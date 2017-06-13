@@ -67,8 +67,8 @@ int whois_encode_apdu(
 
 /* decode the service request only */
 int whois_decode_service_request(
-    uint8_t * apdu,
-    unsigned apdu_len,
+    const uint8_t * apdu,
+    const uint16_t apdu_len,
     int32_t * pLow_limit,
     int32_t * pHigh_limit)
 {

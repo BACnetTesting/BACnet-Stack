@@ -104,7 +104,7 @@ int get_alarm_summary_ack_encode_apdu_data(
         /* tag 0 - Object Identifier */
         apdu_len +=
             encode_application_object_id(&apdu[apdu_len],
-            (int) get_alarm_data->objectIdentifier.type,
+                                         get_alarm_data->objectIdentifier.type,
             get_alarm_data->objectIdentifier.instance);
         /* tag 1 - Alarm State */
         apdu_len +=

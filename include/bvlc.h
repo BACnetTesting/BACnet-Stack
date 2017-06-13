@@ -24,55 +24,71 @@
 #ifndef BVLC_H
 #define BVLC_H
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stddef.h>
-#include <time.h>
-#include "bacdef.h"
-#include "npdu.h"
-#include "bip.h"
+////#include <stdbool.h>
+////#include <stdint.h>
+////#include <stddef.h>
+////#include <time.h>
+//// #include "bacdef.h"
+//#include "npdu.h"
+//// #include "bip.h"
+#include "net.h"
+#include "datalink.h"
 
 struct sockaddr_in;     /* Defined elsewhere, needed here. */
 
-#ifdef __cplusplus
-extern "C" {
 
-#endif /* __cplusplus */
+#ifndef MAX_BBMD_ENTRIES
+#define MAX_BBMD_ENTRIES 16
+#endif
 
 #if defined(BBMD_ENABLED) && BBMD_ENABLED
     void bvlc_maintenance_timer(
+        DLINK_SUPPORT *portParams,
         time_t seconds);
 #else
 #define bvlc_maintenance_timer(x)
 #endif
 
-    typedef struct {
-        /* true if valid entry - false if not */
-        bool valid;
-        /* BACnet/IP address */
-        struct in_addr dest_address;        /* in network format */
-        /* BACnet/IP port number - not always 47808=BAC0h */
-        uint16_t dest_port; /* in network format */
-        /* Broadcast Distribution Mask */
-        struct in_addr broadcast_mask;      /* in tework format */
-    } BBMD_TABLE_ENTRY;
+// Now in bbmd.h
+//typedef struct {
+//    /* true if valid entry - false if not */
+//        bool valid;
+//        /* BACnet/IP address */
+//        struct in_addr dest_address;        /* in network format */
+//        /* BACnet/IP port number - not always 47808=BAC0h */
+//        uint16_t dest_port;					/* in network format */
+//        /* Broadcast Distribution Mask */
+//        struct in_addr broadcast_mask;      /* in network format */
+//    } BBMD_TABLE_ENTRY;
 
-    uint16_t bvlc_receive(
-        BACNET_ADDRESS * src,   /* returns the source address */
-        uint8_t * npdu, /* returns the NPDU */
-        uint16_t max_npdu,      /* amount of space available in the NPDU  */
-        unsigned timeout);      /* number of milliseconds to wait for a packet */
+void bvlc_cleanup(
+    void
+    );
 
-    int bvlc_send_pdu(
-        BACNET_ADDRESS * dest,  /* destination address */
-        BACNET_NPDU_DATA * npdu_data,   /* network information */
-        uint8_t * pdu,  /* any data to be sent - may be null */
-        unsigned pdu_len);
+uint16_t bbmd_receive(
+    // RX_DETAILS *rxDetails,
+    DLINK_SUPPORT *portParams,   // fills in the portParams
+    BACNET_MAC_ADDRESS *rxMac,
+    uint8_t * npdu,             /* returns the NPDU */
+    uint16_t max_npdu);         /* amount of space available in the NPDU  */
 
-    int bvlc_send_mpdu(
-        struct sockaddr_in *dest,
-        uint8_t * mtu,
-        uint16_t mtu_len);
+void bbmd_send_npdu (
+    const DLINK_SUPPORT *portParams,
+    const BACNET_MAC_ADDRESS * dest,  /* destination address */
+    const BACNET_NPDU_DATA * npdu_data,   /* network information */
+    const DLCB *dlcb);
+
+void fd_send_npdu(
+    const DLINK_SUPPORT *portParams,
+    const BACNET_MAC_ADDRESS * dest,  /* destination address */
+    const BACNET_NPDU_DATA * npdu_data,   /* network information */
+    const DLCB *dlcb );
+
+int bvlc_send_mpdu(
+    const DLINK_SUPPORT *portParams,
+    const struct sockaddr_in *ipSockAddr,
+    const uint8_t * mtu,
+    const uint16_t mtu_len);
 
 #if defined(BBMD_CLIENT_ENABLED) && BBMD_CLIENT_ENABLED
     int bvlc_encode_write_bdt_init(
@@ -96,17 +112,20 @@ extern "C" {
     int bvlc_encode_read_bdt(
         uint8_t * pdu);
     int bvlc_bbmd_read_bdt(
+        RX_DETAILS *rxDetails,
         uint32_t bbmd_address,
         uint16_t bbmd_port);
 
     /* registers with a bbmd as a foreign device */
     int bvlc_register_with_bbmd(
+        DLINK_SUPPORT *portParams,
         uint32_t bbmd_address,  /* in network byte order */
         uint16_t bbmd_port,     /* in network byte order */
         uint16_t time_to_live_seconds);
 
     /* Note any BVLC_RESULT code, or NAK the BVLL message in the unsupported cases. */
     int bvlc_for_non_bbmd(
+        const DLINK_SUPPORT *portParams, 
         struct sockaddr_in *sout,
         uint8_t * npdu,
         uint16_t received_bytes);
@@ -126,26 +145,30 @@ extern "C" {
 
 
     /* Local interface to manage BBMD.
-     * The interface user needs to handle mutual exclusion if needed i.e.
-     * BACnet packet is not being handled when the BBMD table is modified.
-     */
+ * The interface user needs to handle mutual exclusion if needed i.e.
+ * BACnet packet is not being handled when the BBMD table is modified.
+ */
 
     /* Get handle to broadcast distribution table. Returns the number of
      * valid entries in the table. */
+#if defined(BBMD_ENABLED) && (BBMD_ENABLED == 1)
     int bvlc_get_bdt_local(
          const BBMD_TABLE_ENTRY** table);
 
     /* Invalidate all entries in the broadcast distribution table */
-    void bvlc_clear_bdt_local(void);
+void bbmd_clear_bdt_local(DLINK_SUPPORT *portParams);
+void bbmd_clear_fdt_local(DLINK_SUPPORT *portParams);    // todo3 - I dont think karg had this, add to BTC?
 
-    /* Add new entry to broadcast distribution table. Returns true if the new
-     * entry was added successfully */
-    bool bvlc_add_bdt_entry_local(
-        BBMD_TABLE_ENTRY* entry);
+/* Add new entry to broadcast distribution table. Returns true if the new
+ * entry was added successfully */
+bool bvlc_add_bdt_entry_local(
+    DLINK_SUPPORT *portParams,
+    BBMD_TABLE_ENTRY* entry);
+#endif
 
 
-    /* NAT handling
-     * If the communication between BBMDs goes through a NAT enabled internet
+/* NAT handling
+ * If the communication between BBMDs goes through a NAT enabled internet
      * router, special considerations are needed as stated in Annex J.7.8.
      *
      * In short, the local IP address of the BBMD is different than the global
@@ -165,7 +188,4 @@ extern "C" {
      */
     void bvlc_disable_nat(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif /* */

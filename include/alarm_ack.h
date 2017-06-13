@@ -45,11 +45,9 @@ typedef struct {
 typedef int (
     *alarm_ack_function) (
     BACNET_ALARM_ACK_DATA * alarmack_data,
+    BACNET_ERROR_CLASS *error_class,
     BACNET_ERROR_CODE * error_code);
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /***************************************************
 **
@@ -80,7 +78,4 @@ extern "C" {
         unsigned apdu_len,
         BACNET_ALARM_ACK_DATA * data);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif /* ALARM_ACK_H_ */

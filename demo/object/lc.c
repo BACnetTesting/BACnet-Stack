@@ -1122,7 +1122,7 @@ static void Load_Control_WriteProperty_Request_Shed_Level(
     int instance,
     unsigned level)
 {
-    bool status = false;
+    bool status ;
     BACNET_APPLICATION_DATA_VALUE value;
     BACNET_WRITE_PROPERTY_DATA wp_data;
 
@@ -1174,7 +1174,7 @@ static void Load_Control_WriteProperty_Enable(
     int instance,
     bool enable)
 {
-    bool status = false;
+    bool status ;
     BACNET_APPLICATION_DATA_VALUE value;
     BACNET_WRITE_PROPERTY_DATA wp_data;
 
@@ -1200,7 +1200,7 @@ static void Load_Control_WriteProperty_Shed_Duration(
     int instance,
     unsigned duration)
 {
-    bool status = false;
+    bool status ;
     BACNET_APPLICATION_DATA_VALUE value;
     BACNET_WRITE_PROPERTY_DATA wp_data;
 
@@ -1225,7 +1225,7 @@ static void Load_Control_WriteProperty_Duty_Window(
     int instance,
     unsigned duration)
 {
-    bool status = false;
+    bool status ;
     BACNET_APPLICATION_DATA_VALUE value;
     BACNET_WRITE_PROPERTY_DATA wp_data;
 
@@ -1250,7 +1250,7 @@ static void Load_Control_WriteProperty_Start_Time_Wildcards(
     int instance)
 {
     int len = 0;
-    bool status = false;
+    bool status ;
     BACNET_APPLICATION_DATA_VALUE value;
     BACNET_WRITE_PROPERTY_DATA wp_data;
 
@@ -1289,7 +1289,7 @@ static void Load_Control_WriteProperty_Start_Time(
     uint8_t hundredths)
 {
     int len = 0;
-    bool status = false;
+    bool status ;
     BACNET_APPLICATION_DATA_VALUE value;
     BACNET_WRITE_PROPERTY_DATA wp_data;
 

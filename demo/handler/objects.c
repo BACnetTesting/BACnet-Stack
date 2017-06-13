@@ -62,14 +62,14 @@ OBJECT_DEVICE_T *objects_device_data(
     int index)
 {
     objects_init();
-    return Keylist_Data_Index(Device_List, index);
+    return (OBJECT_DEVICE_T *) Keylist_Data_Index(Device_List, index);
 }
 
 OBJECT_DEVICE_T *objects_device_by_instance(
     uint32_t device_instance)
 {
     objects_init();
-    return Keylist_Data(Device_List, device_instance);
+    return (OBJECT_DEVICE_T *)Keylist_Data(Device_List, device_instance);
 }
 
 OBJECT_DEVICE_T *objects_device_new(
@@ -80,11 +80,11 @@ OBJECT_DEVICE_T *objects_device_new(
 
     if (Device_List) {
         /* does this device already exist? */
-        pDevice = Keylist_Data(Device_List, key);
+        pDevice = (OBJECT_DEVICE_T *)Keylist_Data(Device_List, key);
         if (pDevice) {
             memset(pDevice, 0, sizeof(OBJECT_DEVICE_T));
         } else {
-            pDevice = calloc(1, sizeof(OBJECT_DEVICE_T));
+            pDevice = (OBJECT_DEVICE_T *) calloc(1, sizeof(OBJECT_DEVICE_T));
             if (pDevice) {
                 pDevice->Object_Identifier.type = OBJECT_DEVICE;
                 pDevice->Object_Identifier.instance = device_instance;
@@ -102,33 +102,35 @@ OBJECT_DEVICE_T *objects_device_new(
     return pDevice;
 }
 
-OBJECT_DEVICE_T *objects_device_delete(
+
+void objects_device_delete(
     int index)
 {
     OBJECT_DEVICE_T *pDevice = NULL;
     BACNET_OBJECT_ID *pObject;
 
     if (Device_List) {
-        pDevice = Keylist_Data_Delete_By_Index(Device_List, index);
+        pDevice = (OBJECT_DEVICE_T *)Keylist_Data_Delete_By_Index(Device_List, index);
         if (pDevice) {
             fprintf(stderr, "Objects: removing device %lu",
-                (unsigned long) pDevice->Object_Identifier.instance);
+                    (unsigned long) pDevice->Object_Identifier.instance);
             if (pDevice->Object_List) {
                 do {
-                    pObject =
-                        Keylist_Data_Delete_By_Index(pDevice->Object_List, 0);
+                    pObject = (BACNET_OBJECT_ID *) Keylist_Data_Delete_By_Index(pDevice->Object_List, 0);
                     /* free any dynamic memory used */
-                    if (pObject) {
-                        free(pObject);
-                    }
+                    // EKH - no point in checking pointer. free() handles the NULL case, and some of my EMMs do a much better check of pObject validity than a simple check for NULL anyway!
+                    // if (pObject) {
+                    free(pObject);
+                    // }
                 } while (pObject);
                 Keylist_Delete(pDevice->Object_List);
             }
             free(pDevice);
         }
     }
-    return pDevice;
+    // EKH: 2016.05.29 Do not return the pointer to freed memory!
 }
+
 
 #ifdef TEST
 #include <assert.h>
@@ -173,13 +175,13 @@ void testBACnetObjects(
         testBACnetObjectsCompare(pTest, pDevice, device_id);
     }
     for (test_point = 0; test_point < max_test_points; test_point++) {
-        device_id = test_point * (BACNET_MAX_INSTANCE / max_test_points);
+        test_point * (BACNET_MAX_INSTANCE / max_test_points);
         pDevice = objects_device_data(test_point);
         testBACnetObjectsCompare(pTest, pDevice, Keylist_Key(Device_List,
-                test_point));
+                                 test_point));
     }
     for (test_point = 0; test_point < max_test_points; test_point++) {
-        pDevice = objects_device_delete(0);
+        objects_device_delete(0);
     }
 }
 

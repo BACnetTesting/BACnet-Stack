@@ -24,9 +24,6 @@
 #ifndef BIGEND_H
 #define BIGEND_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /* Big-Endian systems save the most significant byte first.  */
 /* Sun and Motorola processors, IBM-370s and PDP-10s are big-endian. */
@@ -44,10 +41,7 @@ extern "C" {
 /* x[2] = 0x03 */
 /* x[3] = 0x04 */
 
-    int big_endian(
-        void);
+int big_endian(
+    void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

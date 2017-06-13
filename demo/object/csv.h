@@ -32,9 +32,6 @@
 #include "rp.h"
 #include "wp.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     void CharacterString_Value_Property_Lists(
         const int **pRequired,
@@ -89,7 +86,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

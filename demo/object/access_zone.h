@@ -46,9 +46,6 @@
 #define MAX_ACCESS_ZONE_EXIT_POINTS 4
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     typedef struct {
         uint32_t global_identifier;
@@ -111,7 +108,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

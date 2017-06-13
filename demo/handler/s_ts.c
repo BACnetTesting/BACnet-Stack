@@ -1,3 +1,4 @@
+#if 0 // client side
 /**************************************************************************
 *
 * Copyright (C) 2005 Steve Karg <skarg@users.sourceforge.net>
@@ -48,12 +49,12 @@
 /**
  * Sends a TimeSync message to a specific destination
  *
- * @param dest - #BACNET_ADDRESS - the specific destination
+ * @param dest - #BACNET_PATH - the specific destination
  * @param bdate - #BACNET_DATE
  * @param btime - #BACNET_TIME
  */
 void Send_TimeSync_Remote(
-    BACNET_ADDRESS * dest,
+    BACNET_PATH * dest,
     BACNET_DATE * bdate,
     BACNET_TIME * btime)
 {
@@ -61,14 +62,14 @@ void Send_TimeSync_Remote(
     int pdu_len = 0;
     int bytes_sent = 0;
     BACNET_NPDU_DATA npdu_data;
-    BACNET_ADDRESS my_address;
+    BACNET_PATH my_address;
 
     if (!dcc_communication_enabled())
         return;
 
     datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_setup_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
         npdu_encode_pdu(&Handler_Transmit_Buffer[0], dest, &my_address,
         &npdu_data);
@@ -97,7 +98,7 @@ void Send_TimeSync(
     BACNET_DATE * bdate,
     BACNET_TIME * btime)
 {
-    BACNET_ADDRESS dest;
+    BACNET_PATH dest;
 
     datalink_get_broadcast_address(&dest);
     Send_TimeSync_Remote(&dest, bdate, btime);
@@ -106,12 +107,12 @@ void Send_TimeSync(
 /**
  * Sends a UTC TimeSync message to a specific destination
  *
- * @param dest - #BACNET_ADDRESS - the specific destination
+ * @param dest - #BACNET_PATH - the specific destination
  * @param bdate - #BACNET_DATE
  * @param btime - #BACNET_TIME
  */
 void Send_TimeSyncUTC_Remote(
-    BACNET_ADDRESS * dest,
+    BACNET_PATH * dest,
     BACNET_DATE * bdate,
     BACNET_TIME * btime)
 {
@@ -119,14 +120,14 @@ void Send_TimeSyncUTC_Remote(
     int pdu_len = 0;
     int bytes_sent = 0;
     BACNET_NPDU_DATA npdu_data;
-    BACNET_ADDRESS my_address;
+    BACNET_PATH my_address;
 
     if (!dcc_communication_enabled())
         return;
 
     datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_setup_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
         npdu_encode_pdu(&Handler_Transmit_Buffer[0], dest, &my_address,
         &npdu_data);
@@ -156,7 +157,7 @@ void Send_TimeSyncUTC(
     BACNET_DATE * bdate,
     BACNET_TIME * btime)
 {
-    BACNET_ADDRESS dest;
+    BACNET_PATH dest;
 
     datalink_get_broadcast_address(&dest);
     Send_TimeSyncUTC_Remote(&dest, bdate, btime);
@@ -168,7 +169,7 @@ void Send_TimeSyncUTC(
 void Send_TimeSyncUTC_Device(void)
 {
     int32_t utc_offset_minutes = 0;
-    bool dst = false;
+    bool dst ;
     BACNET_DATE_TIME local_time;
     BACNET_DATE_TIME utc_time;
 
@@ -193,3 +194,4 @@ void Send_TimeSync_Device(void)
     Device_getCurrentDateTime(&local_time);
     Send_TimeSync(&local_time.date, &local_time.time);
 }
+#endif

@@ -37,6 +37,9 @@
 #include "txbuf.h"
 #include "client.h"
 
+#include "config.h"
+#if ( BACNET_USE_EVENT_HANDLING == 1 )
+
 /** @file s_cevent.c  Send a ConfirmedEventNotification Request. */
 
 /** Sends an Confirmed Alarm/Event Notification.
@@ -48,37 +51,50 @@
  *         or no tsm slot is available.
  */
 uint8_t Send_CEvent_Notify(
-    uint32_t device_id,
-    BACNET_EVENT_NOTIFICATION_DATA * data)
+	DLCB *dlcb,
+    // obsolete uint32_t device_id,
+    BACNET_EVENT_NOTIFICATION_DATA * data,
+    BACNET_ROUTE * dest )
 {
     int len = 0;
     int pdu_len = 0;
-    int bytes_sent = 0;
     BACNET_NPDU_DATA npdu_data;
-    BACNET_ADDRESS dest;
-    BACNET_ADDRESS my_address;
-    unsigned max_apdu = 0;
+    // BACNET_ROUTE dest;
+    // BACNET_PATH my_address;
+    unsigned max_apdu = dest->portParams->max_apdu ;
     bool status = false;
-    uint8_t invoke_id = 0;
+    uint8_t invoke_id; // = 0;      // must initialize this.
 
     if (!dcc_communication_enabled())
         return 0;
 
-    /* is the device bound? */
-    status = address_get_by_device(device_id, &max_apdu, &dest);
-    /* is there a tsm available? */
-    if (status)
-        invoke_id = tsm_next_free_invokeID();
+    // todo 2, notice autoclear in device binding... transfer logic to new discovery process 
+
+    ///* is the device bound? */
+    //status = address_get_by_device(device_id, &max_apdu, &dest);
+    //// todo 4 - just because a device is (not yet?) bound, it is no excuse to abandon completely, what about queueing up the attempt with a timer? See AS-208
+
+    ///* is there a tsm available? */
+    //if (status)
+    //{
+    invoke_id = tsm_next_free_invokeID_autoclear();
+    //}
+    //else
+    //{
+    //    // todonext8 - there must be a better way...
+    //    // printf("Target device is not bound, ignoring the Notify Event request\n\r");
+    //}
+
     if (invoke_id) {
         /* encode the NPDU portion of the packet */
-        datalink_get_my_address(&my_address);
-        npdu_encode_npdu_data(&npdu_data, true, MESSAGE_PRIORITY_NORMAL);
+        // datalink_get_my_address(&my_address);
+        npdu_setup_npdu_data(&npdu_data, true, MESSAGE_PRIORITY_NORMAL);
         pdu_len =
-            npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest, &my_address,
+            npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &dest->bacnetPath.glAdr, NULL, // &my_address,
             &npdu_data);
         /* encode the APDU portion of the packet */
         len =
-            cevent_notify_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
+            cevent_notify_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
             invoke_id, data);
         pdu_len += len;
         /* will it fit in the sender?
@@ -87,18 +103,11 @@ uint8_t Send_CEvent_Notify(
            we have a way to check for that and update the
            max_apdu in the address binding table. */
         if ((unsigned) pdu_len < max_apdu) {
-            tsm_set_confirmed_unsegmented_transaction(invoke_id, &dest,
-                &npdu_data, &Handler_Transmit_Buffer[0], (uint16_t) pdu_len);
-            bytes_sent =
-                datalink_send_pdu(&dest, &npdu_data,
-                &Handler_Transmit_Buffer[0], pdu_len);
-#if PRINT_ENABLED
-            if (bytes_sent <= 0) {
-                fprintf(stderr,
-                    "Failed to Send ConfirmedEventNotification Request (%s)!\n",
-                    strerror(errno));
-            }
-#endif
+            // dest.portParams = portParams;
+            tsm_set_confirmed_unsegmented_transaction(dlcb, invoke_id, dest,
+                &npdu_data, (uint16_t) pdu_len);
+            dlcb->bufSize = pdu_len;
+            dest->portParams->SendPdu(dest->portParams, &dest->bacnetPath.localMac, &npdu_data, dlcb);
         } else {
             tsm_free_invoke_id(invoke_id);
             invoke_id = 0;
@@ -112,3 +121,5 @@ uint8_t Send_CEvent_Notify(
 
     return invoke_id;
 }
+
+#endif

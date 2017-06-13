@@ -38,9 +38,6 @@
 #endif
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     typedef struct {
         bool value_active[BACNET_MAX_PRIORITY];
@@ -79,7 +76,7 @@ extern "C" {
     bool Access_Door_Present_Value_Set(
         uint32_t object_instance,
         BACNET_DOOR_VALUE value,
-        unsigned priority);
+        uint8_t priority);
     bool Access_Door_Present_Value_Relinquish(
         uint32_t object_instance,
         unsigned priority);
@@ -137,7 +134,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

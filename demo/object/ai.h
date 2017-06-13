@@ -31,35 +31,40 @@
 #include "bacdef.h"
 #include "rp.h"
 #include "wp.h"
-#if defined(INTRINSIC_REPORTING)
+#if (INTRINSIC_REPORTING == 1)
 #include "nc.h"
 #include "getevent.h"
 #include "alarm_ack.h"
-#include "get_alarm_sum.h"
+// Deprecated since Rev 13    #include "get_alarm_sum.h"
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     typedef struct analog_input_descr {
         unsigned Event_State:3;
+        bool Out_Of_Service;
+        
+#if ( BACNET_SVC_COV_B == 1 )
+        bool Changed;
+#endif // BACNET_SVC_COV_B
+        
         float Present_Value;
         BACNET_RELIABILITY Reliability;
-        bool Out_Of_Service;
         uint8_t Units;
+
+#if ( BACNET_SVC_COV_B == 1 )
         float Prior_Value;
         float COV_Increment;
-        bool Changed;
-#if defined(INTRINSIC_REPORTING)
+#endif // BACNET_SVC_COV_B
+
+#if ( INTRINSIC_REPORTING == 1 )
         uint32_t Time_Delay;
         uint32_t Notification_Class;
         float High_Limit;
         float Low_Limit;
         float Deadband;
-        unsigned Limit_Enable:2;
-        unsigned Event_Enable:3;
-        unsigned Notify_Type:1;
+		uint8_t Limit_Enable:2;
+		uint8_t Event_Enable:3;
+		uint8_t Notify_Type:1;
         ACKED_INFO Acked_Transitions[MAX_BACNET_EVENT_TRANSITION];
         BACNET_DATE_TIME Event_Time_Stamps[MAX_BACNET_EVENT_TRANSITION];
         /* time to generate event notification */
@@ -121,36 +126,47 @@ extern "C" {
         uint32_t object_instance,
         bool oos_flag);
 
+#if ( BACNET_SVC_COV_B == 1 )
+
     bool Analog_Input_Change_Of_Value(
         uint32_t instance);
+
     void Analog_Input_Change_Of_Value_Clear(
         uint32_t instance);
+        
     bool Analog_Input_Encode_Value_List(
         uint32_t object_instance,
         BACNET_PROPERTY_VALUE * value_list);
-    float Analog_Input_COV_Increment(
-        uint32_t instance);
-    void Analog_Input_COV_Increment_Set(
-        uint32_t instance,
-        float value);
+
+	// Not used anywhere, even in Karg Stack
+	//float Analog_Input_COV_Increment(
+ //       uint32_t instance);
+
+	// made static in ai.c
+    //void Analog_Input_COV_Increment_Set(
+    //    uint32_t instance,
+    //    float value);
+#endif
 
     /* note: header of Intrinsic_Reporting function is required
        even when INTRINSIC_REPORTING is not defined */
     void Analog_Input_Intrinsic_Reporting(
         uint32_t object_instance);
 
-#if defined(INTRINSIC_REPORTING)
+#if ( INTRINSIC_REPORTING == 1 )
     int Analog_Input_Event_Information(
         unsigned index,
         BACNET_GET_EVENT_INFORMATION_DATA * getevent_data);
 
     int Analog_Input_Alarm_Ack(
         BACNET_ALARM_ACK_DATA * alarmack_data,
+        BACNET_ERROR_CLASS *error_class,
         BACNET_ERROR_CODE * error_code);
 
-    int Analog_Input_Alarm_Summary(
-        unsigned index,
-        BACNET_GET_ALARM_SUMMARY_DATA * getalarm_data);
+    // Deprecated since Rev 13       
+    //int Analog_Input_Alarm_Summary(
+        // unsigned index,
+        // BACNET_GET_ALARM_SUMMARY_DATA * getalarm_data);
 #endif
 
     bool Analog_Input_Create(
@@ -168,7 +184,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

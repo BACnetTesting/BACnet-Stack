@@ -31,10 +31,13 @@
 #include <time.h>       /* for time */
 #include <ctype.h>      /* for toupper */
 
-#define PRINT_ENABLED 1
+// cannot do this here - must be solution wide else some critical functions are not included. #define PRINT_ENABLED 1
 
 #include "bacdef.h"
 #include "config.h"
+
+// #if ( BACNET_SVC_PRIVATE_TRANSFER )
+
 #include "bactext.h"
 #include "bacerror.h"
 #include "iam.h"
@@ -53,6 +56,8 @@
 #include "client.h"
 #include "txbuf.h"
 #include "dlenv.h"
+#include "bacapp.h"
+#include "ptransfer.h"
 
 /* buffer used for receive */
 static uint8_t Rx_Buf[MAX_MPDU] = { 0 };
@@ -131,13 +136,17 @@ static void Init_Service_Handlers(
     /* set the handler for all the services we don't implement
        It is required to send the proper reject message... */
     apdu_set_unrecognized_service_handler_handler
-        (handler_unrecognized_service);
+    (handler_unrecognized_service);
     /* we must implement read property - it's required! */
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_READ_PROPERTY,
-        handler_read_property);
+                               handler_read_property);
+
+#if ( BACNET_SVC_PRIVATE_TRANSFER )
     /* handle the data coming back from requests */
     apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_PRIVATE_TRANSFER,
-        handler_unconfirmed_private_transfer);
+                                 handler_unconfirmed_private_transfer);
+#endif
+
     /* handle any errors coming back */
     apdu_set_error_handler(SERVICE_CONFIRMED_READ_PROPERTY, MyErrorHandler);
     apdu_set_abort_handler(MyAbortHandler);
@@ -160,7 +169,7 @@ int main(
     time_t timeout_seconds = 0;
     time_t delta_seconds = 0;
     bool found = false;
-    char *filename = NULL;
+    const char *filename ;
     char *value_string = NULL;
     bool status = false;
     int args_remaining = 0, tag_value_arg = 0, i = 0;
@@ -240,7 +249,7 @@ int main(
         } else {
             Target_Object_Property_Value[i].context_specific = false;
         }
-        property_tag = strtol(argv[tag_value_arg], NULL, 0);
+        property_tag = (BACNET_APPLICATION_TAG) strtol(argv[tag_value_arg], NULL, 0);
         args_remaining--;
         if (args_remaining <= 0) {
             fprintf(stderr, "Error: not enough tag-value pairs\r\n");
@@ -252,12 +261,19 @@ int main(
            i, property_tag, i, value_string); */
         if (property_tag >= MAX_BACNET_APPLICATION_TAG) {
             fprintf(stderr, "Error: tag=%u - it must be less than %u\r\n",
-                property_tag, MAX_BACNET_APPLICATION_TAG);
+                    property_tag, MAX_BACNET_APPLICATION_TAG);
             return 1;
         }
+
+        /* I am sure the intent of BACAPP_PRINT_ENABLED was not to affect this demo, but it has. Someone
+           with deeper knowledge than me can resolve this. Ed. */
+#ifdef BACAPP_PRINT_ENABLED
         status =
             bacapp_parse_application_data(property_tag, value_string,
-            &Target_Object_Property_Value[i]);
+                                          &Target_Object_Property_Value[i]);
+#else
+        status = false ;
+#endif
         if (!status) {
             /* FIXME: show the expected entry format for the tag */
             fprintf(stderr, "Error: unable to parse the tag value\r\n");
@@ -368,3 +384,6 @@ int main(
         return 1;
     return 0;
 }
+
+
+// #endif // #if ( BACNET_SVC_PRIVATE_TRANSFER )

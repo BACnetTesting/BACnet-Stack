@@ -24,10 +24,10 @@
 #ifndef BACAPP_H
 #define BACAPP_H
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include "bacdef.h"
+//#include <stdint.h>
+//#include <stdbool.h>
+//#include <stdio.h>
+//#include "bacdef.h"
 #include "bacstr.h"
 #include "datetime.h"
 #if defined (BACAPP_LIGHTING_COMMAND)
@@ -36,6 +36,7 @@
 #if defined (BACAPP_DEVICE_OBJECT_PROP_REF)
 #include "bacdevobjpropref.h"
 #endif
+#include "bacenum.h"
 
 
 struct BACnet_Application_Data_Value;
@@ -131,9 +132,6 @@ typedef struct BACnet_Object_Property_Value {
     BACNET_APPLICATION_DATA_VALUE *value;
 } BACNET_OBJECT_PROPERTY_VALUE;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
     int bacapp_encode_data(
         uint8_t * apdu,
         BACNET_APPLICATION_DATA_VALUE * value);
@@ -201,9 +199,9 @@ extern "C" {
         unsigned max_apdu_len,
         BACNET_PROPERTY_ID property);
 
-#ifndef BACAPP_PRINT_ENABLED
+#if ( BACAPP_PRINT_ENABLED != 1 )
 #if PRINT_ENABLED || defined TEST
-#define BACAPP_PRINT_ENABLED
+#define BACAPP_PRINT_ENABLED    1
 #define BACAPP_SNPRINTF_ENABLED
 #endif
 #endif
@@ -215,7 +213,7 @@ extern "C" {
         BACNET_OBJECT_PROPERTY_VALUE * object_value);
 #endif
 
-#ifdef BACAPP_PRINT_ENABLED
+#if ( BACAPP_PRINT_ENABLED == 1 )
     bool bacapp_parse_application_data(
         BACNET_APPLICATION_TAG tag_number,
         const char *argv,
@@ -242,7 +240,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

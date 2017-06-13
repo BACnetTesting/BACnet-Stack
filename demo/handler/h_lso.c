@@ -22,6 +22,9 @@
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
 *********************************************************************/
+
+#if 0
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -43,7 +46,7 @@
 void handler_lso(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src,
+    BACNET_PATH * src,
     BACNET_CONFIRMED_SERVICE_DATA * service_data)
 {
     BACNET_LSO_DATA data;
@@ -51,11 +54,11 @@ void handler_lso(
     int pdu_len = 0;
     BACNET_NPDU_DATA npdu_data;
     int bytes_sent = 0;
-    BACNET_ADDRESS my_address;
+    BACNET_PATH my_address;
 
     /* encode the NPDU portion of the packet */
     datalink_get_my_address(&my_address);
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_setup_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
         npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
         &npdu_data);
@@ -117,3 +120,5 @@ void handler_lso(
 
     return;
 }
+
+#endif 

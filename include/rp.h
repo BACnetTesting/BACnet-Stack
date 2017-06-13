@@ -24,9 +24,9 @@
 #ifndef READPROPERTY_H
 #define READPROPERTY_H
 
-#include <stdint.h>
-#include <stdbool.h>
-#include "bacdef.h"
+//#include <stdint.h>
+//#include <stdbool.h>
+//#include "bacdef.h"
 #include "bacenum.h"
 
 typedef struct BACnet_Read_Property_Data {
@@ -54,17 +54,13 @@ struct BACnet_Read_Access_Data;
  */
 typedef int (
     *read_property_function) (
-    BACNET_READ_PROPERTY_DATA * rp_data);
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+        BACNET_READ_PROPERTY_DATA * rp_data);
 
 /* encode service */
-    int rp_encode_apdu(
-        uint8_t * apdu,
-        uint8_t invoke_id,
-        BACNET_READ_PROPERTY_DATA * rpdata);
+int rp_encode_apdu(
+    uint8_t * apdu,
+    uint8_t invoke_id,
+    BACNET_READ_PROPERTY_DATA * rpdata);
 
 /* decode the service request only */
     int rp_decode_service_request(
@@ -112,15 +108,12 @@ extern "C" {
         uint8_t * invoke_id,
         BACNET_READ_PROPERTY_DATA * rpdata);
 
-    void test_ReadProperty(
-        Test * pTest);
-    void test_ReadPropertyAck(
-        Test * pTest);
+void test_ReadProperty(
+    Test * pTest);
+void test_ReadPropertyAck(
+    Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 /** @defgroup DataShare Data Sharing BIBBs
  * These BIBBs prescribe the BACnet capabilities required to interoperably
  * perform the data sharing functions enumerated in 22.2.1.1 for the BACnet

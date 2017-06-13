@@ -67,12 +67,13 @@ bool indtext_by_string(
     unsigned *found_index)
 {
     bool found = false;
-    unsigned index = 0;
+    // EKH: Changing name because of symbol collision in linux
+    unsigned localIndex = 0;
 
     if (data_list && search_name) {
         while (data_list->pString) {
             if (strcmp(data_list->pString, search_name) == 0) {
-                index = data_list->index;
+	            localIndex = data_list->index;
                 found = true;
                 break;
             }
@@ -81,7 +82,7 @@ bool indtext_by_string(
     }
 
     if (found && found_index)
-        *found_index = index;
+		*found_index = localIndex;
 
     return found;
 }
@@ -237,7 +238,7 @@ void testIndexText(
     /* case insensitive versions */
     ct_test(pTest, indtext_by_istring(data_list, "JOSHUA", NULL) == true);
     ct_test(pTest, indtext_by_istring(data_list, "joshua", NULL) == true);
-    valid = indtext_by_istring(data_list, "ANNA", &index);
+    indtext_by_istring(data_list, "ANNA", &index);
     ct_test(pTest, index == indtext_by_istring_default(data_list, "ANNA",
             index));
 }

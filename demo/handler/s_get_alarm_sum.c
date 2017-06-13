@@ -1,3 +1,4 @@
+#if 0 // client side
 /**
  * @file
  * @author Daniel Blazevic <daniel.blazevic@gmail.com>
@@ -53,14 +54,14 @@
 #include "get_alarm_sum.h"
 
 uint8_t Send_Get_Alarm_Summary_Address(
-    BACNET_ADDRESS *dest,
+    BACNET_PATH *dest,
     uint16_t max_apdu)
 {
     int len = 0;
     int pdu_len = 0;
     uint8_t invoke_id = 0;
     BACNET_NPDU_DATA npdu_data;
-    BACNET_ADDRESS my_address;
+    BACNET_PATH my_address;
 #if PRINT_ENABLED
     int bytes_sent = 0;
 #endif
@@ -70,7 +71,7 @@ uint8_t Send_Get_Alarm_Summary_Address(
     if (invoke_id) {
         datalink_get_my_address(&my_address);
         /* encode the NPDU portion of the packet */
-        npdu_encode_npdu_data(&npdu_data, true, MESSAGE_PRIORITY_NORMAL);
+        npdu_setup_npdu_data(&npdu_data, true, MESSAGE_PRIORITY_NORMAL);
 
         pdu_len =
             npdu_encode_pdu(&Handler_Transmit_Buffer[0], dest,
@@ -112,17 +113,21 @@ uint8_t Send_Get_Alarm_Summary_Address(
 uint8_t Send_Get_Alarm_Summary(
     uint32_t device_id)
 {
-    BACNET_ADDRESS dest;
-    unsigned max_apdu = 0;
-    uint8_t invoke_id = 0;
-    bool status = false;
+    BACNET_PATH dest;
+    unsigned max_apdu ;
+    uint8_t invoke_id ;
+    bool status ;
 
     /* is the device bound? */
     status = address_get_by_device(device_id, &max_apdu, &dest);
     if (status) {
         invoke_id = Send_Get_Alarm_Summary_Address(
-            &dest, max_apdu);
+                        &dest, max_apdu);
+    } else {
+        invoke_id = 0 ;
+        // todo 5 - surely we can do better than this?
     }
 
     return invoke_id;
 }
+#endif

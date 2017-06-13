@@ -52,7 +52,7 @@ int bacerror_encode_apdu(
     if (apdu) {
         apdu[0] = PDU_TYPE_ERROR;
         apdu[1] = invoke_id;
-        apdu[2] = service;
+        apdu[2] = (uint8_t) service;
         apdu_len = 3;
         /* service parameters */
         apdu_len +=

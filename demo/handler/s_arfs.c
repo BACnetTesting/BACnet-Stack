@@ -1,3 +1,5 @@
+#if 0 
+
 /**************************************************************************
 *
 * Copyright (C) 2006 Steve Karg <skarg@users.sourceforge.net>
@@ -51,15 +53,15 @@ uint8_t Send_Atomic_Read_File_Stream(
     int fileStartPosition,
     unsigned requestedOctetCount)
 {
-    BACNET_ADDRESS dest;
-    BACNET_ADDRESS my_address;
+    BACNET_PATH dest;
+    BACNET_PATH my_address;
     BACNET_NPDU_DATA npdu_data;
     unsigned max_apdu = 0;
     uint8_t invoke_id = 0;
     bool status = false;
     int len = 0;
     int pdu_len = 0;
-    int bytes_sent = 0;
+    int bytes_sent ;
     BACNET_ATOMIC_READ_FILE_DATA data;
 
     /* if we are forbidden to send, don't send! */
@@ -80,7 +82,7 @@ uint8_t Send_Atomic_Read_File_Stream(
         data.type.stream.requestedOctetCount = requestedOctetCount;
         /* encode the NPDU portion of the packet */
         datalink_get_my_address(&my_address);
-        npdu_encode_npdu_data(&npdu_data, true, MESSAGE_PRIORITY_NORMAL);
+        npdu_setup_npdu_data(&npdu_data, true, MESSAGE_PRIORITY_NORMAL);
         pdu_len =
             npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest, &my_address,
             &npdu_data);
@@ -118,3 +120,5 @@ uint8_t Send_Atomic_Read_File_Stream(
 
     return invoke_id;
 }
+
+#endif

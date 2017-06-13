@@ -32,9 +32,6 @@
 #include "wp.h"
 #include "rp.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     typedef struct octetstring_value_descr {
         unsigned Event_State:3;
@@ -89,7 +86,4 @@ extern "C" {
     void testOctetString_Value(Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

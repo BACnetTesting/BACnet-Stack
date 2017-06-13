@@ -52,7 +52,9 @@ static void PrintReadRangeData(
     uint8_t *application_data;
     int application_data_len;
     bool first_value = true;
+#if PRINT_ENABLED
     bool print_brace = false;
+#endif
 
     if (data) {
         application_data = data->application_data;
@@ -62,13 +64,13 @@ static void PrintReadRangeData(
         for (;;) {
             len =
                 bacapp_decode_application_data(application_data,
-                (uint8_t) application_data_len, &value);
+                                               (uint8_t) application_data_len, &value);
             if (first_value && (len < application_data_len)) {
                 first_value = false;
 #if PRINT_ENABLED
                 fprintf(stdout, "{");
-#endif
                 print_brace = true;
+#endif
             }
             object_value.object_type = data->object_type;
             object_value.object_instance = data->object_instance;
@@ -102,7 +104,7 @@ static void PrintReadRangeData(
 void handler_read_range_ack(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src,
+    BACNET_PATH * src,
     BACNET_CONFIRMED_SERVICE_ACK_DATA * service_data)
 {
     int len = 0;

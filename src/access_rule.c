@@ -40,7 +40,7 @@ int bacapp_encode_access_rule(
 
     if (rule->time_range_specifier == TIME_RANGE_SPECIFIER_SPECIFIED) {
         len =
-            bacapp_encode_context_device_obj_property_ref(&apdu[apdu_len], 1,
+            bacapp_encode_context_device_obj_property_ref(&apdu[apdu_len], (uint8_t) 1,
             &rule->time_range);
         if (len > 0)
             apdu_len += len;
@@ -95,11 +95,13 @@ int bacapp_decode_access_rule(
 {
     int len;
     int apdu_len = 0;
+    uint32_t    temp;
 
     if (decode_is_context_tag(&apdu[apdu_len], 0)) {
+        // have to use a temp variable here, size is not the same for all target platforms.
         len =
-            decode_context_enumerated(&apdu[apdu_len], 0,
-            &rule->time_range_specifier);
+            decode_context_enumerated(&apdu[apdu_len], 0, &temp);
+        rule->time_range_specifier = (BACNET_ACCESS_RULE_TIME_RANGE_SPECIFIER) temp;
         if (len < 0)
             return -1;
         else
@@ -121,9 +123,10 @@ int bacapp_decode_access_rule(
     }
 
     if (decode_is_context_tag(&apdu[apdu_len], 2)) {
+        // have to use a temp variable here, size is not the same for all target platforms.
         len =
-            decode_context_enumerated(&apdu[apdu_len], 2,
-            &rule->location_specifier);
+            decode_context_enumerated(&apdu[apdu_len], 2, &temp);
+        rule->location_specifier = (BACNET_ACCESS_RULE_LOCATION_SPECIFIER)temp;
         if (len < 0)
             return -1;
         else

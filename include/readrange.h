@@ -27,15 +27,11 @@
 #include "bacstr.h"
 #include "datetime.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-    struct BACnet_Read_Range_Data;
-    typedef struct BACnet_Read_Range_Data {
-        BACNET_OBJECT_TYPE object_type;
-        uint32_t object_instance;
-        BACNET_PROPERTY_ID object_property;
+struct BACnet_Read_Range_Data;
+typedef struct BACnet_Read_Range_Data {
+    BACNET_OBJECT_TYPE object_type;
+    uint32_t object_instance;
+    BACNET_PROPERTY_ID object_property;
         uint32_t array_index;
         uint8_t *application_data;
         int application_data_len;
@@ -149,15 +145,12 @@ extern "C" {
     int rr_ack_decode_service_request(
         uint8_t * apdu,
         int apdu_len,   /* total length of the apdu */
-        BACNET_READ_RANGE_DATA * rrdata);
+    BACNET_READ_RANGE_DATA * rrdata);
 
-    uint8_t Send_ReadRange_Request(
-        uint32_t device_id,     /* destination device */
-        BACNET_READ_RANGE_DATA * read_access_data);
+uint8_t Send_ReadRange_Request(
+    uint32_t device_id,     /* destination device */
+    BACNET_READ_RANGE_DATA * read_access_data);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 /** @defgroup Trend Trending BIBBs
  * These BIBBs prescribe the BACnet capabilities required to interoperably
  * perform the trending functions enumerated in clause 22.2.1.4 for the

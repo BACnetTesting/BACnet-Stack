@@ -34,9 +34,6 @@
 #include "bacreal.h"
 #include "bits.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /* from clause 20.2.1 General Rules for Encoding BACnet Tags */
 /* returns the number of apdu bytes consumed */
@@ -55,14 +52,14 @@ extern "C" {
         uint8_t * apdu,
         uint8_t tag_number);
     int decode_tag_number(
-        uint8_t * apdu,
+        const uint8_t * apdu,
         uint8_t * tag_number);
     int decode_tag_number_safe(
         uint8_t * apdu,
         uint32_t apdu_len_remaining,
         uint8_t * tag_number);
     int decode_tag_number_and_value(
-        uint8_t * apdu,
+        const uint8_t * apdu,
         uint8_t * tag_number,
         uint32_t * value);
     int decode_tag_number_and_value_safe(
@@ -167,36 +164,36 @@ extern "C" {
 /* from clause 20.2.14 Encoding of an Object Identifier Value */
 /* and 20.2.1 General Rules for Encoding BACnet Tags */
 /* returns the number of apdu bytes consumed */
-    int decode_object_id(
-        uint8_t * apdu,
-        uint16_t * object_type,
-        uint32_t * instance);
+int decode_object_id(
+    uint8_t * apdu,
+    BACNET_OBJECT_TYPE * object_type,
+    uint32_t * instance);
 
-    int decode_object_id_safe(
-        uint8_t * apdu,
-        uint32_t len_value,
-        uint16_t * object_type,
-        uint32_t * instance);
+int decode_object_id_safe(
+    uint8_t * apdu,
+    uint32_t len_value,
+    BACNET_OBJECT_TYPE * object_type,
+    uint32_t * instance);
 
-    int decode_context_object_id(
-        uint8_t * apdu,
-        uint8_t tag_number,
-        uint16_t * object_type,
-        uint32_t * instance);
+int decode_context_object_id(
+    uint8_t * apdu,
+    uint8_t tag_number,
+    BACNET_OBJECT_TYPE * object_type,
+    uint32_t * instance);
 
-    int encode_bacnet_object_id(
-        uint8_t * apdu,
-        int object_type,
-        uint32_t instance);
-    int encode_context_object_id(
-        uint8_t * apdu,
-        uint8_t tag_number,
-        int object_type,
-        uint32_t instance);
-    int encode_application_object_id(
-        uint8_t * apdu,
-        int object_type,
-        uint32_t instance);
+int encode_bacnet_object_id(
+    uint8_t * apdu,
+    BACNET_OBJECT_TYPE object_type,
+    uint32_t instance);
+int encode_context_object_id(
+    uint8_t * apdu,
+    uint8_t tag_number,
+    BACNET_OBJECT_TYPE object_type,
+    uint32_t instance);
+int encode_application_object_id(
+    uint8_t * apdu,
+    BACNET_OBJECT_TYPE object_type,
+    uint32_t instance);
 
 /* from clause 20.2.8 Encoding of an Octet String Value */
 /* and 20.2.1 General Rules for Encoding BACnet Tags */
@@ -264,7 +261,7 @@ extern "C" {
         uint8_t * apdu,
         uint32_t value);
     int decode_unsigned(
-        uint8_t * apdu,
+        const uint8_t * apdu,
         uint32_t len_value,
         uint32_t * value);
     int decode_context_unsigned(
@@ -392,25 +389,28 @@ extern "C" {
         uint8_t octet);
 
 /* returns the number of apdu bytes consumed */
-    int encode_simple_ack(
-        uint8_t * apdu,
-        uint8_t invoke_id,
-        uint8_t service_choice);
+int encode_simple_ack(
+    uint8_t * apdu,
+    uint8_t invoke_id,
+    uint8_t service_choice);
 
-    int encode_bacnet_address(
-        uint8_t * apdu,
-        BACNET_ADDRESS * destination);
-    int decode_bacnet_address(
-        uint8_t * apdu,
-        BACNET_ADDRESS * destination);
-    int encode_context_bacnet_address(
-        uint8_t * apdu,
-        uint8_t tag_number,
-        BACNET_ADDRESS * destination);
-    int decode_context_bacnet_address(
-        uint8_t * apdu,
-        uint8_t tag_number,
-        BACNET_ADDRESS * destination);
+int encode_bacnet_address(
+    uint8_t * apdu,
+    BACNET_PATH * destination);
+
+int decode_bacnet_address(
+    uint8_t * apdu,
+    BACNET_PATH * destination);
+
+int encode_context_bacnet_address(
+    uint8_t * apdu,
+    uint8_t tag_number,
+    BACNET_PATH * destination);
+
+int decode_context_bacnet_address(
+    uint8_t * apdu,
+    uint8_t tag_number,
+    BACNET_PATH * destination);
 
 /* from clause 20.2.1.2 Tag Number */
 /* true if extended tag numbering is used */
@@ -438,7 +438,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

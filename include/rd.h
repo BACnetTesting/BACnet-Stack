@@ -36,18 +36,14 @@ typedef struct BACnet_Reinitialize_Device_Data {
 
 typedef bool(
     *reinitialize_device_function) (
-    BACNET_REINITIALIZE_DEVICE_DATA * rd_data);
+        BACNET_REINITIALIZE_DEVICE_DATA * rd_data);
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /* encode service */
-    int rd_encode_apdu(
-        uint8_t * apdu,
-        uint8_t invoke_id,
-        BACNET_REINITIALIZED_STATE state,
+int rd_encode_apdu(
+    uint8_t * apdu,
+    uint8_t invoke_id,
+    BACNET_REINITIALIZED_STATE state,
         BACNET_CHARACTER_STRING * password);
 
 /* decode the service request only */
@@ -64,15 +60,12 @@ extern "C" {
         unsigned apdu_len,
         uint8_t * invoke_id,
         BACNET_REINITIALIZED_STATE * state,
-        BACNET_CHARACTER_STRING * password);
+    BACNET_CHARACTER_STRING * password);
 
-    void test_ReinitializeDevice(
-        Test * pTest);
+void test_ReinitializeDevice(
+    Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 /** @defgroup DMRD Device Management-ReinitializeDevice (DM-RD)
  * @ingroup RDMS
  * 16.4 ReinitializeDevice Service <br>

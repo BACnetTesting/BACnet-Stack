@@ -1,3 +1,4 @@
+#if 0 // client side
 /**************************************************************************
 *
 * Copyright (C) 2006 Steve Karg <skarg@users.sourceforge.net>
@@ -62,11 +63,11 @@ void Send_WhoHas_Name(
 {
     int len = 0;
     int pdu_len = 0;
-    BACNET_ADDRESS dest;
+    BACNET_PATH dest;
     int bytes_sent = 0;
     BACNET_WHO_HAS_DATA data;
     BACNET_NPDU_DATA npdu_data;
-    BACNET_ADDRESS my_address;
+    BACNET_PATH my_address;
 
     /* if we are forbidden to send, don't send! */
     if (!dcc_communication_enabled())
@@ -75,7 +76,7 @@ void Send_WhoHas_Name(
     datalink_get_broadcast_address(&dest);
     datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_setup_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
         npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest, &my_address,
         &npdu_data);
@@ -117,11 +118,11 @@ void Send_WhoHas_Object(
 {
     int len = 0;
     int pdu_len = 0;
-    BACNET_ADDRESS dest;
+    BACNET_PATH dest;
     int bytes_sent = 0;
     BACNET_WHO_HAS_DATA data;
     BACNET_NPDU_DATA npdu_data;
-    BACNET_ADDRESS my_address;
+    BACNET_PATH my_address;
 
     /* if we are forbidden to send, don't send! */
     if (!dcc_communication_enabled())
@@ -130,7 +131,7 @@ void Send_WhoHas_Object(
     datalink_get_broadcast_address(&dest);
     datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_setup_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
         npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest, &my_address,
         &npdu_data);
@@ -152,3 +153,4 @@ void Send_WhoHas_Object(
             strerror(errno));
 #endif
 }
+#endif

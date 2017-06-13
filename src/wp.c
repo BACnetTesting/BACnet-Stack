@@ -42,6 +42,7 @@
 /* encode service */
 int wp_encode_apdu(
     uint8_t * apdu,
+    uint16_t max_apdu,
     uint8_t invoke_id,
     BACNET_WRITE_PROPERTY_DATA * wpdata)
 {
@@ -50,7 +51,7 @@ int wp_encode_apdu(
 
     if (apdu) {
         apdu[0] = PDU_TYPE_CONFIRMED_SERVICE_REQUEST;
-        apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU);
+        apdu[1] = encode_max_segs_max_apdu(0, max_apdu );
         apdu[2] = invoke_id;
         apdu[3] = SERVICE_CONFIRMED_WRITE_PROPERTY;     /* service choice */
         apdu_len = 4;
@@ -102,7 +103,7 @@ int wp_decode_service_request(
     int tag_len = 0;
     uint8_t tag_number = 0;
     uint32_t len_value_type = 0;
-    uint16_t type = 0;  /* for decoding */
+    BACNET_OBJECT_TYPE type ;   /* for decoding */
     uint32_t property = 0;      /* for decoding */
     uint32_t unsigned_value = 0;
     int i = 0;  /* loop counter */
@@ -195,7 +196,7 @@ int wp_decode_apdu(
     /* optional checking - most likely was already done prior to this call */
     if (apdu[0] != PDU_TYPE_CONFIRMED_SERVICE_REQUEST)
         return -1;
-    /*  apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU); */
+    /*  apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU_MSTP); */
     *invoke_id = apdu[2];       /* invoke id - filled in by net layer */
     if (apdu[3] != SERVICE_CONFIRMED_WRITE_PROPERTY)
         return -1;
@@ -218,7 +219,6 @@ void testWritePropertyTag(
     BACNET_WRITE_PROPERTY_DATA test_data = { 0 };
     BACNET_APPLICATION_DATA_VALUE test_value;
     uint8_t apdu[480] = { 0 };
-    int len = 0;
     int apdu_len = 0;
     uint8_t invoke_id = 128;
     uint8_t test_invoke_id = 0;
@@ -236,7 +236,6 @@ void testWritePropertyTag(
     ct_test(pTest, test_data.object_property == wpdata.object_property);
     ct_test(pTest, test_data.array_index == wpdata.array_index);
     /* decode the application value of the request */
-    len =
         bacapp_decode_application_data(test_data.application_data,
         test_data.application_data_len, &test_value);
     ct_test(pTest, test_value.tag == value->tag);

@@ -29,10 +29,7 @@
 #include <stdbool.h>
 #include "bacdef.h"
 #include "readrange.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+#include "datalink.h"
 
     void address_init(
         void);
@@ -43,7 +40,7 @@ extern "C" {
     void address_add(
         uint32_t device_id,
         unsigned max_apdu,
-        BACNET_ADDRESS * src);
+        BACNET_ROUTE * src);
 
     void address_remove_device(
         uint32_t device_id);
@@ -51,47 +48,59 @@ extern "C" {
     bool address_get_by_device(
         uint32_t device_id,
         unsigned *max_apdu,
-        BACNET_ADDRESS * src);
+        BACNET_ROUTE * src);
+
+    bool address_get_route_from_global_addr(
+        const BACNET_GLOBAL_ADDRESS *globAdr,
+        BACNET_ROUTE * src);
+
+    bool address_get_route_from_device_id(
+        const uint32_t device_id,
+        BACNET_ROUTE * src);
+
+    bool address_bound(
+        uint32_t device_id ) ;
 
     bool address_get_by_index(
-        unsigned index,
+        unsigned objectIndex,
         uint32_t * device_id,
         unsigned *max_apdu,
-        BACNET_ADDRESS * src);
+        BACNET_ROUTE * src);
 
     bool address_device_get_by_index(
         unsigned index,
         uint32_t * device_id,
         uint32_t * device_ttl,
         unsigned *max_apdu,
-        BACNET_ADDRESS * src);
+        BACNET_ROUTE * src);
 
-    bool address_get_device_id(
-        BACNET_ADDRESS * src,
-        uint32_t * device_id);
+    // Obsoleted by EKH - see comment in address.c
+    //bool address_get_device_id(
+    //    BACNET_ROUTE * src,
+    //    uint32_t * device_id);
 
     unsigned address_count(
         void);
 
     bool address_match(
-        BACNET_ADDRESS * dest,
-        BACNET_ADDRESS * src);
+        BACNET_ROUTE * dest,
+        BACNET_ROUTE * src);
 
     bool address_bind_request(
         uint32_t device_id,
         unsigned *max_apdu,
-        BACNET_ADDRESS * src);
+        BACNET_ROUTE * src);
 
     bool address_device_bind_request(
         uint32_t device_id,
         uint32_t * device_ttl,
         unsigned *max_apdu,
-        BACNET_ADDRESS * src);
+        BACNET_ROUTE * src);
 
     void address_add_binding(
         uint32_t device_id,
         unsigned max_apdu,
-        BACNET_ADDRESS * src);
+        BACNET_ROUTE * src);
 
     int address_list_encode(
         uint8_t * apdu,
@@ -118,10 +127,7 @@ extern "C" {
         BACNET_MAC_ADDRESS *mac,
         char *arg);
 
-    void address_protected_entry_index_set(uint32_t top_protected_entry_index);
+    // void address_protected_entry_index_set(uint32_t top_protected_entry_index);
     void address_own_device_id_set(uint32_t own_id);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

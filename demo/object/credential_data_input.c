@@ -364,7 +364,7 @@ bool Credential_Data_Input_Write_Property(
                     &wp_data->error_code);
                 if (status) {
                     cdi_descr[object_index].reliability =
-                        value.type.Enumerated;
+                        (BACNET_RELIABILITY) value.type.Enumerated;
                 }
             } else {
                 wp_data->error_class = ERROR_CLASS_PROPERTY;

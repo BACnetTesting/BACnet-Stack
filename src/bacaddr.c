@@ -31,67 +31,178 @@
  License.
  -------------------------------------------
 ####COPYRIGHTEND####*/
-#include <stddef.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include "config.h"
+//#include <stddef.h>
+//#include <stdint.h>
+//#include <stdbool.h>
+//// #include "config.h"
 #include "bacdef.h"
-#include "bacaddr.h"
+//#include "bacaddr.h"
+#include "datalink.h"
+#include "CEDebug.h"
 
 /** @file bacaddr.c  BACnet Address structure utilities */
 
-void bacnet_address_copy(
-    BACNET_ADDRESS * dest,
-    BACNET_ADDRESS * src)
+void bacnet_mac_copy(
+    BACNET_MAC_ADDRESS * dest,
+    const BACNET_MAC_ADDRESS * src)
 {
-    int i = 0;
-
-    if (dest && src) {
-        dest->mac_len = src->mac_len;
-        for (i = 0; i < MAX_MAC_LEN; i++) {
-            dest->mac[i] = src->mac[i];
-        }
-        dest->net = src->net;
-        dest->len = src->len;
-        for (i = 0; i < MAX_MAC_LEN; i++) {
-            dest->adr[i] = src->adr[i];
-        }
-    }
+    memcpy(dest, src, sizeof(BACNET_MAC_ADDRESS));
 }
 
-bool bacnet_address_same(
-    BACNET_ADDRESS * dest,
-    BACNET_ADDRESS * src)
+void bacnet_address_clear ( BACNET_GLOBAL_ADDRESS *adr )
 {
-    uint8_t i = 0;      /* loop counter */
-    uint8_t max_len = 0;        /* used for dynamic max */
+  memset ( adr, 0, sizeof ( BACNET_GLOBAL_ADDRESS ) ) ;
+}
 
+void bacnet_address_copy(
+    BACNET_GLOBAL_ADDRESS * dest,
+    const BACNET_GLOBAL_ADDRESS * src)
+{
+    memcpy(dest, src, sizeof(BACNET_GLOBAL_ADDRESS));
+}
+
+
+void bacnet_path_copy(
+    BACNET_PATH * dest,
+    const BACNET_PATH * src)
+{
+    memcpy(dest, src, sizeof(BACNET_PATH));
+}
+
+void bacnet_route_copy(
+    BACNET_ROUTE *rdest, 
+    const BACNET_ROUTE *rsrc)
+{
+    memcpy(rdest, rsrc, sizeof(BACNET_ROUTE));
+}
+
+
+void bacnet_route_clear(BACNET_ROUTE *rdest )
+{
+    memset(rdest, 0, sizeof(BACNET_ROUTE));
+}
+
+bool bacnet_mac_same(
+    const BACNET_MAC_ADDRESS *mac1, 
+    const BACNET_MAC_ADDRESS *mac2)
+{
+    int max_len = mac1->len;
+    if (max_len > MAX_MAC_LEN) {
+        max_len = MAX_MAC_LEN;
+        panic();
+        return false;
+    }
+
+    for (int i = 0; i < max_len; i++) {
+        if (mac1->bytes[i] != mac2->bytes[i])
+            return false;
+    }
+    return true;
+}
+
+
+bool bacnet_address_same(
+    const BACNET_GLOBAL_ADDRESS * dest,
+    const BACNET_GLOBAL_ADDRESS * src)
+{
+//    uint8_t i ;             /* loop counter */
+//    uint8_t max_len ;       /* used for dynamic max */
+
+    // todo3 - this is very suspicious, if what we want are the same objects, why bother with the rest
+    // so why is this used, and where are the subtle use differences between bacnet_address_same and address_match
     if (dest == src)    /* same ? */
         return true;
 
     if (dest->net != src->net)
         return false;
 
-    if (dest->len != src->len)
+    //if (dest->len != src->len)
+    return bacnet_mac_same(&dest->mac, &src->mac);
+}
+
+
+bool bacnet_path_same(
+    const BACNET_PATH * dest,
+    const BACNET_PATH * src)
+{
+    uint8_t i;             /* loop counter */
+    uint8_t max_len;       /* used for dynamic max */
+
+    if (dest == src)    /* same ? */
+        return true;
+
+    if (dest->glAdr.net != src->glAdr.net)
         return false;
 
-    max_len = dest->len;
-    if (max_len > MAX_MAC_LEN)
+    //if (dest->len != src->len)
+    //    return false;
+
+    max_len = dest->glAdr.mac.len;
+    if (max_len > MAX_MAC_LEN) {
         max_len = MAX_MAC_LEN;
+        panic();
+        return false;
+    }
+
     for (i = 0; i < max_len; i++) {
-        if (dest->adr[i] != src->adr[i])
+        if (dest->glAdr.mac.bytes[i] != src->glAdr.mac.bytes[i])
             return false;
     }
-    if (dest->net == 0) {
-        if (dest->mac_len != src->mac_len)
+
+    // todo2 - panic if localmac not the same !! should never occur (unless rediscovering)...
+
+    if (dest->glAdr.net == 0) {
+        if (dest->localMac.len != src->localMac.len)
             return false;
-        max_len = dest->mac_len;
+        max_len = dest->localMac.len;
         if (max_len > MAX_MAC_LEN)
-            max_len = MAX_MAC_LEN;
+        {
+            panic();
+            return false;
+        }
         for (i = 0; i < max_len; i++) {
-            if (dest->mac[i] != src->mac[i])
+            if (dest->localMac.bytes[i] != src->localMac.bytes[i])
                 return false;
         }
     }
     return true;
 }
+
+
+#if  0
+// never used.
+void set_broadcast_addr_global(BACNET_GLOBAL_ADDRESS *dest)
+{
+    dest->net = 65535;
+    dest->mac.len = 0;      // indicates b'cast on remote net
+}
+
+void set_broadcast_addr_local(BACNET_GLOBAL_ADDRESS *dest)
+{
+    dest->net = 0;
+    dest->mac.len = 0;      // indicates b'cast on remote net
+}
+#endif
+
+
+void bacnet_path_set_broadcast_global(BACNET_PATH *dest)
+{
+    dest->localMac.len = 0;     // indicates b'cast on local net
+    dest->glAdr.net = 0xffff ;
+    dest->glAdr.mac.len = 0;      // indicates b'cast on remote net
+}
+
+
+void bacnet_path_set_broadcast_local(BACNET_PATH *dest)
+{
+    memset( dest, 0, sizeof (BACNET_PATH)) ;
+    //dest->localMac.len = 0;        // indicates b'cast on local net
+    //dest->glAdr.net = 0;
+    //dest->glAdr.mac.len = 0;      // indicates b'cast on remote net
+}
+
+void set_local_broadcast_mac(BACNET_MAC_ADDRESS *mac)
+{
+    mac->len = 0;
+}
+

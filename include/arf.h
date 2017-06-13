@@ -52,9 +52,6 @@ typedef struct BACnet_Atomic_Read_File_Data {
     bool endOfFile;
 } BACNET_ATOMIC_READ_FILE_DATA;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /* Atomic Read File */
 /* encode service */
@@ -104,7 +101,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

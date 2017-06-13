@@ -22,17 +22,20 @@
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
 *********************************************************************/
-#include <stddef.h>
-#include <stdint.h>
-#include <errno.h>
+//#include <stddef.h>
+//#include <stdint.h>
+//#include <errno.h>
 #include "event.h"
 #include "datalink.h"
-#include "client.h"
-#include "device.h"
+//#include "client.h"
+//#include "device.h"
+#include "config.h"
+
+#if (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1)
 
 /** @file s_uevent.c  Send an Unconfirmed Event Notification. */
 
-/** Sends an Unconfirmed Alarm/Event Notification.
+/** Sends an Unconfirmed Alarm/Alert/Event Notification.
  * @ingroup EVNOTFCN
  *
  * @param buffer [in,out] The buffer to build the message in for sending.
@@ -40,26 +43,27 @@
  * @param dest [in] The destination address information (may be a broadcast).
  * @return Size of the message sent (bytes), or a negative value on error.
  */
-int Send_UEvent_Notify(
-    uint8_t * buffer,
+void Send_UEvent_Notify(
+    DLCB *dlcb, // todo3 - why is this created here?
     BACNET_EVENT_NOTIFICATION_DATA * data,
-    BACNET_ADDRESS * dest)
+    BACNET_ROUTE * dest)
 {
     int len = 0;
     int pdu_len = 0;
-    int bytes_sent = 0;
     BACNET_NPDU_DATA npdu_data;
-    BACNET_ADDRESS my_address;
+    // BACNET_PATH my_address;
 
-    datalink_get_my_address(&my_address);
+    // datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
-    pdu_len = npdu_encode_pdu(buffer, dest, &my_address, &npdu_data);
+    npdu_setup_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+    pdu_len = npdu_encode_pdu( dlcb->Handler_Transmit_Buffer, &dest->bacnetPath.glAdr, NULL, &npdu_data);
     /* encode the APDU portion of the packet */
-    len = uevent_notify_encode_apdu(&buffer[pdu_len], data);
+    len = uevent_notify_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len], data);
     pdu_len += len;
     /* send the data */
-    bytes_sent = datalink_send_pdu(dest, &npdu_data, &buffer[0], pdu_len);
-
-    return bytes_sent;
+    //bytes_sent = portParams->SendPdu(portParams, dest, &npdu_data, pdu_len);
+    dlcb->bufSize = pdu_len;
+    dest->portParams->SendPdu(dest->portParams, &dest->bacnetPath.localMac, &npdu_data, dlcb);
 }
+
+#endif  // (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1)

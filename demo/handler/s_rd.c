@@ -1,3 +1,4 @@
+#if 0 // client side
 /**************************************************************************
 *
 * Copyright (C) 2005 Steve Karg <skarg@users.sourceforge.net>
@@ -58,8 +59,8 @@ uint8_t Send_Reinitialize_Device_Request(
     BACNET_REINITIALIZED_STATE state,
     char *password)
 {
-    BACNET_ADDRESS dest;
-    BACNET_ADDRESS my_address;
+    BACNET_PATH dest;
+    BACNET_PATH my_address;
     unsigned max_apdu = 0;
     uint8_t invoke_id = 0;
     bool status = false;
@@ -81,7 +82,7 @@ uint8_t Send_Reinitialize_Device_Request(
     if (invoke_id) {
         /* encode the NPDU portion of the packet */
         datalink_get_my_address(&my_address);
-        npdu_encode_npdu_data(&npdu_data, true, MESSAGE_PRIORITY_NORMAL);
+        npdu_setup_npdu_data(&npdu_data, true, MESSAGE_PRIORITY_NORMAL);
         pdu_len =
             npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest, &my_address,
             &npdu_data);
@@ -121,3 +122,4 @@ uint8_t Send_Reinitialize_Device_Request(
 
     return invoke_id;
 }
+#endif

@@ -190,6 +190,9 @@ bool Binary_Input_Out_Of_Service(
     return value;
 }
 
+
+#if ( BACNET_SVC_COV_B == 1 )
+
 bool Binary_Input_Change_Of_Value(
     uint32_t object_instance)
 {
@@ -269,6 +272,8 @@ bool Binary_Input_Encode_Value_List(
 
     return status;
 }
+#endif // ( BACNET_SVC_COV_B == 1 )
+
 
 bool Binary_Input_Present_Value_Set(
     uint32_t object_instance,
@@ -319,12 +324,12 @@ bool Binary_Input_Object_Name(
 {
     static char text_string[32] = "";   /* okay for single thread */
     bool status = false;
-    unsigned index = 0;
+    unsigned index ;
 
     index = Binary_Input_Instance_To_Index(object_instance);
     if (index < MAX_BINARY_INPUTS) {
         sprintf(text_string, "BINARY INPUT %lu",
-            (unsigned long) object_instance);
+                (unsigned long) object_instance);
         status = characterstring_init_ansi(object_name, text_string);
     }
 
@@ -335,7 +340,7 @@ BACNET_POLARITY Binary_Input_Polarity(
     uint32_t object_instance)
 {
     BACNET_POLARITY polarity = POLARITY_NORMAL;
-    unsigned index = 0;
+    unsigned index ;
 
     index = Binary_Input_Instance_To_Index(object_instance);
     if (index < MAX_BINARY_INPUTS) {
@@ -350,10 +355,11 @@ bool Binary_Input_Polarity_Set(
     BACNET_POLARITY polarity)
 {
     bool status = false;
-    unsigned index = 0;
+    unsigned index ;
 
     index = Binary_Input_Instance_To_Index(object_instance);
     if (index < MAX_BINARY_INPUTS) {
+        // todo1 is there a COV issue when polarity changes??
         Polarity[index] = polarity;
     }
 
@@ -382,6 +388,7 @@ int Binary_Input_Read_Property(
                 encode_application_object_id(&apdu[0], OBJECT_BINARY_INPUT,
                 rpdata->object_instance);
             break;
+
         case PROP_OBJECT_NAME:
         case PROP_DESCRIPTION:
             /* note: object name must be unique in our device */
@@ -389,16 +396,19 @@ int Binary_Input_Read_Property(
             apdu_len =
                 encode_application_character_string(&apdu[0], &char_string);
             break;
+
         case PROP_OBJECT_TYPE:
             apdu_len =
                 encode_application_enumerated(&apdu[0], OBJECT_BINARY_INPUT);
             break;
+
         case PROP_PRESENT_VALUE:
             /* note: you need to look up the actual value */
             apdu_len =
                 encode_application_enumerated(&apdu[0],
                 Binary_Input_Present_Value(rpdata->object_instance));
             break;
+
         case PROP_STATUS_FLAGS:
             /* note: see the details in the standard on how to use these */
             bitstring_init(&bit_string);
@@ -409,11 +419,17 @@ int Binary_Input_Read_Property(
             bitstring_set_bit(&bit_string, STATUS_FLAG_OUT_OF_SERVICE, state);
             apdu_len = encode_application_bitstring(&apdu[0], &bit_string);
             break;
+
         case PROP_EVENT_STATE:
             /* note: see the details in the standard on how to use this */
             apdu_len =
                 encode_application_enumerated(&apdu[0], EVENT_STATE_NORMAL);
             break;
+
+    case PROP_RELIABILITY:
+// todo 1	    apdu_len = encode_application_enumerated(&apdu[0], GetReliability(&livedata->objectTypeDescriptor));
+        break;
+
         case PROP_OUT_OF_SERVICE:
             state = Binary_Input_Out_Of_Service(rpdata->object_instance);
             apdu_len = encode_application_boolean(&apdu[0], state);
@@ -489,6 +505,7 @@ bool Binary_Input_Write_Property(
                     value.type.Boolean);
             }
             break;
+
         case PROP_POLARITY:
             status =
                 WPValidateArgType(&value, BACNET_APPLICATION_TAG_ENUMERATED,
@@ -504,12 +521,15 @@ bool Binary_Input_Write_Property(
                 }
             }
             break;
+
+        case PROP_DESCRIPTION:
+        case PROP_EVENT_STATE:
         case PROP_OBJECT_IDENTIFIER:
         case PROP_OBJECT_NAME:
-        case PROP_DESCRIPTION:
         case PROP_OBJECT_TYPE:
+        case PROP_PROPERTY_LIST:
+        case PROP_RELIABILITY:
         case PROP_STATUS_FLAGS:
-        case PROP_EVENT_STATE:
             wp_data->error_class = ERROR_CLASS_PROPERTY;
             wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
             break;
@@ -521,6 +541,408 @@ bool Binary_Input_Write_Property(
 
     return status;
 }
+
+
+
+#if (INTRINSIC_REPORTING == 1)
+
+void Binary_Input_Intrinsic_Reporting(
+    uint32_t object_instance)
+{
+    BACNET_EVENT_NOTIFICATION_DATA event_data;
+    BACNET_CHARACTER_STRING msgText;
+    BINARY_INPUT_DESCR *currentObject;
+    // unsigned int object_index;
+    BACNET_EVENT_STATE FromState;
+    BACNET_EVENT_STATE ToState;
+    BACNET_BINARY_PV PresentVal;
+    bool SendNotify = false;
+
+    currentObject = Find_bacnet_BI_object(object_instance);
+    if ( currentObject == NULL) {
+        panic();
+        return;
+    }
+    
+    // todo 2 - Implement Event Detection Enable?
+
+    if (currentObject->Ack_notify_data.bSendAckNotify) {
+        /* clean bSendAckNotify flag */
+        currentObject->Ack_notify_data.bSendAckNotify = false;
+        /* copy toState */
+        ToState = currentObject->Ack_notify_data.EventState;
+
+        dbTraffic(DB_DEBUG, "Send Acknotification for (%s,%d).",
+            bactext_object_type_name(OBJECT_BINARY_INPUT), object_instance);
+
+        characterstring_init_ansi(&msgText, "AckNotification");
+
+        /* Notify Type */
+        event_data.notifyType = NOTIFY_ACK_NOTIFICATION;
+
+        /* Send EventNotification. */
+        SendNotify = true;
+    }
+    else {
+        /* actual Present_Value */
+
+        // PresentVal = ((ram->PresentValue >> gBinaryInput[object_instance].bit) & 1) ? BINARY_ACTIVE : BINARY_INACTIVE;
+
+        PresentVal = Binary_Input_Present_Value(object_instance, nv, ram);
+        FromState = currentObject->Event_State;
+        switch (currentObject->Event_State) {
+            /*  If pCurrentState is NORMAL, and pMonitoredValue is equal to any of the values contained in pAlarmValues
+                for pTimeDelay, then indicate a transition to the OFFNORMAL event state.
+            */
+        case EVENT_STATE_NORMAL:
+            if (PresentVal == FIXED_ALARM_VALUE) {
+                if (!currentObject->Remaining_Time_Delay)
+                    currentObject->Event_State = EVENT_STATE_OFFNORMAL;
+                else
+                    currentObject->Remaining_Time_Delay--;
+                break;
+            }
+
+            /* value of the object is still in the same event state */
+            currentObject->Remaining_Time_Delay = currentObject->pBI->Time_Delay;
+            break;
+
+        case EVENT_STATE_OFFNORMAL:
+            if (PresentVal != FIXED_ALARM_VALUE) {
+                if (!currentObject->Remaining_Time_Delay)
+                    currentObject->Event_State = EVENT_STATE_NORMAL;
+                else
+                    currentObject->Remaining_Time_Delay--;
+                break;
+            }
+            /* value of the object is still in the same event state */
+            currentObject->Remaining_Time_Delay = currentObject->pBI->Time_Delay;
+            break;
+
+        default:
+            return; /* shouldn't happen */
+        }       /* switch (FromState) */
+
+        ToState = currentObject->Event_State;
+
+        if (FromState != ToState) {
+            /* Event_State has changed.
+               Need to fill only the basic parameters of this type of event.
+               Other parameters will be filled in common function. */
+
+            switch (ToState) {
+            case EVENT_STATE_NORMAL:
+                characterstring_init_ansi(&msgText,
+                    "Back to normal state");
+                break;
+
+            case EVENT_STATE_OFFNORMAL:
+                characterstring_init_ansi(&msgText,
+                    "To offnormal state");
+                break;
+
+            default:
+                panic();
+                break;
+            }   /* switch (ToState) */
+
+            dbTraffic(DB_DEBUG, "Event_State for (%s,%d) goes from %s to %s.",
+                bactext_object_type_name(OBJECT_BINARY_INPUT), object_instance,
+                bactext_event_state_name(FromState),
+                bactext_event_state_name(ToState));
+
+            /* Notify Type */
+            event_data.notifyType = currentObject->pBI->Notify_Type;
+
+            /* Send EventNotification. */
+            SendNotify = true;
+        }
+    }
+
+
+    if (SendNotify) {
+        /* Event Object Identifier */
+        event_data.eventObjectIdentifier.type = OBJECT_BINARY_INPUT;
+        event_data.eventObjectIdentifier.instance = object_instance;
+
+        /* Time Stamp */
+        event_data.timeStamp.tag = TIME_STAMP_DATETIME;
+        Device_getCurrentDateTime(&event_data.timeStamp.value.dateTime);
+
+        if (event_data.notifyType != NOTIFY_ACK_NOTIFICATION) {
+            /* fill Event_Time_Stamps */
+            switch (ToState) {
+            case EVENT_STATE_OFFNORMAL:
+                currentObject->Event_Time_Stamps[TRANSITION_TO_OFFNORMAL] =
+                    event_data.timeStamp.value.dateTime;
+                break;
+
+            case EVENT_STATE_FAULT:
+                currentObject->Event_Time_Stamps[TRANSITION_TO_FAULT] =
+                    event_data.timeStamp.value.dateTime;
+                break;
+
+            case EVENT_STATE_NORMAL:
+                currentObject->Event_Time_Stamps[TRANSITION_TO_NORMAL] =
+                    event_data.timeStamp.value.dateTime;
+                break;
+
+            case EVENT_STATE_HIGH_LIMIT:
+            case EVENT_STATE_LOW_LIMIT:
+                panic();
+                break;
+            }
+        }
+
+        /* Notification Class */
+        event_data.notificationClass = currentObject->pBI->Notification_Class;
+
+        // todo2  - there is no check of the event_enable T,T,T flags! we are sending events even if they are not enabled!
+
+        /* Event Type */
+        event_data.eventType = EVENT_CHANGE_OF_STATE;
+
+        /* Message Text */
+        event_data.messageText = &msgText;
+
+        /* Notify Type */
+        /* filled before */
+
+        /* From State */
+        if (event_data.notifyType != NOTIFY_ACK_NOTIFICATION)
+            event_data.fromState = FromState;
+
+        /* To State */
+        event_data.toState = currentObject->Event_State;
+
+        /* Event Values */
+        if (event_data.notifyType != NOTIFY_ACK_NOTIFICATION) {
+            event_data.notificationParams.changeOfState.newState.state.state = ToState;
+            event_data.notificationParams.changeOfState.newState.tag = STATE;   // todo2 - understand this some more - why no equivalent with AI?
+            /* Status_Flags of the referenced object. */
+            bitstring_init(&event_data.notificationParams.changeOfState.
+                statusFlags);
+            bitstring_set_bit(&event_data.notificationParams.changeOfState.
+                statusFlags, STATUS_FLAG_IN_ALARM,
+                currentObject->Event_State ? true : false);
+            bitstring_set_bit(&event_data.notificationParams.changeOfState.
+                statusFlags, STATUS_FLAG_FAULT, false);
+            bitstring_set_bit(&event_data.notificationParams.changeOfState.
+                statusFlags, STATUS_FLAG_OVERRIDDEN, false);
+            bitstring_set_bit(&event_data.notificationParams.changeOfState.
+                statusFlags, STATUS_FLAG_OUT_OF_SERVICE,
+                    IsOutOfService( nv ) ) ;
+        }
+
+        /* add data from notification class */
+        Notification_Class_common_reporting_function(&event_data);
+
+        /* Ack required */
+        if ((event_data.notifyType != NOTIFY_ACK_NOTIFICATION) &&
+            (event_data.ackRequired == true)) {
+            switch (event_data.toState) {
+            case EVENT_STATE_OFFNORMAL:
+                currentObject->Acked_Transitions[TRANSITION_TO_OFFNORMAL].
+                    bIsAcked = false;
+                currentObject->Acked_Transitions[TRANSITION_TO_OFFNORMAL].
+                    Time_Stamp = event_data.timeStamp.value.dateTime;
+                break;
+
+            case EVENT_STATE_NORMAL:
+                currentObject->Acked_Transitions[TRANSITION_TO_NORMAL].
+                    bIsAcked = false;
+                currentObject->Acked_Transitions[TRANSITION_TO_NORMAL].
+                    Time_Stamp = event_data.timeStamp.value.dateTime;
+                break;
+
+            default:
+                panic();
+                // note: we are not supporting FAULT state (requires reliability flag. not sure if we want that at this time.) todo2
+            }
+        }
+    }
+}
+
+
+int Binary_Input_Event_Information(
+    unsigned index,
+    BACNET_GET_EVENT_INFORMATION_DATA * getevent_data)
+{
+    bool IsNotAckedTransitions;
+    bool IsActiveEvent;
+    int i;
+
+    BINARY_INPUT_DESCR *currentObject ;
+
+    /* check index */
+    if (index < MAX_BINARY_INPUTS) {
+        /* Event_State not equal to NORMAL */
+        currentObject = &gBinaryInput[index];
+
+        IsActiveEvent = (currentObject->Event_State != EVENT_STATE_NORMAL);
+
+        /* Acked_Transitions property, which has at least one of the bits
+           (TO-OFFNORMAL, TO-FAULT, TONORMAL) set to FALSE. */
+        IsNotAckedTransitions =
+            (currentObject->Acked_Transitions[TRANSITION_TO_OFFNORMAL].
+                bIsAcked ==
+                false) | (currentObject->Acked_Transitions[TRANSITION_TO_FAULT].
+                    bIsAcked ==
+                    false) | (currentObject->Acked_Transitions[TRANSITION_TO_NORMAL].
+                        bIsAcked == false);
+    }
+    else {
+        return -1;      /* end of list  */
+    }
+
+    if ((IsActiveEvent) || (IsNotAckedTransitions)) {
+        /* Object Identifier */
+        getevent_data->objectIdentifier.type = OBJECT_BINARY_INPUT;
+        getevent_data->objectIdentifier.instance =
+            Binary_Input_Index_To_Instance(index);
+        /* Event State */
+        getevent_data->eventState = currentObject->Event_State;
+        /* Acknowledged Transitions */
+        bitstring_init(&getevent_data->acknowledgedTransitions);
+        bitstring_set_bit(&getevent_data->acknowledgedTransitions,
+            TRANSITION_TO_OFFNORMAL,
+            currentObject->Acked_Transitions[TRANSITION_TO_OFFNORMAL].
+            bIsAcked);
+        bitstring_set_bit(&getevent_data->acknowledgedTransitions,
+            TRANSITION_TO_FAULT,
+            currentObject->Acked_Transitions[TRANSITION_TO_FAULT].bIsAcked);
+        bitstring_set_bit(&getevent_data->acknowledgedTransitions,
+            TRANSITION_TO_NORMAL,
+            currentObject->Acked_Transitions[TRANSITION_TO_NORMAL].bIsAcked);
+        /* Event Time Stamps */
+        for (i = 0; i < 3; i++) {
+            getevent_data->eventTimeStamps[i].tag = TIME_STAMP_DATETIME;
+            getevent_data->eventTimeStamps[i].value.dateTime =
+                currentObject->Event_Time_Stamps[i];
+        }
+        /* Notify Type */
+        getevent_data->notifyType = currentObject->pBI->Notify_Type;
+        /* Event Enable */
+        bitstring_init(&getevent_data->eventEnable);
+        bitstring_set_bit(&getevent_data->eventEnable, TRANSITION_TO_OFFNORMAL,
+            (currentObject->pBI->Event_Enable & EVENT_ENABLE_TO_OFFNORMAL) ? true : false);
+        bitstring_set_bit(&getevent_data->eventEnable, TRANSITION_TO_FAULT,
+            (currentObject->pBI->Event_Enable & EVENT_ENABLE_TO_FAULT) ? true : false);
+        bitstring_set_bit(&getevent_data->eventEnable, TRANSITION_TO_NORMAL,
+            (currentObject->pBI->Event_Enable & EVENT_ENABLE_TO_NORMAL) ? true : false);
+        /* Event Priorities */
+        Notification_Class_Get_Priorities(currentObject->pBI->Notification_Class,
+            getevent_data->eventPriorities);
+
+        return 1;       /* active event */
+    }
+    else {
+        return 0;       /* no active event at this index */
+    }
+}
+
+
+// todo 3 - these functions are essentially identical between object types, consolidate 
+int Binary_Input_Alarm_Ack(
+    BACNET_ALARM_ACK_DATA * alarmack_data,
+    BACNET_ERROR_CLASS *error_class,
+    BACNET_ERROR_CODE * error_code)
+{
+    BINARY_INPUT_DESCR *currentObject = Find_bacnet_BI_object(alarmack_data->eventObjectIdentifier.instance);
+    if (currentObject == NULL) {
+        panic();
+        *error_class = ERROR_CLASS_OBJECT;
+        *error_code = ERROR_CODE_UNKNOWN_OBJECT;
+        return -1;
+    }
+
+    // preset default for rest
+    *error_class = ERROR_CLASS_SERVICES;
+
+    switch (alarmack_data->eventStateAcked) {
+    case EVENT_STATE_OFFNORMAL:
+        if (currentObject->Acked_Transitions[TRANSITION_TO_OFFNORMAL].
+            bIsAcked == false) {
+            if (alarmack_data->eventTimeStamp.tag != TIME_STAMP_DATETIME) {
+                *error_code = ERROR_CODE_INVALID_TIME_STAMP;
+                return -1;
+            }
+            if (datetime_compare(&currentObject->
+                Acked_Transitions[TRANSITION_TO_OFFNORMAL].Time_Stamp,
+                &alarmack_data->eventTimeStamp.value.dateTime) > 0) {
+                *error_code = ERROR_CODE_INVALID_TIME_STAMP;
+                return -1;
+            }
+
+            /* FIXME: Send ack notification */
+            currentObject->Acked_Transitions[TRANSITION_TO_OFFNORMAL].
+                bIsAcked = true;
+        }
+        else {
+            *error_code = ERROR_CODE_INVALID_EVENT_STATE;
+            return -1;
+        }
+        break;
+
+    case EVENT_STATE_FAULT:
+        if (currentObject->Acked_Transitions[TRANSITION_TO_FAULT].bIsAcked ==
+            false) {
+            if (alarmack_data->eventTimeStamp.tag != TIME_STAMP_DATETIME) {
+                *error_code = ERROR_CODE_INVALID_TIME_STAMP;
+                return -1;
+            }
+            if (datetime_compare(&currentObject->
+                Acked_Transitions[TRANSITION_TO_FAULT].Time_Stamp,
+                &alarmack_data->eventTimeStamp.value.dateTime) > 0) {
+                *error_code = ERROR_CODE_INVALID_TIME_STAMP;
+                return -1;
+            }
+
+            /* FIXME: Send ack notification */
+            currentObject->Acked_Transitions[TRANSITION_TO_FAULT].bIsAcked =
+                true;
+        }
+        else {
+            *error_code = ERROR_CODE_INVALID_EVENT_STATE;
+            return -1;
+        }
+        break;
+
+    case EVENT_STATE_NORMAL:
+        if (currentObject->Acked_Transitions[TRANSITION_TO_NORMAL].bIsAcked ==
+            false) {
+            if (alarmack_data->eventTimeStamp.tag != TIME_STAMP_DATETIME) {
+                *error_code = ERROR_CODE_INVALID_TIME_STAMP;
+                return -1;
+            }
+            if (datetime_compare(&currentObject->
+                Acked_Transitions[TRANSITION_TO_NORMAL].Time_Stamp,
+                &alarmack_data->eventTimeStamp.value.dateTime) > 0) {
+                *error_code = ERROR_CODE_INVALID_TIME_STAMP;
+                return -1;
+            }
+
+            /* FIXME: Send ack notification */
+            currentObject->Acked_Transitions[TRANSITION_TO_NORMAL].bIsAcked =
+                true;
+        }
+        else {
+            *error_code = ERROR_CODE_INVALID_EVENT_STATE;
+            return -1;
+        }
+        break;
+
+    default:
+        return -2;
+    }
+    currentObject->Ack_notify_data.bSendAckNotify = true;
+    currentObject->Ack_notify_data.EventState = alarmack_data->eventStateAcked;
+
+    return 1;
+}
+
+#endif /* defined(INTRINSIC_REPORTING) */
+
 
 #ifdef TEST
 #include <assert.h>

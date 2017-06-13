@@ -29,18 +29,39 @@
 #include <stdbool.h>
 #include "bacdef.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
+    void bacnet_address_clear ( BACNET_GLOBAL_ADDRESS *adr ) ;
+  
     void bacnet_address_copy(
-        BACNET_ADDRESS * dest,
-        BACNET_ADDRESS * src);
-    bool bacnet_address_same(
-        BACNET_ADDRESS * dest,
-        BACNET_ADDRESS * src);
+        BACNET_GLOBAL_ADDRESS * dest,
+        const BACNET_GLOBAL_ADDRESS * src);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+    void bacnet_path_copy(
+        BACNET_PATH * dest,
+        const BACNET_PATH * src);
+
+    bool bacnet_mac_same(
+        const BACNET_MAC_ADDRESS *mac1,
+        const BACNET_MAC_ADDRESS *mac2);
+    
+    bool bacnet_address_same(
+        const BACNET_GLOBAL_ADDRESS * dest,
+        const BACNET_GLOBAL_ADDRESS * src);
+
+    bool bacnet_path_same(
+        const BACNET_PATH * dest,
+        const BACNET_PATH * src);
+
+    void bacnet_mac_copy(
+        BACNET_MAC_ADDRESS *target, 
+        const BACNET_MAC_ADDRESS *src);
+
+//BACNET_MAC_ADDRESS *ResolveLocalMac( 
+//    BACNET_PATH *targetPath );
+
+    void bacnet_path_set_broadcast_global(BACNET_PATH *dest);
+    void bacnet_path_set_broadcast_local(BACNET_PATH *dest);
+
+    //    void set_global_broadcast_path(BACNET_PATH *dest) ;
+// void set_local_broadcast_path(BACNET_PATH *dest) ;
 #endif

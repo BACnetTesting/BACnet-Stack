@@ -69,6 +69,17 @@ static const int Binary_Output_Properties_Required[] = {
 
 static const int Binary_Output_Properties_Optional[] = {
     PROP_DESCRIPTION,
+    PROP_RELIABILITY,
+#if (INTRINSIC_REPORTING == 1)
+    PROP_TIME_DELAY,
+    PROP_NOTIFICATION_CLASS,
+    // todo2 - what about event_detection_enable?
+    // surprisingly, BO should not include ALARM_VALUE! PROP_ALARM_VALUE,
+    PROP_EVENT_ENABLE,
+    PROP_ACKED_TRANSITIONS,
+    PROP_NOTIFY_TYPE,
+    PROP_EVENT_TIME_STAMPS,
+#endif
     PROP_ACTIVE_TEXT,
     PROP_INACTIVE_TEXT,
     -1

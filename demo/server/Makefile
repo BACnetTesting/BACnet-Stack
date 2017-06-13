@@ -14,6 +14,7 @@ SRC = main.c
 OBJECT_SRC = \
 	$(BACNET_OBJECT)/device.c \
 	$(BACNET_OBJECT)/ai.c \
+	$(BACNET_OBJECT)/alert_enrollment.c \
 	$(BACNET_OBJECT)/ao.c \
 	$(BACNET_OBJECT)/av.c \
 	$(BACNET_OBJECT)/bi.c \

@@ -38,10 +38,6 @@ typedef struct BACnet_Who_Has_Data {
     } object;
 } BACNET_WHO_HAS_DATA;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 /* encode service  - use -1 for limit if you want unlimited */
     int whohas_encode_apdu(
         uint8_t * apdu,
@@ -63,9 +59,6 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 /** @defgroup DMDOB Device Management-Dynamic Object Binding (DM-DOB)
  * @ingroup RDMS
  * 16.9 Who-Has and I-Have Services <br>

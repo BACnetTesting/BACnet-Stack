@@ -39,6 +39,7 @@
 #include "handlers.h"
 #include "proplist.h"
 #include "timestamp.h"
+#include "event.h"
 #include "ai.h"
 
 
@@ -65,10 +66,15 @@ static const int Properties_Required[] = {
 static const int Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_RELIABILITY,
+
+#if ( BACNET_SVC_COV_B == 1 )
     PROP_COV_INCREMENT,
+#endif
+
 #if defined(INTRINSIC_REPORTING)
     PROP_TIME_DELAY,
     PROP_NOTIFICATION_CLASS,
+    //todo2 - what about event_detection_enable?
     PROP_HIGH_LIMIT,
     PROP_LOW_LIMIT,
     PROP_DEADBAND,
@@ -99,8 +105,6 @@ void Analog_Input_Property_Lists(
         *pOptional = Properties_Optional;
     if (pProprietary)
         *pProprietary = Properties_Proprietary;
-
-    return;
 }
 
 
@@ -108,7 +112,7 @@ void Analog_Input_Init(
     void)
 {
     unsigned i;
-#if defined(INTRINSIC_REPORTING)
+#if (INTRINSIC_REPORTING == 1)
     unsigned j;
 #endif
 
@@ -117,10 +121,12 @@ void Analog_Input_Init(
         AI_Descr[i].Out_Of_Service = false;
         AI_Descr[i].Units = UNITS_PERCENT;
         AI_Descr[i].Reliability = RELIABILITY_NO_FAULT_DETECTED;
+#if (BACNET_SVC_COV_B == 1)
         AI_Descr[i].Prior_Value = 0.0f;
         AI_Descr[i].COV_Increment = 1.0f;
         AI_Descr[i].Changed = false;
-#if defined(INTRINSIC_REPORTING)
+#endif
+#if (INTRINSIC_REPORTING == 1)
         AI_Descr[i].Event_State = EVENT_STATE_NORMAL;
         /* notification class not connected */
         AI_Descr[i].Notification_Class = BACNET_MAX_INSTANCE;
@@ -203,6 +209,8 @@ float Analog_Input_Present_Value(
     return value;
 }
 
+
+#if ( BACNET_SVC_COV_B == 1 )
 static void Analog_Input_COV_Detect(unsigned int index,
     float value)
 {
@@ -224,6 +232,7 @@ static void Analog_Input_COV_Detect(unsigned int index,
         }
     }
 }
+#endif
 
 void Analog_Input_Present_Value_Set(
     uint32_t object_instance,
@@ -233,7 +242,9 @@ void Analog_Input_Present_Value_Set(
 
     index = Analog_Input_Instance_To_Index(object_instance);
     if (index < MAX_ANALOG_INPUTS) {
+#if ( BACNET_SVC_COV_B == 1 )
         Analog_Input_COV_Detect(index, value);
+#endif
         AI_Descr[index].Present_Value = value;
     }
 }
@@ -254,6 +265,9 @@ bool Analog_Input_Object_Name(
 
     return status;
 }
+
+
+#if ( BACNET_SVC_COV_B == 1 )
 
 bool Analog_Input_Change_Of_Value(
     uint32_t object_instance)
@@ -310,6 +324,7 @@ bool Analog_Input_Encode_Value_List(
         value_list->propertyArrayIndex = BACNET_ARRAY_ALL;
         value_list->value.context_specific = false;
         value_list->value.tag = BACNET_APPLICATION_TAG_BIT_STRING;
+        value_list->value.next = NULL;
         bitstring_init(&value_list->value.type.Bit_String);
         bitstring_set_bit(&value_list->value.type.Bit_String,
             STATUS_FLAG_IN_ALARM, false);
@@ -333,19 +348,20 @@ bool Analog_Input_Encode_Value_List(
     return status;
 }
 
-float Analog_Input_COV_Increment(
-    uint32_t object_instance)
-{
-    unsigned index = 0;
-    float value = 0;
-
-    index = Analog_Input_Instance_To_Index(object_instance);
-    if (index < MAX_ANALOG_INPUTS) {
-        value = AI_Descr[index].COV_Increment;
-    }
-
-    return value;
-}
+// Not used anywhere, even in Karg Stack
+//float Analog_Input_COV_Increment(
+//	uint32_t object_instance)
+//{
+//	unsigned index = 0;
+//	float value = 0;
+//
+//	index = Analog_Input_Instance_To_Index(object_instance);
+//	if (index < MAX_ANALOG_INPUTS) {
+//		value = AI_Descr[index].COV_Increment;
+//	}
+//
+//	return value;
+//}
 
 void Analog_Input_COV_Increment_Set(
     uint32_t object_instance,
@@ -359,6 +375,8 @@ void Analog_Input_COV_Increment_Set(
         Analog_Input_COV_Detect(index, AI_Descr[index].Present_Value);
     }
 }
+#endif // ( BACNET_SVC_COV_B == 1 )
+
 
 bool Analog_Input_Out_Of_Service(
     uint32_t object_instance)
@@ -390,9 +408,11 @@ void Analog_Input_Out_Of_Service_Set(
     		Any discussions can be directed to edward@bac-test.com
     		Please feel free to remove this comment when my changes accepted after suitable time for
     		review by all interested parties. Say 6 months -> September 2016 */
+#if (BACNET_SVC_COV_B == 1)
         if (AI_Descr[index].Out_Of_Service != value) {
             AI_Descr[index].Changed = true;
         }
+#endif
         AI_Descr[index].Out_Of_Service = value;
     }
 }
@@ -406,7 +426,7 @@ int Analog_Input_Read_Property(
     BACNET_BIT_STRING bit_string;
     BACNET_CHARACTER_STRING char_string;
     ANALOG_INPUT_DESCR *CurrentAI;
-    unsigned object_index = 0;
+    int object_index ;
 #if defined(INTRINSIC_REPORTING)
     unsigned i = 0;
     int len = 0;
@@ -494,13 +514,15 @@ int Analog_Input_Read_Property(
                 encode_application_enumerated(&apdu[0], CurrentAI->Units);
             break;
 
-        case PROP_COV_INCREMENT:
-            apdu_len = encode_application_real(&apdu[0],
-                CurrentAI->COV_Increment);
-            break;
+#if ( BACNET_SVC_COV_B == 1 )
+    case PROP_COV_INCREMENT:
+        apdu_len = encode_application_real(&apdu[0],
+                                           CurrentAI->COV_Increment);
+        break;
+#endif // ( BACNET_SVC_COV_B == 1 )
 
-#if defined(INTRINSIC_REPORTING)
-        case PROP_TIME_DELAY:
+#if ( INTRINSIC_REPORTING == 1 )
+    case PROP_TIME_DELAY:
             apdu_len =
                 encode_application_unsigned(&apdu[0], CurrentAI->Time_Delay);
             break;
@@ -620,7 +642,8 @@ int Analog_Input_Read_Property(
                 apdu_len = BACNET_STATUS_ERROR;
             }
             break;
-#endif
+#endif  // ( INTRINSIC_REPORTING == 1 )
+
         case 9997:
             /* test case for real encoding-decoding real value correctly */
             apdu_len = encode_application_real(&apdu[0], 90.510F);
@@ -633,6 +656,12 @@ int Analog_Input_Read_Property(
             /* test case for signed encoding-decoding negative value correctly */
             apdu_len = encode_application_signed(&apdu[0], -200);
             break;
+
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
+		case PROP_EVENT_DETECTION_ENABLE:
+			// todo 2
+#endif // ( BACNET_PROTOCOL_REVISION >= 13 ) 
+
         default:
             rpdata->error_class = ERROR_CLASS_PROPERTY;
             rpdata->error_code = ERROR_CODE_UNKNOWN_PROPERTY;
@@ -640,8 +669,11 @@ int Analog_Input_Read_Property(
             break;
     }
     /*  only array properties can have array options */
-    if ((apdu_len >= 0) && (rpdata->object_property != PROP_EVENT_TIME_STAMPS)
-        && (rpdata->array_index != BACNET_ARRAY_ALL)) {
+    if ((apdu_len >= 0) && 
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
+        (rpdata->object_property != PROP_EVENT_TIME_STAMPS) &&
+#endif // ( BACNET_PROTOCOL_REVISION >= 13 )
+        (rpdata->array_index != BACNET_ARRAY_ALL)) {
         rpdata->error_class = ERROR_CLASS_PROPERTY;
         rpdata->error_code = ERROR_CODE_PROPERTY_IS_NOT_AN_ARRAY;
         apdu_len = BACNET_STATUS_ERROR;
@@ -655,7 +687,7 @@ bool Analog_Input_Write_Property(
     BACNET_WRITE_PROPERTY_DATA * wp_data)
 {
     bool status = false;        /* return value */
-    unsigned int object_index = 0;
+    int object_index ;
     int len = 0;
     BACNET_APPLICATION_DATA_VALUE value;
     ANALOG_INPUT_DESCR *CurrentAI;
@@ -723,25 +755,27 @@ bool Analog_Input_Write_Property(
             }
             break;
 
-        case PROP_COV_INCREMENT:
-            status =
-                WPValidateArgType(&value, BACNET_APPLICATION_TAG_REAL,
-                &wp_data->error_class, &wp_data->error_code);
-            if (status) {
-                if (value.type.Real >= 0.0) {
+#if ( BACNET_SVC_COV_B == 1 )
+    case PROP_COV_INCREMENT:
+        status =
+            WPValidateArgType(&value, BACNET_APPLICATION_TAG_REAL,
+                              &wp_data->error_class, &wp_data->error_code);
+        if (status) {
+            if (value.type.Real >= 0.0) {
                     Analog_Input_COV_Increment_Set(
                         wp_data->object_instance,
                         value.type.Real);
                 } else {
-                    status = false;
-                    wp_data->error_class = ERROR_CLASS_PROPERTY;
-                    wp_data->error_code = ERROR_CODE_VALUE_OUT_OF_RANGE;
-                }
+                status = false;
+                wp_data->error_class = ERROR_CLASS_PROPERTY;
+                wp_data->error_code = ERROR_CODE_VALUE_OUT_OF_RANGE;
             }
-            break;
+        }
+        break;
+#endif // ( BACNET_SVC_COV_B == 1 )
 
-#if defined(INTRINSIC_REPORTING)
-        case PROP_TIME_DELAY:
+#if ( INTRINSIC_REPORTING == 1 )
+    case PROP_TIME_DELAY:
             status =
                 WPValidateArgType(&value, BACNET_APPLICATION_TAG_UNSIGNED_INT,
                 &wp_data->error_class, &wp_data->error_code);
@@ -845,15 +879,16 @@ bool Analog_Input_Write_Property(
                 }
             }
             break;
-#endif
+#endif // ( INTRINSIC_REPORTING == 1 )
+
+	    case PROP_DESCRIPTION:
         case PROP_OBJECT_IDENTIFIER:
         case PROP_OBJECT_NAME:
         case PROP_OBJECT_TYPE:
         case PROP_STATUS_FLAGS:
         case PROP_EVENT_STATE:
-        case PROP_DESCRIPTION:
         case PROP_RELIABILITY:
-#if defined(INTRINSIC_REPORTING)
+#if ( INTRINSIC_REPORTING == 1 )
         case PROP_ACKED_TRANSITIONS:
         case PROP_EVENT_TIME_STAMPS:
 #endif
@@ -872,6 +907,8 @@ bool Analog_Input_Write_Property(
     return status;
 }
 
+
+#if (INTRINSIC_REPORTING == 1)
 
 void Analog_Input_Intrinsic_Reporting(
     uint32_t object_instance)
@@ -893,6 +930,9 @@ void Analog_Input_Intrinsic_Reporting(
         CurrentAI = &AI_Descr[object_index];
     else
         return;
+
+	// todo 1
+	/* Have to remove this limit_enable check, else we cannot process e.g. 13.3.6 (e) condition */
 
     /* check limits */
     if (!CurrentAI->Limit_Enable)
@@ -1087,6 +1127,11 @@ void Analog_Input_Intrinsic_Reporting(
                     CurrentAI->Event_Time_Stamps[TRANSITION_TO_NORMAL] =
                         event_data.timeStamp.value.dateTime;
                     break;
+
+            case EVENT_STATE_OFFNORMAL:
+                panic();
+                break;
+
             }
         }
 
@@ -1164,14 +1209,16 @@ void Analog_Input_Intrinsic_Reporting(
                     CurrentAI->Acked_Transitions[TRANSITION_TO_NORMAL].
                         Time_Stamp = event_data.timeStamp.value.dateTime;
                     break;
+
+            default:
+                panic();
+                // note: we are not supporting FAULT state (requires reliability flag. not sure if we want that at this time.) todo2
             }
         }
     }
-#endif /* defined(INTRINSIC_REPORTING) */
 }
+#endif // Intrinsic
 
-
-#if defined(INTRINSIC_REPORTING)
 int Analog_Input_Event_Information(
     unsigned index,
     BACNET_GET_EVENT_INFORMATION_DATA * getevent_data)
@@ -1241,13 +1288,17 @@ int Analog_Input_Event_Information(
             getevent_data->eventPriorities);
 
         return 1;       /* active event */
-    } else
+    }
+    else {
         return 0;       /* no active event at this index */
+    }
 }
 
 
+// todo 3 - these functions are essentially identical between object types, consolidate 
 int Analog_Input_Alarm_Ack(
     BACNET_ALARM_ACK_DATA * alarmack_data,
+    BACNET_ERROR_CLASS *error_class,
     BACNET_ERROR_CODE * error_code)
 {
     ANALOG_INPUT_DESCR *CurrentAI;
@@ -1261,9 +1312,13 @@ int Analog_Input_Alarm_Ack(
     if (object_index < MAX_ANALOG_INPUTS)
         CurrentAI = &AI_Descr[object_index];
     else {
+        *error_class = ERROR_CLASS_OBJECT;
         *error_code = ERROR_CODE_UNKNOWN_OBJECT;
         return -1;
     }
+
+    // preset default for rest
+    *error_class = ERROR_CLASS_SERVICES;
 
     switch (alarmack_data->eventStateAcked) {
         case EVENT_STATE_OFFNORMAL:

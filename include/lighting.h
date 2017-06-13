@@ -54,9 +54,6 @@ typedef struct BACnetLightingCommand {
     uint8_t priority;
 } BACNET_LIGHTING_COMMAND;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     int lighting_command_encode(
         uint8_t * apdu,
@@ -76,7 +73,4 @@ extern "C" {
         BACNET_LIGHTING_COMMAND * dst,
         BACNET_LIGHTING_COMMAND * src);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

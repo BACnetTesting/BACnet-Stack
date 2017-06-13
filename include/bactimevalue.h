@@ -38,9 +38,6 @@ typedef struct {
 } BACNET_TIME_VALUE;
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     int bacapp_encode_time_value(uint8_t * apdu,
         BACNET_TIME_VALUE * value);
@@ -56,7 +53,4 @@ extern "C" {
         uint8_t tag_number,
         BACNET_TIME_VALUE * value);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

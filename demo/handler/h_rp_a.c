@@ -55,7 +55,9 @@ void rp_ack_print_data(
     uint8_t *application_data;
     int application_data_len;
     bool first_value = true;
+#if PRINT_ENABLED
     bool print_brace = false;
+#endif
 
     if (data) {
         application_data = data->application_data;
@@ -65,13 +67,13 @@ void rp_ack_print_data(
         for (;;) {
             len =
                 bacapp_decode_application_data(application_data,
-                (uint8_t) application_data_len, &value);
+                                               (uint8_t) application_data_len, &value);
             if (first_value && (len < application_data_len)) {
                 first_value = false;
 #if PRINT_ENABLED
                 fprintf(stdout, "{");
-#endif
                 print_brace = true;
+#endif
             }
             object_value.object_type = data->object_type;
             object_value.object_instance = data->object_instance;
@@ -110,14 +112,14 @@ void rp_ack_print_data(
  *
  * @param service_request [in] The contents of the service request.
  * @param service_len [in] The length of the service_request.
- * @param src [in] BACNET_ADDRESS of the source of the message
+ * @param src [in] BACNET_PATH of the source of the message
  * @param service_data [in] The BACNET_CONFIRMED_SERVICE_DATA information
  *                          decoded from the APDU header of this message.
  */
 void handler_read_property_ack(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src,
+    BACNET_PATH * src,
     BACNET_CONFIRMED_SERVICE_ACK_DATA * service_data)
 {
     int len = 0;
@@ -166,7 +168,7 @@ int rp_ack_fully_decode_service_request(
          */
         read_access_data->object_type = rp1data.object_type;
         read_access_data->object_instance = rp1data.object_instance;
-        rp1_property = calloc(1, sizeof(BACNET_PROPERTY_REFERENCE));
+        rp1_property = (BACNET_PROPERTY_REFERENCE *) calloc(1, sizeof(BACNET_PROPERTY_REFERENCE));
         read_access_data->listOfProperties = rp1_property;
         if (rp1_property == NULL) {
             /* can't proceed if calloc failed. */
@@ -182,7 +184,7 @@ int rp_ack_fully_decode_service_request(
          more than one element to decode */
         vdata = rp1data.application_data;
         vlen = rp1data.application_data_len;
-        value = calloc(1, sizeof(BACNET_APPLICATION_DATA_VALUE));
+        value = (BACNET_APPLICATION_DATA_VALUE *) calloc(1, sizeof(BACNET_APPLICATION_DATA_VALUE));
         rp1_property->value = value;
         old_value = value;
         while (value && vdata && (vlen > 0)) {
@@ -230,7 +232,7 @@ int rp_ack_fully_decode_service_request(
                 if (vlen > 0) {
                     /* If more values */
                     old_value = value;
-                    value = calloc(1, sizeof(BACNET_APPLICATION_DATA_VALUE));
+                    value = (BACNET_APPLICATION_DATA_VALUE *) calloc(1, sizeof(BACNET_APPLICATION_DATA_VALUE));
                     old_value->next = value;
                 }
             }

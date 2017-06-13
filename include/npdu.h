@@ -42,7 +42,7 @@ typedef struct bacnet_npdu_data_t {
     bool network_layer_message; /* false if APDU */
     BACNET_MESSAGE_PRIORITY priority;
     /* optional network message info */
-    BACNET_NETWORK_MESSAGE_TYPE network_message_type;   /* optional */
+    // BACNET_NETWORK_MESSAGE_TYPE network_message_type;   /* optional */
     uint16_t vendor_id; /* optional, if net message type is > 0x80 */
     uint8_t hop_count;
 } BACNET_NPDU_DATA;
@@ -60,21 +60,17 @@ typedef struct router_port_t {
     struct router_port_t *next;         /**< Point to next in linked list */
 } BACNET_ROUTER_PORT;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-    uint8_t npdu_encode_max_seg_max_apdu(
-        int max_segs,
-        int max_apdu);
+uint8_t npdu_encode_max_seg_max_apdu(
+    int max_segs,
+    int max_apdu);
 
     int npdu_encode_pdu(
         uint8_t * npdu,
-        BACNET_ADDRESS * dest,
-        BACNET_ADDRESS * src,
-        BACNET_NPDU_DATA * npdu_data);
+        const BACNET_GLOBAL_ADDRESS * dest,
+        const BACNET_GLOBAL_ADDRESS * src,
+        const BACNET_NPDU_DATA * npdu_data);
 
-    void npdu_encode_npdu_data(
+    void npdu_setup_npdu_data(
         BACNET_NPDU_DATA * npdu,
         bool data_expecting_reply,
         BACNET_MESSAGE_PRIORITY priority);
@@ -84,12 +80,13 @@ extern "C" {
         BACNET_NPDU_DATA * src);
 
     int npdu_decode(
-        uint8_t * npdu,
-        BACNET_ADDRESS * dest,
-        BACNET_ADDRESS * src,
+        const uint8_t * npdu,
+        BACNET_GLOBAL_ADDRESS * dest,
+        BACNET_GLOBAL_ADDRESS * src,
         BACNET_NPDU_DATA * npdu_data);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+void init_common_npci (
+	BACNET_NPDU_DATA * npdu_data,
+	bool data_expecting_reply );
+
 #endif

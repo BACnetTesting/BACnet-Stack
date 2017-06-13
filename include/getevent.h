@@ -26,10 +26,15 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+
+#include "config.h"
+
+// #if (BACNET_USE_EVENT_HANDLING == 1)
+
 #include "bacdef.h"
 #include "bacenum.h"
 #include "timestamp.h"
-#include "event.h"
+// #include "event.h"
 
 struct BACnet_Get_Event_Information_Data;
 typedef struct BACnet_Get_Event_Information_Data {
@@ -48,17 +53,13 @@ typedef struct BACnet_Get_Event_Information_Data {
    return +1 if active event */
 typedef int (
     *get_event_info_function) (
-    unsigned index,
-    BACNET_GET_EVENT_INFORMATION_DATA * getevent_data);
+        unsigned index,
+        BACNET_GET_EVENT_INFORMATION_DATA * getevent_data);
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-    int getevent_encode_apdu(
-        uint8_t * apdu,
-        uint8_t invoke_id,
-        BACNET_OBJECT_ID * lastReceivedObjectIdentifier);
+int getevent_encode_apdu(
+    uint8_t * apdu,
+    uint8_t invoke_id,
+    BACNET_OBJECT_ID * lastReceivedObjectIdentifier);
 
     int getevent_decode_service_request(
         uint8_t * apdu,
@@ -104,12 +105,9 @@ extern "C" {
     void testGetEventInformationAck(
         Test * pTest);
 
-    void testGetEventInformation(
-        Test * pTest);
+void testGetEventInformation(
+    Test * pTest);
 
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

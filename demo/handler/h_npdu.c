@@ -34,9 +34,9 @@
 #include "handlers.h"
 #include "client.h"
 
-#if PRINT_ENABLED
-#include <stdio.h>
-#endif
+//#if PRINT_ENABLED
+//#include <stdio.h>
+//#endif
 
 /** @file h_npdu.c  Handles messages at the NPDU level of the BACnet stack. */
 
@@ -64,17 +64,17 @@
  *  @param pdu_len [in] The size of the received message in the pdu[] buffer.
  */
 void npdu_handler(
-    BACNET_ADDRESS * src,       /* source address */
-    uint8_t * pdu,      /* PDU data */
+    BACNET_ROUTE * src,      /* source address */
+    uint8_t * pdu,          /* PDU data */
     uint16_t pdu_len)
-{       /* length PDU  */
+{       
     int apdu_offset = 0;
-    BACNET_ADDRESS dest = { 0 };
-    BACNET_NPDU_DATA npdu_data = { 0 };
+    BACNET_GLOBAL_ADDRESS dest ;
+    BACNET_NPDU_DATA npdu_data ;
 
     /* only handle the version that we know how to handle */
     if (pdu[0] == BACNET_PROTOCOL_VERSION) {
-        apdu_offset = npdu_decode(&pdu[0], &dest, src, &npdu_data);
+        apdu_offset = npdu_decode(&pdu[0], &dest, &src->bacnetPath.glAdr, &npdu_data);
         if (npdu_data.network_layer_message) {
             /*FIXME: network layer message received!  Handle it! */
 #if PRINT_ENABLED

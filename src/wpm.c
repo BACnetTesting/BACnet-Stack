@@ -24,13 +24,14 @@
 *
 *********************************************************************/
 #include <stdint.h>
-#include "bacapp.h"
-#include "bacenum.h"
-#include "bacdcode.h"
-#include "bacdef.h"
+#include <memory.h>
+//#include "bacapp.h"
+//#include "bacenum.h"
+//#include "bacdcode.h"
+//#include "bacdef.h"
 #include "wp.h"
 #include "wpm.h"
-#include "string.h"
+// #include "string.h"
 
 /** @file wpm.c  Encode/Decode BACnet Write Property Multiple APDUs  */
 
@@ -57,10 +58,10 @@ int wpm_decode_object_id(
     uint8_t tag_number = 0;
     uint32_t len_value = 0;
     uint32_t object_instance = 0;
-    uint16_t object_type = 0;
+    BACNET_OBJECT_TYPE object_type ;
     uint16_t len = 0;
 
-    if (apdu && (apdu_len > 5) && wp_data) {
+    if (apdu && (apdu_len > 5)) {
         /* Context tag 0 - Object ID */
         len +=
             decode_tag_number_and_value(&apdu[len], &tag_number, &len_value);
@@ -102,13 +103,13 @@ int wpm_decode_object_property(
     uint16_t apdu_len,
     BACNET_WRITE_PROPERTY_DATA * wp_data)
 {
-    uint8_t tag_number = 0;
-    uint32_t len_value = 0;
-    uint32_t ulVal = 0;
-    int len = 0, i = 0;
+    uint8_t tag_number ;
+    uint32_t len_value ;
+    uint32_t ulVal ;
+    int len =0, i ;
 
 
-    if ((apdu) && (apdu_len) && (wp_data)) {
+    if ((apdu) && (apdu_len) ) {
         wp_data->array_index = BACNET_ARRAY_ALL;
         wp_data->priority = BACNET_MAX_PRIORITY;
         wp_data->application_data_len = 0;
@@ -117,7 +118,7 @@ int wpm_decode_object_property(
             decode_tag_number_and_value(&apdu[len], &tag_number, &len_value);
         if (tag_number == 0) {
             len += decode_enumerated(&apdu[len], len_value, &ulVal);
-            wp_data->object_property = ulVal;
+            wp_data->object_property = (BACNET_PROPERTY_ID) ulVal;
         } else {
             wp_data->error_code = ERROR_CODE_REJECT_INVALID_TAG;
             return BACNET_STATUS_REJECT;
@@ -166,8 +167,9 @@ int wpm_decode_object_property(
         if (tag_number == 3) {
             len += decode_unsigned(&apdu[len], len_value, &ulVal);
             wp_data->priority = ulVal;
-        } else
+        } else {
             len--;
+        }
     } else {
         wp_data->error_code = ERROR_CODE_REJECT_MISSING_REQUIRED_PARAMETER;
         return BACNET_STATUS_REJECT;
@@ -179,13 +181,14 @@ int wpm_decode_object_property(
 /* encode functions */
 int wpm_encode_apdu_init(
     uint8_t * apdu,
+    uint16_t max_apdu, 
     uint8_t invoke_id)
 {
     int apdu_len = 0;   /* total length of the apdu, return value */
 
     if (apdu) {
         apdu[0] = PDU_TYPE_CONFIRMED_SERVICE_REQUEST;
-        apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU);
+        apdu[1] = encode_max_segs_max_apdu(0, max_apdu );
         apdu[2] = invoke_id;
         apdu[3] = SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE;        /* service choice */
         apdu_len = 4;
@@ -269,7 +272,7 @@ int wpm_encode_apdu(
     BACNET_WRITE_PROPERTY_DATA wpdata;  /* for compatibility with wpm_encode_apdu_object_property function */
 
     if (apdu) {
-        len = wpm_encode_apdu_init(&apdu[0], invoke_id);
+		len =  wpm_encode_apdu_init(&apdu[0], max_apdu, invoke_id);
         apdu_len += len;
 
         wpm_object = write_access_data;

@@ -32,26 +32,23 @@
 #include "bacerror.h"
 #include "wp.h"
 #include "rp.h"
-#if defined(INTRINSIC_REPORTING)
+#if ( INTRINSIC_REPORTING == 1 )
 #include "nc.h"
 #include "alarm_ack.h"
 #include "getevent.h"
 #include "get_alarm_sum.h"
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     typedef struct analog_value_descr {
-        unsigned Event_State:3;
+        BACNET_EVENT_STATE Event_State:3;
         bool Out_Of_Service;
         uint16_t Units;
         float Present_Value;
         float Prior_Value;
         float COV_Increment;
         bool Changed;
-#if defined(INTRINSIC_REPORTING)
+#if (INTRINSIC_REPORTING == 1)
         uint32_t Time_Delay;
         uint32_t Notification_Class;
         float High_Limit;
@@ -59,7 +56,7 @@ extern "C" {
         float Deadband;
         unsigned Limit_Enable:2;
         unsigned Event_Enable:3;
-        unsigned Notify_Type:1;
+        BACNET_NOTIFY_TYPE Notify_Type ;
         ACKED_INFO Acked_Transitions[MAX_BACNET_EVENT_TRANSITION];
         BACNET_DATE_TIME Event_Time_Stamps[MAX_BACNET_EVENT_TRANSITION];
         /* time to generate event notification */
@@ -79,7 +76,7 @@ extern "C" {
     unsigned Analog_Value_Count(
         void);
     uint32_t Analog_Value_Index_To_Instance(
-        unsigned index);
+        unsigned objectIndex);
     unsigned Analog_Value_Instance_To_Index(
         uint32_t object_instance);
 
@@ -145,26 +142,30 @@ extern "C" {
     void Analog_Value_Intrinsic_Reporting(
         uint32_t object_instance);
 
-#if defined(INTRINSIC_REPORTING)
+#if ( INTRINSIC_REPORTING == 1 )
     int Analog_Value_Event_Information(
-        unsigned index,
+        unsigned objectIndex,
         BACNET_GET_EVENT_INFORMATION_DATA * getevent_data);
 
     int Analog_Value_Alarm_Ack(
         BACNET_ALARM_ACK_DATA * alarmack_data,
+        BACNET_ERROR_CLASS *error_class,
         BACNET_ERROR_CODE * error_code);
 
     int Analog_Value_Alarm_Summary(
-        unsigned index,
+        unsigned objectIndex,
         BACNET_GET_ALARM_SUMMARY_DATA * getalarm_data);
 #endif
 
     bool Analog_Value_Create(
         uint32_t object_instance);
+        
     bool Analog_Value_Delete(
         uint32_t object_instance);
+        
     void Analog_Value_Cleanup(
         void);
+        
     void Analog_Value_Init(
         void);
 
@@ -174,7 +175,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

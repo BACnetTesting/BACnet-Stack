@@ -28,7 +28,6 @@
 #include <string.h>
 #include <errno.h>
 #include "config.h"
-#include "txbuf.h"
 #include "bacdef.h"
 #include "bacdcode.h"
 #include "bacerror.h"
@@ -58,14 +57,14 @@
  *
  * @param service_request [in] The contents of the service request.
  * @param service_len [in] The length of the service_request.
- * @param src [in] BACNET_ADDRESS of the source of the message
+ * @param src [in] BACNET_PATH of the source of the message
  * @param service_data [in] The BACNET_CONFIRMED_SERVICE_DATA information
  *                          decoded from the APDU header of this message.
  */
 void handler_write_property_multiple(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src,
+    BACNET_ROUTE * src,
     BACNET_CONFIRMED_SERVICE_DATA * service_data)
 {
     int len = 0;
@@ -76,10 +75,13 @@ void handler_write_property_multiple(
     bool error = false;
     BACNET_WRITE_PROPERTY_DATA wp_data;
     BACNET_NPDU_DATA npdu_data;
-    BACNET_ADDRESS my_address;
-    int bytes_sent = 0;
+    // BACNET_PATH my_address;
+    // int bytes_sent = 0;
 
-    if (service_data->segmented_message) {
+	DLCB *dlcb = alloc_dlcb_response('p', src->portParams);
+	if (dlcb == NULL) return;
+
+	if (service_data->segmented_message) {
         wp_data.error_code = ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
         len = BACNET_STATUS_ABORT;
 #if PRINT_ENABLED
@@ -137,11 +139,10 @@ void handler_write_property_multiple(
                             [decode_len], 1)) {
                         tag_number = 1;
                         decode_len++;
-                    } else
+                        } else {
                         tag_number = 0; /* it was not tag 1, decode next Property Identifier ... */
-
                 }
-                while (tag_number != 1);        /* end decoding List of Properties for "that" object */
+                    } while (tag_number != 1);  /* end decoding List of Properties for "that" object */
 
                 if (error) {
                     goto WPM_ABORT;
@@ -158,17 +159,17 @@ void handler_write_property_multiple(
 
   WPM_ABORT:
     /* encode the NPDU portion of the packet */
-    datalink_get_my_address(&my_address);
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+    // datalink_get_my_address(&my_address);
+    npdu_setup_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
     npdu_len =
-        npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &src->bacnetPath.glAdr, NULL, // &my_address,
         &npdu_data);
     apdu_len = 0;
     /* handle any errors */
     if (error) {
         if (len == BACNET_STATUS_ABORT) {
             apdu_len =
-                abort_encode_apdu(&Handler_Transmit_Buffer[npdu_len],
+                abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[npdu_len],
                 service_data->invoke_id,
                 abort_convert_error_code(wp_data.error_code), true);
 #if PRINT_ENABLED
@@ -176,14 +177,14 @@ void handler_write_property_multiple(
 #endif
         } else if (len == BACNET_STATUS_ERROR) {
             apdu_len =
-                wpm_error_ack_encode_apdu(&Handler_Transmit_Buffer[npdu_len],
+                wpm_error_ack_encode_apdu(&dlcb->Handler_Transmit_Buffer[npdu_len],
                 service_data->invoke_id, &wp_data);
 #if PRINT_ENABLED
             fprintf(stderr, "WPM: Sending Error!\n");
 #endif
         } else if (len == BACNET_STATUS_REJECT) {
             apdu_len =
-                reject_encode_apdu(&Handler_Transmit_Buffer[npdu_len],
+                reject_encode_apdu(&dlcb->Handler_Transmit_Buffer[npdu_len],
                 service_data->invoke_id,
                 reject_convert_error_code(wp_data.error_code));
 #if PRINT_ENABLED
@@ -192,7 +193,7 @@ void handler_write_property_multiple(
         }
     } else {
         apdu_len =
-            wpm_ack_encode_apdu_init(&Handler_Transmit_Buffer[npdu_len],
+            wpm_ack_encode_apdu_init(&dlcb->Handler_Transmit_Buffer[npdu_len],
             service_data->invoke_id);
 #if PRINT_ENABLED
         fprintf(stderr, "WPM: Sending Ack!\n");
@@ -200,14 +201,6 @@ void handler_write_property_multiple(
     }
 
     pdu_len = npdu_len + apdu_len;
-    bytes_sent =
-        datalink_send_pdu(src, &npdu_data, &Handler_Transmit_Buffer[0],
-        pdu_len);
-#if PRINT_ENABLED
-    if (bytes_sent <= 0) {
-        fprintf(stderr, "Failed to send PDU (%s)!\n", strerror(errno));
-    }
-#else
-    bytes_sent = bytes_sent;
-#endif
+    dlcb->bufSize = pdu_len;
+    src->portParams->SendPdu(src->portParams, &src->bacnetPath.localMac, &npdu_data, dlcb);
 }

@@ -34,18 +34,15 @@
 #endif
 
 #include <stdbool.h>
-#include <stdint.h>
-#include "indtext.h"
+//#include <stdint.h>
+//#include "indtext.h"
+#include "bacdef.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-    const char *bactext_confirmed_service_name(
-        unsigned index);
-    const char *bactext_unconfirmed_service_name(
-        unsigned index);
-    const char *bactext_application_tag_name(
+const char *bactext_confirmed_service_name(
+    unsigned index);
+const char *bactext_unconfirmed_service_name(
+    unsigned index);
+const char *bactext_application_tag_name(
         unsigned index);
 	bool bactext_application_tag_index(
 		const char *search_name,
@@ -134,12 +131,15 @@ extern "C" {
     const char *bactext_lighting_operation_name(
         unsigned index);
 
-	const char *bactext_lighting_in_progress(
-		unsigned index);
+const char *bactext_lighting_in_progress(
+    unsigned index);
 
-	const char *bactext_lighting_transition(
-		unsigned index);
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-#endif
+const char *bactext_lighting_transition(
+    unsigned index);
+
+const char *bactext_bacnet_mac_address(char *tbuf, BACNET_MAC_ADDRESS *addr);
+const char *bactext_bacnet_global_address(char *tbuf, BACNET_GLOBAL_ADDRESS *addr);
+const char *bactext_bacnet_path(char *tbuf, BACNET_PATH *addr);
+
+
+#endif // BACTEXT_H

@@ -1,3 +1,4 @@
+#if 0 // client side
 /**************************************************************************
 *
 * Copyright (C) 2006 Steve Karg <skarg@users.sourceforge.net>
@@ -22,26 +23,27 @@
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
 *********************************************************************/
-#include <stddef.h>
-#include <stdint.h>
-#include <errno.h>
-#include <string.h>
-#include "config.h"
-#include "txbuf.h"
-#include "bacdef.h"
-#include "bacdcode.h"
-#include "address.h"
-#include "tsm.h"
-#include "dcc.h"
-#include "npdu.h"
-#include "apdu.h"
-#include "device.h"
-#include "datalink.h"
-#include "awf.h"
-/* some demo stuff needed */
-#include "handlers.h"
-#include "txbuf.h"
-#include "client.h"
+
+//#include <stddef.h>
+//#include <stdint.h>
+//#include <errno.h>
+//#include <string.h>
+//#include "config.h"
+//#include "txbuf.h"
+//#include "bacdef.h"
+//#include "bacdcode.h"
+//#include "address.h"
+//#include "tsm.h"
+//#include "dcc.h"
+//#include "npdu.h"
+//#include "apdu.h"
+//#include "device.h"
+//#include "datalink.h"
+//#include "awf.h"
+///* some demo stuff needed */
+//#include "handlers.h"
+//#include "txbuf.h"
+//#include "client.h"
 
 /** @file s_awfs.c  Send part of an Atomic Write File Stream request. */
 
@@ -51,8 +53,8 @@ uint8_t Send_Atomic_Write_File_Stream(
     int fileStartPosition,
     BACNET_OCTET_STRING * fileData)
 {
-    BACNET_ADDRESS dest;
-    BACNET_ADDRESS my_address;
+    BACNET_PATH dest;
+    BACNET_PATH my_address;
     BACNET_NPDU_DATA npdu_data;
     unsigned max_apdu = 0;
     uint8_t invoke_id = 0;
@@ -81,7 +83,7 @@ uint8_t Send_Atomic_Write_File_Stream(
         if (status) {
             /* encode the NPDU portion of the packet */
             datalink_get_my_address(&my_address);
-            npdu_encode_npdu_data(&npdu_data, true, MESSAGE_PRIORITY_NORMAL);
+            npdu_setup_npdu_data(&npdu_data, true, MESSAGE_PRIORITY_NORMAL);
             pdu_len =
                 npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest,
                 &my_address, &npdu_data);
@@ -99,7 +101,6 @@ uint8_t Send_Atomic_Write_File_Stream(
                 tsm_set_confirmed_unsegmented_transaction(invoke_id, &dest,
                     &npdu_data, &Handler_Transmit_Buffer[0],
                     (uint16_t) pdu_len);
-                bytes_sent =
                     datalink_send_pdu(&dest, &npdu_data,
                     &Handler_Transmit_Buffer[0], pdu_len);
 #if PRINT_ENABLED
@@ -131,3 +132,4 @@ uint8_t Send_Atomic_Write_File_Stream(
 
     return invoke_id;
 }
+#endif

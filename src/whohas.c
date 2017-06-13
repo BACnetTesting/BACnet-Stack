@@ -71,7 +71,7 @@ int whohas_encode_apdu(
         } else {
             len =
                 encode_context_object_id(&apdu[apdu_len], 2,
-                (int) data->object.identifier.type,
+                                         data->object.identifier.type,
                 data->object.identifier.instance);
             apdu_len += len;
         }
@@ -87,10 +87,10 @@ int whohas_decode_service_request(
     BACNET_WHO_HAS_DATA * data)
 {
     int len = 0;
-    uint8_t tag_number = 0;
-    uint32_t len_value = 0;
-    uint32_t decoded_value = 0; /* for decoding */
-    uint16_t decoded_type = 0;  /* for decoding */
+    uint8_t tag_number ;
+    uint32_t len_value ;
+    uint32_t decoded_value ; /* for decoding */
+    BACNET_OBJECT_TYPE decoded_type ;  /* for decoding */
 
     if (apdu_len && data) {
         /* optional limits - must be used as a pair */

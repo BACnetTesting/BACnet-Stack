@@ -27,9 +27,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     uint8_t CRC_Calc_Header(
         uint8_t dataValue,
@@ -38,7 +35,4 @@ extern "C" {
         uint8_t dataValue,
         uint16_t crcValue);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

@@ -29,6 +29,7 @@
 #include <stddef.h>
 #include "bacdef.h"
 #include "npdu.h"
+#include "datalink.h"
 
 /* note: TSM functionality is optional - only needed if we are
    doing client requests */
@@ -72,28 +73,28 @@ typedef struct BACnet_TSM_Data {
     /* state that the TSM is in */
     BACNET_TSM_STATE state;
     /* the address we sent it to */
-    BACNET_ADDRESS dest;
+    BACNET_ROUTE destRoute;
     /* the network layer info */
     BACNET_NPDU_DATA npdu_data;
     /* copy of the APDU, should we need to send it again */
-    uint8_t apdu[MAX_PDU];
+    // uint8_t apdu[MAX_PDU];
+	// no, we are going to use allocated ..
+	DLCB *dlcb2;
     unsigned apdu_len;
+
+    uint8_t autoClear:1 ;
+
 } BACNET_TSM_DATA;
 
 typedef void (
     *tsm_timeout_function) (
-    uint8_t invoke_id);
+        uint8_t invoke_id);
 
+void tsm_set_timeout_handler(
+    tsm_timeout_function pFunction);
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-    void tsm_set_timeout_handler(
-        tsm_timeout_function pFunction);
-
-    bool tsm_transaction_available(
-        void);
+bool tsm_transaction_available(
+    void);
     uint8_t tsm_transaction_idle_count(
         void);
     void tsm_timer_milliseconds(
@@ -104,31 +105,35 @@ extern "C" {
 /* use these in tandem */
     uint8_t tsm_next_free_invokeID(
         void);
+
+    // Karg has no way of clearing a failed notification... todo BTC
+    uint8_t tsm_next_free_invokeID_autoclear(
+        void);
+
     void tsm_invokeID_set(
         uint8_t invokeID);
+
 /* returns the same invoke ID that was given */
     void tsm_set_confirmed_unsegmented_transaction(
+		DLCB *dlcb,
         uint8_t invokeID,
-        BACNET_ADDRESS * dest,
+        BACNET_ROUTE * dest,
         BACNET_NPDU_DATA * ndpu_data,
-        uint8_t * apdu,
         uint16_t apdu_len);
+
 /* returns true if transaction is found */
     bool tsm_get_transaction_pdu(
         uint8_t invokeID,
-        BACNET_ADDRESS * dest,
+        BACNET_ROUTE * dest,
         BACNET_NPDU_DATA * ndpu_data,
         uint8_t * apdu,
         uint16_t * apdu_len);
 
-    bool tsm_invoke_id_free(
+    bool tsm_invoke_id_free_check(
         uint8_t invokeID);
     bool tsm_invoke_id_failed(
         uint8_t invokeID);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 /* define out any functions necessary for compile */
 #endif
 #endif

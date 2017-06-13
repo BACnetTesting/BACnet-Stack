@@ -27,6 +27,7 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
+
 #include <stddef.h>
 #include <stdint.h>
 #include <errno.h>
@@ -48,6 +49,8 @@
 #include "sbuf.h"
 #include "client.h"
 
+#if 0
+
 /** @file s_wpm.c  Send Write Property Multiple request. */
 
 /** Sends a Write Property Multiple request.
@@ -60,8 +63,8 @@ uint8_t Send_Write_Property_Multiple_Request_Data(
     uint32_t device_id,
     BACNET_WRITE_ACCESS_DATA * write_access_data)
 {
-    BACNET_ADDRESS dest;
-    BACNET_ADDRESS my_address;
+    BACNET_PATH dest;
+    BACNET_PATH my_address;
     unsigned max_apdu = 0;
     uint8_t invoke_id = 0;
     bool status = false;
@@ -82,7 +85,7 @@ uint8_t Send_Write_Property_Multiple_Request_Data(
     if (invoke_id) {
         /* encode the NPDU portion of the packet */
         datalink_get_my_address(&my_address);
-        npdu_encode_npdu_data(&npdu_data, true, MESSAGE_PRIORITY_NORMAL);
+        npdu_setup_npdu_data(&npdu_data, true, MESSAGE_PRIORITY_NORMAL);
         pdu_len =
             npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest, &my_address,
             &npdu_data);
@@ -122,3 +125,4 @@ uint8_t Send_Write_Property_Multiple_Request_Data(
 
     return invoke_id;
 }
+#endif // 0

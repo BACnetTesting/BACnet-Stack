@@ -51,9 +51,6 @@ typedef struct {
 } BACNET_ACCESS_RULE;
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     int bacapp_encode_access_rule(
         uint8_t * apdu,
@@ -70,7 +67,4 @@ extern "C" {
         uint8_t tag_number,
         BACNET_ACCESS_RULE * rule);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

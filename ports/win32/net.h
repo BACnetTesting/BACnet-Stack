@@ -29,12 +29,12 @@
 #define WIN32_LEAN_AND_MEAN
 #define STRICT 1
 /* Windows XP minimum */
-#if (_WIN32_WINNT < 0x501)
-  #undef _WIN32_WINNT
-  #define _WIN32_WINNT 0x501
-  #undef NTDDI_VERSION
-  #define NTDDI_VERSION _NTDDI_VERSION_FROM_WIN32_WINNT(_WIN32_WINNT)
-#endif
+//#if (_WIN32_WINNT < 0x501)
+//  #undef _WIN32_WINNT
+//  #define _WIN32_WINNT 0x501
+//  #undef NTDDI_VERSION
+//  #define NTDDI_VERSION _NTDDI_VERSION_FROM_WIN32_WINNT(_WIN32_WINNT)
+//#endif
 
 
 #include <windows.h>
@@ -42,34 +42,46 @@
  (!defined(USE_CLASSADDR) || (USE_CLASSADDR == 0))
 #include <iphlpapi.h>
 #endif
-#include <windows.h>
+
+// #include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#ifndef IPPROTO_IPV6
-   // If the version of winsock does not by default include IPV6 then
-   // use the tech preview if it is avaliable.
-   #include <tpipv6.h>
-#endif
-#include <stdlib.h>
-#include <stdio.h>
-#ifdef __MINGW32__
-#include <ws2spi.h>
-#else
-#include <wspiapi.h>
-#endif
+//#ifndef IPPROTO_IPV6
+//   // If the version of winsock does not by default include IPV6 then
+//   // use the tech preview if it is avaliable.
+//
+//    // EKH: This file does not exist in MSVC 2015
+//    // Can someone explain how to obtain it?
+//    // #include <tpipv6.h>
+//
+//#endif
+//#include <stdlib.h>
+//#include <stdio.h>
+//#ifdef __MINGW32__
+//#include <ws2spi.h>
+//#else
+//#include <wspiapi.h>
+//#endif
+//
+//#include <sys/timeb.h>
+//
+//#ifdef _MSC_VER
+////#if ! ( _MSC_VER == 14 )
+//// todo - remove? #define inline __inline
+////#endif
+//#endif
+//
+//#ifdef __BORLANDC__
+//#define inline __inline
+//#endif
+//
+//#ifndef _MSC_VER
+//// this conflicts with file close in Microsoft MSVC
+//#define close closesocket
+//#endif
+//
+//typedef int socklen_t;
 
-#include <sys/timeb.h>
-
-#ifdef _MSC_VER
-#define inline __inline
-#endif
-
-#ifdef __BORLANDC__
-#define inline __inline
-#endif
-
-#define close closesocket
-
-typedef int socklen_t;
+// char *winsock_error_code_text(int code);
 
 #endif

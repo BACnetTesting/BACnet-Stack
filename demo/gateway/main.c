@@ -33,8 +33,9 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <time.h>
+
 #include "config.h"
-#include "gateway.h"
+// #include "gateway.h"
 #include "address.h"
 #include "bacdef.h"
 #include "handlers.h"
@@ -44,21 +45,31 @@
 #include "npdu.h"
 #include "apdu.h"
 #include "iam.h"
+#if ( BACNET_CLIENT == 1 )
 #include "tsm.h"
+#endif
 #include "device.h"
-#include "bacfile.h"
+#include "bip.h"
 #include "datalink.h"
 #include "dcc.h"
-#include "net.h"
+#include "getevent.h"
 #include "txbuf.h"
-#include "lc.h"
-#include "debug.h"
 #include "version.h"
 /* include the device object */
 #include "device.h"
-#ifdef BACNET_TEST_VMAC
-#include "vmac.h"
+//#include "trendlog.h"
+#if ( BACNET_USE_OBJECT_NOTIFICATION_CLASS == 1 )
+#include "nc.h"
 #endif
+//#if defined(BACFILE)
+//#include "bacfile.h"
+//#endif /* defined(BACFILE) */
+//#if defined(BAC_UCI)
+//#include "ucix.h"
+//#endif /* defined(BAC_UCI) */
+#include "lumewave.h"
+#include "CEDebug.h"
+// #include "lm.h"
 
 /** @file gateway/main.c  Example virtual gateway application using the BACnet Stack. */
 
@@ -131,41 +142,78 @@ static void Init_Service_Handlers(
      * each device in turn.
      */
     apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_WHO_IS,
-        handler_who_is_unicast);
+                                 handler_who_is_unicast);
     apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_WHO_HAS, handler_who_has);
+
+#if 0
+    /* 	BACnet Testing Observed Incident oi00107
+        Server only devices should not indicate that they EXECUTE I-Am
+        Revealed by BACnet Test Client v1.8.16 ( www.bac-test.com/bacnet-test-client-download )
+        BITS: BIT00040
+        Any discussions can be directed to edward@bac-test.com
+        Please feel free to remove this comment when my changes accepted after suitable time for
+        review by all interested parties. Say 6 months -> September 2016 */
+    /* In this demo, we are the server only ( BACnet "B" device ) so we do not indicate
+       that we can execute the I-Am message */
+    /* handle i-am to support binding to other devices */
+    apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_I_AM, handler_i_am_bind);
+#endif
+
     /* set the handler for all the services we don't implement */
     /* It is required to send the proper reject message... */
-    apdu_set_unrecognized_service_handler_handler
-        (handler_unrecognized_service);
+    apdu_set_unrecognized_service_handler_handler(handler_unrecognized_service);
     /* Set the handlers for any confirmed services that we support. */
     /* We must implement read property - it's required! */
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_READ_PROPERTY,
-        handler_read_property);
+                               handler_read_property);
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_READ_PROP_MULTIPLE,
-        handler_read_property_multiple);
+                               handler_read_property_multiple);
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_WRITE_PROPERTY,
-        handler_write_property);
+                               handler_write_property);
+#if defined (BAC_WPM)
+    apdu_set_confirmed_handler(SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE,
+                               handler_write_property_multiple);
+#endif
+#if defined (BAC_READ_RANGE)
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_READ_RANGE,
-        handler_read_range);
+                               handler_read_range);
+#endif
 #if defined(BACFILE)
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_ATOMIC_READ_FILE,
-        handler_atomic_read_file);
+                               handler_atomic_read_file);
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_ATOMIC_WRITE_FILE,
         handler_atomic_write_file);
 #endif
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_REINITIALIZE_DEVICE,
         handler_reinitialize_device);
     apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_UTC_TIME_SYNCHRONIZATION,
-        handler_timesync_utc);
+                                 handler_timesync_utc);
     apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_TIME_SYNCHRONIZATION,
-        handler_timesync);
+                                 handler_timesync);
+
+#if ( BACNET_SVC_COV_B == 1 ) // Feedback karg
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_SUBSCRIBE_COV,
-        handler_cov_subscribe);
+                               handler_cov_subscribe);
     apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_COV_NOTIFICATION,
-        handler_ucov_notification);
+                                 handler_ucov_notification);
+#endif
     /* handle communication so we can shutup when asked */
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL,
-        handler_device_communication_control);
+                               handler_device_communication_control);
+    /* handle the data coming back from private requests */
+    //apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_PRIVATE_TRANSFER,
+    //    handler_unconfirmed_private_transfer);
+#if defined(INTRINSIC_REPORTING)
+    apdu_set_confirmed_handler(SERVICE_CONFIRMED_ACKNOWLEDGE_ALARM,
+                               handler_alarm_ack);
+    apdu_set_confirmed_handler(SERVICE_CONFIRMED_GET_EVENT_INFORMATION,
+                               handler_get_event_information);
+    apdu_set_confirmed_handler(SERVICE_CONFIRMED_GET_ALARM_SUMMARY,
+                               handler_get_alarm_summary);
+#endif /* defined(INTRINSIC_REPORTING) */
+
+    // apdu_set_confirmed_handler(SERVICE_CONFIRMED_ADD_LIST_ELEMENT, handler_add_list_element);
+    // apdu_set_confirmed_handler(SERVICE_CONFIRMED_REMOVE_LIST_ELEMENT, handler_remove_list_element);
 }
 
 /** Initialize the BACnet Device Addresses for each Device object.
@@ -180,11 +228,11 @@ static void Initialize_Device_Addresses(
     )
 {
     int i = 0;  /* First entry is Gateway Device */
-    uint32_t virtual_mac = 0;
     DEVICE_OBJECT_DATA *pDev = NULL;
     /* Setup info for the main gateway device first */
     pDev = Get_Routed_Device_Object(i);
 #if defined(BACDL_BIP)
+    uint32_t virtual_mac = 0;
     uint16_t myPort;
     struct in_addr *netPtr;     /* Lets us cast to this type */
     uint8_t *gatewayMac = NULL;
@@ -198,7 +246,7 @@ static void Initialize_Device_Addresses(
     pDev->bacDevAddr.mac_len = 1;
     pDev->bacDevAddr.mac[0] = dlmstp_mac_address();
 #else
-#error "No support for this Data Link Layer type "
+// removing for cppcheck #error "No support for this Data Link Layer type "
 #endif
     /* broadcast an I-Am on startup */
     Send_I_Am(&Handler_Transmit_Buffer[0]);
@@ -240,10 +288,27 @@ static void Initialize_Device_Addresses(
         /* broadcast an I-Am for each routed Device now */
         Send_I_Am(&Handler_Transmit_Buffer[0]);
 
-    }
-}
 
-/** Main function of server demo.
+        static void print_usage(const char *filename) {
+            printf("Usage: %s [device-instance [device-name]]\n", filename);
+            printf("       [--version][--help]\n");
+        }
+
+        static void print_help(const char *filename) {
+            printf("Simulate a BACnet server device\n"
+                   "device-instance:\n"
+                   "BACnet Device Object Instance number that you are\n"
+                   "trying simulate.\n"
+                   "device-name:\n"
+                   "The Device object-name is the text name for the device.\n"
+                   "\nExample:\n");
+            printf("To simulate Device 123, use the following command:\n"
+                   "%s 123\n", filename);
+            printf("To simulate Device 123 named Fred, use following command:\n"
+                   "%s 123 Fred\n", filename);
+        }
+
+        /** Main function of server demo.
  *
  * @see Device_Set_Object_Instance_Number, dlenv_init, Send_I_Am,
  *      datalink_receive, npdu_handler,
@@ -325,17 +390,31 @@ int main(
             last_seconds = current_seconds;
             dcc_timer_seconds(elapsed_seconds);
 #if defined(BACDL_BIP) && BBMD_ENABLED
-            bvlc_maintenance_timer(elapsed_seconds);
+                    bvlc_maintenance_timer(elapsed_seconds);
 #endif
-            dlenv_maintenance_timer(elapsed_seconds);
-            Load_Control_State_Machine_Handler();
-            elapsed_milliseconds = elapsed_seconds * 1000;
-            tsm_timer_milliseconds(elapsed_milliseconds);
-        }
-        handler_cov_task();
-        /* output */
+                    dlenv_maintenance_timer(elapsed_seconds);
+#if defined (LOAD_CONTROL)
+                    Load_Control_State_Machine_Handler();
+#endif
+#if defined ( BAC_COV )
+                    handler_cov_timer_seconds(elapsed_seconds);
+#endif
+#if ( BACNET_CLIENT == 1 )
+                    tsm_timer_milliseconds(elapsed_seconds*1000);
+#endif
+#if defined(TREND_LOG)
+                    trend_log_timer(elapsed_seconds);
+#endif
+#if defined(INTRINSIC_REPORTING)
+                    Device_local_reporting();
+#endif
+                }
+#if defined ( BAC_COV )
+                handler_cov_task();
+#endif
+                /* output */
 
-        /* blink LEDs, Turn on or off outputs, etc */
+                /* blink LEDs, Turn on or off outputs, etc */
     }
     /* Dummy return */
     return 0;

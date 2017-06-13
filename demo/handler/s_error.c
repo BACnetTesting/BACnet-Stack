@@ -1,3 +1,4 @@
+#if 0 // client side
 /**************************************************************************
 *
 * Copyright (C) 2016 Steve Karg <skarg@users.sourceforge.net>
@@ -56,8 +57,8 @@
  */
 int error_encode_pdu(
     uint8_t * buffer,
-    BACNET_ADDRESS * dest,
-    BACNET_ADDRESS * src,
+    BACNET_PATH * dest,
+    BACNET_PATH * src,
     BACNET_NPDU_DATA * npdu_data,
     uint8_t invoke_id,
     BACNET_CONFIRMED_SERVICE service,
@@ -68,7 +69,7 @@ int error_encode_pdu(
     int pdu_len = 0;
 
     /* encode the NPDU portion of the packet */
-    npdu_encode_npdu_data(npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_setup_npdu_data(npdu_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len = npdu_encode_pdu(&buffer[0], dest, src, npdu_data);
 
     /* encode the APDU portion of the packet */
@@ -90,14 +91,14 @@ int error_encode_pdu(
  */
 int Send_Error_To_Network(
     uint8_t * buffer,
-    BACNET_ADDRESS *dest,
+    BACNET_PATH *dest,
     uint8_t invoke_id,
     BACNET_CONFIRMED_SERVICE service,
     BACNET_ERROR_CLASS error_class,
     BACNET_ERROR_CODE error_code)
 {
     int pdu_len = 0;
-    BACNET_ADDRESS src;
+    BACNET_PATH src;
     int bytes_sent = 0;
     BACNET_NPDU_DATA npdu_data;
 
@@ -108,3 +109,4 @@ int Send_Error_To_Network(
 
     return bytes_sent;
 }
+#endif

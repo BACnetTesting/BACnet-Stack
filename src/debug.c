@@ -37,7 +37,13 @@
 #include <stdio.h>      /* Standard I/O */
 #include <stdlib.h>     /* Standard Library */
 #include <stdarg.h>
+
+#ifdef _MSC_VER
+#include <wtypes.h>     // for Mutex Handle
+#endif
+
 #include "debug.h"
+#include "btaDebug.h"
 
 /** @file debug.c  Debug print function */
 
@@ -63,3 +69,79 @@ void debug_printf(
     format = format;
 }
 #endif
+
+
+#if DB_TRAFFIC
+
+static DB_LEVEL	dbTrafficLevel = DB_NONE ;
+
+void sys_dbTrafficAssert(DB_LEVEL lev, bool assertion, const char *message )
+{
+    if (assertion) {
+        return;
+    }
+    sys_dbTraffic(lev, message);
+}
+
+
+#ifdef _MSC_VER
+HANDLE hIOMutex ;
+#endif
+
+void sys_dbTraffic(DB_LEVEL lev, const char *format, ...)
+{
+    va_list ap;
+    char tbuf[1000];
+
+#ifdef _MSC_VER
+	if ( hIOMutex == NULL ) hIOMutex = CreateMutex(NULL, FALSE, NULL);
+    WaitForSingleObject(hIOMutex, INFINITE);
+#endif
+
+    if (lev >= dbTrafficLevel) {
+        va_start(ap, format);
+#ifdef _MSC_VER
+        printf("\n\r");
+#endif        
+        vsprintf(tbuf, format, ap);
+        
+#ifdef _MSC_VER
+        printf("%s", tbuf);
+
+        FILE *fp = fopen("BACnet.log", "a");
+        if (fp) {
+            fprintf(fp, "%s", tbuf );
+            fprintf(fp, "\n");
+            fclose(fp);
+        }
+#endif // _MSC_VER
+
+        if (lev == DB_UNEXPECTED_ERROR)
+        {
+            SendBTApanicMessage(tbuf);
+        }
+        else
+        {
+            SendBTAmessage(tbuf);
+        }
+        
+        va_end(ap);
+    }
+
+#ifdef _MSC_VER
+    ReleaseMutex(hIOMutex);
+#endif
+}
+
+
+void sys_dbTrafficSetLevel(DB_LEVEL lev)
+{
+    dbTrafficLevel = lev;
+}
+
+#endif
+
+
+
+/* More sophisticated error logging */
+

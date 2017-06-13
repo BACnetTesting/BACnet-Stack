@@ -52,9 +52,6 @@ typedef struct BACnet_Subscribe_COV_Data {
     struct BACnet_Subscribe_COV_Data *next;
 } BACNET_SUBSCRIBE_COV_DATA;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     int ucov_notify_encode_apdu(
         uint8_t * apdu,
@@ -126,9 +123,6 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 /** @defgroup DSCOV Data Sharing - Change of Value Service (DS-COV)
  * @ingroup DataShare
  * 13.1 Change of Value Reporting <br>

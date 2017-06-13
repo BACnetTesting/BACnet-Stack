@@ -66,12 +66,16 @@ static void show_bacnet_date_time(
 }
 #endif
 
+#ifdef _MSC_VER
+extern int32_t emulationOffset;
+#endif
+
 void handler_timesync(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src)
+    BACNET_ROUTE * src)
 {
-    int len = 0;
+    int len ;
     BACNET_DATE bdate = {0};
     BACNET_TIME btime = {0};
 
@@ -86,22 +90,63 @@ void handler_timesync(
 #if PRINT_ENABLED
             fprintf(stderr, "Received TimeSyncronization Request\r\n");
             show_bacnet_date_time(&bdate, &btime);
-#else
-            /* FIXME: set the time?
-               Maybe only set the time if off by some amount */
+#ifdef _MSC_VER
+        struct tm *tLocal ;
+        struct tm tSet = { 0 } ;
+        time_t clockTime;
+        time_t localTime;
+        time_t setTime;
+        /*
+        struct tm
+
+        int    tm_sec   Seconds [0,60].
+        int    tm_min   Minutes [0,59].
+        int    tm_hour  Hour [0,23].
+        int    tm_mday  Day of month [1,31].
+        int    tm_mon   Month of year [0,11].
+        int    tm_year  Years since 1900.
+        int    tm_wday  Day of week [0,6] (Sunday =0).
+        int    tm_yday  Day of year [0,365].
+        int    tm_isdst Daylight Savings flag.
+        */
+        tSet.tm_sec = bdt.time.sec;
+        tSet.tm_min = bdt.time.min;
+        tSet.tm_hour = bdt.time.hour;
+        tSet.tm_mday = bdt.date.day;
+        tSet.tm_mon = bdt.date.month - 1 ;
+        tSet.tm_year = bdt.date.year - 1900 ;
+        // tSet.tm_isdst = 
+
+
+        time(&clockTime);
+        tLocal = (struct tm *) localtime(&clockTime);
+        localTime = mktime(tLocal);
+        setTime = mktime(&tSet);
+
+        if (setTime > 0)
+        {
+            time_t delta = setTime - localTime;
+            emulationOffset = delta ;
+        }
+        else
+        {
+            panic();
+        }
+
+
+#endif 
+
 #endif
         }
     }
-
-    return;
 }
 
 void handler_timesync_utc(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src)
+    BACNET_ROUTE * src)
 {
-    int len = 0;
+    int len ;
     BACNET_DATE bdate;
     BACNET_TIME btime;
 
@@ -120,8 +165,6 @@ void handler_timesync_utc(
                only set the time if off by some amount */
         }
     }
-
-    return;
 }
 
 #if defined(BACNET_TIME_MASTER)
@@ -244,7 +287,7 @@ static void handler_timesync_update(
 #if defined(BACNET_TIME_MASTER)
 bool handler_timesync_recipient_address_set(
     unsigned index,
-    BACNET_ADDRESS *address)
+    BACNET_PATH *address)
 {
     bool status = false;
 

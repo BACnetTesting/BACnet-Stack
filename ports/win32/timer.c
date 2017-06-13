@@ -34,6 +34,10 @@
 #include "net.h"
 #include <MMSystem.h>
 #include "timer.h"
+#include "CEDebug.h"
+
+#pragma comment(lib, "Winmm.lib")           // for timeGetTime()
+
 
 /* Offset between Windows epoch 1/1/1601 and
    Unix epoch 1/1/1970 in 100 nanosec units */
@@ -104,9 +108,15 @@ int gettimeofday(
             _tzset();
             tzflag++;
         }
-        tz = tzp;
-        tz->tz_minuteswest = _timezone / 60;
-        tz->tz_dsttime = _daylight;
+
+        tz = (struct timezone *) tzp;
+        long ltimezone;
+        if (_get_timezone(&ltimezone)) panic();
+        tz->tz_minuteswest = ltimezone / 60; 
+
+        int ldaylight;
+        if (_get_daylight(&ldaylight)) panic();
+        tz->tz_dsttime = ldaylight;
     }
 
     return 0;
@@ -185,6 +195,30 @@ uint32_t timer_reset(
         Millisecond_Counter[index] = timeGetTime();
     }
     return timer_value;
+}
+
+// ms since machine was started
+uint32_t timer_get_time(void)
+{
+	return timeGetTime();
+}
+
+uint16_t timer_delta_time(uint32_t startTime)
+{
+    uint32_t timeNow = timeGetTime();
+    uint32_t deltaTime;
+
+    if (timeNow < startTime)
+    {
+        deltaTime = timeNow - startTime;
+    }
+    else
+    {
+        deltaTime = (UINT32_MAX - startTime + timeNow + 1);
+    }
+
+	if (deltaTime > UINT16_MAX) return UINT16_MAX;			// todo, this will still fail WHEN the timer wraps on 32 bits...
+	return (uint16_t)deltaTime;
 }
 
 /*************************************************************************

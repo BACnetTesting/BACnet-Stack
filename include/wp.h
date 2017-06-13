@@ -57,17 +57,14 @@ typedef struct BACnet_Write_Property_Data {
  */
 typedef bool(
     *write_property_function) (
-    BACNET_WRITE_PROPERTY_DATA * wp_data);
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-    /* encode service */
-    int wp_encode_apdu(
-        uint8_t * apdu,
-        uint8_t invoke_id,
         BACNET_WRITE_PROPERTY_DATA * wp_data);
+
+/* encode service */
+int wp_encode_apdu(
+    uint8_t * apdu,
+    uint16_t max_apdu,
+    uint8_t invoke_id,
+    BACNET_WRITE_PROPERTY_DATA * wp_data);
 
     /* decode the service request only */
     int wp_decode_service_request(
@@ -84,15 +81,12 @@ extern "C" {
         BACNET_WRITE_PROPERTY_DATA * wp_data);
 
     void testWriteProperty(
-        Test * pTest);
-    void testWritePropertyTag(
-        Test * pTest,
-        BACNET_APPLICATION_DATA_VALUE * value);
+    Test * pTest);
+void testWritePropertyTag(
+    Test * pTest,
+    BACNET_APPLICATION_DATA_VALUE * value);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 /** @defgroup DSWP Data Sharing - Write Property Service (DS-WP)
  * @ingroup DataShare
  * 15.9 WriteProperty Service <br>

@@ -39,15 +39,15 @@ typedef struct BACnet_Recipient_List {
     uint8_t tag;
     union {
         BACNET_OBJECT_ID device;
-        BACNET_ADDRESS address;
+        BACNET_PATH address;
     } type;
     /* simple linked list */
     struct BACnet_Recipient_List *next;
 } BACNET_RECIPIENT_LIST;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+void SetTime(
+    BACNET_DATE *bdate,
+    BACNET_TIME *btime);
 
     /* encode service */
     int timesync_utc_encode_apdu(
@@ -95,7 +95,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-#endif
+#endif /* TIMESYNC_H */

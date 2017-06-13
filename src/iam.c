@@ -81,13 +81,13 @@ int iam_decode_service_request(
     int *pSegmentation,
     uint16_t * pVendor_id)
 {
-    int len = 0;
+    int len ;
     int apdu_len = 0;   /* total length of the apdu, return value */
-    uint16_t object_type = 0;   /* should be a Device Object */
-    uint32_t object_instance = 0;
-    uint8_t tag_number = 0;
-    uint32_t len_value = 0;
-    uint32_t decoded_value = 0;
+    BACNET_OBJECT_TYPE object_type ;   /* should be a Device Object */
+    uint32_t object_instance ;
+    uint8_t tag_number ;
+    uint32_t len_value ;
+    uint32_t decoded_value ;
 
     /* OBJECT ID - object id */
     len =

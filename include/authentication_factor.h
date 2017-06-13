@@ -38,9 +38,6 @@ typedef struct {
 } BACNET_AUTHENTICATION_FACTOR;
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     int bacapp_encode_authentication_factor(
         uint8_t * apdu,
@@ -57,8 +54,5 @@ extern "C" {
         uint8_t tag,
         BACNET_AUTHENTICATION_FACTOR * af);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif
 

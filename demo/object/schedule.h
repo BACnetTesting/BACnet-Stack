@@ -46,14 +46,43 @@
 #endif
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     typedef struct bacnet_daily_schedule {
         BACNET_TIME_VALUE Time_Values[BACNET_WEEKLY_SCHEDULE_SIZE];
         uint16_t TV_Count;      /* the number of time values actually used */
     } BACNET_DAILY_SCHEDULE;
+
+	/*
+	BACnetCalendarEntry ::= CHOICE {
+		date [0] Date,
+		dateRange [1] BACnetDateRange,
+		weekNDay [2] BACnetWeekNDay
+		}
+	*/
+
+/* redeclared from somewhere - commenting out for now ekh todo 1
+	typedef struct BACnetCalendarEntry
+	{
+		uint8_t	choice;
+	} BACNET_CALENDAR_ENTRY;
+#endif
+
+	BACnetSpecialEvent :: = SEQUENCE{
+	period CHOICE{
+	calendarEntry[0] BACnetCalendarEntry,
+	calendarReference[1] BACnetObjectIdentifier
+	},
+	listOfTimeValues[2] SEQUENCE OF BACnetTimeValue,
+	eventPriority[3] Unsigned(1..16)
+	}
+	*/
+    
+// todo EKH - Added these in from latest Karg stack for reference...
+	typedef struct  BACnet_Special_Event
+	{
+		BACNET_TIME_VALUE	listOfTimeValues[2];
+		uint8_t	priority;
+	} BACNET_SPECIAL_EVENT;
 
     typedef struct schedule {
         /* Effective Period: Start and End Date */
@@ -96,13 +125,13 @@ extern "C" {
 
     /* utility functions for calculating current Present Value
      * if Exception Schedule is to be added, these functions must take that into account */
+
+// todo EKH - Added these in from latest Karg stack for reference...
+
     bool Schedule_In_Effective_Period(SCHEDULE_DESCR * desc,
         BACNET_DATE * date);
     void Schedule_Recalculate_PV(SCHEDULE_DESCR * desc,
         BACNET_WEEKDAY wday,
         BACNET_TIME * time);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

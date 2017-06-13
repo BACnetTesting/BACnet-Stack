@@ -155,7 +155,7 @@ int lighting_command_decode(
         len =
             decode_enumerated(&apdu[apdu_len], len_value_type, &unsigned_value);
         if (len > 0) {
-            data->operation = unsigned_value;
+            data->operation = (BACNET_LIGHTING_OPERATION) unsigned_value;
         }
         apdu_len += len;
         /* Tag 1: target-level - OPTIONAL */
@@ -315,7 +315,7 @@ void testBACnetLightingCommand(
     Test * pTest,
     BACNET_LIGHTING_COMMAND *data)
 {
-    bool status = false;
+    // not used bool status ;
     BACNET_LIGHTING_COMMAND test_data;
     int len, apdu_len;
     uint8_t apdu[MAX_APDU] = {0};
@@ -332,7 +332,7 @@ void testBACnetLightingCommand(
     apdu_len = lighting_command_decode(apdu, sizeof(apdu), &test_data);
     ct_test(pTest, len > 0);
     ct_test(pTest, apdu_len > 0);
-    status = lighting_command_same(&test_data, data);
+    lighting_command_same(&test_data, data);
 }
 
 void testBACnetLightingCommandAll(

@@ -29,15 +29,11 @@
 #include "bacenum.h"
 #include "bacstr.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 /* return the status */
-    BACNET_COMMUNICATION_ENABLE_DISABLE dcc_enable_status(
-        void);
-    bool dcc_communication_enabled(
-        void);
+BACNET_COMMUNICATION_ENABLE_DISABLE dcc_enable_status(
+    void);
+bool dcc_communication_enabled(
+    void);
     bool dcc_communication_disabled(
         void);
     bool dcc_communication_initiation_disabled(
@@ -78,15 +74,12 @@ extern "C" {
         uint8_t * invoke_id,
         uint16_t * timeDuration,
         BACNET_COMMUNICATION_ENABLE_DISABLE * enable_disable,
-        BACNET_CHARACTER_STRING * password);
+    BACNET_CHARACTER_STRING * password);
 
-    void test_DeviceCommunicationControl(
-        Test * pTest);
+void test_DeviceCommunicationControl(
+    Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 /** @defgroup RDMS  Device and Network Management Service BIBBs
  * These device management BIBBs prescribe the BACnet capabilities required
  * to interoperably perform the device management functions enumerated in

@@ -28,15 +28,11 @@
 #include <stdbool.h>
 #include "bacenum.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-    int bacerror_encode_apdu(
-        uint8_t * apdu,
-        uint8_t invoke_id,
-        BACNET_CONFIRMED_SERVICE service,
-        BACNET_ERROR_CLASS error_class,
+int bacerror_encode_apdu(
+    uint8_t * apdu,
+    uint8_t invoke_id,
+    BACNET_CONFIRMED_SERVICE service,
+    BACNET_ERROR_CLASS error_class,
         BACNET_ERROR_CODE error_code);
 
     int bacerror_decode_service_request(
@@ -61,13 +57,10 @@ extern "C" {
         uint8_t * invoke_id,
         BACNET_CONFIRMED_SERVICE * service,
         BACNET_ERROR_CLASS * error_class,
-        BACNET_ERROR_CODE * error_code);
+    BACNET_ERROR_CODE * error_code);
 
-    void testBACError(
-        Test * pTest);
+void testBACError(
+    Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

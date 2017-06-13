@@ -49,9 +49,6 @@ typedef int (
     BACNET_GET_ALARM_SUMMARY_DATA * getalarm_data);
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     int get_alarm_summary_encode_apdu(
         uint8_t * apdu,
@@ -77,9 +74,6 @@ extern "C" {
         size_t max_apdu,
         BACNET_GET_ALARM_SUMMARY_DATA * get_alarm_data);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 /** @defgroup ALMEVNT Alarm and Event Management BIBBs
  * @ingroup ALMEVNT
  * 13.1 ConfirmedCOVNotification Service <br>

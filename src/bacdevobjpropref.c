@@ -31,6 +31,10 @@
  License.
  -------------------------------------------
 ####COPYRIGHTEND####*/
+
+#include "config.h"
+
+// #if (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1) || (BACNET_USE_OBJECT_TRENDLOG == 1) || (BACNET_USE_OBJECT_SCHEDULE == 1) || (BACNET_USE_OBJECT_CHANNEL == 1)
 #include <stdint.h>
 #include <stdbool.h>
 #include "bacdcode.h"
@@ -80,9 +84,9 @@ int bacapp_encode_device_obj_property_ref(
     /* object-identifier       [0] BACnetObjectIdentifier */
     len =
         encode_context_object_id(&apdu[apdu_len], 0,
-        (int) value->objectIdentifier.type, value->objectIdentifier.instance);
+                                 value->objectIdentifier.type, value->objectIdentifier.instance);
     apdu_len += len;
-    /* property-identifier     [1] BACnetPropertyIdentifier */
+
     len =
         encode_context_enumerated(&apdu[apdu_len], 1,
         value->propertyIdentifier);
@@ -100,8 +104,8 @@ int bacapp_encode_device_obj_property_ref(
     if (value->deviceIdentifier.type == OBJECT_DEVICE) {
         len =
             encode_context_object_id(&apdu[apdu_len], 3,
-            (int) value->deviceIdentifier.type,
-            value->deviceIdentifier.instance);
+                                     value->deviceIdentifier.type,
+                                     value->deviceIdentifier.instance);
         apdu_len += len;
     }
     return apdu_len;
@@ -163,12 +167,17 @@ int bacapp_decode_device_obj_property_ref(
         }
         apdu_len += len;
     } else {
-    	value->deviceIdentifier.type = BACNET_NO_DEV_TYPE;
-    	value->deviceIdentifier.instance = BACNET_NO_DEV_ID;
+        value->deviceIdentifier.type = OBJECT_NO_DEV_TYPE;
+        value->deviceIdentifier.instance = BACNET_NO_DEV_ID;
+        // todo 2 - why no error return?
     }
 
     return apdu_len;
 }
+// #endif
+
+
+// #if (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1) || 1	// todo - access credentials also require this...
 
 int bacapp_decode_context_device_obj_property_ref(
     uint8_t * apdu,
@@ -242,14 +251,14 @@ int bacapp_encode_device_obj_ref(
     if (value->deviceIdentifier.type == OBJECT_DEVICE) {
         len =
             encode_context_object_id(&apdu[apdu_len], 0,
-            (int) value->deviceIdentifier.type,
-            value->deviceIdentifier.instance);
+                                     value->deviceIdentifier.type,
+                                     value->deviceIdentifier.instance);
         apdu_len += len;
     }
     /* object-identifier [1] BACnetObjectIdentifier */
     len =
         encode_context_object_id(&apdu[apdu_len], 1,
-        (int) value->objectIdentifier.type, value->objectIdentifier.instance);
+                                 value->objectIdentifier.type, value->objectIdentifier.instance);
     apdu_len += len;
 
     return apdu_len;
@@ -277,10 +286,11 @@ int bacapp_decode_device_obj_ref(
         }
         apdu_len += len;
     } else {
-    	value->deviceIdentifier.type = BACNET_NO_DEV_TYPE;
-    	value->deviceIdentifier.instance = BACNET_NO_DEV_ID;
+        value->deviceIdentifier.type = OBJECT_NO_DEV_TYPE;
+        value->deviceIdentifier.instance = BACNET_NO_DEV_ID;
+        // todo 2, this is an error, BTC test? why no return code -1? How does the rest of the stack handle this?
     }
-    /* object-identifier [1] BACnetObjectIdentifier */
+
     if (-1 == (len =
             decode_context_object_id(&apdu[apdu_len], 1,
                 &value->objectIdentifier.type,
@@ -455,3 +465,5 @@ int main(
 
 #endif /* TEST_DEV_ID_PROP_REF */
 #endif /* TEST */
+
+// #endif // BACNET_ALERT_ENROLLMENT

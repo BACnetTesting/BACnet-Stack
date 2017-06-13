@@ -28,6 +28,11 @@
 #include <string.h>
 #include <errno.h>
 #include "config.h"
+
+/** @file h_upt.c  Handles Unconfirmed Private Transfer requests. */
+
+#if ( BACNET_SVC_PRIVATE_TRANSFER )
+
 #include "txbuf.h"
 #include "bacdef.h"
 #include "bacdcode.h"
@@ -48,12 +53,14 @@ void private_transfer_print_data(
     uint8_t *application_data;
     int application_data_len;
     bool first_value = true;
+#if PRINT_ENABLED
     bool print_brace = false;
+#endif
 
     if (private_data) {
 #if PRINT_ENABLED
         printf("PrivateTransfer:vendorID=%u\r\n",
-            (unsigned) private_data->vendorID);
+               (unsigned) private_data->vendorID);
         printf("PrivateTransfer:serviceNumber=%lu\r\n",
             (unsigned long) private_data->serviceNumber);
 #endif
@@ -62,13 +69,13 @@ void private_transfer_print_data(
         for (;;) {
             len =
                 bacapp_decode_application_data(application_data,
-                (uint8_t) application_data_len, &value);
+                                               (uint8_t) application_data_len, &value);
             if (first_value && (len < application_data_len)) {
                 first_value = false;
 #if PRINT_ENABLED
                 fprintf(stdout, "{");
-#endif
                 print_brace = true;
+#endif
             }
             /* private transfer doesn't provide any clues */
             object_value.object_type = MAX_BACNET_OBJECT_TYPE;
@@ -104,7 +111,7 @@ void private_transfer_print_data(
 void handler_unconfirmed_private_transfer(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src)
+    BACNET_PATH * src)
 {
     BACNET_PRIVATE_TRANSFER_DATA private_data;
     int len = 0;
@@ -114,8 +121,10 @@ void handler_unconfirmed_private_transfer(
 #endif
     len =
         ptransfer_decode_service_request(service_request, service_len,
-        &private_data);
+                                         &private_data);
     if (len >= 0) {
         private_transfer_print_data(&private_data);
     }
 }
+
+#endif

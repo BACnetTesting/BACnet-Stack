@@ -252,6 +252,24 @@ bool CharacterString_Value_Object_Name(
 
     index = CharacterString_Value_Instance_To_Index(object_instance);
     if (index < MAX_CHARACTERSTRING_VALUES) {
+
+			/* 	BACnet Testing Observed Incident oi00119 - 2016.07.22
+				Revealed by BACnet Test Client v1.8.36 ( www.bac-test.com/bacnet-test-client-download )
+					Test BITS: BIT00057
+				Any discussions can be directed to edward@bac-test.com
+				Please feel free to remove this comment when my changes accepted after suitable time for
+				review by all interested parties. Say 6 months -> Jan 2017
+            */
+                
+        // every object must have a (unique) object name, it seems that this implementation 'expects' to have the name
+        // created by the BACnet Client (?) (Please confirm)
+        // Anyway, we cannot rely on this having happened by the time we read the name here, so I
+        // 'autocreate' a name if it does not exist in the same way e.g. Analog Input names are created.
+        if ( Object_Name[index][0] == 0 ) {
+            sprintf(Object_Name[index], "CHARACTERSTRING VALUE %lu", (unsigned long)object_instance);
+        }
+        // end of change....
+        
         status = characterstring_init_ansi(object_name, Object_Name[index]);
     }
 

@@ -1,3 +1,5 @@
+#if 0 // client side only
+
 /**
  * @file
  * @author Daniel Blazevic <daniel.blazevic@gmail.com>
@@ -55,14 +57,14 @@
  *
  * @param service_request [in] The contents of the service request.
  * @param service_len [in] The length of the service_request.
- * @param src [in] BACNET_ADDRESS of the source of the message
+ * @param src [in] BACNET_PATH of the source of the message
  * @param service_data [in] The BACNET_CONFIRMED_SERVICE_ACK_DATA information
  * decoded from the APDU header of this message.
  */
 void get_event_ack_handler(
     uint8_t *service_request,
     uint16_t service_len,
-    BACNET_ADDRESS *src,
+    BACNET_PATH *src,
     BACNET_CONFIRMED_SERVICE_ACK_DATA *service_data)
 {
     uint8_t i = 0;
@@ -85,3 +87,5 @@ void get_event_ack_handler(
         /* FIXME: Add code to process get_event_data */
     }
 }
+
+#endif

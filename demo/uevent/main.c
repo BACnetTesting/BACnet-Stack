@@ -162,11 +162,11 @@ int main(
                 event_data.processIdentifier = strtol(argv[argi], NULL, 0);
                 target_args++;
             } else if (target_args == 1) {
-                event_data.initiatingObjectIdentifier.type =
+                event_data.initiatingDeviceIdentifier.type =
                     strtol(argv[argi], NULL, 0);
                 target_args++;
             } else if (target_args == 2) {
-                event_data.initiatingObjectIdentifier.instance =
+                event_data.initiatingDeviceIdentifier.instance =
                     strtol(argv[argi], NULL, 0);
                 target_args++;
             } else if (target_args == 3) {

@@ -1,3 +1,4 @@
+#if 0 // client side
 /**************************************************************************
 *
 * Copyright (C) 2015 bowe
@@ -51,7 +52,7 @@
  * @param target_address [in] BACnet address of target or broadcast
  */
 uint8_t Send_GetEvent(
-        BACNET_ADDRESS * target_address,
+        BACNET_PATH * target_address,
         BACNET_OBJECT_ID * lastReceivedObjectIdentifier)
 {
     int len = 0;
@@ -59,11 +60,11 @@ uint8_t Send_GetEvent(
     int bytes_sent = 0;
     uint8_t invoke_id = 0;
     BACNET_NPDU_DATA npdu_data;
-    BACNET_ADDRESS my_address;
+    BACNET_PATH my_address;
 
     datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_setup_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
 
     pdu_len =
         npdu_encode_pdu(&Handler_Transmit_Buffer[0], target_address,
@@ -99,7 +100,7 @@ uint8_t Send_GetEvent(
  */
 uint8_t Send_GetEvent_Global( void )
 {
-    BACNET_ADDRESS dest;
+    BACNET_PATH dest;
 
     if (!dcc_communication_enabled())
         return -1;
@@ -109,3 +110,4 @@ uint8_t Send_GetEvent_Global( void )
     return Send_GetEvent(&dest, NULL);
 }
 
+#endif

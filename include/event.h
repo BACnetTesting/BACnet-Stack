@@ -43,7 +43,7 @@ typedef enum {
 
 typedef struct BACnet_Event_Notification_Data {
     uint32_t processIdentifier;
-    BACNET_OBJECT_ID initiatingObjectIdentifier;
+    BACNET_OBJECT_ID initiatingDeviceIdentifier;
     BACNET_OBJECT_ID eventObjectIdentifier;
     BACNET_TIMESTAMP timeStamp;
     uint32_t notificationClass;
@@ -119,9 +119,12 @@ typedef struct BACnet_Event_Notification_Data {
         } changeOfLifeSafety;
         /*
          ** EVENT_EXTENDED
-         **
-         ** Not Supported!
          */
+        struct {
+            uint16_t                        vendorId;
+            unsigned                        extendedEventType;      // Vendor choice
+            BACNET_APPLICATION_DATA_VALUE   value;
+        } extended;
         /*
          ** EVENT_BUFFER_READY
          */
@@ -141,10 +144,6 @@ typedef struct BACnet_Event_Notification_Data {
     } notificationParams;
 } BACNET_EVENT_NOTIFICATION_DATA;
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /***************************************************
 **
@@ -189,15 +188,12 @@ extern "C" {
 ** Sends an Unconfirmed Event Notifcation to a dest
 **
 ****************************************************/
-    int uevent_notify_send(
-        uint8_t * buffer,
-        BACNET_EVENT_NOTIFICATION_DATA * data,
-        BACNET_ADDRESS * dest);
+int uevent_notify_send(
+    uint8_t * buffer,
+    BACNET_EVENT_NOTIFICATION_DATA * data,
+    BACNET_PATH * dest);
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 /** @defgroup ALMEVNT Alarm and Event Management BIBBs
  * These BIBBs prescribe the BACnet capabilities required to interoperably
  * perform the alarm and event management functions enumerated in 22.2.1.2

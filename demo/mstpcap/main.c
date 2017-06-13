@@ -107,7 +107,7 @@ struct mstp_statistics {
     /* highest number MAC during poll for master */
     uint8_t max_master;
     /* highest number of frames sent during a token */
-    uint8_t max_info_frames;
+    // 2016.05.29 EKH: never used uint8_t max_info_frames;
     /* how long it takes a node to pass the token */
     uint32_t token_reply;
     /* how long it takes a node to reply to PFM */
@@ -154,14 +154,14 @@ static void mstp_monitor_i_am(
     BACNET_ADDRESS src = { 0 };
     BACNET_ADDRESS dest = { 0 };
     BACNET_NPDU_DATA npdu_data = { 0 };
-    int apdu_offset = 0;
-    uint16_t apdu_len = 0;
-    uint8_t *apdu = NULL;
-    uint8_t pdu_type = 0;
-    uint8_t service_choice = 0;
-    uint8_t *service_request = NULL;
-    uint32_t device_id = 0;
-    int len = 0;
+    int apdu_offset ;
+    uint16_t apdu_len ;
+    uint8_t *apdu ;
+    uint8_t pdu_type ;
+    uint8_t service_choice ;
+    uint8_t *service_request ;
+    uint32_t device_id ;
+    int len ;
 
     if (pdu[0] == BACNET_PROTOCOL_VERSION) {
         MSTP_Fill_BACnet_Address(&src, mac);
@@ -545,10 +545,8 @@ size_t data_write(
     size_t size,
     size_t nitems)
 {
-    ssize_t bytes = 0;
     if (FD_Pipe != -1) {
-        bytes = write(FD_Pipe, ptr, size * nitems);
-        bytes = bytes;
+        write(FD_Pipe, ptr, size * nitems);
     }
     return fwrite(ptr, size, nitems, pFile);
 }
@@ -559,10 +557,8 @@ size_t data_write_header(
     size_t nitems,
     bool pipe_enable)
 {
-    ssize_t bytes = 0;
     if (pipe_enable && (FD_Pipe != -1)) {
-        bytes = write(FD_Pipe, ptr, size * nitems);
-        bytes = bytes;
+        write(FD_Pipe, ptr, size * nitems);
     }
     return fwrite(ptr, size, nitems, pFile);
 }
@@ -768,14 +764,14 @@ static bool test_global_header(
 static bool read_received_packet(
     volatile struct mstp_port_struct_t *mstp_port)
 {
-    uint32_t ts_sec = 0;        /* timestamp seconds */
-    uint32_t ts_usec = 0;       /* timestamp microseconds */
-    uint32_t incl_len = 0;      /* number of octets of packet saved in file */
-    uint32_t orig_len = 0;      /* actual length of packet */
+    uint32_t ts_sec ;        /* timestamp seconds */
+    uint32_t ts_usec ;       /* timestamp microseconds */
+    uint32_t incl_len ;      /* number of octets of packet saved in file */
+    uint32_t orig_len ;      /* actual length of packet */
     uint8_t header[8] = { 0 };  /* MS/TP header */
     struct timeval tv;
-    size_t count = 0;
-    unsigned i = 0;
+    size_t count ;
+    unsigned i ;
 
     if (pFile) {
         count = fread(&ts_sec, sizeof(ts_sec), 1, pFile);
@@ -905,7 +901,7 @@ static void cleanup(
 static BOOL WINAPI CtrlCHandler(
     DWORD dwCtrlType)
 {
-    dwCtrlType = dwCtrlType;
+    (void) dwCtrlType;
 
     if (hPipe != INVALID_HANDLE_VALUE) {
         FlushFileBuffers(hPipe);
@@ -1092,7 +1088,7 @@ int main(
                 printf("An interface must be provided.\n");
                 return 0;
             }
-            printf("dlt {number=%u}{name=BACnet MS/TP}"
+            printf("dlt {number=%d}{name=BACnet MS/TP}"
                 "{display=BACnet MS/TP}\n",
                 DLT_BACNET_MS_TP);
             Exit_Requested = true;

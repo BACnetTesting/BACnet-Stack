@@ -28,7 +28,6 @@
 #include <string.h>
 #include <errno.h>
 #include "config.h"
-#include "txbuf.h"
 #include "bacdef.h"
 #include "bacdcode.h"
 #include "whohas.h"
@@ -42,10 +41,12 @@
  *  or object ID, if the Device has a match.
  *  @param data [in] The decoded who-has payload from the request.
  */
+
 static void match_name_or_object(
+    const DLINK_SUPPORT *portParams,
     BACNET_WHO_HAS_DATA * data)
 {
-    int object_type = 0;
+    BACNET_OBJECT_TYPE object_type ;
     uint32_t object_instance = 0;
     bool found = false;
     BACNET_CHARACTER_STRING object_name;
@@ -58,7 +59,7 @@ static void match_name_or_object(
             Device_Valid_Object_Name(&data->object.name, &object_type,
             &object_instance);
         if (found) {
-            Send_I_Have(Device_Object_Instance_Number(),
+            Send_I_Have( portParams, Device_Object_Instance_Number(),
                 (BACNET_OBJECT_TYPE) object_type, object_instance,
                 &data->object.name);
         }
@@ -69,7 +70,7 @@ static void match_name_or_object(
             object.identifier.type, data->object.identifier.instance,
             &object_name);
         if (found) {
-            Send_I_Have(Device_Object_Instance_Number(),
+            Send_I_Have( portParams, Device_Object_Instance_Number(),
                 (BACNET_OBJECT_TYPE) data->object.identifier.type,
                 data->object.identifier.instance, &object_name);
         }
@@ -84,18 +85,18 @@ static void match_name_or_object(
  * @ingroup DMDOB
  * @param service_request [in] The received message to be handled.
  * @param service_len [in] Length of the service_request message.
- * @param src [in] The BACNET_ADDRESS of the message's source.
+ * @param src [in] The BACNET_PATH of the message's source.
  */
 void handler_who_has(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src)
+    BACNET_ROUTE * src)
 {
     int len = 0;
     BACNET_WHO_HAS_DATA data;
     bool directed_to_me = false;
 
-    (void) src;
+//     (void) src;
     len = whohas_decode_service_request(service_request, service_len, &data);
     if (len > 0) {
         if ((data.low_limit == -1) || (data.high_limit == -1))
@@ -104,7 +105,7 @@ void handler_who_has(
             && (Device_Object_Instance_Number() <= (uint32_t) data.high_limit))
             directed_to_me = true;
         if (directed_to_me) {
-            match_name_or_object(&data);
+            match_name_or_object( src->portParams, &data);
         }
     }
 }
@@ -122,33 +123,33 @@ void handler_who_has(
  * @ingroup DMDOB
  * @param service_request [in] The received message to be handled.
  * @param service_len [in] Length of the service_request message.
- * @param src [in] The BACNET_ADDRESS of the message's source (ignored).
+ * @param src [in] The BACNET_PATH of the message's source (ignored).
  */
-void handler_who_has_for_routing(
-    uint8_t * service_request,
-    uint16_t service_len,
-    BACNET_ADDRESS * src)
-{
-    int len = 0;
-    BACNET_WHO_HAS_DATA data;
-    int32_t dev_instance;
-    int cursor = 0;     /* Starting hint */
-    int my_list[2] = { 0, -1 }; /* Not really used, so dummy values */
-    BACNET_ADDRESS bcast_net;
-
-    (void) src;
-    len = whohas_decode_service_request(service_request, service_len, &data);
-    if (len > 0) {
-        /* Go through all devices, starting with the root gateway Device */
-        memset(&bcast_net, 0, sizeof(BACNET_ADDRESS));
-        bcast_net.net = BACNET_BROADCAST_NETWORK;       /* That's all we have to set */
-        while (Routed_Device_GetNext(&bcast_net, my_list, &cursor)) {
-            dev_instance = Device_Object_Instance_Number();
-            if ((data.low_limit == -1) || (data.high_limit == -1) ||
-                ((dev_instance >= data.low_limit) &&
-                    (dev_instance <= data.high_limit)))
-                match_name_or_object(&data);
-        }
-    }
-}
+//void handler_who_has_for_routing(
+//    uint8_t * service_request,
+//    uint16_t service_len,
+//    BACNET_PATH * src)
+//{
+//    int len = 0;
+//    BACNET_WHO_HAS_DATA data;
+//    int32_t dev_instance;
+//    int cursor = 0;     /* Starting hint */
+//    int my_list[2] = { 0, -1 }; /* Not really used, so dummy values */
+//    BACNET_PATH bcast_net;
+//
+//    (void) src;
+//    len = whohas_decode_service_request(service_request, service_len, &data);
+//    if (len > 0) {
+//        /* Go through all devices, starting with the root gateway Device */
+//        memset(&bcast_net, 0, sizeof(BACNET_PATH));
+//        bcast_net.net = BACNET_BROADCAST_NETWORK;       /* That's all we have to set */
+//        while (Routed_Device_GetNext(&bcast_net, my_list, &cursor)) {
+//            dev_instance = Device_Object_Instance_Number();
+//            if ((data.low_limit == -1) || (data.high_limit == -1) ||
+//                ((dev_instance >= data.low_limit) &&
+//                    (dev_instance <= data.high_limit)))
+//                match_name_or_object(&data);
+//        }
+//    }
+//}
 #endif /* BAC_ROUTING */

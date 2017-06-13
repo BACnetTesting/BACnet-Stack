@@ -19,6 +19,7 @@ SRCS = ai.c \
 	$(SRC_DIR)/indtext.c \
 	$(SRC_DIR)/datetime.c \
 	$(SRC_DIR)/lighting.c \
+	$(SRC_DIR)/proplist.c \
 	$(TEST_DIR)/ctest.c
 
 TARGET = analog_input

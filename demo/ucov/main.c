@@ -180,9 +180,16 @@ int main(
             MAX_BACNET_APPLICATION_TAG);
         return 1;
     }
+    /* I am sure the intent of BACAPP_PRINT_ENABLED was not to affect this demo, but it has. Someone
+       with deeper knowledge than me can resolve this. Ed. */
+#ifdef BACAPP_PRINT_ENABLED
     status =
         bacapp_parse_application_data(tag, value_string,
-        &cov_data.listOfValues->value);
+                                      &cov_data.listOfValues->value);
+#else
+    status = false ;
+#endif
+
     if (!status) {
         /* FIXME: show the expected entry format for the tag */
         fprintf(stderr, "unable to parse the tag value\r\n");

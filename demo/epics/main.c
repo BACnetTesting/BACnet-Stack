@@ -445,7 +445,7 @@ static const char *protocol_services_supported_text(
 {
     bool is_confirmed = false;
     size_t text_index = 0;
-    bool found = false;
+    bool found ;
     const char *services_text = "unknown";
 
     found =
@@ -482,7 +482,7 @@ bool PrettyPrintPropertyValue(
     BACNET_APPLICATION_DATA_VALUE *value = NULL;
     bool status = true; /*return value */
     size_t len = 0, i = 0, j = 0;
-    BACNET_PROPERTY_ID property = PROP_ALL;
+    BACNET_PROPERTY_ID property ;
     char short_month[4];
 
     value = object_value->value;

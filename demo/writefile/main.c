@@ -154,9 +154,43 @@ static void Init_Service_Handlers(
     apdu_set_reject_handler(MyRejectHandler);
 }
 
-int main(
-    int argc,
-    char *argv[])
+static void print_usage(char *filename)
+{
+    printf("Usage: %s device-instance object-type object-instance "
+           "property [index]\n", filename);
+    printf("       [--version][--help]\n");
+}
+
+static void print_help(char *filename)
+{
+    printf("Read a property from an object in a BACnet device\n"
+           "and print the value.\n"
+           "device-instance:\n"
+           "BACnet Device Object Instance number that you are\n"
+           "trying to communicate to.  This number will be used\n"
+           "to try and bind with the device using Who-Is and\n"
+           "I-Am services.  For example, if you were reading\n"
+           "Device Object 123, the device-instance would be 123.\n"
+           "Trailing options: -p port\n"
+           "\nExample:\n"
+           "If you want read the Present-Value of Analog Output 101\n"
+           "in Device 123, you could send the following command:\n"
+           "%s 123 AI 101 PV\n",
+           filename);
+}
+
+int ParseCmd(int argc, char *argv[], char srch)
+{
+    int i = 1;
+    for (; i < argc - 1; i++) {
+        if ((argv[i][0] == '-' || argv[i][0] == '/') && argv[i][1] == srch) {
+            return i + 1;
+        }
+    }
+    return 0;
+}
+
+int main(int argc, char *argv[])
 {
     BACNET_ADDRESS src = {
         0
@@ -173,6 +207,8 @@ int main(
     uint8_t invoke_id = 0;
     bool found = false;
     uint16_t my_max_apdu = 0;
+    uint16_t user_specified_bytes=0;
+    uint16_t millisecondDelay = 0;
     FILE *pFile = NULL;
     static BACNET_OCTET_STRING fileData;
     size_t len = 0;
@@ -202,10 +238,30 @@ int main(
     if (argc > 4) {
         Target_File_Requested_Octet_Count = strtol(argv[4], NULL, 0);
     }
-    if (argc > 5) {
-        Target_File_Requested_Octet_Pad_Byte = strtol(argv[5], NULL, 0);
-        pad_byte = true;
+
+    // todo a) document, b) dont automatically pad if argc > 5 !!
+    //if (argc > 5) {
+    //    Target_File_Requested_Octet_Pad_Byte = strtol(argv[5], NULL, 0);
+    //    pad_byte = true;
+    //}
+
+    int portArg = ParseCmd(argc, argv, 'p');
+    if (portArg != 0) {
+        _putenv_s("BACNET_IP_PORT", argv[portArg]);
     }
+
+    // change size of packet?
+    user_specified_bytes = ParseCmd(argc, argv, 's');
+    if (user_specified_bytes) {
+        user_specified_bytes = atoi(argv[user_specified_bytes]);
+    }
+
+    // delay between messages
+    millisecondDelay = ParseCmd(argc, argv, 'd');
+    if (millisecondDelay) {
+        millisecondDelay = atoi(argv[millisecondDelay]);
+    }
+
     /* setup my info */
     Device_Set_Object_Instance_Number(BACNET_MAX_INSTANCE);
     address_init();
@@ -269,11 +325,20 @@ int main(
                     requestedOctetCount = my_max_apdu / 2;
                 }
             }
+
+            if (user_specified_bytes != 0) {
+                requestedOctetCount = user_specified_bytes ;
+            }
+
             /* has the previous invoke id expired or returned?
                note: invoke ID = 0 is invalid, so it will be idle */
             if ((invoke_id == 0) || tsm_invoke_id_free(invoke_id)) {
-                if (End_Of_File_Detected || Error_Detected) {
+                if (End_Of_File_Detected ) {
                     printf("\r\n");
+                    break;
+                }
+                if ( Error_Detected) {
+                    printf("Error detected\r\n");
                     break;
                 }
                 if (invoke_id != 0) {
@@ -305,10 +370,11 @@ int main(
                 invoke_id =
                     Send_Atomic_Write_File_Stream
                     (Target_Device_Object_Instance,
-                    Target_File_Object_Instance, fileStartPosition, &fileData);
+                     Target_File_Object_Instance, fileStartPosition, &fileData);
+                Sleep(millisecondDelay);
                 Current_Invoke_ID = invoke_id;
             } else if (tsm_invoke_id_failed(invoke_id)) {
-                fprintf(stderr, "\rError: TSM Timeout!\r\n");
+                printf("Error: TSM Timeout!\r\n");
                 tsm_free_invoke_id(invoke_id);
                 Error_Detected = true;
                 /* try again or abort? */
@@ -318,7 +384,7 @@ int main(
             /* increment timer - exit if timed out */
             elapsed_seconds += (current_seconds - last_seconds);
             if (elapsed_seconds > timeout_seconds) {
-                fprintf(stderr, "\rError: APDU Timeout!\r\n");
+                printf("Error: APDU Timeout!\r\n");
                 Error_Detected = true;
                 break;
             }

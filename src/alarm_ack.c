@@ -32,6 +32,10 @@
  -------------------------------------------
 ####COPYRIGHTEND####*/
 
+#include "config.h"
+
+#if (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1) || (INTRINSIC_REPORTING == 1)
+
 #include "alarm_ack.h"
 
 /** @file alarm_ack.c  Handles Event Notifications (ACKs) */
@@ -84,7 +88,7 @@ int alarm_ack_encode_service_request(
 
         len =
             encode_context_object_id(&apdu[apdu_len], 1,
-            (int) data->eventObjectIdentifier.type,
+                                     data->eventObjectIdentifier.type,
             data->eventObjectIdentifier.instance);
         apdu_len += len;
 
@@ -128,7 +132,7 @@ int alarm_ack_decode_service_request(
     uint32_t enumValue;
 
     /* unused parameter */
-    apdu_len = apdu_len;
+  //  apdu_len = apdu_len;
 
     if (-1 == (section_len =
             decode_context_unsigned(&apdu[len], 0,
@@ -279,3 +283,5 @@ int main(
 
 #endif /* TEST_ALARM_ACK */
 #endif /* TEST */
+
+#endif // (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1)

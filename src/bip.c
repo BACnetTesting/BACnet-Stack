@@ -42,98 +42,81 @@
 #if PRINT_ENABLED
 #include <stdio.h>      /* for standard i/o, like printing */
 #endif
-
+#include "CEDebug.h"
+#include "btaDebug.h"
+#include "datalink.h"
+#include "bacaddr.h"
 /** @file bip.c  Configuration and Operations for BACnet/IP */
 
-static int BIP_Socket = -1;
+// static int BIP_Socket = -1;
 /* port to use - stored in network byte order */
-static uint16_t BIP_Port = 0;   /* this will force initialization in demos */
-/* IP Address - stored in network byte order */
-static struct in_addr BIP_Address;
-/* Broadcast Address - stored in network byte order */
-static struct in_addr BIP_Broadcast_Address;
-
-/** Setter for the BACnet/IP socket handle.
- *
- * @param sock_fd [in] Handle for the BACnet/IP socket.
- */
-void bip_set_socket(
-    int sock_fd)
-{
-    BIP_Socket = sock_fd;
-}
-
-/** Getter for the BACnet/IP socket handle.
- *
- * @return The handle to the BACnet/IP socket.
- */
-int bip_socket(
-    void)
-{
-    return BIP_Socket;
-}
-
-bool bip_valid(
-    void)
-{
-    return (BIP_Socket != -1);
-}
-
-void bip_set_addr(
-    uint32_t net_address)
-{       /* in network byte order */
-    BIP_Address.s_addr = net_address;
-}
+// static uint16_t BIP_Port = 0;   /* this will force initialization in demos */
 
 /* returns network byte order */
-uint32_t bip_get_addr(
-    void)
+uint32_t bip_get_addr(const DLINK_SUPPORT *portParams)
 {
-    return BIP_Address.s_addr;
+    // return BIP_Address.s_addr;
+    return portParams->bipParams.nwoLocal_addr;
 }
 
+#if defined(BBMD_ENABLED) && BBMD_ENABLED
 void bip_set_broadcast_addr(
+    DLINK_SUPPORT *portParams,
     uint32_t net_address)
-{       /* in network byte order */
-    BIP_Broadcast_Address.s_addr = net_address;
+{
+    // BIP_Broadcast_Address.s_addr = net_address;
+    portParams->bipParams.nwoBroadcast_addr = net_address;
 }
 
 /* returns network byte order */
-uint32_t bip_get_broadcast_addr(
-    void)
+uint32_t bip_get_broadcast_ipAddr(
+    const DLINK_SUPPORT *portParams)
 {
-    return BIP_Broadcast_Address.s_addr;
+    // return BIP_Broadcast_Address.s_addr;
+    return portParams->bipParams.nwoBroadcast_addr;
 }
+#endif
 
 
-void bip_set_port(
-    uint16_t port)
-{       /* in network byte order */
-    BIP_Port = port;
+void bip_set_local_port(
+    DLINK_SUPPORT *portParams,
+    uint16_t nwoPort)
+{
+    portParams->bipParams.nwoPort = nwoPort;
 }
 
 /* returns network byte order */
-uint16_t bip_get_port(
-    void)
+uint16_t bip_get_local_port(
+    const DLINK_SUPPORT *portParams )
 {
-    return BIP_Port;
+    return portParams->bipParams.nwoPort;
 }
 
-static int bip_decode_bip_address(
-    BACNET_ADDRESS * bac_addr,
+
+    // copy data, everything in network order...
+void bip_ipAddr_port_to_bacnet_mac(BACNET_MAC_ADDRESS *addr, const uint32_t nwoIpAddr, const uint16_t nwoPort)
+{
+    addr->bytes[0] = ((uint8_t *)&nwoIpAddr)[0];
+    addr->bytes[1] = ((uint8_t *)&nwoIpAddr)[1];
+    addr->bytes[2] = ((uint8_t *)&nwoIpAddr)[2];
+    addr->bytes[3] = ((uint8_t *)&nwoIpAddr)[3];
+
+    addr->bytes[4] = ((uint8_t *)&nwoPort)[0];
+    addr->bytes[5] = ((uint8_t *)&nwoPort)[1];
+
+    addr->len = 6 ;
+}
+
+
+static void bip_decode_bip_address(
+    const uint8_t * bac_mac,
     struct in_addr *address,    /* in network format */
     uint16_t * port)
 {       /* in network format */
-    int len = 0;
-
-    if (bac_addr) {
-        memcpy(&address->s_addr, &bac_addr->mac[0], 4);
-        memcpy(port, &bac_addr->mac[4], 2);
-        len = 6;
-    }
-
-    return len;
+        memcpy(&address->s_addr, &bac_mac[0], 4);
+        memcpy(port, &bac_mac[4], 2);
 }
+
 
 /** Function to send a packet out the BACnet/IP socket (Annex J).
  * @ingroup DLBIP
@@ -144,66 +127,91 @@ static int bip_decode_bip_address(
  * @param pdu_len [in] Number of bytes in the pdu buffer.
  * @return Number of bytes sent on success, negative number on failure.
  */
-int bip_send_pdu(
-    BACNET_ADDRESS * dest,      /* destination address */
-    BACNET_NPDU_DATA * npdu_data,       /* network information */
-    uint8_t * pdu,      /* any data to be sent - may be null */
-    unsigned pdu_len)
+void bip_send_npdu(
+    const DLINK_SUPPORT *portParams,
+    const BACNET_MAC_ADDRESS *destMAC,      /* destination address, if null, then broadcast */
+    const BACNET_NPDU_DATA * npdu_data,     /* network information */
+    const DLCB *dlcb )
 {       /* number of bytes of data */
     struct sockaddr_in bip_dest;
-    uint8_t mtu[MAX_MPDU] = { 0 };
+    uint8_t mtu[MAX_MPDU_IP] = { 0 };
     int mtu_len = 0;
-    int bytes_sent = 0;
+    int bytes_sent ;
     /* addr and port in host format */
     struct in_addr address;
-    uint16_t port = 0;
-
-    (void) npdu_data;
-    /* assumes that the driver has already been initialized */
-    if (BIP_Socket < 0) {
-        return BIP_Socket;
-    }
+    uint16_t port;
 
     mtu[0] = BVLL_TYPE_BACNET_IP;
     bip_dest.sin_family = AF_INET;
-    if ((dest->net == BACNET_BROADCAST_NETWORK) || (dest->mac_len == 0)) {
+
+    if (destMAC == NULL)
+    {
         /* broadcast */
-        address.s_addr = BIP_Broadcast_Address.s_addr;
-        port = BIP_Port;
+        address.s_addr = portParams->bipParams.nwoBroadcast_addr; // BIP_Broadcast_Address.s_addr;
+        // port = BIP_Port;
+        port = portParams->bipParams.nwoPort;
         mtu[1] = BVLC_ORIGINAL_BROADCAST_NPDU;
-    } else if ((dest->net > 0) && (dest->len == 0)) {
-        /* network specific broadcast */
-        if (dest->mac_len == 6) {
-            bip_decode_bip_address(dest, &address, &port);
-        } else {
-            address.s_addr = BIP_Broadcast_Address.s_addr;
-            port = BIP_Port;
-        }
-        mtu[1] = BVLC_ORIGINAL_BROADCAST_NPDU;
-    } else if (dest->mac_len == 6) {
-        bip_decode_bip_address(dest, &address, &port);
-        mtu[1] = BVLC_ORIGINAL_UNICAST_NPDU;
-    } else {
-        /* invalid address */
-        return -1;
     }
+    else
+    {
+        bip_decode_bip_address(destMAC->bytes, &address, &port);
+        mtu[1] = BVLC_ORIGINAL_UNICAST_NPDU;
+    }
+
     bip_dest.sin_addr.s_addr = address.s_addr;
     bip_dest.sin_port = port;
     memset(&(bip_dest.sin_zero), '\0', 8);
     mtu_len = 2;
     mtu_len +=
         encode_unsigned16(&mtu[mtu_len],
-        (uint16_t) (pdu_len + 4 /*inclusive */ ));
-    memcpy(&mtu[mtu_len], pdu, pdu_len);
-    mtu_len += pdu_len;
+        (uint16_t)(dlcb->bufSize + 4 /*inclusive */));
+    memcpy(&mtu[mtu_len], dlcb->Handler_Transmit_Buffer, dlcb->bufSize );
+    mtu_len += dlcb->bufSize;
 
     /* Send the packet */
     bytes_sent =
-        sendto(BIP_Socket, (char *) mtu, mtu_len, 0,
+        sendto(portParams->bipParams.socket, (char *)mtu, mtu_len, 0,
         (struct sockaddr *) &bip_dest, sizeof(struct sockaddr));
 
-    return bytes_sent;
+    if (bytes_sent <= 0)
+    {
+        SendBTApanicMessage("mxxx - Could not send PDU");
+        return; 
+    }
+
+    // just for BTA, if we just did a broadcast, fill in the IP b'cast address for clarity (len == 0 indicates b'cast)
+    {
+        BACNET_MAC_ADDRESS phySrc;
+        BACNET_MAC_ADDRESS phyDest;
+
+        //memcpy(&phySrc.adr, &portParams->bipParams.local_addr, 4);
+        //memcpy(&phySrc.adr[4], &portParams->bipParams.nwoPort, 2);
+        //phySrc.len = 6;
+        bip_ipAddr_port_to_bacnet_mac(&phySrc, portParams->bipParams.nwoLocal_addr, portParams->bipParams.nwoPort);
+
+        if (destMAC)
+        {
+            //memcpy(phyDest.adr, destMAC, 6);
+            //phyDest.len = 6;
+            // bacnet_mac_copy(&phyDest, destMAC);
+            phyDest = *destMAC;
+            SendBTApacketTx(500 + portParams->port_id2, &phySrc, &phyDest, mtu, mtu_len);
+        }
+        else
+        {
+            // broadcast, make a dest for BTA
+            BACNET_MAC_ADDRESS bcastMac;
+            //memcpy(bcastMac.adr, &portParams->bipParams.local_addr, 4);
+            //memcpy(&bcastMac.adr[4], &portParams->bipParams.nwoPort, 2);
+            //bcastMac.len = 6;
+            bip_ipAddr_port_to_bacnet_mac(&bcastMac, portParams->bipParams.nwoBroadcast_addr, portParams->bipParams.nwoPort);
+            SendBTApacketTx( 600+portParams->port_id2, &phySrc, &bcastMac, mtu, mtu_len);
+        }
+    }
+	
+	// todo ekh - free dlcb
 }
+
 
 /** Implementation of the receive() function for BACnet/IP; receives one
  * packet, verifies its BVLC header, and removes the BVLC header from
@@ -217,43 +225,39 @@ int bip_send_pdu(
  * @return The number of octets (remaining) in the PDU, or zero on failure.
  */
 uint16_t bip_receive(
-    BACNET_ADDRESS * src,       /* source address */
-    uint8_t * pdu,      /* PDU data */
-    uint16_t max_pdu,   /* amount of space available in the PDU  */
-    unsigned timeout)
+    DLINK_SUPPORT *portParams,
+    BACNET_MAC_ADDRESS *mac,
+    uint8_t *pdu,
+    uint16_t max_pdu
+    )
 {
     int received_bytes = 0;
     uint16_t pdu_len = 0;       /* return value */
     fd_set read_fds;
-    int max = 0;
+    int max ;
     struct timeval select_timeout;
     struct sockaddr_in sin = { 0 };
     socklen_t sin_len = sizeof(sin);
     uint16_t i = 0;
-    int function = 0;
+    int function ;
 
     /* Make sure the socket is open */
-    if (BIP_Socket < 0)
+    if (portParams->bipParams.socket < 0)
         return 0;
 
     /* we could just use a non-blocking socket, but that consumes all
        the CPU time.  We can use a timeout; it is only supported as
        a select. */
-    if (timeout >= 1000) {
-        select_timeout.tv_sec = timeout / 1000;
-        select_timeout.tv_usec =
-            1000 * (timeout - select_timeout.tv_sec * 1000);
-    } else {
         select_timeout.tv_sec = 0;
-        select_timeout.tv_usec = 1000 * timeout;
-    }
+        select_timeout.tv_usec = 10000;
+
     FD_ZERO(&read_fds);
-    FD_SET(BIP_Socket, &read_fds);
-    max = BIP_Socket;
+    FD_SET(portParams->bipParams.socket, &read_fds);
+    max = portParams->bipParams.socket;
     /* see if there is a packet for us */
     if (select(max + 1, &read_fds, NULL, NULL, &select_timeout) > 0)
         received_bytes =
-            recvfrom(BIP_Socket, (char *) &pdu[0], max_pdu, 0,
+        recvfrom(portParams->bipParams.socket, (char *)&pdu[0], max_pdu, 0,
             (struct sockaddr *) &sin, &sin_len);
     else
         return 0;
@@ -267,11 +271,25 @@ uint16_t bip_receive(
     if (received_bytes == 0)
         return 0;
 
+    // we do NOT want to process packets from ourselves
+    if (sin.sin_addr.s_addr == portParams->bipParams.nwoLocal_addr && sin.sin_port == portParams->bipParams.nwoPort)
+    {
+        return 0;
+    }
+
+    BACNET_MAC_ADDRESS smac, dmac;
+
+    bip_ipAddr_port_to_bacnet_mac(&smac, sin.sin_addr.s_addr, sin.sin_port);
+    bip_ipAddr_port_to_bacnet_mac(&dmac, portParams->bipParams.nwoLocal_addr, portParams->bipParams.nwoPort);
+
+    SendBTApacketRx(portParams->port_id2, &smac, &dmac, pdu, received_bytes);
+
+
     /* the signature of a BACnet/IP packet */
     if (pdu[0] != BVLL_TYPE_BACNET_IP)
         return 0;
 
-    if (bvlc_for_non_bbmd(&sin, pdu, received_bytes) > 0) {
+    if (bvlc_for_non_bbmd(portParams, &sin, pdu, received_bytes) > 0) {
         /* Handled, usually with a NACK. */
 #if PRINT_ENABLED
         fprintf(stderr, "BIP: BVLC discarded!\n");
@@ -282,18 +300,19 @@ uint16_t bip_receive(
     function = bvlc_get_function_code();        /* aka, pdu[1] */
     if ((function == BVLC_ORIGINAL_UNICAST_NPDU) ||
         (function == BVLC_ORIGINAL_BROADCAST_NPDU)) {
-        /* ignore messages from me */
-        if ((sin.sin_addr.s_addr == BIP_Address.s_addr) &&
-            (sin.sin_port == BIP_Port)) {
+        /* ignore messages from me */ // todo2 - this is redundant, see above
+        if ((sin.sin_addr.s_addr == portParams->bipParams.nwoLocal_addr ) && // BIP_Address.s_addr) &&
+            (sin.sin_port == portParams->bipParams.nwoPort )) {
             pdu_len = 0;
 #if 0
             fprintf(stderr, "BIP: src is me. Discarded!\n");
 #endif
         } else {
             /* data in src->mac[] is in network format */
-            src->mac_len = 6;
-            memcpy(&src->mac[0], &sin.sin_addr.s_addr, 4);
-            memcpy(&src->mac[4], &sin.sin_port, 2);
+            //portParams->src.mac_len = 6;
+            //memcpy(&portParams->src.mac[0], &sin.sin_addr.s_addr, 4);
+            //memcpy(&portParams->src.mac[4], &sin.sin_port, 2);
+            bip_ipAddr_port_to_bacnet_mac( mac, sin.sin_addr.s_addr, sin.sin_port);
             /* FIXME: check destination address */
             /* see if it is broadcast or for us */
             /* decode the length of the PDU - length is inclusive of BVLC */
@@ -305,12 +324,7 @@ uint16_t bip_receive(
                 fprintf(stderr, "BIP: NPDU[%hu]:", pdu_len);
 #endif
                 /* shift the buffer to return a valid PDU */
-                for (i = 0; i < pdu_len; i++) {
-                    pdu[i] = pdu[4 + i];
-#if 0
-                    fprintf(stderr, "%02X ", pdu[i]);
-#endif
-                }
+                memcpy ( pdu, &pdu[4], pdu_len ) ;
 #if 0
                 fprintf(stderr, "\n");
 #endif
@@ -327,15 +341,16 @@ uint16_t bip_receive(
     } else if (function == BVLC_FORWARDED_NPDU) {
         memcpy(&sin.sin_addr.s_addr, &pdu[4], 4);
         memcpy(&sin.sin_port, &pdu[8], 2);
-        if ((sin.sin_addr.s_addr == BIP_Address.s_addr) &&
-            (sin.sin_port == BIP_Port)) {
+        if ((sin.sin_addr.s_addr == portParams->bipParams.nwoLocal_addr ) && // BIP_Address.s_addr) &&
+            (sin.sin_port == portParams->bipParams.nwoPort)) {
             /* ignore messages from me */
             pdu_len = 0;
         } else {
             /* data in src->mac[] is in network format */
-            src->mac_len = 6;
-            memcpy(&src->mac[0], &sin.sin_addr.s_addr, 4);
-            memcpy(&src->mac[4], &sin.sin_port, 2);
+            //portParams->src.mac_len = 6;
+            //memcpy(&portParams->src.mac[0], &sin.sin_addr.s_addr, 4);
+            //memcpy(&portParams->src.mac[4], &sin.sin_port, 2);
+            bip_ipAddr_port_to_bacnet_mac(mac, sin.sin_addr.s_addr, sin.sin_port);
             /* FIXME: check destination address */
             /* see if it is broadcast or for us */
             /* decode the length of the PDU - length is inclusive of BVLC */
@@ -344,9 +359,7 @@ uint16_t bip_receive(
             pdu_len -= 10;
             if (pdu_len < max_pdu) {
                 /* shift the buffer to return a valid PDU */
-                for (i = 0; i < pdu_len; i++) {
-                    pdu[i] = pdu[4 + 6 + i];
-                }
+                memcpy(pdu, &pdu[4 + 6 + i], pdu_len);
             } else {
                 /* ignore packets that are too large */
                 /* clients should check my max-apdu first */
@@ -358,42 +371,25 @@ uint16_t bip_receive(
     return pdu_len;
 }
 
-void bip_get_my_address(
-    BACNET_ADDRESS * my_address)
+
+void bip_get_MAC_address(
+    const DLINK_SUPPORT *portParams,
+    BACNET_MAC_ADDRESS * my_address)
 {
-    int i = 0;
-
-    if (my_address) {
-        my_address->mac_len = 6;
-        memcpy(&my_address->mac[0], &BIP_Address.s_addr, 4);
-        memcpy(&my_address->mac[4], &BIP_Port, 2);
-        my_address->net = 0;    /* local only, no routing */
-        my_address->len = 0;    /* no SLEN */
-        for (i = 0; i < MAX_MAC_LEN; i++) {
-            /* no SADR */
-            my_address->adr[i] = 0;
-        }
-    }
-
-    return;
+    bip_ipAddr_port_to_bacnet_mac(my_address, portParams->bipParams.nwoLocal_addr, portParams->bipParams.nwoPort);
 }
 
-void bip_get_broadcast_address(
-    BACNET_ADDRESS * dest)
-{       /* destination address */
-    int i = 0;  /* counter */
 
-    if (dest) {
-        dest->mac_len = 6;
-        memcpy(&dest->mac[0], &BIP_Broadcast_Address.s_addr, 4);
-        memcpy(&dest->mac[4], &BIP_Port, 2);
-        dest->net = BACNET_BROADCAST_NETWORK;
-        dest->len = 0;  /* no SLEN */
-        for (i = 0; i < MAX_MAC_LEN; i++) {
-            /* no SADR */
-            dest->adr[i] = 0;
-        }
-    }
+void bip_get_broadcast_BACnetMacAddress(
+    const DLINK_SUPPORT *portParams,
+    BACNET_MAC_ADDRESS * dest)
+{
+    /* destination address */
+//     int i = 0;  /* counter */
 
-    return;
+        dest->len = 6;
+        memcpy(&dest->bytes[0], &portParams->bipParams.nwoBroadcast_addr, 4) ; //BIP_Broadcast_Address.s_addr, 4);
+        memcpy(&dest->bytes[4], &portParams->bipParams.nwoPort, 2);
 }
+
+

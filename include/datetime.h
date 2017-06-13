@@ -34,7 +34,8 @@ typedef enum BACnet_Weekday {
     BACNET_WEEKDAY_THURSDAY = 4,
     BACNET_WEEKDAY_FRIDAY = 5,
     BACNET_WEEKDAY_SATURDAY = 6,
-    BACNET_WEEKDAY_SUNDAY = 7
+    BACNET_WEEKDAY_SUNDAY = 7,
+    BACNET_WEEKDAY_ANY = 0xff
 } BACNET_WEEKDAY;
 
 /* date */
@@ -42,7 +43,7 @@ typedef struct BACnet_Date {
     uint16_t year;      /* AD */
     uint8_t month;      /* 1=Jan */
     uint8_t day;        /* 1..31 */
-    uint8_t wday;       /* 1=Monday-7=Sunday */
+    BACNET_WEEKDAY wday;       /* 1=Monday-7=Sunday */
 } BACNET_DATE;
 
 /* time */
@@ -71,9 +72,6 @@ typedef struct BACnet_Weeknday {
     uint8_t dayofweek;  /* 1=Monday-7=Sunday, FF=any */
 } BACNET_WEEKNDAY;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     /* utility initialization functions */
     void datetime_set_date(
@@ -125,7 +123,7 @@ extern "C" {
     uint8_t datetime_month_days(
         uint16_t year,
         uint8_t month);
-    uint8_t datetime_day_of_week(
+    BACNET_WEEKDAY datetime_day_of_week(
         uint16_t year,
         uint8_t month,
         uint8_t day);
@@ -249,7 +247,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif /* DATE_TIME_H */

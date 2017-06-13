@@ -71,12 +71,8 @@ typedef void (
 
 typedef void (
     *rpm_object_property_lists_function) (
-    BACNET_OBJECT_TYPE object_type,
-    struct special_property_list_t * pPropertyList);
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+        BACNET_OBJECT_TYPE object_type,
+        struct special_property_list_t * pPropertyList);
 
 /* encode functions */
 /* Start with the Init function, and then add an object,
@@ -144,19 +140,19 @@ extern "C" {
         uint8_t * application_data,
         unsigned application_data_len);
 
-    int rpm_ack_encode_apdu_object_property_error(
-        uint8_t * apdu,
-        BACNET_ERROR_CLASS error_class,
-        BACNET_ERROR_CODE error_code);
+int rpm_ack_encode_apdu_object_property_error(
+    uint8_t * apdu,
+    BACNET_ERROR_CLASS error_class,
+    BACNET_ERROR_CODE error_code);
 
-    int rpm_ack_encode_apdu_object_end(
-        uint8_t * apdu);
+//int rpm_ack_encode_apdu_object_end(
+//    uint8_t * apdu);
 
-    int rpm_ack_decode_object_id(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        BACNET_OBJECT_TYPE * object_type,
-        uint32_t * object_instance);
+int rpm_ack_decode_object_id(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    BACNET_OBJECT_TYPE * object_type,
+    uint32_t * object_instance);
 /* is this the end of the list of this objects properties values? */
     int rpm_ack_decode_object_end(
         uint8_t * apdu,
@@ -182,15 +178,12 @@ extern "C" {
         uint8_t ** service_request,
         unsigned *service_request_len);
 
-    void testReadPropertyMultiple(
-        Test * pTest);
-    void testReadPropertyMultipleAck(
-        Test * pTest);
+void testReadPropertyMultiple(
+    Test * pTest);
+void testReadPropertyMultipleAck(
+    Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 /** @defgroup DSRPM Data Sharing -Read Property Multiple Service (DS-RPM)
  * @ingroup DataShare
  * 15.7 ReadPropertyMultiple Service <br>

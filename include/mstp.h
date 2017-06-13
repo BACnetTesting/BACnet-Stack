@@ -58,8 +58,11 @@ struct mstp_port_struct_t {
     /* Used to accumulate the CRC on the data field of a frame. */
     uint16_t DataCRC;
     /* Used to store the actual CRC from the data field. */
+
+    // todo ekh 3 - not used  - used by MSTPCAP.C
     uint8_t DataCRCActualMSB;
     uint8_t DataCRCActualLSB;
+
     /* Used to store the data length of a received frame. */
     uint16_t DataLength;
     /* Used to store the destination address of a received frame. */
@@ -77,7 +80,10 @@ struct mstp_port_struct_t {
     /* Used to accumulate the CRC on the header of a frame. */
     uint8_t HeaderCRC;
     /* Used to store the actual CRC from the header. */
+
+    // not used? todo ekh 3  - used by mstpcap only?
     uint8_t HeaderCRCActual;
+
     /* Used as an index by the Receive State Machine, up to a maximum value of */
     /* InputBufferSize. */
     uint32_t Index;
@@ -169,9 +175,6 @@ struct mstp_port_struct_t {
 
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     void MSTP_Init(
         volatile struct mstp_port_struct_t *mstp_port);
@@ -206,7 +209,7 @@ extern "C" {
         uint16_t data_len);
 
     void MSTP_Fill_BACnet_Address(
-        BACNET_ADDRESS * src,
+        BACNET_PATH * src,
         uint8_t mstp_address);
 
     /* functions used by the MS/TP state machine to put or get data */
@@ -226,7 +229,4 @@ extern "C" {
         volatile struct mstp_port_struct_t *mstp_port,
         unsigned timeout);      /* milliseconds to wait for a packet */
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

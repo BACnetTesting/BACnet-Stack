@@ -32,9 +32,6 @@
 #include "rp.h"
 #include "wp.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     void Analog_Output_Property_Lists(
         const int **pRequired,
@@ -45,7 +42,7 @@ extern "C" {
     unsigned Analog_Output_Count(
         void);
     uint32_t Analog_Output_Index_To_Instance(
-        unsigned index);
+        unsigned objectIndex);
     unsigned Analog_Output_Instance_To_Index(
         uint32_t instance);
     bool Analog_Output_Object_Instance_Add(
@@ -115,17 +112,49 @@ extern "C" {
 
     int Analog_Output_Read_Property(
         BACNET_READ_PROPERTY_DATA * rpdata);
+        
     bool Analog_Output_Write_Property(
         BACNET_WRITE_PROPERTY_DATA * wp_data);
 
+#if ( BACNET_SVC_COV_B == 1 )
+    bool Analog_Output_Change_Of_Value(
+        uint32_t instance);
+    void Analog_Output_Change_Of_Value_Clear(
+        uint32_t instance);
+        
+    bool Analog_Output_Encode_Value_List(
+        uint32_t object_instance,
+        BACNET_PROPERTY_VALUE * value_list);
+#endif
+
+
     bool Analog_Output_Create(
         uint32_t object_instance);
+        
     bool Analog_Output_Delete(
         uint32_t object_instance);
+        
     void Analog_Output_Cleanup(
         void);
+        
     void Analog_Output_Init(
         void);
+
+#if ( INTRINSIC_REPORTING == 1 )
+    int Analog_Output_Event_Information(
+        unsigned index,
+        BACNET_GET_EVENT_INFORMATION_DATA * getevent_data);
+
+    int Analog_Output_Alarm_Ack(
+        BACNET_ALARM_ACK_DATA * alarmack_data,
+        BACNET_ERROR_CLASS *error_class,
+        BACNET_ERROR_CODE * error_code);
+
+    // Deprecated since Rev 13   
+    //int Analog_Output_Alarm_Summary(
+    //    unsigned index,
+    //    BACNET_GET_ALARM_SUMMARY_DATA * getalarm_data);
+#endif
 
 #ifdef TEST
 #include "ctest.h"
@@ -133,7 +162,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

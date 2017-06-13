@@ -112,42 +112,51 @@ static uint32_t Database_Revision = 0;
 int Device_Read_Property_Local(
     BACNET_READ_PROPERTY_DATA * rpdata);
 extern int Routed_Device_Read_Property_Local(
-    BACNET_READ_PROPERTY_DATA * rpdata);
+    BACNET_READ_PROPERTY_DATA *rpdata);
 extern bool Routed_Device_Write_Property_Local(
-    BACNET_WRITE_PROPERTY_DATA * wp_data);
+    BACNET_WRITE_PROPERTY_DATA *wp_data);
 
 /* All included BACnet objects */
 static object_functions_t Object_Table[] = {
-    {OBJECT_DEVICE,
-            NULL /* Init - don't init Device or it will recourse! */ ,
-            Device_Count,
-            Device_Index_To_Instance,
-            Device_Valid_Object_Instance_Number,
-            Device_Object_Name,
-            Device_Read_Property_Local,
-            NULL /* Write_Property */ ,
-            NULL /* Property_Lists */ ,
-            NULL /* ReadRangeInfo */ ,
-            NULL /* Iterator */ ,
-            NULL /* Value_Lists */ ,
-            NULL /* COV */ ,
-            NULL /* COV Clear */ ,
-        NULL /* Intrinsic Reporting */ },
-    {MAX_BACNET_OBJECT_TYPE,
-            NULL /* Init */ ,
-            NULL /* Count */ ,
-            NULL /* Index_To_Instance */ ,
-            NULL /* Valid_Instance */ ,
-            NULL /* Object_Name */ ,
-            NULL /* Read_Property */ ,
-            NULL /* Write_Property */ ,
-            NULL /* Property_Lists */ ,
-            NULL /* ReadRangeInfo */ ,
-            NULL /* Iterator */ ,
-            NULL /* Value_Lists */ ,
-            NULL /* COV */ ,
-            NULL /* COV Clear */ ,
-        NULL /* Intrinsic Reporting */ }
+    {
+        OBJECT_DEVICE,
+        NULL /* Init - don't init Device or it will recourse! */,
+        Device_Count,
+        Device_Index_To_Instance,
+        Device_Valid_Object_Instance_Number,
+        Device_Object_Name,
+        Device_Read_Property_Local,
+        NULL /* Write_Property */,
+        NULL /* Property_Lists */,
+        NULL /* ReadRangeInfo */,
+        NULL /* Iterator */,
+#if ( BACNET_SVC_COV == 1 )
+        NULL /* Value_Lists */,
+        NULL /* COV */,
+        NULL /* COV Clear */,
+#endif
+        NULL /* Intrinsic Reporting */
+    },
+
+    {
+        MAX_BACNET_OBJECT_TYPE,
+        NULL /* Init */,
+        NULL /* Count */,
+        NULL /* Index_To_Instance */,
+        NULL /* Valid_Instance */,
+        NULL /* Object_Name */,
+        NULL /* Read_Property */,
+        NULL /* Write_Property */,
+        NULL /* Property_Lists */,
+        NULL /* ReadRangeInfo */,
+        NULL /* Iterator */,
+#if ( BACNET_SVC_COV == 1 )
+        NULL /* Value_Lists */,
+        NULL /* COV */,
+        NULL /* COV Clear */,
+#endif
+        NULL /* Intrinsic Reporting */
+    }
 };
 
 /** Glue function to let the Device object, when called by a handler,
@@ -513,8 +522,8 @@ unsigned Device_Object_List_Count(
  */
 bool Device_Object_List_Identifier(
     uint32_t array_index,
-    int *object_type,
-    uint32_t * instance)
+    BACNET_OBJECT_TYPE *object_type,
+    uint32_t *instance)
 {
     bool status = false;
     unsigned count = 0;
@@ -571,12 +580,12 @@ bool Device_Object_List_Identifier(
  * @return True on success or else False if not found.
  */
 bool Device_Valid_Object_Name(
-    BACNET_CHARACTER_STRING * object_name1,
-    int *object_type,
-    uint32_t * object_instance)
+    BACNET_CHARACTER_STRING *object_name1,
+    BACNET_OBJECT_TYPE *object_type,
+    uint32_t *object_instance)
 {
     bool found = false;
-    int type = 0;
+    BACNET_OBJECT_TYPE type = OBJECT_ANALOG_INPUT;
     uint32_t instance;
     uint32_t max_objects = 0, i = 0;
     bool check_id = false;
@@ -612,7 +621,7 @@ bool Device_Valid_Object_Name(
  * @return True if found, else False if no such Object in this device.
  */
 bool Device_Valid_Object_Id(
-    int object_type,
+    BACNET_OBJECT_TYPE object_type,
     uint32_t object_instance)
 {
     bool status = false;        /* return value */
@@ -809,7 +818,7 @@ int Device_Read_Property_Local(
     BACNET_BIT_STRING bit_string;
     BACNET_CHARACTER_STRING char_string;
     uint32_t i = 0;
-    int object_type = 0;
+    BACNET_OBJECT_TYPE object_type = OBJECT_ANALOG_INPUT;
     uint32_t instance = 0;
     uint32_t count = 0;
     uint8_t *apdu = NULL;

@@ -27,7 +27,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include "txbuf.h"
 #include "bacdef.h"
 #include "bacdcode.h"
 #include "apdu.h"
@@ -45,47 +44,44 @@
  *
  * @param service_request [in] The contents of the service request (unused).
  * @param service_len [in] The length of the service_request (unused).
- * @param src [in] BACNET_ADDRESS of the source of the message
+ * @param src [in] BACNET_PATH of the source of the message
  * @param service_data [in] The BACNET_CONFIRMED_SERVICE_DATA information
  *                          decoded from the APDU header of this message.
  */
+
 void handler_unrecognized_service(
-    uint8_t * service_request,
+	uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src,
+    BACNET_ROUTE * src,
     BACNET_CONFIRMED_SERVICE_DATA * service_data)
 {
     int len = 0;
     int pdu_len = 0;
-    int bytes_sent = 0;
+    // int bytes_sent = 0;
     BACNET_NPDU_DATA npdu_data;
-    BACNET_ADDRESS my_address;
+    // BACNET_PATH my_address;
 
     (void) service_request;
     (void) service_len;
 
+	DLCB *dlcb = alloc_dlcb_response('q', src->portParams);
+	if (dlcb == NULL)
+	{
+		return ;
+	}
+
     /* encode the NPDU portion of the packet */
-    datalink_get_my_address(&my_address);
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+    // datalink_get_my_address(&my_address);
+    npdu_setup_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
-        npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &src->bacnetPath.glAdr, NULL, // &my_address,
         &npdu_data);
     /* encode the APDU portion of the packet */
     len =
-        reject_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
+        reject_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
         service_data->invoke_id, REJECT_REASON_UNRECOGNIZED_SERVICE);
     pdu_len += len;
     /* send the data */
-    bytes_sent =
-        datalink_send_pdu(src, &npdu_data, &Handler_Transmit_Buffer[0],
-        pdu_len);
-    if (bytes_sent > 0) {
-#if PRINT_ENABLED
-        fprintf(stderr, "Sent Reject!\n");
-#endif
-    } else {
-#if PRINT_ENABLED
-        fprintf(stderr, "Failed to Send Reject (%s)!\n", strerror(errno));
-#endif
-    }
+    dlcb->bufSize = pdu_len;
+    src->portParams->SendPdu(src->portParams, &src->bacnetPath.localMac, &npdu_data, dlcb);
 }

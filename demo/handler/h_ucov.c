@@ -28,7 +28,9 @@
 #include <string.h>
 #include <errno.h>
 #include "config.h"
-#include "txbuf.h"
+
+#if ( BACNET_SVC_COV_B == 1 )
+
 #include "bacdef.h"
 #include "bacdcode.h"
 #include "apdu.h"
@@ -55,21 +57,23 @@
  *
  * @param service_request [in] The contents of the service request.
  * @param service_len [in] The length of the service_request.
- * @param src [in] BACNET_ADDRESS of the source of the message (unused)
+ * @param src [in] BACNET_PATH of the source of the message (unused)
  */
 void handler_ucov_notification(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src)
+    BACNET_ROUTE * src)
 {
     BACNET_COV_DATA cov_data;
     BACNET_PROPERTY_VALUE property_value[MAX_COV_PROPERTIES];
-    BACNET_PROPERTY_VALUE *pProperty_value = NULL;
-    int len = 0;
+    BACNET_PROPERTY_VALUE *pProperty_value ;
+#if PRINT_ENABLED
+    int len ;
+#endif
     unsigned index = 0;
 
     /* src not needed for this application */
-    src = src;
+//     (void) src;
     /* create linked list to store data if more
        than one property value is expected */
     pProperty_value = &property_value[0];
@@ -83,13 +87,16 @@ void handler_ucov_notification(
         pProperty_value = pProperty_value->next;
     }
     cov_data.listOfValues = &property_value[0];
+
 #if PRINT_ENABLED
     fprintf(stderr, "UCOV: Received Notification!\n");
-#endif
     /* decode the service request only */
     len =
+#endif
+        /* decode the service request only */
         cov_notify_decode_service_request(service_request, service_len,
-        &cov_data);
+                                          &cov_data);
+
 #if PRINT_ENABLED
     if (len > 0) {
         fprintf(stderr, "UCOV: PID=%u ", cov_data.subscriberProcessIdentifier);
@@ -121,3 +128,5 @@ void handler_ucov_notification(
     }
 #endif
 }
+
+#endif // ( BACNET_SVC_COV_B == 1 )

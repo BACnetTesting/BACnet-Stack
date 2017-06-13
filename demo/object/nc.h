@@ -22,30 +22,28 @@
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
 *********************************************************************/
+
 #ifndef NC_H
 #define NC_H
 
+#include "config.h"
+
+//#if ( BACNET_USE_OBJECT_NOTIFICATION_CLASS == 1 )
+
 #include "event.h"
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-
-#define NC_RESCAN_RECIPIENTS_SECS   60
+#define NC_RESCAN_RECIPIENTS_SECS   10	// making this temporarily faster for testing - was 60
 
 /* max "length" of recipient_list */
 #define NC_MAX_RECIPIENTS 10
 /* Recipient types */
     typedef enum {
-        RECIPIENT_TYPE_NOTINITIALIZED = 0,
-        RECIPIENT_TYPE_DEVICE = 1,
-        RECIPIENT_TYPE_ADDRESS = 2
-    } NC_RECIPIENT_TYPE;
+    RECIPIENT_TYPE_NOTINITIALIZED = 0,
+    RECIPIENT_TYPE_DEVICE = 1,
+    RECIPIENT_TYPE_ADDRESS = 2
+} NC_RECIPIENT_TYPE;
 
 
-#if defined(INTRINSIC_REPORTING)
 /* BACnetRecipient structure */
 /*
 BACnetRecipient ::= CHOICE {
@@ -53,13 +51,15 @@ BACnetRecipient ::= CHOICE {
     address [1] BACnetAddress
 }
 */
-    typedef struct BACnet_Recipient {
-        uint8_t RecipientType;  /* Type of Recipient */
-        union {
-            uint32_t DeviceIdentifier;
-            BACNET_ADDRESS Address;
-        } _;
-    } BACNET_RECIPIENT;
+typedef struct BACnet_Recipient {
+    NC_RECIPIENT_TYPE RecipientType;  /* Type of Recipient */
+    union {
+        uint32_t DeviceIdentifier;
+        BACNET_GLOBAL_ADDRESS   Address;                    // Switching from BACnet Path to BACnet Global Address
+                                                            // we do not know the router to this destination, the workstation cannot be expected to write it, Karg did not deal with this issue. See AS-308
+                                                            // we have to discover the path to the destination by issuing a who-is-router-to-network based on the NN in this global address
+    } _;
+} BACNET_RECIPIENT;
 
 
 /* BACnetDestination structure */
@@ -127,15 +127,23 @@ BACnetRecipient ::= CHOICE {
         uint32_t Object_Instance,
         uint32_t * pPriorityArray);
 
-    void Notification_Class_common_reporting_function(
-        BACNET_EVENT_NOTIFICATION_DATA * event_data);
+void Notification_Class_common_reporting_function(
+    BACNET_EVENT_NOTIFICATION_DATA * event_data);
 
-    void Notification_Class_find_recipient(
-        void);
-#endif /* defined(INTRINSIC_REPORTING) */
+void Notification_Class_find_recipient(
+    void);
+
+#if ( LIST_MANIPULATION == 1 )
+bool Notification_Class_Add_List_Element(
+    DEVICE_OBJECT_DATA *pDev,
+    BACNET_LIST_MANIPULATION_DATA * lmdata);
+
+bool Notification_Class_Remove_List_Element(
+    DEVICE_OBJECT_DATA *pDev,
+    BACNET_LIST_MANIPULATION_DATA * lmdata);
+#endif 
+
+// #endif /* defined(INTRINSIC_REPORTING) */
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif /* NC_H */

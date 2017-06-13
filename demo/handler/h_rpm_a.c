@@ -85,13 +85,13 @@ int rpm_ack_decode_service_request(
         decoded_len += len;
         apdu_len -= len;
         apdu += len;
-        rpm_property = calloc(1, sizeof(BACNET_PROPERTY_REFERENCE));
+        rpm_property = (BACNET_PROPERTY_REFERENCE *) calloc(1, sizeof(BACNET_PROPERTY_REFERENCE));
         rpm_object->listOfProperties = rpm_property;
         old_rpm_property = rpm_property;
         while (rpm_property && apdu_len) {
             len =
                 rpm_ack_decode_object_property(apdu, apdu_len,
-                &rpm_property->propertyIdentifier,
+                                               &rpm_property->propertyIdentifier,
                 &rpm_property->propertyArrayIndex);
             if (len <= 0) {
                 old_rpm_property->next = NULL;
@@ -112,7 +112,7 @@ int rpm_ack_decode_service_request(
                 apdu++;
                 /* note: if this is an array, there will be
                    more than one element to decode */
-                value = calloc(1, sizeof(BACNET_APPLICATION_DATA_VALUE));
+                value = (BACNET_APPLICATION_DATA_VALUE*) calloc(1, sizeof(BACNET_APPLICATION_DATA_VALUE));
                 rpm_property->value = value;
                 old_value = value;
                 while (value && (apdu_len > 0)) {
@@ -142,7 +142,7 @@ int rpm_ack_decode_service_request(
                     } else {
                         old_value = value;
                         value =
-                            calloc(1, sizeof(BACNET_APPLICATION_DATA_VALUE));
+                            (BACNET_APPLICATION_DATA_VALUE*) calloc(1, sizeof(BACNET_APPLICATION_DATA_VALUE));
                         old_value->next = value;
                     }
                 }
@@ -159,7 +159,7 @@ int rpm_ack_decode_service_request(
                 apdu += len;
                 /* FIXME: we could validate that the tag is enumerated... */
                 len = decode_enumerated(apdu, len_value, &error_value);
-                rpm_property->error.error_class = error_value;
+                rpm_property->error.error_class = (BACNET_ERROR_CLASS) error_value;
                 decoded_len += len;
                 apdu_len -= len;
                 apdu += len;
@@ -170,7 +170,7 @@ int rpm_ack_decode_service_request(
                 apdu += len;
                 /* FIXME: we could validate that the tag is enumerated... */
                 len = decode_enumerated(apdu, len_value, &error_value);
-                rpm_property->error.error_code = error_value;
+                rpm_property->error.error_code = (BACNET_ERROR_CODE) error_value;
                 decoded_len += len;
                 apdu_len -= len;
                 apdu += len;
@@ -181,7 +181,7 @@ int rpm_ack_decode_service_request(
                 }
             }
             old_rpm_property = rpm_property;
-            rpm_property = calloc(1, sizeof(BACNET_PROPERTY_REFERENCE));
+            rpm_property = (BACNET_PROPERTY_REFERENCE *) calloc(1, sizeof(BACNET_PROPERTY_REFERENCE));
             old_rpm_property->next = rpm_property;
         }
         len = rpm_decode_object_end(apdu, apdu_len);
@@ -192,7 +192,7 @@ int rpm_ack_decode_service_request(
         }
         if (apdu_len) {
             old_rpm_object = rpm_object;
-            rpm_object = calloc(1, sizeof(BACNET_READ_ACCESS_DATA));
+            rpm_object = (BACNET_READ_ACCESS_DATA *) calloc(1, sizeof(BACNET_READ_ACCESS_DATA));
             old_rpm_object->next = rpm_object;
         }
     }
@@ -207,13 +207,15 @@ void rpm_ack_print_data(
     BACNET_OBJECT_PROPERTY_VALUE object_value;  /* for bacapp printing */
     BACNET_PROPERTY_REFERENCE *listOfProperties;
     BACNET_APPLICATION_DATA_VALUE *value;
+#if PRINT_ENABLED
     bool array_value = false;
+#endif
 
     if (rpm_data) {
 #if PRINT_ENABLED
         fprintf(stdout, "%s #%lu\r\n",
-            bactext_object_type_name(rpm_data->object_type),
-            (unsigned long) rpm_data->object_instance);
+                bactext_object_type_name(rpm_data->object_type),
+                (unsigned long) rpm_data->object_instance);
         fprintf(stdout, "{\r\n");
 #endif
         listOfProperties = rpm_data->listOfProperties;
@@ -290,14 +292,14 @@ void rpm_ack_print_data(
  *
  * @param service_request [in] The contents of the service request.
  * @param service_len [in] The length of the service_request.
- * @param src [in] BACNET_ADDRESS of the source of the message
+ * @param src [in] BACNET_PATH of the source of the message
  * @param service_data [in] The BACNET_CONFIRMED_SERVICE_DATA information
  *                          decoded from the APDU header of this message.
  */
 void handler_read_property_multiple_ack(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src,
+    BACNET_PATH * src,
     BACNET_CONFIRMED_SERVICE_ACK_DATA * service_data)
 {
     int len = 0;
@@ -311,7 +313,7 @@ void handler_read_property_multiple_ack(
     (void) src;
     (void) service_data;        /* we could use these... */
 
-    rpm_data = calloc(1, sizeof(BACNET_READ_ACCESS_DATA));
+    rpm_data = (BACNET_READ_ACCESS_DATA *) calloc(1, sizeof(BACNET_READ_ACCESS_DATA));
     if (rpm_data) {
         len =
             rpm_ack_decode_service_request(service_request, service_len,

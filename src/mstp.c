@@ -30,6 +30,14 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
+*
+*   This file contains changes made by ConnectEx, Inc. If published,
+*   these changes are subject to the permissions, warranty 
+*   terms and limitations above. If not published, then these terms
+*   apply to ConnectEx, Inc's customers to whom the code has 
+*   been supplied. For more details info@connect-ex.com
+*   Where appropriate, the changes are Copyright (C) 2014-2017 ConnectEx, Inc.
+*
  -------------------------------------------
 ####COPYRIGHTEND####*/
 
@@ -175,27 +183,27 @@ bool MSTP_Line_Active(
 }
 
 void MSTP_Fill_BACnet_Address(
-    BACNET_ADDRESS * src,
+    BACNET_PATH * src,
     uint8_t mstp_address)
 {
     int i = 0;
 
     if (mstp_address == MSTP_BROADCAST_ADDRESS) {
         /* mac_len = 0 if broadcast address */
-        src->mac_len = 0;
-        src->mac[0] = 0;
+        src->localMac.len = 0;
+        src->localMac.bytes[0] = 0;
     } else {
-        src->mac_len = 1;
-        src->mac[0] = mstp_address;
+        src->localMac.len = 1;
+        src->localMac.bytes[0] = mstp_address;
     }
     /* fill with 0's starting with index 1; index 0 filled above */
     for (i = 1; i < MAX_MAC_LEN; i++) {
-        src->mac[i] = 0;
+        src->glAdr.mac.bytes[i] = 0;
     }
-    src->net = 0;
-    src->len = 0;
+    src->glAdr.net = 0;
+    src->glAdr.mac.len = 0;
     for (i = 0; i < MAX_MAC_LEN; i++) {
-        src->adr[i] = 0;
+        src->glAdr.mac.bytes[i] = 0;
     }
 }
 
@@ -575,8 +583,10 @@ void MSTP_Receive_Frame_FSM(
     }
     if ((receive_state != MSTP_RECEIVE_STATE_IDLE) &&
         (mstp_port->receive_state == MSTP_RECEIVE_STATE_IDLE)) {
+#if PRINT_ENABLED
         printf_receive_data("\n");
         fflush(stderr);
+#endif
     }
     return;
 }
@@ -704,6 +714,8 @@ bool MSTP_Master_Node_FSM(
             /* more data frames. These may be BACnet Data frames or */
             /* proprietary frames. */
             /* FIXME: We could wait for up to Tusage_delay */
+            
+// todo sk - see below            
             length = (unsigned) MSTP_Get_Send(mstp_port, 0);
             if (length < 1) {
                 /* NothingToSend */
@@ -716,6 +728,31 @@ bool MSTP_Master_Node_FSM(
                 RS485_Send_Frame(mstp_port,
                     (uint8_t *) & mstp_port->OutputBuffer[0],
                     (uint16_t) length);
+                    
+                    
+#if 0
+todo sk - replace the above with:
+            if ( ! ll_GetCount ( &mstpOutputQueue ))
+                {
+                /* NothingToSend */
+                FrameCount = Nmax_info_frames;
+                Master_State = MSTP_MASTER_STATE_DONE_WITH_TOKEN;
+                transition_now = true;
+            } else {
+                uint8_t frame_type;
+                // OS_Q_GetPtr(&PDU_Queue, (void **) &pkt );
+                pkt = (struct mstp_pdu_packet *) ll_Dequeue( &mstpOutputQueue ) ;
+                if (pkt->data_expecting_reply) {
+                    frame_type = FRAME_TYPE_BACNET_DATA_EXPECTING_REPLY;
+                } else {
+                    frame_type = FRAME_TYPE_BACNET_DATA_NOT_EXPECTING_REPLY;
+                }
+                MSTP_Send_Frame(frame_type, pkt->destination_mac, This_Station,
+                    pkt->dlcb->Handler_Transmit_Buffer, pkt->length);
+                dlcb_free(pkt->dlcb);
+                emm_free(pkt);
+#endif
+
                 mstp_port->FrameCount++;
                 switch (frame_type) {
                     case FRAME_TYPE_BACNET_DATA_EXPECTING_REPLY:
@@ -1070,11 +1107,33 @@ bool MSTP_Master_Node_FSM(
             /* The ANSWER_DATA_REQUEST state is entered when a  */
             /* BACnet Data Expecting Reply, a Test_Request, or  */
             /* a proprietary frame that expects a reply is received. */
+
+
+#if 0 // todo sk
+            if ( ll_GetCount ( &mstpOutputQueue )) {
+            // if ( OS_Q_GetPtrCond( &PDU_Queue, (void **) &pkt )) {
+              pkt = (struct mstp_pdu_packet *) ll_Pluck( &mstpOutputQueue, NULL, matchMSTP ) ;
+//                matched =
+//                    dlmstp_compare_data_expecting_reply(&InputBuffer[0],
+//                    DataLength, SourceAddress, pkt->dlcb->Handler_Transmit_Buffer, pkt->length,
+//                    pkt->destination_mac);
+                // whether this turns out to be a match or not, now that we have been flagged by the queue, need to free later.
+                // needToFree = true ;
+            } 
+            else {
+              pkt = NULL ;
+            }
+            
+            if ( pkt != NULL ) {
+#endif
             /* FIXME: MSTP_Get_Reply waits for a matching reply, but
                if the next queued message doesn't match, then we
                sit here for Treply_delay doing nothing */
             length = (unsigned) MSTP_Get_Reply(mstp_port, 0);
             if (length > 0) {
+            
+// todo sk - replace the above..
+            
                 /* Reply */
                 /* If a reply is available from the higher layers  */
                 /* within Treply_delay after the reception of the  */
@@ -1106,6 +1165,19 @@ bool MSTP_Master_Node_FSM(
                 /* clear our flag we were holding for comparison */
                 mstp_port->ReceivedValidFrame = false;
             }
+            
+#if 0 // todo sk            
+            if ( pkt != NULL  )
+            {
+                /* clear the queue */
+                // OS_Q_Purge(&PDU_Queue);
+                // and memory
+                dlcb_free(pkt->dlcb);
+                emm_free (pkt);
+            }
+          }
+#endif
+
             break;
         default:
             mstp_port->master_state = MSTP_MASTER_STATE_IDLE;

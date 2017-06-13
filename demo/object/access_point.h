@@ -43,9 +43,6 @@
 #define MAX_ACCESS_DOORS_COUNT 4
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     typedef struct {
         BACNET_EVENT_STATE event_state;
@@ -114,7 +111,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

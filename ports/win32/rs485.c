@@ -55,6 +55,7 @@
 #include <windows.h>
 #include "rs485.h"
 #include "fifo.h"
+#include "CEDebug.h"
 
 /* details from Serial Communications in Win32 at MSDN */
 
@@ -139,6 +140,8 @@ bool RS485_Interface_Valid(
     bool status = false;
     char ifname[255] = "";
 
+#ifndef __cplusplus
+    // I dont know how to do this yet.
     sprintf(ifname, "\\\\.\\COM%u", port_number);
     h = CreateFile(ifname, GENERIC_READ | GENERIC_WRITE, 0, NULL,
         OPEN_EXISTING, 0, NULL);
@@ -152,6 +155,7 @@ bool RS485_Interface_Valid(
         status = true;
         CloseHandle(h);
     }
+#endif
 
     return status;
 }
@@ -165,6 +169,8 @@ const char *RS485_Interface(
 void RS485_Print_Error(
     void)
 {
+#ifndef __cplusplus
+    // I dont know how to do this in C++ yet.
     LPVOID lpMsgBuf;
 
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
@@ -172,8 +178,7 @@ void RS485_Print_Error(
         (LPTSTR) & lpMsgBuf, 0, NULL);
     MessageBox(NULL, lpMsgBuf, "GetLastError", MB_OK | MB_ICONINFORMATION);
     LocalFree(lpMsgBuf);
-
-    return;
+#endif
 }
 
 static void RS485_Configure_Status(
@@ -233,7 +238,7 @@ static void RS485_Configure_Status(
         RS485_Print_Error();
     }
     /* Set the Comm buffer size */
-    SetupComm(RS485_Handle, MAX_MPDU, MAX_MPDU);
+    SetupComm(RS485_Handle, MAX_MPDU_MSTP, MAX_MPDU_MSTP);
     /* raise DTR */
     if (!EscapeCommFunction(RS485_Handle, SETDTR)) {
         fprintf(stderr, "Unable to set DTR on %s\n", RS485_Port_Name);
@@ -271,11 +276,14 @@ static void RS485_Cleanup(
 void RS485_Initialize(
     void)
 {
+#ifndef __cplusplus
+    // I dont know how to do this in C++ yet.
     RS485_Handle =
         CreateFile(RS485_Port_Name, GENERIC_READ | GENERIC_WRITE, 0, 0,
         OPEN_EXISTING,
         /*FILE_FLAG_OVERLAPPED */ 0,
         0);
+
     if (RS485_Handle == INVALID_HANDLE_VALUE) {
         fprintf(stderr, "Unable to open %s\n", RS485_Port_Name);
         RS485_Print_Error();
@@ -290,8 +298,9 @@ void RS485_Initialize(
 #endif
 
     atexit(RS485_Cleanup);
-
-    return;
+#else
+    panic();
+#endif
 }
 
 /****************************************************************************

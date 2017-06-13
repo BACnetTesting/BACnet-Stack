@@ -1,3 +1,4 @@
+#if 0 // client side
 /**
  * @file
  * @author Daniel Blazevic <daniel.blazevic@gmail.com>
@@ -55,7 +56,7 @@
 #include "getevent.h"
 
 uint8_t Send_Get_Event_Information_Address(
-    BACNET_ADDRESS *dest,
+    BACNET_PATH *dest,
     uint16_t max_apdu,
     BACNET_OBJECT_ID * lastReceivedObjectIdentifier)
 {
@@ -63,7 +64,7 @@ uint8_t Send_Get_Event_Information_Address(
     int pdu_len = 0;
     uint8_t invoke_id = 0;
     BACNET_NPDU_DATA npdu_data;
-    BACNET_ADDRESS my_address;
+    BACNET_PATH my_address;
 #if PRINT_ENABLED
     int bytes_sent = 0;
 #endif
@@ -73,7 +74,7 @@ uint8_t Send_Get_Event_Information_Address(
     if (invoke_id) {
         datalink_get_my_address(&my_address);
         /* encode the NPDU portion of the packet */
-        npdu_encode_npdu_data(&npdu_data, true, MESSAGE_PRIORITY_NORMAL);
+        npdu_setup_npdu_data(&npdu_data, true, MESSAGE_PRIORITY_NORMAL);
         pdu_len =
             npdu_encode_pdu(&Handler_Transmit_Buffer[0], dest,
             &my_address, &npdu_data);
@@ -113,17 +114,22 @@ uint8_t Send_Get_Event_Information(
     uint32_t device_id,
     BACNET_OBJECT_ID * lastReceivedObjectIdentifier)
 {
-    BACNET_ADDRESS dest = {0};
+    BACNET_PATH dest = {0};
     unsigned max_apdu = 0;
-    uint8_t invoke_id = 0;
-    bool status = false;
+    uint8_t invoke_id ;
+    bool status ;
 
     /* is the device bound? */
     status = address_get_by_device(device_id, &max_apdu, &dest);
     if (status) {
         invoke_id = Send_Get_Event_Information_Address(
-            &dest, max_apdu, lastReceivedObjectIdentifier);
+                        &dest, max_apdu, lastReceivedObjectIdentifier);
+    } else {
+        // todo 5 - surely we can do better than this
+        invoke_id = 0 ;
+        // and what about max_apdu (etc) ?
     }
 
     return invoke_id;
 }
+#endif

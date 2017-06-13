@@ -22,23 +22,26 @@
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
 *********************************************************************/
-#include <stddef.h>
+
+//#include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-#include "config.h"
-#include "txbuf.h"
-#include "bacdef.h"
-#include "bacdcode.h"
+//#include <stdio.h>
+//#include <string.h>
+//#include <errno.h>
+//#include "config.h"
+//#include "bacdef.h"
+//#include "bacdcode.h"
 #include "bacerror.h"
-#include "apdu.h"
-#include "npdu.h"
+//#include "apdu.h"
+//#include "npdu.h"
 #include "abort.h"
-#include "wp.h"
-/* device object has the handling for all objects */
+//#include "wp.h"
+///* device object has the handling for all objects */
 #include "device.h"
 #include "handlers.h"
+#include "debug.h"
+// #include "CEDebug.h"
+#include "bactext.h"
 
 /** @file h_wp.c  Handles Write Property requests. */
 
@@ -57,92 +60,78 @@
  *
  * @param service_request [in] The contents of the service request.
  * @param service_len [in] The length of the service_request.
- * @param src [in] BACNET_ADDRESS of the source of the message
+ * @param src [in] BACNET_PATH of the source of the message
  * @param service_data [in] The BACNET_CONFIRMED_SERVICE_DATA information
  *                          decoded from the APDU header of this message.
  */
 void handler_write_property(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src,
+    BACNET_ROUTE * src,
     BACNET_CONFIRMED_SERVICE_DATA * service_data)
 {
     BACNET_WRITE_PROPERTY_DATA wp_data;
     int len = 0;
     int pdu_len = 0;
     BACNET_NPDU_DATA npdu_data;
-    int bytes_sent = 0;
-    BACNET_ADDRESS my_address;
+    // int bytes_sent = 0;
+    // BACNET_PATH my_address;
 
-    /* encode the NPDU portion of the packet */
-    datalink_get_my_address(&my_address);
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+	DLCB *dlcb = alloc_dlcb_response('n', src->portParams);
+	if (dlcb == NULL) return;
+
+	/* encode the NPDU portion of the packet */
+    // datalink_get_my_address(&my_address);
+    npdu_setup_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
-        npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
-        &npdu_data);
-#if PRINT_ENABLED
-    fprintf(stderr, "WP: Received Request!\n");
-#endif
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &src->bacnetPath.glAdr, NULL, // &my_address,
+                        &npdu_data);
+    dbTraffic(DB_UNUSUAL_TRAFFIC, "WP: Received Request!");
     if (service_data->segmented_message) {
         len =
-            abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-            service_data->invoke_id, ABORT_REASON_SEGMENTATION_NOT_SUPPORTED,
-            true);
-#if PRINT_ENABLED
-        fprintf(stderr, "WP: Segmented message.  Sending Abort!\n");
-#endif
+            abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
+                              service_data->invoke_id, ABORT_REASON_SEGMENTATION_NOT_SUPPORTED,
+                              true);
+        dbTraffic(DB_ERROR, "WP: Segmented message.  Sending Abort!");
         goto WP_ABORT;
     }   /* decode the service request only */
     len = wp_decode_service_request(service_request, service_len, &wp_data);
 #if PRINT_ENABLED
     if (len > 0)
-        fprintf(stderr,
-            "WP: type=%lu instance=%lu property=%lu priority=%lu index=%ld\n",
-            (unsigned long) wp_data.object_type,
-            (unsigned long) wp_data.object_instance,
-            (unsigned long) wp_data.object_property,
-            (unsigned long) wp_data.priority, (long) wp_data.array_index);
-    else
-        fprintf(stderr, "WP: Unable to decode Request!\n");
+        dbTraffic(DB_UNUSUAL_TRAFFIC,
+                  "WP: type=%lu instance=%lu property=%lu priority=%lu index=%ld",
+                  (unsigned long) wp_data.object_type,
+                  (unsigned long) wp_data.object_instance,
+                  (unsigned long) wp_data.object_property,
+                  (unsigned long) wp_data.priority, (long) wp_data.array_index);
+    else {
+        dbTraffic(DB_ERROR, "WP: Unable to decode Request!");
+    }
 #endif
     /* bad decoding or something we didn't understand - send an abort */
     if (len <= 0) {
         len =
-            abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-            service_data->invoke_id, ABORT_REASON_OTHER, true);
-#if PRINT_ENABLED
-        fprintf(stderr, "WP: Bad Encoding. Sending Abort!\n");
-#endif
+            abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
+                              service_data->invoke_id, ABORT_REASON_OTHER, true);
+        dbTraffic(DB_ERROR, "WP: Bad Encoding. Sending Abort!");
         goto WP_ABORT;
     }
     if (Device_Write_Property(&wp_data)) {
         len =
-            encode_simple_ack(&Handler_Transmit_Buffer[pdu_len],
-            service_data->invoke_id, SERVICE_CONFIRMED_WRITE_PROPERTY);
-#if PRINT_ENABLED
-        fprintf(stderr, "WP: Sending Simple Ack!\n");
-#endif
+            encode_simple_ack(&dlcb->Handler_Transmit_Buffer[pdu_len],
+                              service_data->invoke_id, SERVICE_CONFIRMED_WRITE_PROPERTY);
+        dbTraffic(DB_UNUSUAL_TRAFFIC, "WP: Sending Simple Ack!");
     } else {
         len =
-            bacerror_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-            service_data->invoke_id, SERVICE_CONFIRMED_WRITE_PROPERTY,
-            wp_data.error_class, wp_data.error_code);
-#if PRINT_ENABLED
-        fprintf(stderr, "WP: Sending Error!\n");
-#endif
+            bacerror_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
+                                 service_data->invoke_id, SERVICE_CONFIRMED_WRITE_PROPERTY,
+                                 wp_data.error_class, wp_data.error_code);
+        dbTraffic(DB_UNUSUAL_TRAFFIC, "WP: Sending Error Class:%s Code:%s!", bactext_error_class_name( wp_data.error_class), bactext_error_code_name(wp_data.error_code)  );
     }
-  WP_ABORT:
+WP_ABORT:
     pdu_len += len;
-    bytes_sent =
-        datalink_send_pdu(src, &npdu_data, &Handler_Transmit_Buffer[0],
-        pdu_len);
-    if (bytes_sent <= 0) {
-#if PRINT_ENABLED
-        fprintf(stderr, "WP: Failed to send PDU (%s)!\n", strerror(errno));
-#endif
-    }
-
-    return;
+    dlcb->bufSize = pdu_len;
+    src->portParams->SendPdu(src->portParams, &src->bacnetPath.localMac, &npdu_data, dlcb);
 }
 
 

@@ -219,7 +219,7 @@ wp: logfile test/wp.mak
 objects: ai ao av bi bo bv csv lc lo lso lsp \
 	mso msv ms-input osv piv command \
 	access_credential access_door access_point access_rights \
-	access_user access_zone credential_data_input
+	access_user access_zone credential_data_input alert_enrollment
 
 access_credential: logfile demo/object/access_credential.mak
 	$(MAKE) -s -C demo/object -f access_credential.mak clean all
@@ -260,6 +260,11 @@ ai: logfile demo/object/ai.mak
 	$(MAKE) -s -C demo/object -f ai.mak clean all
 	( ./demo/object/analog_input >> ${LOGFILE} )
 	$(MAKE) -s -C demo/object -f ai.mak clean
+
+alert_enrollment: logfile demo/object/alert_enrollment.mak
+	$(MAKE) -s -C demo/object -f alert_enrollment.mak clean all
+	( ./demo/object/alert_enrollment >> ${LOGFILE} )
+	$(MAKE) -s -C demo/object -f alert_enrollment.mak clean
 
 ao: logfile demo/object/ao.mak
 	$(MAKE) -s -C demo/object -f ao.mak clean all

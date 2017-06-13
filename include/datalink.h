@@ -20,111 +20,168 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*
+*   This file contains changes made by ConnectEx, Inc. If published,
+*   these changes are subject to the permissions, warranty
+*   terms and limitations above. If not published, then these terms
+*   apply to ConnectEx, Inc's customers to whom the code has
+*   been supplied. For more details info@connect-ex.com
+*   Where appropriate, the changes are Copyright (C) 2014-2017 ConnectEx, Inc.
+*
 *********************************************************************/
+
 #ifndef DATALINK_H
 #define DATALINK_H
 
 #include "config.h"
 #include "bacdef.h"
-
-#if defined(BACDL_ETHERNET)
-#include "ethernet.h"
-
-#define datalink_init ethernet_init
-#define datalink_send_pdu ethernet_send_pdu
-#define datalink_receive ethernet_receive
-#define datalink_cleanup ethernet_cleanup
-#define datalink_get_broadcast_address ethernet_get_broadcast_address
-#define datalink_get_my_address ethernet_get_my_address
-
-#elif defined(BACDL_ARCNET)
-#include "arcnet.h"
-
-#define datalink_init arcnet_init
-#define datalink_send_pdu arcnet_send_pdu
-#define datalink_receive arcnet_receive
-#define datalink_cleanup arcnet_cleanup
-#define datalink_get_broadcast_address arcnet_get_broadcast_address
-#define datalink_get_my_address arcnet_get_my_address
-
-#elif defined(BACDL_MSTP)
-#include "dlmstp.h"
-
-#define datalink_init dlmstp_init
-#define datalink_send_pdu dlmstp_send_pdu
-#define datalink_receive dlmstp_receive
-#define datalink_cleanup dlmstp_cleanup
-#define datalink_get_broadcast_address dlmstp_get_broadcast_address
-#define datalink_get_my_address dlmstp_get_my_address
-
-#elif defined(BACDL_BIP)
-#include "bip.h"
-#include "bvlc.h"
-
-#define datalink_init bip_init
-#if defined(BBMD_ENABLED) && BBMD_ENABLED
-#define datalink_send_pdu bvlc_send_pdu
-#define datalink_receive bvlc_receive
-#else
-#define datalink_send_pdu bip_send_pdu
-#define datalink_receive bip_receive
-#endif
-#define datalink_cleanup bip_cleanup
-#define datalink_get_broadcast_address bip_get_broadcast_address
-#ifdef BAC_ROUTING
-extern void routed_get_my_address(
-    BACNET_ADDRESS * my_address);
-#define datalink_get_my_address routed_get_my_address
-#else
-#define datalink_get_my_address bip_get_my_address
-#endif
-
-#elif defined(BACDL_BIP6)
-#include "bip6.h"
-#include "bvlc6.h"
-#define datalink_init bip6_init
-#define datalink_send_pdu bip6_send_pdu
-#define datalink_receive bip6_receive
-#define datalink_cleanup bip6_cleanup
-#define datalink_get_broadcast_address bip6_get_broadcast_address
-#define datalink_get_my_address bip6_get_my_address
-
-
-#else /* Ie, BACDL_ALL */
+#include "net.h"
+#include "linklist.h"
 #include "npdu.h"
+// #include "bvlc.h"
+#include "bbmd.h"
 
-#define MAX_HEADER (8)
-#define MAX_MPDU (MAX_HEADER+MAX_PDU)
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-    int datalink_send_pdu(
-        BACNET_ADDRESS * dest,
-        BACNET_NPDU_DATA * npdu_data,
-        uint8_t * pdu,
-        unsigned pdu_len);
-    extern uint16_t datalink_receive(
-        BACNET_ADDRESS * src,
-        uint8_t * pdu,
-        uint16_t max_pdu,
-        unsigned timeout);
-    extern void datalink_cleanup(
-        void);
-    extern void datalink_get_broadcast_address(
-        BACNET_ADDRESS * dest);
-    extern void datalink_get_my_address(
-        BACNET_ADDRESS * my_address);
-    extern void datalink_set_interface(
-        char *ifname);
-    extern void datalink_set(
-        char *datalink_string);
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+typedef enum {
+    DL_BIP,
+    DL_MSTP,
+#if defined(BBMD_ENABLED) && (BBMD_ENABLED == 1)
+    DL_BBMD,
+    DL_FD,
 #endif
+    DL_APP
+} DL_TYPE;
+
+
+typedef struct {
+        int socket;
+        uint16_t nwoPort;                           // network order
+        uint32_t nwoLocal_addr ;                    // network order
+#if defined(BBMD_ENABLED) && BBMD_ENABLED
+        uint32_t nwoBroadcast_addr ;                // network order
+#endif
+        // uint32_t netmask_not_used_todo3;
+        bool BVLC_NAT_Handling;                     // for NAT BBMD handling
+
+        struct sockaddr_in  fd_ipep;                  // For FD registration
+        uint16_t            fd_timetolive;            
+        uint16_t            fd_timeRemaining;
+
+        struct sockaddr_in BVLC_Global_Address;
+    } BIP_PARAMS ;
+
+
+typedef struct {
+        uint32_t baudrate;
+        uint8_t databits;
+        uint8_t stopbits;
+        uint8_t max_master;
+        uint8_t max_frames;
+    } MSTP_PARAMS ;
+
+typedef struct _PORT_SUPPORT DLINK_SUPPORT;
+
+typedef struct
+{
+#if ( BAC_DEBUG == 1 )
+  uint8_t signature ;
+#endif
+
+    char                source ;                    // is this packet due to an external (MSTP) or internal (App) event
+    uint16_t            bufSize;
+    uint8_t             *Handler_Transmit_Buffer;
+    BACNET_NPDU_DATA    npciData ;                  // this is only needed to carry expecting_reply for MSTP. Review... todo4
+    BACNET_MAC_ADDRESS  phyDest;
+    const DLINK_SUPPORT *portParams;
+} DLCB ;
+
+
+struct _PORT_SUPPORT {
+    LLIST   llist;         
+    uint8_t port_id2;      /* different for every router port */
+    DL_TYPE portType;
+
+    union
+    {
+        BIP_PARAMS bipParams;
+        MSTP_PARAMS mstpParams;
+    }  ;
+
+    uint8_t *txBuff;    // this is the buffer used by the datalink send routing to prepare the MMPDU. (eg BVLC).   
+    uint16_t max_apdu;  // note, this is smaller than the required buffer size !
+
+#if ( BBMD_ENABLED == 1 )
+    // todo3 all these should be in bip_params above..
+    BBMD_TABLE_ENTRY    BBMD_Table[MAX_BBMD_ENTRIES];
+    FD_TABLE_ENTRY      FD_Table[MAX_FD_ENTRIES];
+#endif
+
+    void (*SendPdu) (
+        const DLINK_SUPPORT          *portParams,
+        const BACNET_MAC_ADDRESS    *bacnetMac,
+        const BACNET_NPDU_DATA      *npdu_data,
+        const DLCB                  *dlcb);
+
+    uint16_t (*ReceiveMPDU) ( 
+        DLINK_SUPPORT *portParams,
+        BACNET_MAC_ADDRESS *src,
+        uint8_t *pdu, 
+        uint16_t maxlen
+        );
+
+    void (*get_MAC_address) (
+        const struct _PORT_SUPPORT *portParams,
+        BACNET_MAC_ADDRESS *my_address);
+
+} ; // PORT_SUPPORT ;
+
+typedef struct {
+    const DLINK_SUPPORT  *portParams;
+    BACNET_PATH         bacnetPath;
+} BACNET_ROUTE;
+
+typedef struct
+{
+    char                  block_valid;
+
+    const DLINK_SUPPORT        *portParams;
+
+    BACNET_PATH         srcPath ;
+
+    uint8_t             *rxBuf ;
+    uint16_t            len ;
+
+} RX_DETAILS ;
+
+
+
+
+DLCB *alloc_dlcb_sys(char typ, const DLINK_SUPPORT *portParams );
+void dlcb_free(const DLCB *dlcb);
+DLCB *dlcb_deep_clone(const DLCB *dlcb);
+
+// renaming to allow tracing during debugging
+#define alloc_dlcb_response(tag, portParams)        alloc_dlcb_sys(tag, portParams)
+#define alloc_dlcb_application(tag, portParams)     alloc_dlcb_sys(tag, portParams)
+#define alloc_dlcb_app2(tag, portParams)	        alloc_dlcb_sys(tag, portParams)
+
+void SendIAmRouter(void);
+void SendNetworkNumberIs(void);
+void SendWhoIsRouter(void);
+void dump_router_table(void);
+void Send_I_Am_Broadcast(void);
+void set_local_broadcast_path(BACNET_PATH *dest);
+void set_global_broadcast_path(BACNET_PATH *dest);
+void set_local_broadcast_mac(BACNET_MAC_ADDRESS *mac);
+void set_broadcast_addr_local(BACNET_GLOBAL_ADDRESS *dest);
+void set_broadcast_addr_global(BACNET_GLOBAL_ADDRESS *dest);
+
+char *PortSupportToString( const DLINK_SUPPORT *ps);
+void bacnet_route_copy(BACNET_ROUTE *rdest, const BACNET_ROUTE *rsrc);
+void bacnet_route_clear(BACNET_ROUTE *rdest);
+
+DLINK_SUPPORT *InitDatalink(DL_TYPE rpt, uint16_t nwoPort);
+void datalink_cleanup(void);
+
 /** @defgroup DataLink The BACnet Network (DataLink) Layer
  * <b>6 THE NETWORK LAYER </b><br>
  * The purpose of the BACnet network layer is to provide the means by which

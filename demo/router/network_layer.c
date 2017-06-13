@@ -220,6 +220,7 @@ uint16_t create_network_message(
     switch (network_message_type) {
 
         case NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK:
+            // todo1 ekh - this is endian sensitive ! BTC todo.
             if (val != NULL) {
                 uint8_t *valptr = (uint8_t *) val;
                 uint16_t val16 = (valptr[0]) + (valptr[1] << 8);

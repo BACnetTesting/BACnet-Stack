@@ -46,9 +46,6 @@
 #define MAX_AUTHENTICATION_FACTOR_FORMAT_COUNT 4
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     typedef struct {
         BACNET_AUTHENTICATION_FACTOR present_value;
@@ -110,7 +107,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

@@ -81,19 +81,21 @@ static const int Lighting_Output_Properties_Required[] = {
     PROP_OBJECT_TYPE,
     PROP_PRESENT_VALUE,
     PROP_TRACKING_VALUE,
+	PROP_STATUS_FLAGS,
+	PROP_OUT_OF_SERVICE,
+	PROP_PRIORITY_ARRAY,
+	PROP_RELINQUISH_DEFAULT,
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
     PROP_LIGHTING_COMMAND,
     PROP_IN_PROGRESS,
-    PROP_STATUS_FLAGS,
-    PROP_OUT_OF_SERVICE,
     PROP_BLINK_WARN_ENABLE,
     PROP_EGRESS_TIME,
     PROP_EGRESS_ACTIVE,
     PROP_DEFAULT_FADE_TIME,
     PROP_DEFAULT_RAMP_RATE,
     PROP_DEFAULT_STEP_INCREMENT,
-    PROP_PRIORITY_ARRAY,
-    PROP_RELINQUISH_DEFAULT,
     PROP_LIGHTING_COMMAND_DEFAULT_PRIORITY,
+#endif
     -1
 };
 static const int Lighting_Output_Properties_Optional[] = {
@@ -966,7 +968,9 @@ int Lighting_Output_Read_Property(
     int apdu_len = 0;   /* return value */
     BACNET_BIT_STRING bit_string;
     BACNET_CHARACTER_STRING char_string;
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
     BACNET_LIGHTING_COMMAND lighting_command;
+#endif
     float real_value = (float) 1.414;
     uint32_t unsigned_value = 0;
     unsigned i = 0;
@@ -1002,6 +1006,7 @@ int Lighting_Output_Read_Property(
                 Lighting_Output_Tracking_Value(rpdata->object_instance);
             apdu_len = encode_application_real(&apdu[0], real_value);
             break;
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
         case PROP_LIGHTING_COMMAND:
             Lighting_Output_Lighting_Command(
                 rpdata->object_instance,
@@ -1015,6 +1020,7 @@ int Lighting_Output_Read_Property(
             apdu_len = encode_application_enumerated(&apdu[0],
                 unsigned_value);
             break;
+#endif
         case PROP_STATUS_FLAGS:
             bitstring_init(&bit_string);
             bitstring_set_bit(&bit_string, STATUS_FLAG_IN_ALARM, false);
@@ -1028,6 +1034,7 @@ int Lighting_Output_Read_Property(
             state = Lighting_Output_Out_Of_Service(rpdata->object_instance);
             apdu_len = encode_application_boolean(&apdu[0], state);
             break;
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
         case PROP_BLINK_WARN_ENABLE:
             state = Lighting_Output_Blink_Warn_Enable(rpdata->object_instance);
             apdu_len = encode_application_boolean(&apdu[0], state);
@@ -1058,6 +1065,7 @@ int Lighting_Output_Read_Property(
                 Lighting_Output_Default_Step_Increment(rpdata->object_instance);
             apdu_len = encode_application_real(&apdu[0], real_value);
             break;
+#endif
         case PROP_PRIORITY_ARRAY:
             /* Array element zero is the number of elements in the array */
             if (rpdata->array_index == 0) {
@@ -1095,11 +1103,10 @@ int Lighting_Output_Read_Property(
                         real_value = Lighting_Output_Priority_Value(
                             rpdata->object_instance,
                             rpdata->array_index);
-                        len =
                             encode_application_real(&apdu[apdu_len],
                             real_value);
                     } else {
-                        len = encode_application_null(&apdu[apdu_len]);
+                    encode_application_null(&apdu[apdu_len]);
                     }
                 } else {
                     rpdata->error_class = ERROR_CLASS_PROPERTY;
@@ -1113,12 +1120,14 @@ int Lighting_Output_Read_Property(
                     rpdata->object_instance);
             apdu_len = encode_application_real(&apdu[0], real_value);
             break;
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
         case PROP_LIGHTING_COMMAND_DEFAULT_PRIORITY:
             unsigned_value = Lighting_Output_Default_Priority(
                 rpdata->object_instance);
             apdu_len = encode_application_unsigned(&apdu[0],
                 unsigned_value);
             break;
+#endif
         default:
             rpdata->error_class = ERROR_CLASS_PROPERTY;
             rpdata->error_code = ERROR_CODE_UNKNOWN_PROPERTY;
@@ -1212,6 +1221,7 @@ bool Lighting_Output_Write_Property(
                 }
             }
             break;
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
         case PROP_LIGHTING_COMMAND:
             if (value.tag == BACNET_APPLICATION_TAG_LIGHTING_COMMAND) {
                 status = Lighting_Output_Lighting_Command_Set(
@@ -1226,6 +1236,7 @@ bool Lighting_Output_Write_Property(
                 wp_data->error_code = ERROR_CODE_INVALID_DATA_TYPE;
             }
             break;
+#endif
         case PROP_OUT_OF_SERVICE:
             status =
                 WPValidateArgType(&value, BACNET_APPLICATION_TAG_BOOLEAN,
@@ -1240,14 +1251,16 @@ bool Lighting_Output_Write_Property(
         case PROP_OBJECT_NAME:
         case PROP_OBJECT_TYPE:
         case PROP_TRACKING_VALUE:
+		case PROP_STATUS_FLAGS:
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
         case PROP_IN_PROGRESS:
-        case PROP_STATUS_FLAGS:
         case PROP_BLINK_WARN_ENABLE:
         case PROP_EGRESS_TIME:
         case PROP_EGRESS_ACTIVE:
         case PROP_DEFAULT_FADE_TIME:
         case PROP_DEFAULT_RAMP_RATE:
         case PROP_DEFAULT_STEP_INCREMENT:
+#endif
         case PROP_PRIORITY_ARRAY:
         case PROP_RELINQUISH_DEFAULT:
             wp_data->error_class = ERROR_CLASS_PROPERTY;

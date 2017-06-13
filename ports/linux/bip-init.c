@@ -59,7 +59,7 @@ long bip_getaddrbyname(
 }
 
 static int get_local_ifr_ioctl(
-    char *ifname,
+    const char *ifname,
     struct ifreq *ifr,
     int request)
 {
@@ -79,8 +79,8 @@ static int get_local_ifr_ioctl(
 }
 
 /* forward prototype required for compilers */
-int get_local_address_ioctl(
-    char *ifname,
+static int get_local_address_ioctl(
+    const char *ifname,
     struct in_addr *addr,
     int request);
 
@@ -109,7 +109,7 @@ int get_local_address_ioctl(
  *        Eg, for Linux, ifname is eth0, ath0, arc0, and others.
  */
 void bip_set_interface(
-    char *ifname)
+    const char *ifname)
 {
     struct in_addr local_address;
     struct in_addr broadcast_address;
@@ -127,7 +127,8 @@ void bip_set_interface(
         fprintf(stderr, "IP Address: %s\n", inet_ntoa(local_address));
     }
     /* setup local broadcast address */
-    rv = get_local_address_ioctl(ifname, &netmask, SIOCGIFNETMASK);
+    // 2016.08.20 EKH: was rv = get_local_address_ioctl(ifname, &netmask, SIOCGIFNETMASK);
+    rv = get_local_address_ioctl(ifname, &broadcast_address, SIOCGIFBRDADDR);
 
     if (rv < 0) {
         broadcast_address.s_addr = ~0;
@@ -242,7 +243,7 @@ int bip_get_local_netmask(
     int rv;
     char *ifname = getenv("BACNET_IFACE");      /* will probably be null */
     if (ifname == NULL)
-        ifname = "eth0";
+        ifname = (char *) "eth0";
     rv = get_local_address_ioctl(ifname, netmask, SIOCGIFNETMASK);
     return rv;
 }

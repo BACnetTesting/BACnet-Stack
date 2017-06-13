@@ -31,13 +31,15 @@
  License.
  -------------------------------------------
 ####COPYRIGHTEND####*/
-#include "ethernet.h"
+//#include "ethernet.h"
 #include "bip.h"
 #include "bvlc.h"
-#include "arcnet.h"
+//#include "arcnet.h"
 #include "dlmstp.h"
 #include "datalink.h"
-#include <string.h>
+//#include <string.h>
+#include "emm.h"
+#include "CEDebug.h"
 
 /** @file datalink.c  Optional run-time assignment of datalink transport */
 
@@ -67,12 +69,12 @@ bool(*datalink_init) (char *ifname);
  */
 int (
     *datalink_send_pdu) (
-    BACNET_ADDRESS * dest,
+    BACNET_PATH * dest,
     BACNET_NPDU_DATA * npdu_data,
     uint8_t * pdu,
     unsigned pdu_len);
 
-uint16_t(*datalink_receive) (BACNET_ADDRESS * src, uint8_t * pdu,
+uint16_t(*datalink_receive) (BACNET_PATH * src, uint8_t * pdu,
     uint16_t max_pdu, unsigned timeout);
 
 /** Function template to close the DataLink services and perform any cleanup.
@@ -84,50 +86,169 @@ void (
 
 void (
     *datalink_get_broadcast_address) (
-    BACNET_ADDRESS * dest);
+    BACNET_PATH * dest);
 
 void (
     *datalink_get_my_address) (
-    BACNET_ADDRESS * my_address);
+    BACNET_PATH * my_address);
 
-void datalink_set(
-    char *datalink_string)
+#endif
+
+
+DLCB *alloc_dlcb_sys(char typ, const DLINK_SUPPORT *portParams)
 {
-    if (strcasecmp("bip", datalink_string) == 0) {
-        datalink_init = bip_init;
-        datalink_send_pdu = bip_send_pdu;
-        datalink_receive = bip_receive;
-        datalink_cleanup = bip_cleanup;
-        datalink_get_broadcast_address = bip_get_broadcast_address;
-        datalink_get_my_address = bip_get_my_address;
-    } else if (strcasecmp("bvlc", datalink_string) == 0) {
-        datalink_init = bip_init;
-        datalink_send_pdu = bvlc_send_pdu;
-        datalink_receive = bvlc_receive;
-        datalink_cleanup = bip_cleanup;
-        datalink_get_broadcast_address = bip_get_broadcast_address;
-        datalink_get_my_address = bip_get_my_address;
-    } else if (strcasecmp("ethernet", datalink_string) == 0) {
-        datalink_init = ethernet_init;
-        datalink_send_pdu = ethernet_send_pdu;
-        datalink_receive = ethernet_receive;
-        datalink_cleanup = ethernet_cleanup;
-        datalink_get_broadcast_address = ethernet_get_broadcast_address;
-        datalink_get_my_address = ethernet_get_my_address;
-    } else if (strcasecmp("arcnet", datalink_string) == 0) {
-        datalink_init = arcnet_init;
-        datalink_send_pdu = arcnet_send_pdu;
-        datalink_receive = arcnet_receive;
-        datalink_cleanup = arcnet_cleanup;
-        datalink_get_broadcast_address = arcnet_get_broadcast_address;
-        datalink_get_my_address = arcnet_get_my_address;
-    } else if (strcasecmp("mstp", datalink_string) == 0) {
-        datalink_init = dlmstp_init;
-        datalink_send_pdu = dlmstp_send_pdu;
-        datalink_receive = dlmstp_receive;
-        datalink_cleanup = dlmstp_cleanup;
-        datalink_get_broadcast_address = dlmstp_get_broadcast_address;
-        datalink_get_my_address = dlmstp_get_my_address;
+    DLCB *dlcb = (DLCB *)emm_dmalloc(typ, sizeof(DLCB));
+    if (dlcb == NULL) return NULL;
+
+    dlcb->Handler_Transmit_Buffer = (uint8_t *)emm_dmalloc(typ, portParams->max_apdu );
+    if (dlcb->Handler_Transmit_Buffer == NULL)
+    {
+        emm_free(dlcb);
+        return NULL;
+    }
+
+#if ( BAC_DEBUG == 1 )
+    dlcb->signature = 'd';
+#endif
+
+    dlcb->portParams = portParams;
+    dlcb->source = typ;            // 'a'pp or 'm'stp (in future, ethernet(s), other mstp(s) wifi
+    dlcb->bufSize = portParams->max_apdu ;
+    return dlcb;
+}
+
+
+DLCB *dlcb_deep_clone(const DLCB *dlcb)
+{
+#if ( BAC_DEBUG == 1 ) && ! defined ( _MSC_VER )
+    if (dlcb->signature != 'd')
+    {
+        SendBTApanicMessage("mxxxx - Bad signature 2");
+        return NULL;
+    }
+#endif
+
+    DLCB *newdlcb = (DLCB *)emm_dmalloc('k', sizeof(DLCB));
+    if (newdlcb == NULL) return NULL;
+
+    newdlcb->Handler_Transmit_Buffer = (uint8_t *)emm_dmalloc('h', dlcb->bufSize);
+    if (newdlcb->Handler_Transmit_Buffer == NULL)
+    {
+        emm_free(newdlcb);
+        return NULL;
+    }
+
+#if ( BAC_DEBUG == 1 )
+    newdlcb->signature = 'd';
+#endif
+
+    newdlcb->portParams = dlcb->portParams;
+    newdlcb->bufSize = dlcb->bufSize;
+    memcpy(newdlcb->Handler_Transmit_Buffer, dlcb->Handler_Transmit_Buffer, dlcb->bufSize);	// todo3, start using safebuffers, with associated lengths
+    return newdlcb;
+}
+
+
+void dlcb_free(const DLCB *dlcb)
+{
+#if (BAC_DEBUG == 1 )
+    if (dlcb->signature != 'd')
+    {
+        // bad ptr/already free
+        panic();
+        return;
+    }
+    ((DLCB *)dlcb)->signature = 'Z';
+#endif // BAC_DEBUG
+
+    // todo2 - add debug check that dlcb not already freed
+    emm_free(dlcb->Handler_Transmit_Buffer);
+    emm_free((void *) dlcb);
+}
+
+
+DLINK_SUPPORT *datalinkSupportHead;
+
+DLINK_SUPPORT *InitDatalink(DL_TYPE rpt, uint16_t ipPort )
+{
+    static uint8_t portId;
+
+    DLINK_SUPPORT *ps = (DLINK_SUPPORT *)emm_dmalloc('b', sizeof(DLINK_SUPPORT));
+    if (ps == NULL) return NULL;
+
+    ps->port_id2 = ++portId;
+
+    ps->portType = rpt;
+
+    switch (rpt)
+    {
+    default:
+        panic();
+        emm_free(ps);
+        return NULL;
+
+#if defined(BBMD_ENABLED) && (BBMD_ENABLED == 1)
+    case DL_FD:
+        ps->bipParams.BVLC_NAT_Handling = false;
+        ps->SendPdu = fd_send_npdu;
+        ps->ReceiveMPDU = bip_receive;
+        ps->get_MAC_address = bip_get_MAC_address;
+        ps->bipParams.nwoPort = htons(ipPort);
+        ps->max_apdu = MAX_MPDU_IP;
+        bip_init(ps, "192.168.1.101" );     // todo ks - karg only allows one interface at a time. We need a method to set multiple... I will think of something todo ekh
+        break;
+#endif
+
+    case DL_BIP:
+        ps->SendPdu = bip_send_npdu;
+        ps->ReceiveMPDU = bip_receive;
+        ps->get_MAC_address = bip_get_MAC_address;
+        ps->bipParams.nwoPort = htons(ipPort);
+        ps->max_apdu = MAX_MPDU_IP;
+        bip_init(ps, "192.168.1.101");
+        break;
+
+#if defined(BBMD_ENABLED) && (BBMD_ENABLED == 1)
+    case DL_BBMD:
+        ps->SendPdu = bbmd_send_npdu;
+        ps->ReceiveMPDU = bbmd_receive;
+        ps->get_MAC_address = bip_get_MAC_address;
+        ps->bipParams.nwoPort = htons( ipPort ) ;
+        ps->bipParams.BVLC_NAT_Handling = false;
+        ps->max_apdu = MAX_MPDU_IP;
+        bip_init (ps, "192.168.1.101");
+        break;
+#endif
+
+#if 0
+    case DL_MSTP:
+        ps->SendPdu = dlmstp_send_pdu;
+        ps->ReceiveMPDU = dlmstp_receive_pdu;  
+        ps->get_MAC_address = dlmstp_get_MAC_address;
+        ps->max_apdu = MAX_APDU_MSTP;
+        dlmstp_init(ps, "COM15" );              // todo ks - same as above
+        break;
+#endif
+
+    }
+
+
+#if defined(BBMD_ENABLED) && (BBMD_ENABLED == 1)
+    // need to clear BDT after initializing the port, since we need to insert the port address
+    bbmd_clear_bdt_local(ps);   // at present, all PORT_SUPPORTS have FD, BBMD tables. todo4 eliminate unused instances. esp MSTP?
+    bbmd_clear_fdt_local(ps);
+#endif
+
+    LinkListAppend((void **)&datalinkSupportHead, ps);     // Regular port structures
+
+    return ps;
+}
+
+void datalink_cleanup(void)
+{
+    for (DLINK_SUPPORT *ps = datalinkSupportHead; ps != NULL; ps = (DLINK_SUPPORT *)ps->llist.next)
+    {
+        panic();
+        // ps->
     }
 }
-#endif

@@ -32,10 +32,6 @@
 #include "rp.h"
 #include "wp.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
     void Binary_Value_Init(
         void);
 
@@ -49,7 +45,7 @@ extern "C" {
     unsigned Binary_Value_Count(
         void);
     uint32_t Binary_Value_Index_To_Instance(
-        unsigned index);
+        unsigned objectIndex);
     unsigned Binary_Value_Instance_To_Index(
         uint32_t object_instance);
     bool Binary_Value_Object_Instance_Add(
@@ -146,7 +142,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

@@ -22,22 +22,26 @@
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
 *********************************************************************/
-#include <stddef.h>
+
+//#include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
+//#include <stdio.h>
+//#include <string.h>
+//#include <errno.h>
 #include "config.h"
-#include "txbuf.h"
-#include "bacdef.h"
-#include "bacdcode.h"
+
+#if ( BACNET_SVC_COV_A == 1 )
+
+//#include "txbuf.h"
+//#include "bacdef.h"
+//#include "bacdcode.h"
 #include "apdu.h"
 #include "npdu.h"
-#include "abort.h"
-/* special for this module */
+//#include "abort.h"
+///* special for this module */
 #include "cov.h"
-#include "bactext.h"
-#include "handlers.h"
+//#include "bactext.h"
+//#include "handlers.h"
 
 #ifndef MAX_COV_PROPERTIES
 #define MAX_COV_PROPERTIES 2
@@ -55,14 +59,14 @@
  *
  * @param service_request [in] The contents of the service request.
  * @param service_len [in] The length of the service_request.
- * @param src [in] BACNET_ADDRESS of the source of the message
+ * @param src [in] BACNET_PATH of the source of the message
  * @param service_data [in] The BACNET_CONFIRMED_SERVICE_DATA information
  *                          decoded from the APDU header of this message.
  */
 void handler_ccov_notification(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src,
+    BACNET_PATH * src,
     BACNET_CONFIRMED_SERVICE_DATA * service_data)
 {
     BACNET_NPDU_DATA npdu_data;
@@ -71,9 +75,9 @@ void handler_ccov_notification(
     BACNET_PROPERTY_VALUE *pProperty_value = NULL;
     unsigned index = 0;
     int len = 0;
-    int pdu_len = 0;
-    int bytes_sent = 0;
-    BACNET_ADDRESS my_address;
+    int pdu_len ;
+    int bytes_sent ;
+    BACNET_PATH my_address;
 
     /* create linked list to store data if more
        than one property value is expected */
@@ -90,7 +94,7 @@ void handler_ccov_notification(
     cov_data.listOfValues = &property_value[0];
     /* encode the NPDU portion of the packet */
     datalink_get_my_address(&my_address);
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_setup_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
         npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
         &npdu_data);
@@ -160,14 +164,15 @@ void handler_ccov_notification(
     pdu_len += len;
     bytes_sent =
         datalink_send_pdu(src, &npdu_data, &Handler_Transmit_Buffer[0],
-        pdu_len);
+                          pdu_len);
 #if PRINT_ENABLED
     if (bytes_sent <= 0) {
         fprintf(stderr, "CCOV: Failed to send PDU (%s)!\n", strerror(errno));
     }
 #else
-    bytes_sent = bytes_sent;
+    (void) bytes_sent;
 #endif
 
-    return;
 }
+
+#endif // ( BACNET_SVC_COV_B == 1 )

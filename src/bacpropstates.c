@@ -32,6 +32,10 @@
  -------------------------------------------
 ####COPYRIGHTEND####*/
 
+#include "config.h"
+
+#if (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1) || ( INTRINSIC_REPORTING == 1 )
+
 #include "bacdcode.h"
 #include "npdu.h"
 #include "timestamp.h"
@@ -55,7 +59,7 @@ int bacapp_decode_property_state(
     if (-1 == section_length) {
         return -1;
     }
-    value->tag = tagnum;
+    value->tag = (BACNET_PROPERTY_STATE_TYPE) tagnum;
     len += section_length;
     switch (value->tag) {
         case BOOLEAN_VALUE:
@@ -443,3 +447,5 @@ int main(
 
 #endif /* TEST_PROP_STATES */
 #endif /* TEST */
+
+#endif // BACNET_ALERT_ENROLLMENT

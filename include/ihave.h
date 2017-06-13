@@ -34,15 +34,11 @@ typedef struct BACnet_I_Have_Data {
     BACNET_CHARACTER_STRING object_name;
 } BACNET_I_HAVE_DATA;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+int ihave_encode_apdu(
+    uint8_t * apdu,
+    BACNET_I_HAVE_DATA * data);
 
-    int ihave_encode_apdu(
-        uint8_t * apdu,
-        BACNET_I_HAVE_DATA * data);
-
-    int ihave_decode_service_request(
+int ihave_decode_service_request(
         uint8_t * apdu,
         unsigned apdu_len,
         BACNET_I_HAVE_DATA * data);
@@ -54,11 +50,8 @@ extern "C" {
 
 #ifdef TEST
 #include "ctest.h"
-    void testIHave(
-        Test * pTest);
+void testIHave(
+    Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

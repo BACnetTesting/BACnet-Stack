@@ -236,7 +236,7 @@ int ethernet_send(
     unsigned pdu_len    /* number of bytes of data */
     )
 {
-    int bytes = 0;
+    int bytes ;
     uint8_t mtu[MAX_MPDU] = { 0 };
     int mtu_len = 0;
     int i = 0;

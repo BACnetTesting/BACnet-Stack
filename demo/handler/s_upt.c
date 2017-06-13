@@ -22,64 +22,63 @@
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
 *********************************************************************/
-#include <stddef.h>
-#include <stdint.h>
-#include <errno.h>
-#include <string.h>
-#include "config.h"
-#include "txbuf.h"
-#include "bacdef.h"
-#include "bacdcode.h"
-#include "address.h"
-#include "tsm.h"
-#include "npdu.h"
-#include "apdu.h"
-#include "device.h"
+
+//#include <stddef.h>
+//#include <stdint.h>
+//#include <errno.h>
+//#include <string.h>
+//#include "config.h"
+//#include "bacdef.h"
+//#include "bacdcode.h"
+//#include "address.h"
+//#include "tsm.h"
+//#include "npdu.h"
+//#include "apdu.h"
+//#include "device.h"
 #include "datalink.h"
-#include "dcc.h"
+//#include "dcc.h"
 #include "ptransfer.h"
-/* some demo stuff needed */
-#include "handlers.h"
-#include "txbuf.h"
-#include "client.h"
+///* some demo stuff needed */
+//#include "handlers.h"
+//#include "client.h"
+
+#if (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1)
 
 /** @file s_upt.c  Send an Unconfirmed Private Transfer request. */
 
-int Send_UnconfirmedPrivateTransfer(
-    BACNET_ADDRESS * dest,
+// todo2 - who uses this (seems to me to be added pretty late in the game 2017.03.09 )
+void Send_UnconfirmedPrivateTransfer(
+	DLCB *dlcb,
+    BACNET_PATH * dest,
     BACNET_PRIVATE_TRANSFER_DATA * private_data)
 {
     int len = 0;
     int pdu_len = 0;
-    int bytes_sent = 0;
+    // int bytes_sent = 0;
     BACNET_NPDU_DATA npdu_data;
-    BACNET_ADDRESS my_address;
+    BACNET_PATH my_address;
 
     if (!dcc_communication_enabled())
-        return bytes_sent;
+        return;
 
+#if 0
     datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_setup_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
-        npdu_encode_pdu(&Handler_Transmit_Buffer[0], dest, &my_address,
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], dest, &my_address,
         &npdu_data);
 
     /* encode the APDU portion of the packet */
     len =
-        uptransfer_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
+        uptransfer_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
         private_data);
     pdu_len += len;
-    bytes_sent =
-        datalink_send_pdu(dest, &npdu_data, &Handler_Transmit_Buffer[0],
+        datalink_send_pdu(dlcb, dest, &npdu_data, 
         pdu_len);
-    if (bytes_sent <= 0) {
-#if PRINT_ENABLED
-        fprintf(stderr,
-            "Failed to Send UnconfirmedPrivateTransfer Request (%s)!\n",
-            strerror(errno));
-#endif
-    }
 
-    return bytes_sent;
+#endif
 }
+
+#endif // #if ( BACNET_SVC_PRIVATE_TRANSFER )
+

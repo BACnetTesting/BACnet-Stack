@@ -25,6 +25,7 @@
 /* Acknowledging the contribution of code and ideas used here that
  * came from Paul Chapman's vmac demo project. */
 
+#ifdef BAC_ROUTING
 #include <stdbool.h>
 #include <stdint.h>
 #include "bacdef.h"
@@ -40,9 +41,9 @@
 #include "bactext.h"
 #include "debug.h"
 
-#if PRINT_ENABLED
-#include <stdio.h>
-#endif
+//#if PRINT_ENABLED
+//#include <stdio.h>
+//#endif
 #if defined(BACDL_BIP)
 #include "bvlc.h"
 #endif
@@ -70,7 +71,7 @@
  *  @param npdu_len [in] The length of the remaining NPDU message in npdu[].
  */
 static void network_control_handler(
-    BACNET_ADDRESS * src,
+    BACNET_PATH * src,
     int *DNET_list,
     BACNET_NPDU_DATA * npdu_data,
     uint8_t * npdu,
@@ -165,7 +166,12 @@ static void network_control_handler(
         case NETWORK_MESSAGE_ESTABLISH_CONNECTION_TO_NETWORK:
         case NETWORK_MESSAGE_DISCONNECT_CONNECTION_TO_NETWORK:
             /* Do nothing - don't support PTP half-router control */
-            break;
+	case NETWORK_MESSAGE_WHAT_IS_NETWORK_NUMBER:
+			// do nothing, we don't support this yet.
+			// todo 5 - BTL / BTC
+			// Our virtual devices dont care about the Network Number of the local network. We can happily live with a routing table with just one Network Number entry, but will BTL
+			// accept that?
+		break;
         default:
             /* An unrecognized message is bad; send an error response. */
             Send_Reject_Message_To_Network(src,
@@ -184,16 +190,16 @@ static void network_control_handler(
  * would for a routed message) because the reply will be sent from the level
  * of the gateway Device.
  *
- * @param src [in] The BACNET_ADDRESS of the message's source.
- * @param dest [in] The BACNET_ADDRESS of the message's destination.
+ * @param src [in] The BACNET_PATH of the message's source.
+ * @param dest [in] The BACNET_PATH of the message's destination.
  * @param DNET_list [in] List of our reachable downstream BACnet Network numbers.
  * 					 Normally just one valid entry; terminated with a -1 value.
  * @param apdu [in] The apdu portion of the request, to be processed.
  * @param apdu_len [in] The total (remaining) length of the apdu.
  */
 static void routed_apdu_handler(
-    BACNET_ADDRESS * src,
-    BACNET_ADDRESS * dest,
+    BACNET_PATH * src,
+    BACNET_PATH * dest,
     int *DNET_list,
     uint8_t * apdu,
     uint16_t apdu_len)
@@ -266,13 +272,13 @@ static void routed_apdu_handler(
  *  @param pdu_len [in] The size of the received message in the pdu[] buffer.
  */
 void routing_npdu_handler(
-    BACNET_ADDRESS * src,
+    BACNET_PATH * src,
     int *DNET_list,
     uint8_t * pdu,
     uint16_t pdu_len)
 {
     int apdu_offset = 0;
-    BACNET_ADDRESS dest = { 0 };
+    BACNET_PATH dest = { 0 };
     BACNET_NPDU_DATA npdu_data = { 0 };
 
     /* only handle the version that we know how to handle */
@@ -301,6 +307,6 @@ void routing_npdu_handler(
             ("NPDU: Unsupported BACnet Protocol Version=%u.  Discarded!\n",
             (unsigned) pdu[0]);
     }
-
-    return;
 }
+
+#endif // BAC_ROUTING

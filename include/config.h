@@ -25,6 +25,8 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#include "debug.h"
+
 /* Note: these defines can be defined in your makefile or project
    or here or not defined and defaults will be used */
 
@@ -67,16 +69,21 @@
 /* Define your processor architecture as
    Big Endian (PowerPC,68K,Sparc) or Little Endian (Intel,AVR)
    ARM and MIPS can be either - what is your setup? */
-#if !defined(BIG_ENDIAN)
-#define BIG_ENDIAN 0
+
+   /* NOTE: byte order plays a role in decoding multibyte values */
+   /* http://www.unixpapa.com/incnote/byteorder.html */
+   // 2016.08.20 EKH: Found a conflict with BIG_ENDIAN in another library. Renaming for BACnet.
+
+#if !defined(BACNET_STACK_BIG_ENDIAN)
+#define BACNET_STACK_BIG_ENDIAN 0
 #endif
 
 /* Define your Vendor Identifier assigned by ASHRAE */
 #if !defined(BACNET_VENDOR_ID)
-#define BACNET_VENDOR_ID 260
+#define BACNET_VENDOR_ID 462
 #endif
 #if !defined(BACNET_VENDOR_NAME)
-#define BACNET_VENDOR_NAME "BACnet Stack at SourceForge"
+#define BACNET_VENDOR_NAME "ConnectEx, Inc."
 #endif
 
 /* Max number of bytes in an APDU. */
@@ -167,7 +174,7 @@
 #define BACAPP_TIME
 #define BACAPP_OBJECT_ID
 #define BACAPP_DEVICE_OBJECT_PROP_REF
-#define BACAPP_LIGHTING_COMMAND
+// #define BACAPP_LIGHTING_COMMAND
 #elif defined (BACAPP_MINIMAL)
 #define BACAPP_NULL
 #define BACAPP_BOOLEAN
@@ -240,45 +247,101 @@
 #define BACNET_USE_SIGNED      1
 #endif
 
+#ifndef BACNET_CLIENT
+#define BACNET_CLIENT           0
+#endif
+
+#ifndef INTRINSIC_REPORTING
+#define INTRINSIC_REPORTING		0
+#endif
+
 /* Do them one by one */
-#ifndef BACNET_SVC_I_HAVE_A     /* Do we send I_Have requests? */
-#define BACNET_SVC_I_HAVE_A 0
+#ifndef BACNET_SVC_COV_B				/* EKH, I am only defining B for now, make A vs B more fine grained when next dealing with COVs */
+#define BACNET_SVC_COV_B		0
 #endif
 
-#ifndef BACNET_SVC_WP_A /* Do we send WriteProperty requests? */
-#define BACNET_SVC_WP_A 0
+#ifndef BACNET_SVC_I_HAVE_A             /* Do we send I_Have requests? */
+#define BACNET_SVC_I_HAVE_A     0
 #endif
 
-#ifndef BACNET_SVC_RP_A /* Do we send ReadProperty requests? */
-#define BACNET_SVC_RP_A 0
+#ifndef BACNET_SVC_WP_A                 /* Do we send WriteProperty requests? */
+#define BACNET_SVC_WP_A         0
 #endif
 
-#ifndef BACNET_SVC_RPM_A        /* Do we send ReadPropertyMultiple requests? */
-#define BACNET_SVC_RPM_A 0
+#ifndef BACNET_SVC_RP_A                 /* Do we send ReadProperty requests? */
+#define BACNET_SVC_RP_A         0
 #endif
 
-#ifndef BACNET_SVC_DCC_A        /* Do we send DeviceCommunicationControl requests? */
-#define BACNET_SVC_DCC_A 0
+#ifndef BACNET_SVC_RR_B                 /* Do we respond to Read Range requests? */
+#define BACNET_SVC_RR_B         0
 #endif
 
-#ifndef BACNET_SVC_RD_A /* Do we send ReinitialiseDevice requests? */
-#define BACNET_SVC_RD_A 0
+#ifndef BACNET_SVC_RPM_A                /* Do we send ReadPropertyMultiple requests? */
+#define BACNET_SVC_RPM_A        0
 #endif
 
-#ifndef BACNET_SVC_SERVER       /* Are we a pure server type device? */
-#define BACNET_SVC_SERVER 1
+#ifndef BACNET_SVC_DCC_A                /* Do we send DeviceCommunicationControl requests? */
+#define BACNET_SVC_DCC_A        0
 #endif
 
-#ifndef BACNET_USE_OCTETSTRING  /* Do we need any octet strings? */
-#define BACNET_USE_OCTETSTRING 0
+#ifndef BACNET_SVC_PRIVATE_TRANSFER
+#define BACNET_SVC_PRIVATE_TRANSFER 0
 #endif
 
-#ifndef BACNET_USE_DOUBLE       /* Do we need any doubles? */
-#define BACNET_USE_DOUBLE 0
+#ifndef BACNET_SVC_RD_A                 /* Do we send ReinitialiseDevice requests? */
+#define BACNET_SVC_RD_A         0
 #endif
 
-#ifndef BACNET_USE_SIGNED       /* Do we need any signed integers */
-#define BACNET_USE_SIGNED 0
+#ifndef BACNET_SVC_SERVER               /* Are we a pure server type device? */
+#define BACNET_SVC_SERVER       1
 #endif
 
+#ifndef BACNET_USE_OCTETSTRING          /* Do we need any octet strings? */
+#define BACNET_USE_OCTETSTRING  0
 #endif
+
+#ifndef BACNET_USE_DOUBLE               /* Do we need any doubles? */
+#define BACNET_USE_DOUBLE       0
+#endif
+
+#ifndef BACNET_USE_SIGNED               /* Do we need any signed integers */
+#define BACNET_USE_SIGNED       0
+#endif
+
+
+/* And a similar method for optional BACnet Objects */
+
+#ifndef BACNET_USE_OBJECT_ALERT_ENROLLMENT
+#define BACNET_USE_OBJECT_ALERT_ENROLLMENT  0
+#endif
+
+#ifndef BACNET_USE_OBJECT_LOAD_CONTROL
+#define BACNET_USE_OBJECT_LOAD_CONTROL      0
+#endif
+
+#ifndef BACNET_USE_OBJECT_TRENDLOG
+#define BACNET_USE_OBJECT_TRENDLOG          0
+#endif
+
+#ifndef BACNET_USE_OBJECT_LIFE_SAFETY
+#define BACNET_USE_OBJECT_LIFE_SAFETY       0
+#endif
+
+#ifndef BACNET_USE_OBJECT_CHANNEL
+#define BACNET_USE_OBJECT_CHANNEL			0
+#endif
+
+#ifndef BACNET_USE_OBJECT_SCHEDULE
+#define BACNET_USE_OBJECT_SCHEDULE			0
+#endif
+
+
+// There are some cascading dependencies, check and resolve them here
+
+#if (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1 ) ||  ( INTRINSIC_REPORTING == 1 )
+#define BACNET_USE_OBJECT_NOTIFICATION_CLASS    1
+#define BACNET_USE_EVENT_HANDLING               1
+#endif
+
+#endif // CONFIG_H
+

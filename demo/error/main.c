@@ -198,7 +198,7 @@ int main(
             } else if (target_args == 2) {
                 Target_Service = strtol(argv[argi], NULL, 0);
                 target_args++;
-            } else if (target_args == 2) {
+            } else if (target_args == 3) {
                 Target_Invoke_ID = strtol(argv[argi], NULL, 0);
                 target_args++;
             } else {

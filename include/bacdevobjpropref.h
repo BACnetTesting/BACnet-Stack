@@ -24,11 +24,6 @@
 #ifndef _BAC_DEV_PROP_REF_H_
 #define _BAC_DEV_PROP_REF_H_
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include "bacdef.h"
-#include "bacenum.h"
 
 typedef struct BACnetDeviceObjectPropertyReference {
     BACNET_OBJECT_ID objectIdentifier;
@@ -48,9 +43,6 @@ typedef struct BACnetDeviceObjectReference {
 
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     int bacapp_encode_device_obj_property_ref(
         uint8_t * apdu,
@@ -95,7 +87,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

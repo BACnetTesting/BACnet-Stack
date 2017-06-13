@@ -28,9 +28,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     int decode_real_safe(
         uint8_t * apdu,
@@ -73,7 +70,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

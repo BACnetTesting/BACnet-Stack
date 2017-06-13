@@ -282,7 +282,7 @@ bool bitstring_init_ascii(
    initialize by using value=NULL */
 bool characterstring_init(
     BACNET_CHARACTER_STRING * char_string,
-    uint8_t encoding,
+    BACNET_CHARACTER_STRING_ENCODING encoding,
     const char *value,
     size_t length)
 {
@@ -404,7 +404,7 @@ bool characterstring_ansi_same(
     }
     /* NULL matches an empty string in our world */
     else if (src) {
-        if (strlen(src) == 0) {
+        if ( src[0] == 0) {
             same_status = true;
         }
     } else if (dest) {
@@ -497,10 +497,10 @@ size_t characterstring_capacity(
 }
 
 /* returns the encoding. */
-uint8_t characterstring_encoding(
+BACNET_CHARACTER_STRING_ENCODING characterstring_encoding(
     BACNET_CHARACTER_STRING * char_string)
 {
-    uint8_t encoding = 0;
+    BACNET_CHARACTER_STRING_ENCODING encoding = CHARACTER_UTF8;
 
     if (char_string) {
         encoding = char_string->encoding;
@@ -512,7 +512,7 @@ uint8_t characterstring_encoding(
 /* returns the encoding. */
 bool characterstring_set_encoding(
     BACNET_CHARACTER_STRING * char_string,
-    uint8_t encoding)
+    BACNET_CHARACTER_STRING_ENCODING encoding)
 {
     bool status = false;
 
@@ -754,8 +754,9 @@ bool octetstring_init_ascii_hex(
                     /* at least one pair was decoded */
                     status = true;
                 } else {
-                    break;
+                    // ekh 2016.05.30 : incorrect sequence corrected
                     status = false;
+                    break;
                 }
                 /* set up for next pair */
                 index += 2;
@@ -979,7 +980,7 @@ void testCharacterString(
     char test_value[MAX_APDU] = "Patricia";
     char test_append_value[MAX_APDU] = " and the Kids";
     char test_append_string[MAX_APDU] = "";
-    bool status = false;
+    bool status ;
     size_t length = 0;
     size_t test_length = 0;
     size_t i = 0;
@@ -1039,7 +1040,7 @@ void testOctetString(
     uint8_t test_value[MAX_APDU] = "Patricia";
     uint8_t test_append_value[MAX_APDU] = " and the Kids";
     uint8_t test_append_string[MAX_APDU] = "";
-    bool status = false;
+    bool status ;
     size_t length = 0;
     size_t test_length = 0;
     size_t i = 0;

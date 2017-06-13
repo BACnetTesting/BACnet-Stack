@@ -24,10 +24,11 @@
 #ifndef APDU_H
 #define APDU_H
 
-#include <stdbool.h>
-#include <stdint.h>
-#include "bacdef.h"
-#include "bacenum.h"
+//#include <stdbool.h>
+//#include <stdint.h>
+//#include "bacdef.h"
+//#include "bacenum.h"
+#include "datalink.h"
 
 typedef struct _confirmed_service_data {
     bool segmented_message;
@@ -48,9 +49,6 @@ typedef struct _confirmed_service_ack_data {
     uint8_t proposed_window_number;
 } BACNET_CONFIRMED_SERVICE_ACK_DATA;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /* generic unconfirmed function handler */
 /* Suitable to handle the following services: */
@@ -60,9 +58,9 @@ extern "C" {
 /* UTC_Time_Synchronization */
     typedef void (
         *unconfirmed_function) (
-        uint8_t * service_request,
-        uint16_t len,
-        BACNET_ADDRESS * src);
+    uint8_t * service_request,
+    uint16_t len,
+    BACNET_ROUTE * src);
 
 /* generic confirmed function handler */
 /* Suitable to handle the following services: */
@@ -84,13 +82,13 @@ extern "C" {
         *confirmed_function) (
         uint8_t * service_request,
         uint16_t service_len,
-        BACNET_ADDRESS * src,
+        BACNET_ROUTE * src,
         BACNET_CONFIRMED_SERVICE_DATA * service_data);
 
 /* generic confirmed simple ack function handler */
     typedef void (
         *confirmed_simple_ack_function) (
-        BACNET_ADDRESS * src,
+        BACNET_ROUTE * src,
         uint8_t invoke_id);
 
 /* generic confirmed ack function handler */
@@ -98,13 +96,13 @@ extern "C" {
         *confirmed_ack_function) (
         uint8_t * service_request,
         uint16_t service_len,
-        BACNET_ADDRESS * src,
+        BACNET_ROUTE * src,
         BACNET_CONFIRMED_SERVICE_ACK_DATA * service_data);
 
 /* generic error reply function */
     typedef void (
         *error_function) (
-        BACNET_ADDRESS * src,
+        BACNET_ROUTE * src,
         uint8_t invoke_id,
         BACNET_ERROR_CLASS error_class,
         BACNET_ERROR_CODE error_code);
@@ -112,7 +110,7 @@ extern "C" {
 /* generic abort reply function */
     typedef void (
         *abort_function) (
-        BACNET_ADDRESS * src,
+        BACNET_ROUTE * src,
         uint8_t invoke_id,
         uint8_t abort_reason,
         bool server);
@@ -120,7 +118,7 @@ extern "C" {
 /* generic reject reply function */
     typedef void (
         *reject_function) (
-        BACNET_ADDRESS * src,
+        BACNET_ROUTE * src,
         uint8_t invoke_id,
         uint8_t reject_reason);
 
@@ -151,45 +149,42 @@ extern "C" {
 /* Function to translate a SERVICE_SUPPORTED_ enum to its SERVICE_CONFIRMED_
  *  or SERVICE_UNCONFIRMED_ index.
  */
-    bool apdu_service_supported_to_index(
-        BACNET_SERVICES_SUPPORTED service_supported,
-        size_t * index,
-        bool * bIsConfirmed);
+bool apdu_service_supported_to_index(
+    BACNET_SERVICES_SUPPORTED service_supported,
+    size_t * objectIndex,
+    bool * bIsConfirmed);
 
 
-    void apdu_set_error_handler(
-        BACNET_CONFIRMED_SERVICE service_choice,
-        error_function pFunction);
+void apdu_set_error_handler(
+    BACNET_CONFIRMED_SERVICE service_choice,
+    error_function pFunction);
 
-    void apdu_set_abort_handler(
-        abort_function pFunction);
+void apdu_set_abort_handler(
+    abort_function pFunction);
 
-    void apdu_set_reject_handler(
-        reject_function pFunction);
+void apdu_set_reject_handler(
+    reject_function pFunction);
 
-    uint16_t apdu_decode_confirmed_service_request(
-        uint8_t * apdu, /* APDU data */
-        uint16_t apdu_len,
-        BACNET_CONFIRMED_SERVICE_DATA * service_data,
-        uint8_t * service_choice,
-        uint8_t ** service_request,
-        uint16_t * service_request_len);
+uint16_t apdu_decode_confirmed_service_request(
+    uint8_t * apdu, /* APDU data */
+    uint16_t apdu_len,
+    BACNET_CONFIRMED_SERVICE_DATA * service_data,
+    BACNET_CONFIRMED_SERVICE * service_choice,
+    uint8_t ** service_request,
+    uint16_t * service_request_len);
 
-    uint16_t apdu_timeout(
-        void);
-    void apdu_timeout_set(
-        uint16_t value);
-    uint8_t apdu_retries(
-        void);
-    void apdu_retries_set(
-        uint8_t value);
+uint16_t apdu_timeout(
+    void);
+void apdu_timeout_set(
+    uint16_t value);
+uint8_t apdu_retries(
+    void);
+void apdu_retries_set(
+    uint8_t value);
 
-    void apdu_handler(
-        BACNET_ADDRESS * src,   /* source address */
-        uint8_t * apdu, /* APDU data */
-        uint16_t pdu_len);      /* for confirmed messages */
+void apdu_handler(
+    BACNET_ROUTE * src,   /* source address */
+    uint8_t * apdu, /* APDU data */
+    uint16_t pdu_len);      /* for confirmed messages */
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

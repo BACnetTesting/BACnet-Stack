@@ -25,17 +25,14 @@
 #ifndef TRENDLOG_H
 #define TRENDLOG_H
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <time.h>       /* for time_t */
-#include "bacdef.h"
-#include "cov.h"
+//#include <stdbool.h>
+//#include <stdint.h>
+//#include <time.h>       /* for time_t */
+//#include "bacdef.h"
+//#include "cov.h"
 #include "rp.h"
 #include "wp.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+#include "readrange.h"
 
 /* Error code for Trend Log storage */
     typedef struct tl_error {
@@ -194,7 +191,4 @@ extern "C" {
     void trend_log_timer(
         uint16_t uSeconds);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

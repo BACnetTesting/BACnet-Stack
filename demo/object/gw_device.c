@@ -23,43 +23,45 @@
 *
 *********************************************************************/
 
+#if 0 // until we introduce virtual devices
+
 /** @file gw_device.c  Functions that extend the Device object to support routing. */
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <string.h>     /* for memmove */
-#include <time.h>       /* for timezone, localtime */
-#include "bacdef.h"
-#include "bacdcode.h"
-#include "bacenum.h"
-#include "bacapp.h"
-#include "config.h"     /* the custom stuff */
-#include "apdu.h"
+//#include <stdbool.h>
+//#include <stdint.h>
+//#include <string.h>     /* for memmove */
+//#include <time.h>       /* for timezone, localtime */
+//#include "bacdef.h"
+//#include "bacdcode.h"
+//#include "bacenum.h"
+//#include "bacapp.h"
+//#include "config.h"     /* the custom stuff */
+//#include "apdu.h"
 #include "wp.h" /* write property handling */
 #include "rp.h" /* read property handling */
-#include "version.h"
+//#include "version.h"
 #include "device.h"     /* me */
-#include "handlers.h"
-#include "datalink.h"
-#include "address.h"
-#include "reject.h"
-/* include the objects */
-#include "ai.h"
-#include "ao.h"
-#include "av.h"
-#include "bi.h"
-#include "bo.h"
-#include "bv.h"
-#include "lc.h"
-#include "lsp.h"
-#include "mso.h"
-#include "ms-input.h"
-#include "trendlog.h"
-#if defined(BACFILE)
-#include "bacfile.h"    /* object list dependency */
-#endif
-/* os specfic includes */
-#include "timer.h"
+//#include "handlers.h"
+//#include "datalink.h"
+//#include "address.h"
+//#include "reject.h"
+///* include the objects */
+//#include "ai.h"
+//#include "ao.h"
+//#include "av.h"
+//#include "bi.h"
+//#include "bo.h"
+//#include "bv.h"
+//#include "lc.h"
+//#include "lsp.h"
+//#include "mso.h"
+//#include "ms-input.h"
+//#include "trendlog.h"
+//#if defined(BACFILE)
+//#include "bacfile.h"    /* object list dependency */
+//#endif
+///* os specfic includes */
+//#include "timer.h"
 
 #if defined(__BORLANDC__) || defined(_WIN32)
 /* seems to not be defined in time.h as specified by The Open Group */
@@ -80,7 +82,7 @@ bool Routed_Device_Write_Property_Local(
 
 #if !defined(BAC_ROUTING)
 #ifdef _MSC_VER
-#pragma message This file should not be included in the build unless BAC_ROUTING is enabled.
+#pragma message ("This file should not be included in the build unless BAC_ROUTING is enabled.")
 #else
 #warning This file should not be included in the build unless BAC_ROUTING is enabled.
 #endif
@@ -177,7 +179,7 @@ DEVICE_OBJECT_DATA *Get_Routed_Device_Object(
  * @return Pointer to the requested Device Object BACnet address, or NULL if the idx
  *         is for an invalid row entry (eg, after the last good Device).
  */
-BACNET_ADDRESS *Get_Routed_Device_Address(
+BACNET_PATH *Get_Routed_Device_Address(
     int idx)
 {
     if (idx == -1)
@@ -199,11 +201,11 @@ BACNET_ADDRESS *Get_Routed_Device_Address(
  * 							BACnet address.
  */
 void routed_get_my_address(
-    BACNET_ADDRESS * my_address)
+    BACNET_PATH * my_address)
 {
     if (my_address) {
         memcpy(my_address, &Devices[iCurrent_Device_Idx].bacDevAddr,
-            sizeof(BACNET_ADDRESS));
+            sizeof(BACNET_PATH));
     }
 }
 
@@ -260,7 +262,7 @@ bool Routed_Device_Address_Lookup(
  * if a match is found, for use in the subsequent routing handling
  * functions.
  *
- * @param dest [in] The BACNET_ADDRESS of the message's destination.
+ * @param dest [in] The BACNET_PATH of the message's destination.
  * 		   If the Length of the mac_adress[] field is 0, then this is a MAC
  * 		   broadcast.  Otherwise, size is determined
  *         by the DLL type (eg, 6 for BIP and 2 for MSTP).
@@ -281,7 +283,7 @@ bool Routed_Device_Address_Lookup(
  *         be returned as -1 in these cases.
  */
 bool Routed_Device_GetNext(
-    BACNET_ADDRESS * dest,
+    BACNET_PATH * dest,
     int *DNET_list,
     int *cursor)
 {
@@ -657,3 +659,5 @@ int Routed_Device_Service_Approval(
     }
     return len;
 }
+
+#endif

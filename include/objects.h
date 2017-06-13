@@ -57,9 +57,9 @@ typedef struct object_device_t {
     BACNET_DEVICE_STATUS System_Status;
     BACNET_CHARACTER_STRING Vendor_Name;
     uint16_t Vendor_Identifier;
-    BACNET_CHARACTER_STRING Model_Name;
+    // BACNET_CHARACTER_STRING Model_Name;
     BACNET_CHARACTER_STRING Firmware_Revision;
-    BACNET_CHARACTER_STRING Application_Software_Version;
+    // BACNET_CHARACTER_STRING Application_Software_Version;
     BACNET_CHARACTER_STRING Location;
     BACNET_CHARACTER_STRING Description;
     uint8_t Protocol_Version;

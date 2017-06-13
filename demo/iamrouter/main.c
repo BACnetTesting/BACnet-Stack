@@ -150,7 +150,7 @@ int main(
     if (argc > 1) {
         for (arg_count = 1; arg_count < argc; arg_count++) {
             if (arg_count > MAX_ROUTER_DNETS) {
-                fprintf(stderr, "Limited to %u DNETS.  Sorry!\n",
+                fprintf(stderr, "Limited to %d DNETS.  Sorry!\n",
                     MAX_ROUTER_DNETS);
                 break;
             }

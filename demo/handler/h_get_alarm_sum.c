@@ -28,6 +28,10 @@
 #include <string.h>
 
 #include "config.h"
+
+#if 0
+//#if (INTRINSIC_REPORTING == 1)
+
 #include "txbuf.h"
 #include "bacdef.h"
 #include "bacdcode.h"
@@ -53,18 +57,18 @@ void handler_get_alarm_summary_set(
 void handler_get_alarm_summary(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src,
+    BACNET_PATH * src,
     BACNET_CONFIRMED_SERVICE_DATA * service_data)
 {
     int len = 0;
     int pdu_len = 0;
     int apdu_len = 0;
-    int bytes_sent = 0;
+    int bytes_sent ;
     int alarm_value = 0;
     unsigned i = 0;
     unsigned j = 0;
     bool error = false;
-    BACNET_ADDRESS my_address;
+    BACNET_PATH my_address;
     BACNET_NPDU_DATA npdu_data;
     BACNET_GET_ALARM_SUMMARY_DATA getalarm_data;
 
@@ -72,7 +76,7 @@ void handler_get_alarm_summary(
 
     /* encode the NPDU portion of the packet */
     datalink_get_my_address(&my_address);
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_setup_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
         npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
         &npdu_data);
@@ -155,8 +159,12 @@ void handler_get_alarm_summary(
         /*fprintf(stderr, "Failed to send PDU (%s)!\n", strerror(errno)); */
     }
 #else
-    bytes_sent = bytes_sent;
+    (void) bytes_sent;
 #endif
 
     return;
 }
+
+
+// #endif // INTRINSIC_REPORTING
+#endif

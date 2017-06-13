@@ -211,7 +211,7 @@ int rpm_decode_object_id(
     BACNET_RPM_DATA * rpmdata)
 {
     unsigned len = 0;
-    uint16_t type = 0;  /* for decoding */
+    BACNET_OBJECT_TYPE type ;  /* for decoding */
 
     /* check for value pointers */
     if (apdu && apdu_len && rpmdata) {
@@ -436,7 +436,7 @@ int rpm_ack_decode_object_id(
     uint32_t * object_instance)
 {
     unsigned len = 0;
-    uint16_t type = 0;  /* for decoding */
+    BACNET_OBJECT_TYPE type ;
 
     /* check for value pointers */
     if (apdu && apdu_len && object_type && object_instance) {
@@ -444,7 +444,7 @@ int rpm_ack_decode_object_id(
         if (!decode_is_context_tag(&apdu[len++], 0))
             return -1;
         len += decode_object_id(&apdu[len], &type, object_instance);
-        if (object_type)
+// very redundant check..        if (object_type)
             *object_type = (BACNET_OBJECT_TYPE) type;
         /* Tag 1: listOfResults */
         if (!decode_is_opening_tag_number(&apdu[len], 1))
@@ -494,7 +494,7 @@ int rpm_ack_decode_object_property(
         if (tag_number != 2)
             return -1;
         len += decode_enumerated(&apdu[len], len_value_type, &property);
-        if (object_property)
+// very redundant check..        if (object_property)
             *object_property = (BACNET_PROPERTY_ID) property;
         /* Tag 3: Optional propertyArrayIndex */
         if ((len < apdu_len) && IS_CONTEXT_SPECIFIC(apdu[len]) &&

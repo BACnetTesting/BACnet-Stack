@@ -123,12 +123,6 @@ typedef enum {
 #define DEFAULT_MAX_MASTER 127
 #define DEFAULT_MAC_ADDRESS 127
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

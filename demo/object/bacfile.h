@@ -44,9 +44,6 @@
 #include "rp.h"
 #include "wp.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     void BACfile_Property_Lists(
         const int **pRequired,
@@ -102,7 +99,4 @@ extern "C" {
     bool bacfile_write_property(
         BACNET_WRITE_PROPERTY_DATA * wp_data);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

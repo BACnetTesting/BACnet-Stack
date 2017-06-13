@@ -44,10 +44,9 @@
 
 /** @file bacreal.c  Encode/Decode Floating Point (Real) Types */
 
-/* NOTE: byte order plays a role in decoding multibyte values */
-/* http://www.unixpapa.com/incnote/byteorder.html */
-#ifndef BIG_ENDIAN
-#error Define BIG_ENDIAN=0 or BIG_ENDIAN=1 for BACnet Stack in compiler settings
+// make sure it is defined one way or the other ( =1 or =0 )
+#ifndef BACNET_STACK_BIG_ENDIAN
+#error Define BACNET_STACK_BIG_ENDIAN=0 or BACNET_STACK_BIG_ENDIAN=1 for BACnet Stack in compiler settings
 #endif
 
 /* from clause 20.2.6 Encoding of a Real Number Value */
@@ -62,7 +61,7 @@ int decode_real(
     } my_data;
 
     /* NOTE: assumes the compiler stores float as IEEE-754 float */
-#if BIG_ENDIAN
+#if BACNET_STACK_BIG_ENDIAN
     my_data.byte[0] = apdu[0];
     my_data.byte[1] = apdu[1];
     my_data.byte[2] = apdu[2];
@@ -123,7 +122,7 @@ int encode_bacnet_real(
 
     /* NOTE: assumes the compiler stores float as IEEE-754 float */
     my_data.real_value = value;
-#if BIG_ENDIAN
+#if BACNET_STACK_BIG_ENDIAN
     apdu[0] = my_data.byte[0];
     apdu[1] = my_data.byte[1];
     apdu[2] = my_data.byte[2];
@@ -152,7 +151,7 @@ int decode_double(
     } my_data;
 
     /* NOTE: assumes the compiler stores float as IEEE-754 float */
-#if BIG_ENDIAN
+#if BACNET_STACK_BIG_ENDIAN
     my_data.byte[0] = apdu[0];
     my_data.byte[1] = apdu[1];
     my_data.byte[2] = apdu[2];
@@ -203,7 +202,7 @@ int encode_bacnet_double(
 
     /* NOTE: assumes the compiler stores float as IEEE-754 float */
     my_data.double_value = value;
-#if BIG_ENDIAN
+#if BACNET_STACK_BIG_ENDIAN
     apdu[0] = my_data.byte[0];
     apdu[1] = my_data.byte[1];
     apdu[2] = my_data.byte[2];

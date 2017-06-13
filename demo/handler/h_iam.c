@@ -22,16 +22,18 @@
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
 *********************************************************************/
-#include <stddef.h>
+
+//#include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
-#include "config.h"
-#include "txbuf.h"
+//#include <stdio.h>
+//#include "config.h"
+//#include "txbuf.h"
 #include "bacdef.h"
-#include "bacdcode.h"
+//#include "bacdcode.h"
 #include "iam.h"
-#include "address.h"
-#include "handlers.h"
+//#include "address.h"
+//#include "handlers.h"
+#include "CEDebug.h"
 
 /** @file h_iam.c  Handles I-Am requests. */
 
@@ -40,12 +42,12 @@
  * @ingroup DMDDB
  * @param service_request [in] The received message to be handled.
  * @param service_len [in] Length of the service_request message.
- * @param src [in] The BACNET_ADDRESS of the message's source.
+ * @param src [in] The BACNET_PATH of the message's source.
  */
 void handler_i_am_add(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src)
+    BACNET_PATH * src)
 {
     int len = 0;
     uint32_t device_id = 0;
@@ -66,7 +68,9 @@ void handler_i_am_add(
             (unsigned long) device_id, src->mac[0], src->mac[1], src->mac[2],
             src->mac[3], src->mac[4], src->mac[5]);
 #endif
-        address_add(device_id, max_apdu, src);
+        // we need this if we are going to do any notifications or events
+        panic();
+        // todo1 address_add(device_id, max_apdu, src);
     } else {
 #if PRINT_ENABLED
         fprintf(stderr, ", but unable to decode it.\n");
@@ -82,12 +86,12 @@ void handler_i_am_add(
  *
  * @param service_request [in] The received message to be handled.
  * @param service_len [in] Length of the service_request message.
- * @param src [in] The BACNET_ADDRESS of the message's source.
+ * @param src [in] The BACNET_PATH of the message's source.
  */
 void handler_i_am_bind(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src)
+    BACNET_PATH * src)
 {
     int len = 0;
     uint32_t device_id = 0;
@@ -101,7 +105,9 @@ void handler_i_am_bind(
         &segmentation, &vendor_id);
     if (len > 0) {
         /* only add address if requested to bind */
-        address_add_binding(device_id, max_apdu, src);
+        // we need this if we are going to do any notifications or events
+        panic();
+        // address_add_binding(device_id, max_apdu, src);
     }
 
     return;

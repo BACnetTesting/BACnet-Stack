@@ -47,8 +47,8 @@
 #include "tsm.h"
 
 /* services */
-#include "arf.h"
-#include "awf.h"
+// #include "arf.h"
+// #include "awf.h"
 #include "cov.h"
 #include "dcc.h"
 #include "iam.h"
@@ -72,17 +72,16 @@
 /* demo objects */
 #include "ai.h"
 #include "ao.h"
-#include "av.h"
-#include "bacfile.h"
+//#include "av.h"
+//#include "bacfile.h"
 #include "bi.h"
 #include "bo.h"
-#include "bv.h"
-#include "lc.h"
-#include "lsp.h"
-#include "mso.h"
+//#include "bv.h"
+//#include "lc.h"
+//#include "lsp.h"
+//#include "mso.h"
 
 /* demo handlers */
-#include "txbuf.h"
 #include "client.h"
 #include "handlers.h"
 

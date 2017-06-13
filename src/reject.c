@@ -95,7 +95,7 @@ BACNET_REJECT_REASON reject_convert_error_code(
 int reject_encode_apdu(
     uint8_t * apdu,
     uint8_t invoke_id,
-    uint8_t reject_reason)
+    BACNET_REJECT_REASON reject_reason)
 {
     int apdu_len = 0;   /* total length of the apdu, return value */
 
@@ -115,7 +115,7 @@ int reject_decode_service_request(
     uint8_t * apdu,
     unsigned apdu_len,
     uint8_t * invoke_id,
-    uint8_t * reject_reason)
+    BACNET_REJECT_REASON * reject_reason)
 {
     int len = 0;
 
@@ -123,7 +123,7 @@ int reject_decode_service_request(
         if (invoke_id)
             *invoke_id = apdu[0];
         if (reject_reason)
-            *reject_reason = apdu[1];
+            *reject_reason = (BACNET_REJECT_REASON) apdu[1];
     }
 
     return len;

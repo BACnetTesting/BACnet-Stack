@@ -40,6 +40,8 @@
 #include "bits.h"
 #include "npdu.h"
 #include "apdu.h"
+#include "datalink.h"
+#include "bacaddr.h"
 
 /** @file npdu.c  Encode/Decode NPDUs - Network Protocol Data Units */
 
@@ -56,12 +58,10 @@ void npdu_copy_data(
         dest->data_expecting_reply = src->data_expecting_reply;
         dest->network_layer_message = src->network_layer_message;
         dest->priority = src->priority;
-        dest->network_message_type = src->network_message_type;
+//        dest->network_message_type = src->network_message_type;
         dest->vendor_id = src->vendor_id;
         dest->hop_count = src->hop_count;
     }
-
-    return;
 }
 
 /*
@@ -131,9 +131,9 @@ ABORT.indication               Yes         Yes         Yes        No
  */
 int npdu_encode_pdu(
     uint8_t * npdu,
-    BACNET_ADDRESS * dest,
-    BACNET_ADDRESS * src,
-    BACNET_NPDU_DATA * npdu_data)
+    const BACNET_GLOBAL_ADDRESS * dest,
+    const BACNET_GLOBAL_ADDRESS * src,
+    const BACNET_NPDU_DATA * npdu_data)
 {
     int len = 0;        /* return value - number of octets loaded in this function */
     uint8_t i = 0;      /* counter  */
@@ -164,7 +164,7 @@ int npdu_encode_pdu(
         /* 1 =  SNET, SLEN, and SADR present */
         /* SLEN = 0 Invalid */
         /* SLEN > 0 specifies length of SADR field */
-        if (src && src->net && src->len)
+        if (src && src->net && src->mac.len)
             npdu[1] |= BIT3;
         /* Bit 2: The value of this bit corresponds to the */
         /* data_expecting_reply parameter in the N-UNITDATA primitives. */
@@ -185,23 +185,23 @@ int npdu_encode_pdu(
         len = 2;
         if (dest && dest->net) {
             len += encode_unsigned16(&npdu[len], dest->net);
-            npdu[len++] = dest->len;
+            npdu[len++] = dest->mac.len;
             /* DLEN = 0 denotes broadcast MAC DADR and DADR field is absent */
             /* DLEN > 0 specifies length of DADR field */
-            if (dest->len) {
-                for (i = 0; i < dest->len; i++) {
-                    npdu[len++] = dest->adr[i];
+            if (dest->mac.len) {
+                for (i = 0; i < dest->mac.len; i++) {
+                    npdu[len++] = dest->mac.bytes[i];
                 }
             }
         }
-        if (src && src->net && src->len) {      /* Only insert if valid */
+        if (src && src->net && src->mac.len) {      /* Only insert if valid */
             len += encode_unsigned16(&npdu[len], src->net);
-            npdu[len++] = src->len;
+            npdu[len++] = src->mac.len;
             /* SLEN = 0 denotes broadcast MAC SADR and SADR field is absent */
             /* SLEN > 0 specifies length of SADR field */
-            if (src->len) {
-                for (i = 0; i < src->len; i++) {
-                    npdu[len++] = src->adr[i];
+            if (src->mac.len) {
+                for (i = 0; i < src->mac.len; i++) {
+                    npdu[len++] = src->mac.bytes[i];
                 }
             }
         }
@@ -212,14 +212,17 @@ int npdu_encode_pdu(
             npdu[len] = npdu_data->hop_count;
             len++;
         }
-        if (npdu_data->network_layer_message) {
-            npdu[len] = npdu_data->network_message_type;
-            len++;
-            /* Message Type field contains a value in the range 0x80 - 0xFF, */
-            /* then a Vendor ID field shall be present */
-            if (npdu_data->network_message_type >= 0x80)
-                len += encode_unsigned16(&npdu[len], npdu_data->vendor_id);
-        }
+
+        // 2016.12.29 moving elsewhere, the Network Message has to be preserved for e.g. router layer.
+        //if (npdu_data->network_layer_message) {
+        //    npdu[len] = npdu_data->network_message_type;
+        //    len++;
+        //    /* Message Type field contains a value in the range 0x80 - 0xFF, */
+        //    /* then a Vendor ID field shall be present */
+        //    if (npdu_data->network_message_type >= 0x80)
+        //        len += encode_unsigned16(&npdu[len], npdu_data->vendor_id);
+        //}
+
     }
 
     return len;
@@ -261,7 +264,7 @@ is expected for the service being issued.
 
 /** Initialize an npdu_data structure to good defaults.
  * The name is a misnomer, as it doesn't do any actual encoding here.
- * @see npdu_encode_npdu_network if you need to set a network layer msg.
+ * @see npci_setup_npci_network if you need to set a network layer msg.
  *
  * @param npdu_data [out] Returns a filled-out structure with information
  * 					 provided by the other arguments and good defaults.
@@ -269,20 +272,26 @@ is expected for the service being issued.
  * @param priority [in] One of the 4 priorities defined in section 6.2.2,
  *                      like B'11' = Life Safety message
  */
-void npdu_encode_npdu_data(
+void init_common_npci (
+	BACNET_NPDU_DATA * npdu_data,
+	bool data_expecting_reply )
+{
+	npdu_data->protocol_version = BACNET_PROTOCOL_VERSION;
+	npdu_data->vendor_id = 0;			// btctodo - experiment with this
+	npdu_data->priority = MESSAGE_PRIORITY_NORMAL;
+	npdu_data->hop_count = HOP_COUNT_DEFAULT;
+	npdu_data->data_expecting_reply = data_expecting_reply;
+}
+
+ // EKH: this function does not 'encode' data into a buffer at all, so I renamed npdu_encode_npdu_data() to npdu_setup_npdu_data()
+void npdu_setup_npdu_data(
     BACNET_NPDU_DATA * npdu_data,
     bool data_expecting_reply,
     BACNET_MESSAGE_PRIORITY priority)
 {
-    if (npdu_data) {
-        npdu_data->data_expecting_reply = data_expecting_reply;
-        npdu_data->protocol_version = BACNET_PROTOCOL_VERSION;
-        npdu_data->network_layer_message = false;       /* false if APDU */
-        npdu_data->network_message_type = NETWORK_MESSAGE_INVALID;      /* optional */
-        npdu_data->vendor_id = 0;       /* optional, if net message type is > 0x80 */
-        npdu_data->priority = priority;
-        npdu_data->hop_count = HOP_COUNT_DEFAULT;
-    }
+    init_common_npci ( npdu_data, data_expecting_reply ) ;
+    npdu_data->network_layer_message = false;       /* false if APDU */
+    npdu_data->priority = priority;
 }
 
 /** Decode the NPDU portion of a received message, particularly the NCPI byte.
@@ -307,9 +316,9 @@ void npdu_encode_npdu_data(
  *         If 0 or negative, there were problems with the data or arguments.
  */
 int npdu_decode(
-    uint8_t * npdu,
-    BACNET_ADDRESS * dest,
-    BACNET_ADDRESS * src,
+    const uint8_t * npdu,
+    BACNET_GLOBAL_ADDRESS * dest,
+    BACNET_GLOBAL_ADDRESS * src,
     BACNET_NPDU_DATA * npdu_data)
 {
     int len = 0;        /* return value - number of octets loaded in this function */
@@ -319,6 +328,8 @@ int npdu_decode(
     uint8_t address_len = 0;
     uint8_t mac_octet = 0;
 
+    npdu_data->vendor_id = 0 ;
+    
     if (npdu && npdu_data) {
         /* Protocol Version */
         npdu_data->protocol_version = npdu[0];
@@ -327,7 +338,14 @@ int npdu_decode(
         /*          Message Type field is present. */
         /*        0 indicates that the NSDU contains a BACnet APDU. */
         /*          Message Type field is absent. */
-        npdu_data->network_layer_message = (npdu[1] & BIT7) ? true : false;
+        if (npdu[1] & BIT7) 
+        {
+          npdu_data->network_layer_message = true ;
+        }
+        else
+        {
+          npdu_data->network_layer_message = false;
+        }
         /*Bit 6: Reserved. Shall be zero. */
         /* Bit 4: Reserved. Shall be zero. */
         /* Bit 2: The value of this bit corresponds to data expecting reply */
@@ -352,6 +370,13 @@ int npdu_decode(
         /* 1 = DNET, DLEN, and Hop Count present */
         /* DLEN = 0 denotes broadcast MAC DADR and DADR field is absent */
         /* DLEN > 0 specifies length of DADR field */
+        if (dest)
+        {
+            /* zero out the destination address */
+            // memset(dest, 0, sizeof(BACNET_MAC_ADDRESS));
+          
+            bacnet_address_clear ( dest ) ;
+        }
         if (npdu[1] & BIT5) {
             len += decode_unsigned16(&npdu[len], &dest_net);
             /* DLEN = 0 denotes broadcast MAC DADR and DADR field is absent */
@@ -359,7 +384,7 @@ int npdu_decode(
             address_len = npdu[len++];
             if (dest) {
                 dest->net = dest_net;
-                dest->len = address_len;
+                dest->mac.len = address_len;
             }
             if (address_len) {
                 if (address_len > MAX_MAC_LEN) {
@@ -369,23 +394,16 @@ int npdu_decode(
 
                 for (i = 0; i < address_len; i++) {
                     mac_octet = npdu[len++];
-                    if (dest)
-                        dest->adr[i] = mac_octet;
+                    if (dest) {
+                        dest->mac.bytes[i] = mac_octet;
+                    }
                 }
-            }
-        }
-        /* zero out the destination address */
-        else if (dest) {
-            dest->net = 0;
-            dest->len = 0;
-            for (i = 0; i < MAX_MAC_LEN; i++) {
-                dest->adr[i] = 0;
             }
         }
         /* Bit 3: Source specifier where: */
         /* 0 =  SNET, SLEN, and SADR absent */
         /* 1 =  SNET, SLEN, and SADR present */
-        /* SLEN = 0 Invalid todo Steve: immediately below src->len == broadcast case, surely then this comment is incorrect? */
+        /* SLEN = 0 Invalid */
         /* SLEN > 0 specifies length of SADR field */
         if (npdu[1] & BIT3) {
             len += decode_unsigned16(&npdu[len], &src_net);
@@ -394,7 +412,7 @@ int npdu_decode(
             address_len = npdu[len++];
             if (src) {
                 src->net = src_net;
-                src->len = address_len;
+                src->mac.len = address_len;
             }
             if (address_len) {
                 if (address_len > MAX_MAC_LEN) {
@@ -405,7 +423,7 @@ int npdu_decode(
                 for (i = 0; i < address_len; i++) {
                     mac_octet = npdu[len++];
                     if (src)
-                        src->adr[i] = mac_octet;
+                        src->mac.bytes[i] = mac_octet;
                 }
             }
         } else if (src) {
@@ -413,11 +431,12 @@ int npdu_decode(
              * function set it to BACNET_BROADCAST_NETWORK, (eg, for 
              * BVLC_ORIGINAL_BROADCAST_NPDU) then don't stomp on that.
              */
-            if (src->net != BACNET_BROADCAST_NETWORK)
+            if (src->net != BACNET_BROADCAST_NETWORK) {
                 src->net = 0;
-            src->len = 0;
+            }
+            src->mac.len = 0;
             for (i = 0; i < MAX_MAC_LEN; i++) {
-                src->adr[i] = 0;
+                src->mac.bytes[i] = 0;
             }
         }
         /* The Hop Count field shall be present only if the message is */
@@ -428,20 +447,25 @@ int npdu_decode(
         } else {
             npdu_data->hop_count = 0;
         }
-        /* Indicates that the NSDU conveys a network layer message. */
-        /* Message Type field is present. */
-        if (npdu_data->network_layer_message) {
-            npdu_data->network_message_type =
-                (BACNET_NETWORK_MESSAGE_TYPE) npdu[len++];
-            /* Message Type field contains a value in the range 0x80 - 0xFF, */
-            /* then a Vendor ID field shall be present */
-            if (npdu_data->network_message_type >= 0x80)
-                len += decode_unsigned16(&npdu[len], &npdu_data->vendor_id);
-        } else {
-            /* Since npdu_data->network_layer_message is false,
-             * it doesn't much matter what we set here; this is safe: */
-            npdu_data->network_message_type = NETWORK_MESSAGE_INVALID;
-        }
+
+
+        // Moving elsewhere
+        ///* Indicates that the NSDU conveys a network layer message. */
+        ///* Message Type field is present. */
+        //if (npdu_data->network_layer_message) {
+        //    npdu_data->network_message_type =
+        //        (BACNET_NETWORK_MESSAGE_TYPE) npdu[len++];
+        //    /* Message Type field contains a value in the range 0x80 - 0xFF, */
+        //    /* then a Vendor ID field shall be present */
+        //    if (npdu_data->network_message_type >= 0x80) {
+        //        len += decode_unsigned16(&npdu[len], &npdu_data->vendor_id);
+        //    }
+        //} else {
+        //    /* Since npdu_data->network_layer_message is false,
+        //     * it doesn't much matter what we set here; this is safe: */
+        //    npdu_data->network_message_type = NETWORK_MESSAGE_INVALID;
+        //}
+
     }
 
     return len;
@@ -456,10 +480,10 @@ void testNPDU2(
     Test * pTest)
 {
     uint8_t pdu[480] = { 0 };
-    BACNET_ADDRESS dest = { 0 };
-    BACNET_ADDRESS src = { 0 };
-    BACNET_ADDRESS npdu_dest = { 0 };
-    BACNET_ADDRESS npdu_src = { 0 };
+    BACNET_GLOBAL_ADDRESS dest = { 0 };
+    BACNET_GLOBAL_ADDRESS src = { 0 };
+    BACNET_GLOBAL_ADDRESS npdu_dest = { 0 };
+    BACNET_GLOBAL_ADDRESS npdu_src = { 0 };
     int len = 0;
     bool data_expecting_reply = true;
     BACNET_MESSAGE_PRIORITY priority = MESSAGE_PRIORITY_NORMAL;
@@ -490,7 +514,7 @@ void testNPDU2(
     for (i = 0; i < src.len; i++) {
         src.adr[i] = 0x40;
     }
-    npdu_encode_npdu_data(&npdu_data, true, priority);
+    npdu_setup_npdu_data(&npdu_data, true, priority);
     len = npdu_encode_pdu(&pdu[0], &dest, &src, &npdu_data);
     ct_test(pTest, len != 0);
     /* can we get the info back? */
@@ -521,10 +545,10 @@ void testNPDU1(
     Test * pTest)
 {
     uint8_t pdu[480] = { 0 };
-    BACNET_ADDRESS dest = { 0 };
-    BACNET_ADDRESS src = { 0 };
-    BACNET_ADDRESS npdu_dest = { 0 };
-    BACNET_ADDRESS npdu_src = { 0 };
+    BACNET_GLOBAL_ADDRESS dest = { 0 };
+    BACNET_GLOBAL_ADDRESS src = { 0 };
+    BACNET_GLOBAL_ADDRESS npdu_dest = { 0 };
+    BACNET_GLOBAL_ADDRESS npdu_src = { 0 };
     int len = 0;
     bool data_expecting_reply = false;
     BACNET_MESSAGE_PRIORITY priority = MESSAGE_PRIORITY_NORMAL;
@@ -556,7 +580,7 @@ void testNPDU1(
     for (i = 0; i < MAX_MAC_LEN; i++) {
         src.adr[i] = 0;
     }
-    npdu_encode_npdu_data(&npdu_data, false, priority);
+    npdu_setup_npdu_data(&npdu_data, false, priority);
     len = npdu_encode_pdu(&pdu[0], &dest, &src, &npdu_data);
     ct_test(pTest, len != 0);
     /* can we get the info back? */
@@ -584,7 +608,7 @@ void tsm_free_invoke_id(
 void iam_handler(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src)
+    BACNET_GLOBAL_ADDRESS * src)
 {
     (void) service_request;
     (void) service_len;

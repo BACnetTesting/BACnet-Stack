@@ -244,7 +244,7 @@ bool Integer_Value_Object_Name(
 
     index = Integer_Value_Instance_To_Index(object_instance);
     if (index < MAX_INTEGER_VALUES) {
-        sprintf(text_string, "ANALOG VALUE %lu", (unsigned long) object_instance);
+        sprintf(text_string, "INTEGER VALUE %lu", (unsigned long) object_instance);
         status = characterstring_init_ansi(object_name, text_string);
     }
 
@@ -356,7 +356,7 @@ int Integer_Value_Read_Property(
     BACNET_CHARACTER_STRING char_string;
     uint8_t *apdu = NULL;
     uint32_t units = 0;
-    int32_t integer_value = 0.0;
+    int32_t integer_value = 0 ;
     bool state = false;
 
     if ((rpdata == NULL) || (rpdata->application_data == NULL) ||

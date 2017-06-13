@@ -22,13 +22,13 @@
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
 *********************************************************************/
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include "config.h"
-#include "txbuf.h"
 #include "bacdef.h"
 #include "bacdcode.h"
 #include "bacerror.h"
@@ -42,10 +42,10 @@
 
 /** @file h_dcc.c  Handles Device Communication Control request. */
 
-static char My_Password[32] = "filister";
+static char My_Password[32] = "ConnectEx";
 
 /** Sets (non-volatile hold) the password to be used for DCC requests.
- * @param new_password [in] The new DCC password, of up to 31 characters.
+ * @param new_password [in] The new DCC password, of up to 32 characters.
  */
 void handler_dcc_password_set(
     char *new_password)
@@ -90,14 +90,14 @@ char *handler_dcc_password(void)
  *
  * @param service_request [in] The contents of the service request.
  * @param service_len [in] The length of the service_request.
- * @param src [in] BACNET_ADDRESS of the source of the message
+ * @param src [in] BACNET_PATH of the source of the message
  * @param service_data [in] The BACNET_CONFIRMED_SERVICE_DATA information
  *                          decoded from the APDU header of this message.
  */
 void handler_device_communication_control(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src,
+    BACNET_ROUTE * src,
     BACNET_CONFIRMED_SERVICE_DATA * service_data)
 {
     uint16_t timeDuration = 0;
@@ -106,20 +106,23 @@ void handler_device_communication_control(
     int len = 0;
     int pdu_len = 0;
     BACNET_NPDU_DATA npdu_data;
-    BACNET_ADDRESS my_address;
+    // BACNET_PATH my_address;
+
+	DLCB *dlcb = alloc_dlcb_response('a', src->portParams);
+	if (dlcb == NULL) return;
 
     /* encode the NPDU portion of the reply packet */
-    datalink_get_my_address(&my_address);
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+    // datalink_get_my_address(&my_address);
+    npdu_setup_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
-        npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &src->bacnetPath.glAdr, NULL, // &my_address,
         &npdu_data);
 #if PRINT_ENABLED
     fprintf(stderr, "DeviceCommunicationControl!\n");
 #endif
     if (service_data->segmented_message) {
         len =
-            abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
+            abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, ABORT_REASON_SEGMENTATION_NOT_SUPPORTED,
             true);
 #if PRINT_ENABLED
@@ -143,7 +146,7 @@ void handler_device_communication_control(
     /* bad decoding or something we didn't understand - send an abort */
     if (len < 0) {
         len =
-            abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
+            abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, ABORT_REASON_OTHER, true);
 #if PRINT_ENABLED
         fprintf(stderr,
@@ -154,7 +157,7 @@ void handler_device_communication_control(
     }
     if (state >= MAX_BACNET_COMMUNICATION_ENABLE_DISABLE) {
         len =
-            reject_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
+            reject_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, REJECT_REASON_UNDEFINED_ENUMERATION);
 #if PRINT_ENABLED
         fprintf(stderr,
@@ -167,46 +170,34 @@ void handler_device_communication_control(
         len =
             Routed_Device_Service_Approval
             (SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL, (int) state,
-            &Handler_Transmit_Buffer[pdu_len], service_data->invoke_id);
-        if (len > 0)
+            &dlcb->Handler_Transmit_Buffer[pdu_len], service_data->invoke_id);
+        if (len > 0) {
             goto DCC_ABORT;
+        }
 #endif
 
         if (characterstring_ansi_same(&password, My_Password)) {
             len =
-                encode_simple_ack(&Handler_Transmit_Buffer[pdu_len],
-                service_data->invoke_id,
-                SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL);
-#if PRINT_ENABLED
-            fprintf(stderr,
-                "DeviceCommunicationControl: " "Sending Simple Ack!\n");
-#endif
+                encode_simple_ack(&dlcb->Handler_Transmit_Buffer[pdu_len],
+                                  service_data->invoke_id,
+                                  SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL);
+            dbTraffic(DB_INFO,
+                      "DeviceCommunicationControl: " "Sending Simple Ack!\n");
             dcc_set_status_duration(state, timeDuration);
         } else {
             len =
-                bacerror_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-                service_data->invoke_id,
-                SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL,
-                ERROR_CLASS_SECURITY, ERROR_CODE_PASSWORD_FAILURE);
-#if PRINT_ENABLED
-            fprintf(stderr,
-                "DeviceCommunicationControl: "
-                "Sending Error - password failure.\n");
-#endif
+                bacerror_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
+                                     service_data->invoke_id,
+                                     SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL,
+                                     ERROR_CLASS_SECURITY, ERROR_CODE_PASSWORD_FAILURE);
+            dbTraffic(DB_ERROR,
+                      "DeviceCommunicationControl: "
+                      "Sending Error - password failure.\n");
         }
     }
-  DCC_ABORT:
+DCC_ABORT:
     pdu_len += len;
-    len =
-        datalink_send_pdu(src, &npdu_data, &Handler_Transmit_Buffer[0],
-        pdu_len);
-    if (len <= 0) {
-#if PRINT_ENABLED
-        fprintf(stderr,
-            "DeviceCommunicationControl: " "Failed to send PDU (%s)!\n",
-            strerror(errno));
-#endif
-    }
+    dlcb->bufSize = pdu_len;
+    src->portParams->SendPdu(src->portParams, &src->bacnetPath.localMac, &npdu_data, dlcb);
 
-    return;
 }

@@ -24,34 +24,63 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
-#include <stdint.h>
+//#include <stdint.h>
 #include <stdbool.h>
-#include <stdio.h>
-#include "bacdef.h"
+//#include <stdio.h>
+//#include "bacdef.h"
 
-#ifndef DEBUG_ENABLED
-#define DEBUG_ENABLED 0
-#endif
+// finer grained debugging
+// Set the following to 0 to disable. Any value > 0 adds more and more detail...
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+#define	DB_TRAFFIC	1
 
-    void debug_printf(
-        const char *format,
-        ...);
+typedef enum {
+    DB_DEBUG,
+    DB_INFO,
+    DB_NORMAL_TRAFFIC,
+    DB_NOTE,
+    DB_EXPECTED_ERROR_TRAFFIC,
+    DB_UNUSUAL_TRAFFIC,
+    DB_ERROR,
+    DB_BTC_ERROR,                   // Errors that are expected during BTC testing.
+    DB_UNEXPECTED_ERROR,
+    DB_NONE			// so we can turn off a single statement easily
+} DB_LEVEL;
+
+#define	dbTrafficSetLevel(lev)			        sys_dbTrafficSetLevel(lev)
+#define	dbTraffic(lev, ...)			            sys_dbTraffic(lev,__VA_ARGS__)
+#define	dbTrafficAssert(lev, assertion, msg)	sys_dbTrafficAssert(lev, assertion, msg)
+        
+void sys_dbTraffic( DB_LEVEL lev, const char *format, ...);
+void sys_dbTrafficAssert(DB_LEVEL lev, bool assertion, const char *message);
+
+// Sets level filter to only display debug messages of priority of lev or above
+void sys_dbTrafficSetLevel(DB_LEVEL lev);
+
+void debug_printf(
+    const char *format,
+    ...);
+
 #if DEBUG_ENABLED
-    /* Nothing more here */
+/* Nothing more here */
 #else
     /* If your compiler supports it, this is more compact:
        inline void debug_printf(
-       const char *format,
-       ...) {
-       format = format;
-       }
-     */
+   const char *format,
+   ...) {
+   format = format;
+   }
+ */
 #endif
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-#endif
+#else // DB_TRAFFIC not defined
+
+//#define	dbTrafficSetLevel(lev)
+//#define	dbTraffic(lev, ...)
+//#define dbTrafficAssert(lev, ...)
+    
+#endif // DB_TRAFFIC
+
+
+
+void print_address_cache(void);
+void print_tsm_cache(void);

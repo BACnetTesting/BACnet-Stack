@@ -25,13 +25,13 @@
 #ifndef ACCESS_USER_H
 #define ACCESS_USER_H
 
-#include <stdbool.h>
-#include <stdint.h>
-#include "bacdef.h"
-#include "bacerror.h"
-#include "bacdevobjpropref.h"
-#include "rp.h"
-#include "wp.h"
+//#include <stdbool.h>
+//#include <stdint.h>
+//#include "bacdef.h"
+//#include "bacerror.h"
+//#include "bacdevobjpropref.h"
+//#include "rp.h"
+//#include "wp.h"
 
 
 #ifndef MAX_ACCESS_USERS
@@ -42,54 +42,52 @@
 #define MAX_ACCESS_USER_CREDENTIALS_COUNT 4
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
-    typedef struct {
-        uint32_t global_identifier;
-        BACNET_RELIABILITY reliability;
-        BACNET_ACCESS_USER_TYPE user_type;
-        uint32_t credentials_count;
-        BACNET_DEVICE_OBJECT_REFERENCE
-            credentials[MAX_ACCESS_USER_CREDENTIALS_COUNT];
-    } ACCESS_USER_DESCR;
+typedef struct {
+    uint32_t global_identifier;
+    BACNET_RELIABILITY reliability;
+    BACNET_ACCESS_USER_TYPE user_type;
+    uint32_t credentials_count;
+    BACNET_DEVICE_OBJECT_REFERENCE
+        credentials[MAX_ACCESS_USER_CREDENTIALS_COUNT];
+} ACCESS_USER_DESCR;
 
-    void Access_User_Property_Lists(
-        const int **pRequired,
-        const int **pOptional,
-        const int **pProprietary);
-    bool Access_User_Valid_Instance(
-        uint32_t object_instance);
-    unsigned Access_User_Count(
-        void);
-    uint32_t Access_User_Index_To_Instance(
-        unsigned index);
-    unsigned Access_User_Instance_To_Index(
-        uint32_t instance);
-    bool Access_User_Object_Instance_Add(
-        uint32_t instance);
+void Access_User_Property_Lists(
+    const int **pRequired,
+    const int **pOptional,
+    const int **pProprietary);
+bool Access_User_Valid_Instance(
+    uint32_t object_instance);
+unsigned Access_User_Count(
+    void);
+uint32_t Access_User_Index_To_Instance(
+    unsigned index);
+unsigned Access_User_Instance_To_Index(
+    uint32_t instance);
+bool Access_User_Object_Instance_Add(
+    uint32_t instance);
 
-    bool Access_User_Object_Name(
-        uint32_t object_instance,
-        BACNET_CHARACTER_STRING * object_name);
-    bool Access_User_Name_Set(
-        uint32_t object_instance,
-        char *new_name);
+bool Access_User_Object_Name(
+    uint32_t object_instance,
+    BACNET_CHARACTER_STRING * object_name);
+bool Access_User_Name_Set(
+    uint32_t object_instance,
+    char *new_name);
 
-    int Access_User_Read_Property(
-        BACNET_READ_PROPERTY_DATA * rpdata);
-    bool Access_User_Write_Property(
-        BACNET_WRITE_PROPERTY_DATA * wp_data);
+int Access_User_Read_Property(
+    BACNET_READ_PROPERTY_DATA * rpdata);
 
-    bool Access_User_Create(
-        uint32_t object_instance);
-    bool Access_User_Delete(
-        uint32_t object_instance);
-    void Access_User_Cleanup(
-        void);
-    void Access_User_Init(
-        void);
+bool Access_User_Write_Property(
+    BACNET_WRITE_PROPERTY_DATA * wp_data);
+
+bool Access_User_Create(
+    uint32_t object_instance);
+bool Access_User_Delete(
+    uint32_t object_instance);
+void Access_User_Cleanup(
+    void);
+void Access_User_Init(
+    void);
 
 #ifdef TEST
 #include "ctest.h"
@@ -97,7 +95,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

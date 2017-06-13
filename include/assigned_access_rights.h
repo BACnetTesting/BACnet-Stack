@@ -37,9 +37,6 @@ typedef struct {
     bool enable;
 } BACNET_ASSIGNED_ACCESS_RIGHTS;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     int bacapp_encode_assigned_access_rights(
         uint8_t * apdu,
@@ -56,7 +53,4 @@ extern "C" {
         uint8_t tag,
         BACNET_ASSIGNED_ACCESS_RIGHTS * aar);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

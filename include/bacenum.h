@@ -24,6 +24,8 @@
 #ifndef BACENUM_H
 #define BACENUM_H
 
+#include "bacdef.h"
+
 typedef enum {
     PROP_ACKED_TRANSITIONS = 0,
     PROP_ACK_REQUIRED = 1,
@@ -368,7 +370,9 @@ typedef enum {
     PROP_COVU_PERIOD = 349,
     PROP_COVU_RECIPIENTS = 350,
     PROP_EVENT_MESSAGE_TEXTS = 351,
-    /* enumerations 352-363 are defined in Addendum 2010-af */
+
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
+		/* enumerations 352-363 are defined in Addendum 2010-af */
     PROP_EVENT_MESSAGE_TEXTS_CONFIG = 352,
     PROP_EVENT_DETECTION_ENABLE = 353,
     PROP_EVENT_ALGORITHM_INHIBIT = 354,
@@ -381,7 +385,10 @@ typedef enum {
     PROP_PROCESS_IDENTIFIER_FILTER = 361,
     PROP_SUBSCRIBED_RECIPIENTS = 362,
     PROP_PORT_FILTER = 363,
-    /* enumeration 364 is defined in Addendum 2010-ae */
+#endif
+
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
+		/* enumeration 364 is defined in Addendum 2010-ae */
     PROP_AUTHORIZATION_EXEMPTIONS = 364,
     /* enumerations 365-370 are defined in Addendum 2010-aa */
     PROP_ALLOW_GROUP_DELAY_INHIBIT = 365,
@@ -390,9 +397,16 @@ typedef enum {
     PROP_EXECUTION_DELAY = 368,
     PROP_LAST_PRIORITY = 369,
     PROP_WRITE_STATUS = 370,
+#endif
+
     /* enumeration 371 is defined in Addendum 2010-ao */
+	/* Note: Although Property_List is defined in revision 14 and should not be valid if a prior version is specified, the reality is this
+		implmentation of the stack uses this enum for some internal processes, so we allow it to be defined for that purpose only even if 
+		selected revision < 14 */
     PROP_PROPERTY_LIST = 371,
-    /* enumeration 372 is defined in Addendum 2010-ak */
+
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
+	/* enumeration 372 is defined in Addendum 2010-ak */
     PROP_SERIAL_NUMBER = 372,
     /* enumerations 373-386 are defined in Addendum 2010-i */
     PROP_BLINK_WARN_ENABLE = 373,
@@ -409,6 +423,7 @@ typedef enum {
     PROP_POWER = 384,
     PROP_TRANSITION = 385,
     PROP_EGRESS_ACTIVE = 386,
+#endif
 	/* enumerations 399-427 are defined in Addendum 2012-ai */
     PROP_APDU_LENGTH = 399,
     PROP_IP_ADDRESS = 400,
@@ -441,6 +456,68 @@ typedef enum {
 	PROP_NETWORK_TYPE = 427,
     PROP_ROUTING_TABLE = 428,
     PROP_VIRTUAL_MAC_ADDRESS_TABLE = 429,
+    PROP_COMMAND_TIME_ARRAY=430,                 
+    PROP_CURRENT_COMMAND_PRIORITY=431,           
+    PROP_LAST_COMMAND_TIME=432,                  
+    PROP_VALUE_SOURCE=433,                       
+    PROP_VALUE_SOURCE_ARRAY=434,                 
+    PROP_BACNET_IPV6_MODE=435,                   
+    PROP_IPV6_ADDRESS=436,                       
+    PROP_IPV6_PREFIX_LENGTH=437,                 
+    PROP_BACNET_IPV6_UDP_PORT=438,               
+    PROP_IPV6_DEFAULT_GATEWAY=439,               
+    PROP_BACNET_IPV6_MULTICAST_ADDRESS=440,      
+    PROP_IPV6_DNS_SERVER=441,                    
+    PROP_IPV6_AUTO_ADDRESSING_ENABLE=442,        
+    PROP_IPV6_DHCP_LEASE_TIME=443,               
+    PROP_IPV6_DHCP_LEASE_TIME_REMAINING=444,     
+    PROP_IPV6_DHCP_SERVER=445,                   
+    PROP_IPV6_ZONE_INDEX=446,                    
+    PROP_ASSIGNED_LANDING_CALLS=447,             
+    PROP_CAR_ASSIGNED_DIRECTION=448,             
+    PROP_CAR_DOOR_COMMAND=449,                   
+    PROP_CAR_DOOR_STATUS=450,                    
+    PROP_CAR_DOOR_TEXT=451,                      
+    PROP_CAR_DOOR_ZONE=452,                      
+    PROP_CAR_DRIVE_STATUS=453,                   
+    PROP_CAR_LOAD=454,                           
+    PROP_CAR_LOAD_UNITS=455,                     
+    PROP_CAR_MODE=456,                           
+    PROP_CAR_MOVING_DIRECTION=457,               
+    PROP_CAR_POSITION=458,                       
+    PROP_ELEVATOR_GROUP=459,                     
+    PROP_ENERGY_METER=460,                       
+    PROP_ENERGY_METER_REF =461,                   
+    PROP_ESCALATOR_MODE=462,                     
+    PROP_FAULT_SIGNALS=463,                      
+    PROP_FLOOR_TEXT=464,                         
+    PROP_GROUP_ID=465,                           
+    PROP_GROUP_MODE=467,                         
+    PROP_HIGHER_DECK=468,                        
+    PROP_INSTALLATION_ID=469,                    
+    PROP_LANDING_CALLS=470,                      
+    PROP_LANDING_CALL_CONTROL=471,               
+    PROP_LANDING_DOOR_STATUS=472,                
+    PROP_LOWER_DECK=473,                         
+    PROP_MACHINE_ROOM_ID=474,                    
+    PROP_MAKING_CAR_CALL=475,                    
+    PROP_NEXT_STOPPING_FLOOR=476,                
+    PROP_OPERATION_DIRECTION=477,                
+    PROP_PASSENGER_ALARM=478,                    
+    PROP_POWER_MODE=479,                         
+    PROP_REGISTERED_CAR_CALL=480,                
+    PROP_ACTIVE_COV_MULTIPLE_SUBSCRIPTIONS=481,  
+    PROP_REFERENCE_PORT=483,                     
+    PROP_DEPLOYED_PROFILE_LOCATION=484,          
+    PROP_PROFILE_LOCATION=485,                   
+    PROP_TAGS=486,                               
+    PROP_SUBORDINATE_NODE_TYPES=487,             
+    PROP_SUBORDINATE_TAGS=488,                   
+    PROP_SUBORDINATE_RELATIONSHIPS=489,          
+    PROP_DEFAULT_SUBORDINATE_RELATIONSHIP=490,   
+    PROP_REPRESENTS=491,                         
+    
+    
     /* The special property identifiers all, optional, and required  */
     /* are reserved for use in the ReadPropertyConditional and */
     /* ReadPropertyMultiple services or services not defined in this standard. */
@@ -501,6 +578,16 @@ typedef enum {
     STATUS_BACKUP_IN_PROGRESS = 5,
     MAX_DEVICE_STATUS = 6
 } BACNET_DEVICE_STATUS;
+
+typedef enum {
+  BR_STATE_IDLE = 0,
+  BR_STATE_PREPARE_BACKUP = 1,
+  BR_STATE_PREPARE_RESTORE = 2,
+  BR_STATE_PERFORMING_BACKUP = 3,
+  BR_STATE_PERFORMING_RESTORE = 4,
+  BR_STATE_BACKUP_FAILURE = 5,
+  BR_STATE_RESTORE_FAILURE = 6
+} BACNET_BACKUP_RESTORE_STATE;
 
 typedef enum {
     /* Acceleration */
@@ -1104,21 +1191,21 @@ typedef enum {
     OBJECT_BITSTRING_VALUE = 39,        /* Addendum 2008-w */
     OBJECT_CHARACTERSTRING_VALUE = 40,  /* Addendum 2008-w */
     OBJECT_DATE_PATTERN_VALUE = 41,     /* Addendum 2008-w */
-    OBJECT_DATE_VALUE = 42,     /* Addendum 2008-w */
+    OBJECT_DATE_VALUE = 42,             /* Addendum 2008-w */
     OBJECT_DATETIME_PATTERN_VALUE = 43, /* Addendum 2008-w */
-    OBJECT_DATETIME_VALUE = 44, /* Addendum 2008-w */
-    OBJECT_INTEGER_VALUE = 45,  /* Addendum 2008-w */
+    OBJECT_DATETIME_VALUE = 44,         /* Addendum 2008-w */
+    OBJECT_INTEGER_VALUE = 45,          /* Addendum 2008-w */
     OBJECT_LARGE_ANALOG_VALUE = 46,     /* Addendum 2008-w */
     OBJECT_OCTETSTRING_VALUE = 47,      /* Addendum 2008-w */
     OBJECT_POSITIVE_INTEGER_VALUE = 48, /* Addendum 2008-w */
     OBJECT_TIME_PATTERN_VALUE = 49,     /* Addendum 2008-w */
-    OBJECT_TIME_VALUE = 50,     /* Addendum 2008-w */
+    OBJECT_TIME_VALUE = 50,             /* Addendum 2008-w */
     OBJECT_NOTIFICATION_FORWARDER = 51, /* Addendum 2010-af */
     OBJECT_ALERT_ENROLLMENT = 52,       /* Addendum 2010-af */
-    OBJECT_CHANNEL = 53,        /* Addendum 2010-aa */
+    OBJECT_CHANNEL = 53,                /* Addendum 2010-aa */
     OBJECT_LIGHTING_OUTPUT = 54,        /* Addendum 2010-i */
     OBJECT_BINARY_LIGHTING_OUTPUT = 55, /* Addendum 135-2012az */
-    OBJECT_NETWORK_PORT = 56,   /* Addendum 135-2012az */
+    OBJECT_NETWORK_PORT = 56,           /* Addendum 135-2012az */
     /* Enumerated values 0-127 are reserved for definition by ASHRAE. */
     /* Enumerated values 128-1023 may be used by others subject to  */
     /* the procedures and constraints described in Clause 23. */
@@ -1127,7 +1214,8 @@ typedef enum {
        which is used to store decoding */
     OBJECT_PROPRIETARY_MIN = 128,
     OBJECT_PROPRIETARY_MAX = 1023,
-    MAX_BACNET_OBJECT_TYPE = 1024
+    MAX_BACNET_OBJECT_TYPE = 1024,
+    OBJECT_NO_DEV_TYPE = 0xFFFFu
 } BACNET_OBJECT_TYPE;
 
 typedef enum {
@@ -1860,7 +1948,8 @@ typedef enum {
     DOOR_VALUE_LOCK = 0,
     DOOR_VALUE_UNLOCK = 1,
     DOOR_VALUE_PULSE_UNLOCK = 2,
-    DOOR_VALUE_EXTENDED_PULSE_UNLOCK = 3
+    DOOR_VALUE_EXTENDED_PULSE_UNLOCK = 3,
+    DOOR_VALUE_ILLEGAL = 99						// todo EKH, I don't know what is an 'illegal' value, but for sure -1 is not for an enumerated
 } BACNET_DOOR_VALUE;
 
 /* Lock Status */

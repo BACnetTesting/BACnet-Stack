@@ -29,22 +29,16 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
     bool memcopylen(
         size_t offset,
         size_t max,
         size_t len);
-    size_t memcopy(
-        void *dest,
-        void *src,
-        size_t offset,
-        size_t len,
-        size_t max);
+        
+size_t memcopy(
+    void *dest,
+    void *src,
+    size_t offset,  /* where in dest to put the data */
+    size_t len,     /* amount of data to copy */
+    size_t max);    /* total size of destination */
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

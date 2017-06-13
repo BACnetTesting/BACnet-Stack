@@ -32,10 +32,15 @@
  -------------------------------------------
 ####COPYRIGHTEND####*/
 #include <assert.h>
+#include "config.h"
+
+#if (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1) || ( INTRINSIC_REPORTING == 1 )
+
 #include "event.h"
 #include "bacdcode.h"
 #include "npdu.h"
 #include "timestamp.h"
+// #include "CEdebug.h"
 
 /** @file event.c  Encode/Decode Event Notifications */
 
@@ -102,20 +107,20 @@ int event_notify_encode_service_request(
         /* tag 0 - processIdentifier */
         len =
             encode_context_unsigned(&apdu[apdu_len], 0,
-            data->processIdentifier);
+                                    data->processIdentifier);
         apdu_len += len;
         /* tag 1 - initiatingObjectIdentifier */
         len =
             encode_context_object_id(&apdu[apdu_len], 1,
-            (int) data->initiatingObjectIdentifier.type,
-            data->initiatingObjectIdentifier.instance);
+                                     data->initiatingDeviceIdentifier.type,
+                                     data->initiatingDeviceIdentifier.instance);
         apdu_len += len;
 
         /* tag 2 - eventObjectIdentifier */
         len =
             encode_context_object_id(&apdu[apdu_len], 2,
-            (int) data->eventObjectIdentifier.type,
-            data->eventObjectIdentifier.instance);
+                                     data->eventObjectIdentifier.type,
+                                     data->eventObjectIdentifier.instance);
         apdu_len += len;
 
         /* tag 3 - timeStamp */
@@ -412,29 +417,50 @@ int event_notify_encode_service_request(
                             encode_context_unsigned(&apdu[apdu_len], 2,
                             data->notificationParams.
                             unsignedRange.exceededLimit);
-                        apdu_len += len;
+                apdu_len += len;
 
-                        len = encode_closing_tag(&apdu[apdu_len], 11);
-                        apdu_len += len;
-                        break;
-                    case EVENT_EXTENDED:
-                    case EVENT_COMMAND_FAILURE:
-                    default:
-                        assert(0);
-                        break;
+                len = encode_closing_tag(&apdu[apdu_len], 11);
+                apdu_len += len;
+                break;
+            case EVENT_EXTENDED:
+                apdu_len += encode_opening_tag(&apdu[apdu_len], 9); 
+                /*
+                extended[9] SEQUENCE{
+                    vendor - id[0] Unsigned16,
+                    extended - event - type[1] Unsigned,
+                    parameters[2] SEQUENCE OF CHOICE {
+                        null NULL,
+                            objectIdentifier BACnetObjectIdentifier,
+                            reference[0] BACnetDeviceObjectPropertyReference
+                    }
                 }
+                */
+
+                apdu_len += encode_context_unsigned(&apdu[apdu_len], 0, data->notificationParams.extended.vendorId);    // todo 2 - we need to ensure this is unsigned 16
+                apdu_len += encode_context_unsigned (&apdu[apdu_len], 1, data->notificationParams.extended.extendedEventType );
+                apdu_len += encode_opening_tag(&apdu[apdu_len], 2);
+                apdu_len += bacapp_encode_application_data(&apdu[apdu_len], &data->notificationParams.extended.value);
+                apdu_len += encode_closing_tag(&apdu[apdu_len], 2);
+                apdu_len += encode_closing_tag(&apdu[apdu_len], 9); 
+                break;
+
+            case EVENT_COMMAND_FAILURE:
+            default:
+                break;
+            }
                 len = encode_closing_tag(&apdu[apdu_len], 12);
                 apdu_len += len;
                 break;
             case NOTIFY_ACK_NOTIFICATION:
                 /* FIXME: handle this case */
             default:
-                break;
+            break;
         }
     }
     return apdu_len;
 }
 
+// else unit tests fail #if ( BAC_CLIENT == 1 )
 int event_notify_decode_service_request(
     uint8_t * apdu,
     unsigned apdu_len,
@@ -456,9 +482,9 @@ int event_notify_decode_service_request(
 
         /* tag 1 - initiatingObjectIdentifier */
         if ((section_length =
-                decode_context_object_id(&apdu[len], 1,
-                    &data->initiatingObjectIdentifier.type,
-                    &data->initiatingObjectIdentifier.instance)) == -1) {
+                    decode_context_object_id(&apdu[len], 1,
+                                             &data->initiatingDeviceIdentifier.type,
+                                             &data->initiatingDeviceIdentifier.instance)) == -1) {
             return -1;
         } else {
             len += section_length;
@@ -862,12 +888,14 @@ int event_notify_decode_service_request(
                    but continue normally */
             case NOTIFY_ACK_NOTIFICATION:
             default:
-                break;
+            break;
         }
     }
 
     return len;
 }
+// #endif // BAC_CLIENT 
+
 
 #ifdef  TEST
 
@@ -884,11 +912,11 @@ void testBaseEventState(
 {
     ct_test(pTest, data.processIdentifier == data2.processIdentifier);
     ct_test(pTest,
-        data.initiatingObjectIdentifier.instance ==
-        data2.initiatingObjectIdentifier.instance);
+        data.initiatingDeviceIdentifier.instance ==
+        data2.initiatingDeviceIdentifier.instance);
     ct_test(pTest,
-        data.initiatingObjectIdentifier.type ==
-        data2.initiatingObjectIdentifier.type);
+        data.initiatingDeviceIdentifier.type ==
+        data2.initiatingDeviceIdentifier.type);
     ct_test(pTest,
         data.eventObjectIdentifier.instance ==
         data2.eventObjectIdentifier.instance);
@@ -982,8 +1010,8 @@ void testEventEventState(
     data2.messageText = &messageText2;
 
     data.processIdentifier = 1234;
-    data.initiatingObjectIdentifier.type = OBJECT_ANALOG_INPUT;
-    data.initiatingObjectIdentifier.instance = 100;
+    data.initiatingDeviceIdentifier.type = OBJECT_ANALOG_INPUT;
+    data.initiatingDeviceIdentifier.instance = 100;
     data.eventObjectIdentifier.type = OBJECT_ANALOG_INPUT;
     data.eventObjectIdentifier.instance = 200;
     data.timeStamp.value.sequenceNum = 1234;
@@ -1520,3 +1548,6 @@ int main(
 
 #endif /* TEST_EVENT */
 #endif /* TEST */
+
+#endif // ( BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1 )
+

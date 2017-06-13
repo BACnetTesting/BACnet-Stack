@@ -31,22 +31,27 @@
 #include "cov.h"
 #include "rp.h"
 #include "wp.h"
+#include "config.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+#if (INTRINSIC_REPORTING == 1)
+#include "nc.h"
+#include "getevent.h"
+#include "alarm_ack.h"
+// Deprecated since Rev 13   #include "get_alarm_sum.h"
+#endif
 
-    void Binary_Input_Property_Lists(
-        const int **pRequired,
-        const int **pOptional,
-        const int **pProprietary);
+
+void Binary_Input_Property_Lists(
+    const int **pRequired,
+    const int **pOptional,
+    const int **pProprietary);
 
     bool Binary_Input_Valid_Instance(
         uint32_t object_instance);
     unsigned Binary_Input_Count(
         void);
     uint32_t Binary_Input_Index_To_Instance(
-        unsigned index);
+        unsigned objectIndex);
     unsigned Binary_Input_Instance_To_Index(
         uint32_t instance);
     bool Binary_Input_Object_Instance_Add(
@@ -123,13 +128,29 @@ extern "C" {
     void Binary_Input_Init(
         void);
 
-#ifdef TEST
-#include "ctest.h"
-    void testBinaryInput(
-        Test * pTest);
+    void Binary_Input_Intrinsic_Reporting(
+        uint32_t object_instance);
+
+#if ( INTRINSIC_REPORTING == 1 )
+    int Binary_Input_Event_Information(
+        unsigned index,
+        BACNET_GET_EVENT_INFORMATION_DATA * getevent_data);
+
+    int Binary_Input_Alarm_Ack(
+        BACNET_ALARM_ACK_DATA * alarmack_data,
+        BACNET_ERROR_CLASS *error_class,
+        BACNET_ERROR_CODE * error_code);
+
+    // Deprecated since Rev 13       
+    //int Analog_Input_Alarm_Summary(
+        // unsigned index,
+        // BACNET_GET_ALARM_SUMMARY_DATA * getalarm_data);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+#ifdef TEST
+#include "ctest.h"
+void testBinaryInput(
+    Test * pTest);
+#endif
+
 #endif

@@ -153,10 +153,10 @@ int rr_decode_service_request(
     BACNET_READ_RANGE_DATA * rrdata)
 {
     unsigned len = 0;
-    unsigned TagLen = 0;
-    uint8_t tag_number = 0;
-    uint32_t len_value_type = 0;
-    uint16_t type = 0;  /* for decoding */
+    unsigned TagLen ;
+    uint8_t tag_number ;
+    uint32_t len_value_type ;
+    BACNET_OBJECT_TYPE type;  /* for decoding */
     uint32_t UnsignedTemp;
 
     /* check for value pointers */
@@ -359,14 +359,14 @@ int rr_ack_decode_service_request(
     int apdu_len,       /* total length of the apdu */
     BACNET_READ_RANGE_DATA * rrdata)
 {
-    uint8_t tag_number = 0;
-    uint32_t len_value_type = 0;
-    int tag_len = 0;    /* length of tag decode */
+    uint8_t tag_number ;
+    uint32_t len_value_type ;
+    int tag_len ;    /* length of tag decode */
     int len = 0;        /* total length of decodes */
     int start_len;
-    uint16_t object = 0;        /* object type */
-    uint32_t property = 0;      /* for decoding */
-    uint32_t array_value = 0;   /* for decoding */
+    BACNET_OBJECT_TYPE object ;        /* object type */
+    uint32_t property ;      /* for decoding */
+    uint32_t array_value;   /* for decoding */
 
     /* FIXME: check apdu_len against the len during decode   */
     /* Tag 0: Object ID */

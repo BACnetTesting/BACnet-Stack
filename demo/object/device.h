@@ -62,7 +62,7 @@ typedef unsigned (
 typedef uint32_t(
     *object_index_to_instance_function)
         (
-    unsigned index);
+    unsigned objectIndex);
 
 /** Provides the BACnet Object_Name for a given object instance of this type.
  * @ingroup ObjHelpers
@@ -100,7 +100,9 @@ typedef bool(
  */
 typedef unsigned (
     *object_iterate_function) (
-    unsigned current_index);
+        unsigned current_index);
+
+#if ( BACNET_SVC_COV_B == 1 )
 
 /** Look in the table of objects of this type, and get the COV Value List.
  * @ingroup ObjHelpers
@@ -128,16 +130,37 @@ typedef bool(
  */
 typedef void (
     *object_cov_clear_function) (
-    uint32_t object_instance);
+        uint32_t object_instance);
 
-/** Intrinsic Reporting funcionality.
+#endif // ( BACNET_SVC_COV_B == 1 )
+
+/** Intrinsic Reporting functionality.
  * @ingroup ObjHelpers
  * @param [in] Object instance.
  */
 typedef void (
     *object_intrinsic_reporting_function) (
-    uint32_t object_instance);
+        uint32_t object_instance);
 
+#if 0
+/** AddListElement helper function
+* @ingroup ObjHelpers
+* @param [in] Object instance.
+*/
+typedef bool(
+    *object_add_list_element_function) (
+        DEVICE_OBJECT_DATA *pDev,
+        BACNET_LIST_MANIPULATION_DATA * lmdata);
+
+/** RemoveListElement helper function
+* @ingroup ObjHelpers
+* @param [in] Object instance.
+*/
+typedef bool(
+    *object_remove_list_element_function) (
+        DEVICE_OBJECT_DATA *pDev,
+        BACNET_LIST_MANIPULATION_DATA * lmdata);
+#endif
 
 /** Defines the group of object helper functions for any supported Object.
  * @ingroup ObjHelpers
@@ -158,12 +181,24 @@ typedef struct object_functions {
     read_property_function Object_Read_Property;
     write_property_function Object_Write_Property;
     rpm_property_lists_function Object_RPM_List;
+#if ( BACNET_SVC_RR_B == 1 )
     rr_info_function Object_RR_Info;
+#endif
     object_iterate_function Object_Iterator;
+#if ( BACNET_SVC_COV_B == 1 )
     object_value_list_function Object_Value_List;
     object_cov_function Object_COV;
     object_cov_clear_function Object_COV_Clear;
+#endif
+
+#if (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1) || (BACNET_USE_OBJECT_TRENDLOG == 1) || (BACNET_USE_OBJECT_SCHEDULE == 1) || (BACNET_USE_OBJECT_CHANNEL == 1)
+//	object_add_list_element_function Object_Add_List_Element;
+//    object_remove_list_element_function Object_Remove_List_Element;
+#endif
+
+//#if defined(INTRINSIC_REPORTING)
     object_intrinsic_reporting_function Object_Intrinsic_Reporting;
+//#endif
 } object_functions_t;
 
 /* String Lengths - excluding any nul terminator */
@@ -204,7 +239,7 @@ typedef struct commonBacObj_s {
  */
 typedef struct devObj_s {
     /** The BACnet Device Address for this device; ->len depends on DLL type. */
-    BACNET_ADDRESS bacDevAddr;
+    BACNET_PATH bacDevAddr;
 
     /** Structure for the Object Properties common to all Objects. */
     COMMON_BAC_OBJECT bacObj;
@@ -217,17 +252,16 @@ typedef struct devObj_s {
 } DEVICE_OBJECT_DATA;
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
-    void Device_Init(
-        object_functions_t * object_table);
+void Device_Init(
+    object_functions_t * object_table);
 
-    bool Device_Reinitialize(
-        BACNET_REINITIALIZE_DEVICE_DATA * rd_data);
-    bool Device_Reinitialize_State_Set(BACNET_REINITIALIZED_STATE state);
-    BACNET_REINITIALIZED_STATE Device_Reinitialized_State(
+bool Device_Reinitialize(
+    BACNET_REINITIALIZE_DEVICE_DATA * rd_data);
+
+bool Device_Reinitialize_State_Set(BACNET_REINITIALIZED_STATE state);
+
+BACNET_REINITIALIZED_STATE Device_Reinitialized_State(
         void);
 
     rr_info_function Device_Objects_RR_Info(
@@ -273,19 +307,19 @@ extern "C" {
         void);
     bool Device_Set_Object_Instance_Number(
         uint32_t object_id);
-    bool Device_Valid_Object_Instance_Number(
-        uint32_t object_id);
-    unsigned Device_Object_List_Count(
-        void);
-    bool Device_Object_List_Identifier(
+bool Device_Valid_Object_Instance_Number(
+    uint32_t object_id);
+unsigned Device_Object_List_Count(
+    void);
+bool Device_Object_List_Identifier(
         uint32_t array_index,
-        int *object_type,
-        uint32_t * instance);
+    BACNET_OBJECT_TYPE *object_type,
+    uint32_t * instance);
 
-    unsigned Device_Count(
-        void);
-    uint32_t Device_Index_To_Instance(
-        unsigned index);
+unsigned Device_Count(
+    void);
+uint32_t Device_Index_To_Instance(
+        unsigned objectIndex);
 
     bool Device_Object_Name(
         uint32_t object_instance,
@@ -353,20 +387,23 @@ extern "C" {
         void);
     void Device_Set_Database_Revision(
         uint32_t revision);
-    void Device_Inc_Database_Revision(
-        void);
 
-    bool Device_Valid_Object_Name(
-        BACNET_CHARACTER_STRING * object_name,
-        int *object_type,
-        uint32_t * object_instance);
-    bool Device_Valid_Object_Id(
-        int object_type,
-        uint32_t object_instance);
+void Device_Inc_Database_Revision(
+    void);
 
-    int Device_Read_Property(
-        BACNET_READ_PROPERTY_DATA * rpdata);
-    bool Device_Write_Property(
+bool Device_Valid_Object_Name(
+    BACNET_CHARACTER_STRING * object_name,
+    BACNET_OBJECT_TYPE *object_type,
+    uint32_t * object_instance);
+
+bool Device_Valid_Object_Id(
+    BACNET_OBJECT_TYPE object_type,
+    uint32_t object_instance);
+
+int Device_Read_Property(
+    BACNET_READ_PROPERTY_DATA * rpdata);
+
+bool Device_Write_Property(
         BACNET_WRITE_PROPERTY_DATA * wp_data);
 
     bool DeviceGetRRInfo(
@@ -378,10 +415,10 @@ extern "C" {
     bool Device_Write_Property_Local(
         BACNET_WRITE_PROPERTY_DATA * wp_data);
 
-#if defined(INTRINSIC_REPORTING)
+//#if defined(INTRINSIC_REPORTING)
     void Device_local_reporting(
         void);
-#endif
+//#endif
 
 /* Prototypes for Routing functionality in the Device Object.
  * Enable by defining BAC_ROUTING in config.h and including gw_device.c
@@ -396,18 +433,18 @@ extern "C" {
         const char *Description);
     DEVICE_OBJECT_DATA *Get_Routed_Device_Object(
         int idx);
-    BACNET_ADDRESS *Get_Routed_Device_Address(
+    BACNET_PATH *Get_Routed_Device_Address(
         int idx);
 
     void routed_get_my_address(
-        BACNET_ADDRESS * my_address);
+        BACNET_PATH * my_address);
 
     bool Routed_Device_Address_Lookup(
-        int idx,
+        unsigned int idx,
         uint8_t address_len,
         uint8_t * mac_adress);
     bool Routed_Device_GetNext(
-        BACNET_ADDRESS * dest,
+        BACNET_PATH * dest,
         int *DNET_list,
         int *cursor);
     bool Routed_Device_Is_Valid_Network(
@@ -415,7 +452,7 @@ extern "C" {
         int *DNET_list);
 
     uint32_t Routed_Device_Index_To_Instance(
-        unsigned index);
+        unsigned objectIndex);
     bool Routed_Device_Valid_Object_Instance_Number(
         uint32_t object_id);
     bool Routed_Device_Name(
@@ -436,15 +473,14 @@ extern "C" {
         void);
     int Routed_Device_Service_Approval(
         BACNET_CONFIRMED_SERVICE service,
-        int service_argument,
-        uint8_t * apdu_buff,
-        uint8_t invoke_id);
+    int service_argument,
+    uint8_t * apdu_buff,
+    uint8_t invoke_id);
+
+// Todo 2
+// The -Wsign-compare warning might not be included in -Wall, but it is part of -Wextra (old -W). <- do these tests !
 
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 /** @defgroup ObjFrmwk Object Framework
  * The modules in this section describe the BACnet-stack's framework for
  * BACnet-defined Objects (Device, Analog Input, etc). There are two submodules

@@ -29,6 +29,12 @@
 #include <stddef.h>
 #include "bacdef.h"
 #include "config.h"
+#include "bacenum.h"
+
+typedef struct BACnet_Object_Id {
+        BACNET_OBJECT_TYPE type;
+        uint32_t instance;
+    } BACNET_OBJECT_ID;
 
 /* bit strings
    They could be as large as 256/8=32 octets */
@@ -39,7 +45,7 @@ typedef struct BACnet_Bit_String {
 
 typedef struct BACnet_Character_String {
     size_t length;
-    uint8_t encoding;
+    BACNET_CHARACTER_STRING_ENCODING encoding;
     /* limit - 6 octets is the most our tag and type could be */
     char value[MAX_CHARACTER_STRING_BYTES];
 } BACNET_CHARACTER_STRING;
@@ -52,11 +58,7 @@ typedef struct BACnet_Octet_String {
     uint8_t value[MAX_OCTET_STRING_BYTES];
 } BACNET_OCTET_STRING;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-    void bitstring_init(
+void bitstring_init(
         BACNET_BIT_STRING * bit_string);
     void bitstring_set_bit(
         BACNET_BIT_STRING * bit_string,
@@ -96,15 +98,15 @@ extern "C" {
 
 /* returns false if the string exceeds capacity
    initialize by using length=0 */
-    bool characterstring_init(
-        BACNET_CHARACTER_STRING * char_string,
-        uint8_t encoding,
-        const char *value,
-        size_t length);
+bool characterstring_init(
+    BACNET_CHARACTER_STRING * char_string,
+    BACNET_CHARACTER_STRING_ENCODING encoding,
+    const char *value,
+    size_t length);
 /* used for ANSI C-Strings */
-    bool characterstring_init_ansi(
-        BACNET_CHARACTER_STRING * char_string,
-        const char *value);
+bool characterstring_init_ansi(
+    BACNET_CHARACTER_STRING * char_string,
+    const char *value);
     bool characterstring_copy(
         BACNET_CHARACTER_STRING * dest,
         BACNET_CHARACTER_STRING * src);
@@ -127,21 +129,21 @@ extern "C" {
 /* This function sets a new length without changing the value.
    If length exceeds capacity, no modification happens and
    function returns false.  */
-    bool characterstring_truncate(
-        BACNET_CHARACTER_STRING * char_string,
-        size_t length);
-    bool characterstring_set_encoding(
-        BACNET_CHARACTER_STRING * char_string,
-        uint8_t encoding);
+bool characterstring_truncate(
+    BACNET_CHARACTER_STRING * char_string,
+    size_t length);
+bool characterstring_set_encoding(
+    BACNET_CHARACTER_STRING * char_string,
+    BACNET_CHARACTER_STRING_ENCODING encoding);
 /* Returns the value */
-    char *characterstring_value(
-        BACNET_CHARACTER_STRING * char_string);
+char *characterstring_value(
+    BACNET_CHARACTER_STRING * char_string);
 /* returns the length */
-    size_t characterstring_length(
-        BACNET_CHARACTER_STRING * char_string);
-    uint8_t characterstring_encoding(
-        BACNET_CHARACTER_STRING * char_string);
-    size_t characterstring_capacity(
+size_t characterstring_length(
+    BACNET_CHARACTER_STRING * char_string);
+BACNET_CHARACTER_STRING_ENCODING characterstring_encoding(
+    BACNET_CHARACTER_STRING * char_string);
+size_t characterstring_capacity(
         BACNET_CHARACTER_STRING * char_string);
     bool characterstring_printable(
         BACNET_CHARACTER_STRING * char_string);
@@ -154,14 +156,14 @@ extern "C" {
     /* returns false if the string exceeds capacity
        initialize by using length=0 */
     bool octetstring_init(
-        BACNET_OCTET_STRING * octet_string,
-        uint8_t * value,
-        size_t length);
-#ifdef PRINT_ENABLED
-    /* converts an null terminated ASCII Hex string to an octet string.
-       returns true if successfully converted and fits; false if too long */
-    bool octetstring_init_ascii_hex(
-        BACNET_OCTET_STRING * octet_string,
+    BACNET_OCTET_STRING * octet_string,
+    uint8_t * value,
+    size_t length);
+#if PRINT_ENABLED
+/* converts an null terminated ASCII Hex string to an octet string.
+   returns true if successfully converted and fits; false if too long */
+bool octetstring_init_ascii_hex(
+    BACNET_OCTET_STRING * octet_string,
         const char *ascii_hex);
 #endif
     bool octetstring_copy(
@@ -197,11 +199,8 @@ extern "C" {
 
 #ifdef TEST
 #include "ctest.h"
-    void testBACnetStrings(
-        Test * pTest);
+void testBACnetStrings(
+    Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

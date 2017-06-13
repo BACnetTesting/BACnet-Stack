@@ -25,17 +25,17 @@
 
 /* Access User Objects - customize for your use */
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include "bacdef.h"
-#include "bacdcode.h"
-#include "bacenum.h"
-#include "bacapp.h"
-#include "config.h"     /* the custom stuff */
-#include "wp.h"
-#include "access_user.h"
+////#include <stdbool.h>
+//#include <stdint.h>
+//#include <stdio.h>
 #include "handlers.h"
+//#include "bacdef.h"
+//#include "bacdcode.h"
+////#include "bacenum.h"
+////#include "bacapp.h"
+////#include "config.h"     /* the custom stuff */
+//#include "wp.h"
+#include "access_user.h"
 
 static bool Access_User_Initialized = false;
 
@@ -371,3 +371,4 @@ int main(
 }
 #endif /* TEST_ACCESS_USER */
 #endif /* TEST */
+

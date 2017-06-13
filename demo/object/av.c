@@ -63,6 +63,8 @@ static const int Analog_Value_Properties_Required[] = {
 
 static const int Analog_Value_Properties_Optional[] = {
     PROP_DESCRIPTION,
+    PROP_PRIORITY_ARRAY,
+    PROP_RELINQUISH_DEFAULT,
     PROP_COV_INCREMENT,
 #if defined(INTRINSIC_REPORTING)
     PROP_TIME_DELAY,
@@ -95,14 +97,13 @@ void Analog_Value_Property_Lists(
     if (pProprietary)
         *pProprietary = Analog_Value_Properties_Proprietary;
 
-    return;
 }
 
 void Analog_Value_Init(
     void)
 {
 	unsigned i;
-#if defined(INTRINSIC_REPORTING)
+#if (INTRINSIC_REPORTING == 1)
 	unsigned j;
 #endif
 
@@ -113,7 +114,7 @@ void Analog_Value_Init(
         AV_Descr[i].Prior_Value = 0.0f;
         AV_Descr[i].COV_Increment = 1.0f;
         AV_Descr[i].Changed = false;
-#if defined(INTRINSIC_REPORTING)
+#if (INTRINSIC_REPORTING == 1)
         AV_Descr[i].Event_State = EVENT_STATE_NORMAL;
         /* notification class not connected */
         AV_Descr[i].Notification_Class = BACNET_MAX_INSTANCE;
@@ -129,6 +130,7 @@ void Analog_Value_Init(
             Analog_Value_Event_Information);
         /* Set handler for AcknowledgeAlarm function */
         handler_alarm_ack_set(OBJECT_ANALOG_VALUE, Analog_Value_Alarm_Ack);
+
         /* Set handler for GetAlarmSummary Service */
         handler_get_alarm_summary_set(OBJECT_ANALOG_VALUE,
             Analog_Value_Alarm_Summary);
@@ -412,7 +414,7 @@ int Analog_Value_Read_Property(
     BACNET_BIT_STRING bit_string;
     BACNET_CHARACTER_STRING char_string;
     float real_value = (float) 1.414;
-    unsigned object_index = 0;
+    int object_index ;
     bool state = false;
     uint8_t *apdu = NULL;
     ANALOG_VALUE_DESCR *CurrentAV;
@@ -500,7 +502,7 @@ int Analog_Value_Read_Property(
                 CurrentAV->COV_Increment);
             break;
 
-#if defined(INTRINSIC_REPORTING)
+#if (INTRINSIC_REPORTING == 1)
         case PROP_TIME_DELAY:
             apdu_len =
                 encode_application_unsigned(&apdu[0], CurrentAV->Time_Delay);
@@ -646,7 +648,7 @@ bool Analog_Value_Write_Property(
     BACNET_WRITE_PROPERTY_DATA * wp_data)
 {
     bool status = false;        /* return value */
-    unsigned int object_index = 0;
+    int object_index ;
     int len = 0;
     BACNET_APPLICATION_DATA_VALUE value;
     ANALOG_VALUE_DESCR *CurrentAV;
@@ -737,7 +739,7 @@ bool Analog_Value_Write_Property(
             }
             break;
 
-#if defined(INTRINSIC_REPORTING)
+#if (INTRINSIC_REPORTING == 1)
         case PROP_TIME_DELAY:
             status =
                 WPValidateArgType(&value, BACNET_APPLICATION_TAG_UNSIGNED_INT,
@@ -829,10 +831,10 @@ bool Analog_Value_Write_Property(
             if (status) {
                 switch ((BACNET_NOTIFY_TYPE) value.type.Enumerated) {
                     case NOTIFY_EVENT:
-                        CurrentAV->Notify_Type = 1;
+                        CurrentAV->Notify_Type = NOTIFY_EVENT ;
                         break;
                     case NOTIFY_ALARM:
-                        CurrentAV->Notify_Type = 0;
+                        CurrentAV->Notify_Type = NOTIFY_ALARM ;
                         break;
                     default:
                         wp_data->error_class = ERROR_CLASS_PROPERTY;
@@ -845,10 +847,12 @@ bool Analog_Value_Write_Property(
 #endif
         case PROP_OBJECT_IDENTIFIER:
         case PROP_OBJECT_NAME:
+    case PROP_DESCRIPTION:
         case PROP_OBJECT_TYPE:
         case PROP_STATUS_FLAGS:
         case PROP_EVENT_STATE:
-        case PROP_DESCRIPTION:
+        case PROP_RELINQUISH_DEFAULT:
+        case PROP_PRIORITY_ARRAY:
 #if defined(INTRINSIC_REPORTING)
         case PROP_ACKED_TRANSITIONS:
         case PROP_EVENT_TIME_STAMPS:
@@ -856,8 +860,6 @@ bool Analog_Value_Write_Property(
             wp_data->error_class = ERROR_CLASS_PROPERTY;
             wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
             break;
-        case PROP_RELINQUISH_DEFAULT:
-        case PROP_PRIORITY_ARRAY:
         default:
             wp_data->error_class = ERROR_CLASS_PROPERTY;
             wp_data->error_code = ERROR_CODE_UNKNOWN_PROPERTY;
@@ -871,12 +873,12 @@ bool Analog_Value_Write_Property(
 void Analog_Value_Intrinsic_Reporting(
     uint32_t object_instance)
 {
-#if defined(INTRINSIC_REPORTING)
+#if (INTRINSIC_REPORTING == 1)
     BACNET_EVENT_NOTIFICATION_DATA event_data;
     BACNET_CHARACTER_STRING msgText;
     ANALOG_VALUE_DESCR *CurrentAV;
     unsigned int object_index;
-    uint8_t FromState = 0;
+    BACNET_EVENT_STATE FromState ;
     uint8_t ToState;
     float ExceededLimit = 0.0f;
     float PresentVal = 0.0f;
@@ -1166,7 +1168,7 @@ void Analog_Value_Intrinsic_Reporting(
 }
 
 
-#if defined(INTRINSIC_REPORTING)
+#if (INTRINSIC_REPORTING == 1)
 int Analog_Value_Event_Information(
     unsigned index,
     BACNET_GET_EVENT_INFORMATION_DATA * getevent_data)
@@ -1236,12 +1238,15 @@ int Analog_Value_Event_Information(
             getevent_data->eventPriorities);
 
         return 1;       /* active event */
-    } else
+    }
+    else {
         return 0;       /* no active event at this index */
+    }
 }
 
 int Analog_Value_Alarm_Ack(
     BACNET_ALARM_ACK_DATA * alarmack_data,
+    BACNET_ERROR_CLASS *error_class,
     BACNET_ERROR_CODE * error_code)
 {
     ANALOG_VALUE_DESCR *CurrentAV;
@@ -1255,9 +1260,13 @@ int Analog_Value_Alarm_Ack(
     if (object_index < MAX_ANALOG_VALUES)
         CurrentAV = &AV_Descr[object_index];
     else {
+        *error_class = ERROR_CLASS_OBJECT;
         *error_code = ERROR_CODE_UNKNOWN_OBJECT;
         return -1;
     }
+
+    // preset default for rest
+    *error_class = ERROR_CLASS_SERVICES;
 
     switch (alarmack_data->eventStateAcked) {
         case EVENT_STATE_OFFNORMAL:

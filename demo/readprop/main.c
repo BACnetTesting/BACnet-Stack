@@ -30,7 +30,7 @@
 #include <errno.h>
 #include <time.h>       /* for time */
 
-#define PRINT_ENABLED 1
+// cannot define here... too late for library calls #define PRINT_ENABLED 1
 
 #include "bacdef.h"
 #include "config.h"
@@ -168,7 +168,7 @@ static void Init_Service_Handlers(
     apdu_set_reject_handler(MyRejectHandler);
 }
 
-static void print_usage(char *filename)
+static void print_usage(const char *filename)
 {
     printf("Usage: %s device-instance object-type object-instance "
         "property [index]\n", filename);
@@ -176,7 +176,7 @@ static void print_usage(char *filename)
     printf("       [--version][--help]\n");
 }
 
-static void print_help(char *filename)
+static void print_help(const char *filename)
 {
     printf("Read a property from an object in a BACnet device\n"
         "and print the value.\n");
@@ -253,7 +253,7 @@ int main(
     bool specific_address = false;
     int argi = 0;
     unsigned int target_args = 0;
-    char *filename = NULL;
+    const char *filename ;
 
     filename = filename_remove_path(argv[0]);
     for (argi = 1; argi < argc; argi++) {
@@ -294,13 +294,13 @@ int main(
                 Target_Device_Object_Instance = strtol(argv[argi], NULL, 0);
                 target_args++;
             } else if (target_args == 1) {
-                Target_Object_Type = strtol(argv[argi], NULL, 0);
+                Target_Object_Type = (BACNET_OBJECT_TYPE) strtol (argv[argi], NULL, 0);
                 target_args++;
             } else if (target_args == 2) {
                 Target_Object_Instance = strtol(argv[argi], NULL, 0);
                 target_args++;
             } else if (target_args == 3) {
-                Target_Object_Property = strtol(argv[argi], NULL, 0);
+                Target_Object_Property = (BACNET_PROPERTY_ID) strtol(argv[argi], NULL, 0);
                 target_args++;
             } else if (target_args == 4) {
                 Target_Object_Index = strtol(argv[argi], NULL, 0);

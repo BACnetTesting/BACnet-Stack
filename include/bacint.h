@@ -28,28 +28,29 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     /* unsigned value encoding and decoding */
+uint8_t encode_unsigned8(
+	uint8_t * apdu,
+	uint8_t value);
+
     int encode_unsigned16(
         uint8_t * apdu,
         uint16_t value);
     int decode_unsigned16(
-        uint8_t * apdu,
+        const uint8_t * apdu,
         uint16_t * value);
     int encode_unsigned24(
         uint8_t * apdu,
         uint32_t value);
     int decode_unsigned24(
-        uint8_t * apdu,
+        const uint8_t * apdu,
         uint32_t * value);
     int encode_unsigned32(
         uint8_t * apdu,
         uint32_t value);
     int decode_unsigned32(
-        uint8_t * apdu,
+        const uint8_t * apdu,
         uint32_t * value);
 #ifdef UINT64_MAX
     int decode_unsigned64(
@@ -93,7 +94,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

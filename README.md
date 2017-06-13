@@ -1,11 +1,8 @@
-# BACnet-Stack
+This compiles and runs on solo board (A9 / Linux)
 
-This is a fork of the Open Source BACnet Stack based on Steve Karg's SourceForge very popular project. I created this 
-in order to create a publicly accessible source tree of the changes and (ahem) improvements that we ac ConnectEx, Inc.
-have made to the original.
-
-We will only maintain a linux 'make' and a Microsoft Visual Studio implementation using the latest free Microsoft tools.
-
-Ed Hague 2017.06.04
+2017.01.05 - Ed: I see that they have stripped ai.c av.c bv.c apdu.c etc. in AVR (now copied to CortexM4) to 'simplify' the build.
+I prefer to use the originals with #defines to remove unwanted functionality.
+We can do that eventally, keep going on the current plan.
 
 
+Ed
