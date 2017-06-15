@@ -60,14 +60,14 @@
 static struct Keylist_Node *NodeCreate(
     void)
 {
-    return (Keylist_Node *) calloc(1, sizeof(struct Keylist_Node));
+    return calloc(1, sizeof(struct Keylist_Node));
 }
 
 /* grab memory for a list */
 static struct Keylist *KeylistCreate(
     void)
 {
-    return (Keylist *) calloc(1, sizeof(struct Keylist));
+    return calloc(1, sizeof(struct Keylist));
 }
 
 /* check to see if the array is big enough for an addition */
@@ -93,7 +93,7 @@ static int CheckArraySize(
     if (new_size) {
 
         /* Allocate more room for node pointer array */
-        new_array = (Keylist_Node **) calloc((size_t) new_size, sizeof(new_array));
+        new_array = calloc((size_t) new_size, sizeof(new_array));
 
         /* See if we got the memory we wanted */
         if (!new_array)

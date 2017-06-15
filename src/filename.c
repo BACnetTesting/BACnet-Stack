@@ -37,10 +37,10 @@
 
 /** @file filename.c  Function for filename manipulation */
 
-const char *filename_remove_path(
+char *filename_remove_path(
     const char *filename_in)
 {
-    const char *filename_out = (char *) filename_in;
+    char *filename_out = (char *) filename_in;
 
     /* allow the device ID to be set */
     if (filename_in) {

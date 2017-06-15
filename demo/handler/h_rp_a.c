@@ -166,7 +166,7 @@ int rp_ack_fully_decode_service_request(
          */
         read_access_data->object_type = rp1data.object_type;
         read_access_data->object_instance = rp1data.object_instance;
-        rp1_property = (BACNET_PROPERTY_REFERENCE *) calloc(1, sizeof(BACNET_PROPERTY_REFERENCE));
+        rp1_property = calloc(1, sizeof(BACNET_PROPERTY_REFERENCE));
         read_access_data->listOfProperties = rp1_property;
         if (rp1_property == NULL) {
             /* can't proceed if calloc failed. */
@@ -182,7 +182,7 @@ int rp_ack_fully_decode_service_request(
          more than one element to decode */
         vdata = rp1data.application_data;
         vlen = rp1data.application_data_len;
-        value = (BACNET_APPLICATION_DATA_VALUE *) calloc(1, sizeof(BACNET_APPLICATION_DATA_VALUE));
+        value = calloc(1, sizeof(BACNET_APPLICATION_DATA_VALUE));
         rp1_property->value = value;
         old_value = value;
         while (value && vdata && (vlen > 0)) {
@@ -230,7 +230,7 @@ int rp_ack_fully_decode_service_request(
                 if (vlen > 0) {
                     /* If more values */
                     old_value = value;
-                    value = (BACNET_APPLICATION_DATA_VALUE *) calloc(1, sizeof(BACNET_APPLICATION_DATA_VALUE));
+                    value = calloc(1, sizeof(BACNET_APPLICATION_DATA_VALUE));
                     old_value->next = value;
                 }
             }

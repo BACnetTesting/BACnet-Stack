@@ -74,9 +74,9 @@ bool VMAC_Add(uint32_t device_id, struct vmac_data *src)
     int index = 0;
     size_t i = 0;
 
-    pVMAC = (struct vmac_data *) Keylist_Data(VMAC_List, device_id);
+    pVMAC = Keylist_Data(VMAC_List, device_id);
     if (!pVMAC) {
-        pVMAC = (struct vmac_data *) calloc(1, sizeof(struct vmac_data));
+        pVMAC = calloc(1, sizeof(struct vmac_data));
         if (pVMAC) {
             /* copy the MAC into the data store */
             for (i = 0; i < sizeof(pVMAC->mac); i++) {
@@ -110,7 +110,7 @@ bool VMAC_Delete(uint32_t device_id)
     bool status = false;
     struct vmac_data *pVMAC;
 
-    pVMAC = (struct vmac_data *) Keylist_Data_Delete(VMAC_List, device_id);
+    pVMAC = Keylist_Data_Delete(VMAC_List, device_id);
     if (pVMAC) {
         free(pVMAC);
         status = true;
@@ -128,7 +128,7 @@ bool VMAC_Delete(uint32_t device_id)
  */
 struct vmac_data *VMAC_Find_By_Key(uint32_t device_id)
 {
-    return (struct vmac_data *) Keylist_Data(VMAC_List, device_id);
+    return Keylist_Data(VMAC_List, device_id);
 }
 
 /** Compare the VMAC address
@@ -216,7 +216,7 @@ bool VMAC_Find_By_Data(struct vmac_data *vmac, uint32_t *device_id)
     count = Keylist_Count(VMAC_List);
     while (count) {
         index = count - 1;
-        list_vmac = (struct vmac_data *) Keylist_Data_Index(VMAC_List, index);
+        list_vmac = Keylist_Data_Index(VMAC_List, index);
         if (list_vmac) {
             if (VMAC_Match(vmac, list_vmac)) {
                 if (device_id) {
@@ -241,7 +241,7 @@ void VMAC_Cleanup(void)
 
     if (VMAC_List) {
         do {
-            pVMAC = (struct vmac_data *) Keylist_Data_Pop(VMAC_List);
+            pVMAC = Keylist_Data_Pop(VMAC_List);
             if (pVMAC) {
                 free(pVMAC);
             }

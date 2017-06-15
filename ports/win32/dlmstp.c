@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#if defined ( __BORLANDC__ ) || defined ( _MSC_VER )
+#ifdef __BORLANDC__
 #include <process.h>
 #endif
 #include "bacdef.h"
@@ -591,12 +591,10 @@ bool dlmstp_init(
     /* initialize packet queue */
     Receive_Packet.ready = false;
     Receive_Packet.pdu_len = 0;
-#if 0   // todo1
     Receive_Packet_Flag = CreateSemaphore(NULL, 0, 1, "dlmstpReceivePacket");
     if (Receive_Packet_Flag == NULL)
         exit(1);
     Received_Frame_Flag = CreateSemaphore(NULL, 0, 1, "dlsmtpReceiveFrame");
-#endif
     if (Received_Frame_Flag == NULL) {
         CloseHandle(Receive_Packet_Flag);
         exit(1);
