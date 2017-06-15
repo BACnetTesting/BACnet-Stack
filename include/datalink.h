@@ -102,7 +102,7 @@ extern "C" {
 
     int datalink_send_pdu(
         BACNET_ADDRESS * dest,
-        BACNET_NPDU_DATA * npdu_data,
+        BACNET_NPCI_DATA * npci_data,
         uint8_t * pdu,
         unsigned pdu_len);
     extern uint16_t datalink_receive(
