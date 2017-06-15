@@ -207,6 +207,7 @@ bool bitstring_same(
     int bytes_used = 0;
     uint8_t compare_mask = 0;
 
+    // todo karg feedback
     if (bitstring1 && bitstring2) {
         if ((bitstring1->bits_used == bitstring2->bits_used) &&
             (bitstring1->bits_used / 8 <= MAX_BITSTRING_BYTES)) {
@@ -282,7 +283,7 @@ bool bitstring_init_ascii(
    initialize by using value=NULL */
 bool characterstring_init(
     BACNET_CHARACTER_STRING * char_string,
-    uint8_t encoding,
+    BACNET_CHARACTER_STRING_ENCODING encoding,
     const char *value,
     size_t length)
 {
@@ -321,7 +322,7 @@ bool characterstring_init_ansi(
     const char *value)
 {
     return characterstring_init(char_string, CHARACTER_ANSI_X34, value,
-        value ? strlen(value) : 0);
+                                value ? strlen(value) : 0);
 }
 
 bool characterstring_copy(
@@ -329,7 +330,7 @@ bool characterstring_copy(
     BACNET_CHARACTER_STRING * src)
 {
     return characterstring_init(dest, characterstring_encoding(src),
-        characterstring_value(src), characterstring_length(src));
+                                characterstring_value(src), characterstring_length(src));
 }
 
 bool characterstring_ansi_copy(
@@ -497,10 +498,10 @@ size_t characterstring_capacity(
 }
 
 /* returns the encoding. */
-uint8_t characterstring_encoding(
+BACNET_CHARACTER_STRING_ENCODING characterstring_encoding(
     BACNET_CHARACTER_STRING * char_string)
 {
-    uint8_t encoding = 0;
+    BACNET_CHARACTER_STRING_ENCODING encoding = CHARACTER_UTF8;
 
     if (char_string) {
         encoding = char_string->encoding;
@@ -512,7 +513,7 @@ uint8_t characterstring_encoding(
 /* returns the encoding. */
 bool characterstring_set_encoding(
     BACNET_CHARACTER_STRING * char_string,
-    uint8_t encoding)
+    BACNET_CHARACTER_STRING_ENCODING encoding)
 {
     bool status = false;
 
@@ -772,7 +773,7 @@ bool octetstring_copy(
     BACNET_OCTET_STRING * src)
 {
     return octetstring_init(dest, octetstring_value(src),
-        octetstring_length(src));
+                            octetstring_length(src));
 }
 
 /* returns the number of bytes copied, or 0 if the dest
@@ -965,7 +966,7 @@ void testBitString(
         /* Set the first bit of bit_string2 and the last bit of bit_string3 to be different */
         bitstring_set_bit(&bit_string2, 0, !bitstring_bit(&bit_string, 0));
         bitstring_set_bit(&bit_string3, max_bit - 1,
-            !bitstring_bit(&bit_string, max_bit - 1));
+                          !bitstring_bit(&bit_string, max_bit - 1));
         ct_test(pTest, !bitstring_same(&bit_string, &bit_string2));
         ct_test(pTest, !bitstring_same(&bit_string, &bit_string3));
     }

@@ -56,7 +56,6 @@
 #define MAX_COMMAND_ACTIONS 8
 #endif
 
-
     typedef struct bacnet_action_list {
         BACNET_OBJECT_ID Device_Id;     /* Optional */
         BACNET_OBJECT_ID Object_Id;

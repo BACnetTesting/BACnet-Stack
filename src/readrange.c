@@ -83,60 +83,60 @@ int rr_encode_apdu(
 
         apdu_len +=
             encode_context_object_id(&apdu[apdu_len], 0, rrdata->object_type,
-            rrdata->object_instance);
+                                     rrdata->object_instance);
         apdu_len +=
             encode_context_enumerated(&apdu[apdu_len], 1,
-            rrdata->object_property);
+                                      rrdata->object_property);
 
         /* optional array index */
 
         if (rrdata->array_index != BACNET_ARRAY_ALL) {
             apdu_len +=
                 encode_context_unsigned(&apdu[apdu_len], 2,
-                rrdata->array_index);
+                                        rrdata->array_index);
         }
 
         /* Build the appropriate (optional) range parameter based on the request type */
 
         switch (rrdata->RequestType) {
-            case RR_BY_POSITION:
-                apdu_len += encode_opening_tag(&apdu[apdu_len], 3);
-                apdu_len +=
-                    encode_application_unsigned(&apdu[apdu_len],
-                    rrdata->Range.RefIndex);
-                apdu_len +=
-                    encode_application_signed(&apdu[apdu_len], rrdata->Count);
-                apdu_len += encode_closing_tag(&apdu[apdu_len], 3);
-                break;
+        case RR_BY_POSITION:
+            apdu_len += encode_opening_tag(&apdu[apdu_len], 3);
+            apdu_len +=
+                encode_application_unsigned(&apdu[apdu_len],
+                                            rrdata->Range.RefIndex);
+            apdu_len +=
+                encode_application_signed(&apdu[apdu_len], rrdata->Count);
+            apdu_len += encode_closing_tag(&apdu[apdu_len], 3);
+            break;
 
-            case RR_BY_SEQUENCE:
-                apdu_len += encode_opening_tag(&apdu[apdu_len], 6);
-                apdu_len +=
-                    encode_application_unsigned(&apdu[apdu_len],
-                    rrdata->Range.RefSeqNum);
-                apdu_len +=
-                    encode_application_signed(&apdu[apdu_len], rrdata->Count);
-                apdu_len += encode_closing_tag(&apdu[apdu_len], 6);
-                break;
+        case RR_BY_SEQUENCE:
+            apdu_len += encode_opening_tag(&apdu[apdu_len], 6);
+            apdu_len +=
+                encode_application_unsigned(&apdu[apdu_len],
+                                            rrdata->Range.RefSeqNum);
+            apdu_len +=
+                encode_application_signed(&apdu[apdu_len], rrdata->Count);
+            apdu_len += encode_closing_tag(&apdu[apdu_len], 6);
+            break;
 
-            case RR_BY_TIME:
-                apdu_len += encode_opening_tag(&apdu[apdu_len], 7);
-                apdu_len +=
-                    encode_application_date(&apdu[apdu_len],
-                    &rrdata->Range.RefTime.date);
-                apdu_len +=
-                    encode_application_time(&apdu[apdu_len],
-                    &rrdata->Range.RefTime.time);
-                apdu_len +=
-                    encode_application_signed(&apdu[apdu_len], rrdata->Count);
-                apdu_len += encode_closing_tag(&apdu[apdu_len], 7);
-                break;
+        case RR_BY_TIME:
+            apdu_len += encode_opening_tag(&apdu[apdu_len], 7);
+            apdu_len +=
+                encode_application_date(&apdu[apdu_len],
+                                        &rrdata->Range.RefTime.date);
+            apdu_len +=
+                encode_application_time(&apdu[apdu_len],
+                                        &rrdata->Range.RefTime.time);
+            apdu_len +=
+                encode_application_signed(&apdu[apdu_len], rrdata->Count);
+            apdu_len += encode_closing_tag(&apdu[apdu_len], 7);
+            break;
 
-            case RR_READ_ALL:  /* to attempt a read of the whole array or list, omit the range parameter */
-                break;
+        case RR_READ_ALL:  /* to attempt a read of the whole array or list, omit the range parameter */
+            break;
 
-            default:
-                break;
+        default:
+            break;
         }
     }
 
@@ -156,7 +156,7 @@ int rr_decode_service_request(
     unsigned TagLen = 0;
     uint8_t tag_number = 0;
     uint32_t len_value_type = 0;
-    uint16_t type = 0;  /* for decoding */
+    BACNET_OBJECT_TYPE type;  /* for decoding */
     uint32_t UnsignedTemp;
 
     /* check for value pointers */
@@ -181,7 +181,7 @@ int rr_decode_service_request(
         if (len < apdu_len) {
             TagLen =
                 (unsigned) decode_tag_number_and_value(&apdu[len], &tag_number,
-                &len_value_type);
+                        &len_value_type);
             if (tag_number == 2) {
                 len += TagLen;
                 len +=
@@ -202,75 +202,75 @@ int rr_decode_service_request(
              */
             len +=
                 decode_tag_number_and_value(&apdu[len], &tag_number,
-                &len_value_type);
+                                            &len_value_type);
             switch (tag_number) {
-                case 3:        /* ReadRange by position */
-                    rrdata->RequestType = RR_BY_POSITION;
-                    len +=
-                        decode_tag_number_and_value(&apdu[len], &tag_number,
-                        &len_value_type);
-                    len +=
-                        decode_unsigned(&apdu[len], len_value_type,
-                        &rrdata->Range.RefIndex);
-                    len +=
-                        decode_tag_number_and_value(&apdu[len], &tag_number,
-                        &len_value_type);
-                    len +=
-                        decode_signed(&apdu[len], len_value_type,
-                        &rrdata->Count);
-                    len +=
-                        decode_tag_number_and_value(&apdu[len], &tag_number,
-                        &len_value_type);
-                    break;
+            case 3:        /* ReadRange by position */
+                rrdata->RequestType = RR_BY_POSITION;
+                len +=
+                    decode_tag_number_and_value(&apdu[len], &tag_number,
+                                                &len_value_type);
+                len +=
+                    decode_unsigned(&apdu[len], len_value_type,
+                                    &rrdata->Range.RefIndex);
+                len +=
+                    decode_tag_number_and_value(&apdu[len], &tag_number,
+                                                &len_value_type);
+                len +=
+                    decode_signed(&apdu[len], len_value_type,
+                                  &rrdata->Count);
+                len +=
+                    decode_tag_number_and_value(&apdu[len], &tag_number,
+                                                &len_value_type);
+                break;
 
-                case 6:        /* ReadRange by sequence number */
-                    rrdata->RequestType = RR_BY_SEQUENCE;
-                    len +=
-                        decode_tag_number_and_value(&apdu[len], &tag_number,
-                        &len_value_type);
-                    len +=
-                        decode_unsigned(&apdu[len], len_value_type,
-                        &rrdata->Range.RefSeqNum);
-                    len +=
-                        decode_tag_number_and_value(&apdu[len], &tag_number,
-                        &len_value_type);
-                    len +=
-                        decode_signed(&apdu[len], len_value_type,
-                        &rrdata->Count);
-                    len +=
-                        decode_tag_number_and_value(&apdu[len], &tag_number,
-                        &len_value_type);
-                    rrdata->Overhead += RR_1ST_SEQ_OVERHEAD;    /* Allow for this in the response */
-                    break;
+            case 6:        /* ReadRange by sequence number */
+                rrdata->RequestType = RR_BY_SEQUENCE;
+                len +=
+                    decode_tag_number_and_value(&apdu[len], &tag_number,
+                                                &len_value_type);
+                len +=
+                    decode_unsigned(&apdu[len], len_value_type,
+                                    &rrdata->Range.RefSeqNum);
+                len +=
+                    decode_tag_number_and_value(&apdu[len], &tag_number,
+                                                &len_value_type);
+                len +=
+                    decode_signed(&apdu[len], len_value_type,
+                                  &rrdata->Count);
+                len +=
+                    decode_tag_number_and_value(&apdu[len], &tag_number,
+                                                &len_value_type);
+                rrdata->Overhead += RR_1ST_SEQ_OVERHEAD;    /* Allow for this in the response */
+                break;
 
-                case 7:        /* ReadRange by time stamp */
-                    rrdata->RequestType = RR_BY_TIME;
-                    len +=
-                        decode_tag_number_and_value(&apdu[len], &tag_number,
-                        &len_value_type);
-                    len +=
-                        decode_date(&apdu[len], &rrdata->Range.RefTime.date);
-                    len +=
-                        decode_tag_number_and_value(&apdu[len], &tag_number,
-                        &len_value_type);
-                    len +=
-                        decode_bacnet_time(&apdu[len],
-                        &rrdata->Range.RefTime.time);
-                    len +=
-                        decode_tag_number_and_value(&apdu[len], &tag_number,
-                        &len_value_type);
-                    len +=
-                        decode_signed(&apdu[len], len_value_type,
-                        &rrdata->Count);
-                    len +=
-                        decode_tag_number_and_value(&apdu[len], &tag_number,
-                        &len_value_type);
-                    rrdata->Overhead += RR_1ST_SEQ_OVERHEAD;    /* Allow for this in the response */
-                    break;
+            case 7:        /* ReadRange by time stamp */
+                rrdata->RequestType = RR_BY_TIME;
+                len +=
+                    decode_tag_number_and_value(&apdu[len], &tag_number,
+                                                &len_value_type);
+                len +=
+                    decode_date(&apdu[len], &rrdata->Range.RefTime.date);
+                len +=
+                    decode_tag_number_and_value(&apdu[len], &tag_number,
+                                                &len_value_type);
+                len +=
+                    decode_bacnet_time(&apdu[len],
+                                       &rrdata->Range.RefTime.time);
+                len +=
+                    decode_tag_number_and_value(&apdu[len], &tag_number,
+                                                &len_value_type);
+                len +=
+                    decode_signed(&apdu[len], len_value_type,
+                                  &rrdata->Count);
+                len +=
+                    decode_tag_number_and_value(&apdu[len], &tag_number,
+                                                &len_value_type);
+                rrdata->Overhead += RR_1ST_SEQ_OVERHEAD;    /* Allow for this in the response */
+                break;
 
-                default:       /* If we don't recognise the tag then we do nothing here and try to return
+            default:       /* If we don't recognise the tag then we do nothing here and try to return
                                  * all elements of the array */
-                    break;
+                break;
             }
         }
     }
@@ -286,7 +286,7 @@ int rr_decode_service_request(
  *     resultFlags         [3] BACnetResultFlags,
  *     itemCount           [4] Unsigned,
  *     itemData            [5] SEQUENCE OF ABSTRACT-SYNTAX.&TYPE,
- *     firstSequenceNumber [6] Unsigned32 OPTIONAL -- used only if 'Item Count' > 0 and the request was either of 
+ *     firstSequenceNumber [6] Unsigned32 OPTIONAL -- used only if 'Item Count' > 0 and the request was either of
  *                                                  -- type 'By Sequence Number' or 'By Time'
  * }
  */
@@ -311,15 +311,15 @@ int rr_ack_encode_apdu(
         /* service ack follows */
         apdu_len +=
             encode_context_object_id(&apdu[apdu_len], 0, rrdata->object_type,
-            rrdata->object_instance);
+                                     rrdata->object_instance);
         apdu_len +=
             encode_context_enumerated(&apdu[apdu_len], 1,
-            rrdata->object_property);
+                                      rrdata->object_property);
         /* context 2 array index is optional */
         if (rrdata->array_index != BACNET_ARRAY_ALL) {
             apdu_len +=
                 encode_context_unsigned(&apdu[apdu_len], 2,
-                rrdata->array_index);
+                                        rrdata->array_index);
         }
         /* Context 3 BACnet Result Flags */
         apdu_len +=
@@ -327,7 +327,7 @@ int rr_ack_encode_apdu(
         /* Context 4 Item Count */
         apdu_len +=
             encode_context_unsigned(&apdu[apdu_len], 4, rrdata->ItemCount);
-        /* Context 5 Property list - reading the standard it looks like an empty list still 
+        /* Context 5 Property list - reading the standard it looks like an empty list still
          * requires an opening and closing tag as the tagged parameter is not optional
          */
         apdu_len += encode_opening_tag(&apdu[apdu_len], 5);
@@ -343,7 +343,7 @@ int rr_ack_encode_apdu(
             /* Context 6 Sequence number of first item */
             apdu_len +=
                 encode_context_unsigned(&apdu[apdu_len], 6,
-                rrdata->FirstSequence);
+                                        rrdata->FirstSequence);
         }
     }
 
@@ -364,7 +364,7 @@ int rr_ack_decode_service_request(
     int tag_len = 0;    /* length of tag decode */
     int len = 0;        /* total length of decodes */
     int start_len;
-    uint16_t object = 0;        /* object type */
+    BACNET_OBJECT_TYPE object ;        /* object type */
     uint32_t property = 0;      /* for decoding */
     uint32_t array_value = 0;   /* for decoding */
 
@@ -426,7 +426,7 @@ int rr_ack_decode_service_request(
                 /* Don't care about tag number, just skipping over anyway */
                 len +=
                     decode_tag_number_and_value(&apdu[len], NULL,
-                    &len_value_type);
+                                                &len_value_type);
                 len += len_value_type;  /* Skip over data value as well */
                 if (len >= apdu_len)    /* APDU is exhausted so we have failed to find closing tag */
                     return (-1);
@@ -445,7 +445,7 @@ int rr_ack_decode_service_request(
 
         len +=
             decode_unsigned(&apdu[len], len_value_type,
-            &rrdata->FirstSequence);
+                            &rrdata->FirstSequence);
     }
 
     len = apdu_len;     /* There should be nothing left to see here */

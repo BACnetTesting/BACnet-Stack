@@ -66,13 +66,13 @@ int whohas_encode_apdu(
         if (data->is_object_name) {
             len =
                 encode_context_character_string(&apdu[apdu_len], 3,
-                &data->object.name);
+                                                &data->object.name);
             apdu_len += len;
         } else {
             len =
                 encode_context_object_id(&apdu[apdu_len], 2,
-                (int) data->object.identifier.type,
-                data->object.identifier.instance);
+                                         data->object.identifier.type,
+                                         data->object.identifier.instance);
             apdu_len += len;
         }
     }
@@ -90,7 +90,7 @@ int whohas_decode_service_request(
     uint8_t tag_number = 0;
     uint32_t len_value = 0;
     uint32_t decoded_value = 0; /* for decoding */
-    uint16_t decoded_type = 0;  /* for decoding */
+    BACNET_OBJECT_TYPE decoded_type ;  /* for decoding */
 
     if (apdu_len && data) {
         /* optional limits - must be used as a pair */
@@ -118,10 +118,10 @@ int whohas_decode_service_request(
             data->is_object_name = false;
             len +=
                 decode_tag_number_and_value(&apdu[len], &tag_number,
-                &len_value);
+                                            &len_value);
             len +=
                 decode_object_id(&apdu[len], &decoded_type,
-                &data->object.identifier.instance);
+                                 &data->object.identifier.instance);
             data->object.identifier.type = decoded_type;
         }
         /* object name */
@@ -129,10 +129,10 @@ int whohas_decode_service_request(
             data->is_object_name = true;
             len +=
                 decode_tag_number_and_value(&apdu[len], &tag_number,
-                &len_value);
+                                            &len_value);
             len +=
                 decode_character_string(&apdu[len], len_value,
-                &data->object.name);
+                                        &data->object.name);
         }
         /* missing required parameters */
         else
@@ -190,15 +190,15 @@ void testWhoHasData(
     /* Object ID */
     if (data->is_object_name == false) {
         ct_test(pTest,
-            test_data.object.identifier.type == data->object.identifier.type);
+                test_data.object.identifier.type == data->object.identifier.type);
         ct_test(pTest,
-            test_data.object.identifier.instance ==
-            data->object.identifier.instance);
+                test_data.object.identifier.instance ==
+                data->object.identifier.instance);
     }
     /* Object Name */
     else {
         ct_test(pTest, characterstring_same(&test_data.object.name,
-                &data->object.name));
+                                            &data->object.name));
     }
 }
 
@@ -215,16 +215,16 @@ void testWhoHas(
     testWhoHasData(pTest, &data);
 
     for (data.low_limit = 0; data.low_limit <= BACNET_MAX_INSTANCE;
-        data.low_limit += (BACNET_MAX_INSTANCE / 4)) {
+         data.low_limit += (BACNET_MAX_INSTANCE / 4)) {
         for (data.high_limit = 0; data.high_limit <= BACNET_MAX_INSTANCE;
-            data.high_limit += (BACNET_MAX_INSTANCE / 4)) {
+             data.high_limit += (BACNET_MAX_INSTANCE / 4)) {
             data.is_object_name = false;
             for (data.object.identifier.type = OBJECT_ANALOG_INPUT;
-                data.object.identifier.type < MAX_BACNET_OBJECT_TYPE;
-                data.object.identifier.type++) {
+                 data.object.identifier.type < MAX_BACNET_OBJECT_TYPE;
+                 data.object.identifier.type++) {
                 for (data.object.identifier.instance = 1;
-                    data.object.identifier.instance <= BACNET_MAX_INSTANCE;
-                    data.object.identifier.instance <<= 1) {
+                     data.object.identifier.instance <= BACNET_MAX_INSTANCE;
+                     data.object.identifier.instance <<= 1) {
                     testWhoHasData(pTest, &data);
                 }
             }

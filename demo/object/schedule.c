@@ -87,11 +87,11 @@ void Schedule_Init(void)
         Schedule_Descr[i].Start_Date.year = 0xFF;
         Schedule_Descr[i].Start_Date.month = 1;
         Schedule_Descr[i].Start_Date.day = 1;
-        Schedule_Descr[i].Start_Date.wday = 0xFF;
+        Schedule_Descr[i].Start_Date.wday = BACNET_WEEKDAY_ANY ;
         Schedule_Descr[i].End_Date.year = 0xFF;
         Schedule_Descr[i].End_Date.month = 12;
         Schedule_Descr[i].End_Date.day = 31;
-        Schedule_Descr[i].End_Date.wday = 0xFF;
+        Schedule_Descr[i].End_Date.wday = BACNET_WEEKDAY_ANY;
         for (j = 0; j < 7; j++) {
             Schedule_Descr[i].Weekly_Schedule[j].TV_Count = 0;
         }

@@ -65,7 +65,7 @@ static bool Error_Detected = false;
 void MyAbortHandler(
     BACNET_ADDRESS * src,
     uint8_t invoke_id,
-    uint8_t abort_reason,
+    BACNET_ABORT_REASON abort_reason,
     bool server)
 {
     /* FIXME: verify src and invoke id */
@@ -233,6 +233,7 @@ int main(
         Send_WhoHas_Object(Target_Object_Instance_Min,
             Target_Object_Instance_Max, Target_Object_Type,
             Target_Object_Instance);
+            
     }
     /* loop forever */
     for (;;) {
@@ -244,8 +245,10 @@ int main(
         if (pdu_len) {
             npdu_handler(&src, &Rx_Buf[0], pdu_len);
         }
+        
         if (Error_Detected)
             break;
+            
         /* increment timer - exit if timed out */
         elapsed_seconds += (current_seconds - last_seconds);
         if (elapsed_seconds > timeout_seconds)

@@ -578,7 +578,7 @@ bool Trend_Log_Write_Property(
                 &wp_data->error_class, &wp_data->error_code);
             if (status) {
                 if (value.type.Enumerated != LOGGING_TYPE_COV) {
-                    CurrentLog->LoggingType = value.type.Enumerated;
+                CurrentLog->LoggingType = (BACNET_LOGGING_TYPE)value.type.Enumerated;
                     if (value.type.Enumerated == LOGGING_TYPE_POLLED) {
                         /* As per 12.25.27 pick a suitable default if interval is 0 */
                         if (CurrentLog->ulLogInterval == 0) {
@@ -992,9 +992,9 @@ void TL_Local_Time_To_BAC(
      * Windows is days from Sunday 0 - 6 so we
      * have to adjust */
     if (TempTime->tm_wday == 0)
-        DestTime->date.wday = 7;
+        DestTime->date.wday = BACNET_WEEKDAY_SUNDAY;
     else
-        DestTime->date.wday = (uint8_t) TempTime->tm_wday;
+        DestTime->date.wday = (BACNET_WEEKDAY) (uint8_t)TempTime->tm_wday;
     DestTime->time.hour = (uint8_t) TempTime->tm_hour;
     DestTime->time.min = (uint8_t) TempTime->tm_min;
     DestTime->time.sec = (uint8_t) TempTime->tm_sec;

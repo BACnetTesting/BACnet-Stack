@@ -41,7 +41,7 @@
 
 
     typedef struct analog_value_descr {
-        unsigned Event_State:3;
+        BACNET_EVENT_STATE Event_State;
         bool Out_Of_Service;
         uint16_t Units;
         float Present_Value;
@@ -56,7 +56,7 @@
         float Deadband;
         unsigned Limit_Enable:2;
         unsigned Event_Enable:3;
-        unsigned Notify_Type:1;
+        BACNET_NOTIFY_TYPE Notify_Type ;
         ACKED_INFO Acked_Transitions[MAX_BACNET_EVENT_TRANSITION];
         BACNET_DATE_TIME Event_Time_Stamps[MAX_BACNET_EVENT_TRANSITION];
         /* time to generate event notification */
@@ -156,19 +156,22 @@
         BACNET_GET_ALARM_SUMMARY_DATA * getalarm_data);
 #endif
 
-    bool Analog_Value_Create(
-        uint32_t object_instance);
-    bool Analog_Value_Delete(
-        uint32_t object_instance);
-    void Analog_Value_Cleanup(
-        void);
-    void Analog_Value_Init(
-        void);
+bool Analog_Value_Create(
+    uint32_t object_instance);
+
+bool Analog_Value_Delete(
+    uint32_t object_instance);
+
+void Analog_Value_Cleanup(
+    void);
+
+void Analog_Value_Init(
+    void);
 
 #ifdef TEST
 #include "ctest.h"
-    void testAnalog_Value(
-        Test * pTest);
+void testAnalog_Value(
+    Test * pTest);
 #endif
 
 #endif

@@ -151,7 +151,7 @@ void test_memcopy(
     ct_test(pTest, len == sizeof(data2));
     len =
         memcopy(&buffer[0], &big_buffer[0], 1, sizeof(big_buffer),
-        sizeof(buffer));
+                sizeof(buffer));
     ct_test(pTest, len == 0);
 }
 

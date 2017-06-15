@@ -33,13 +33,14 @@ typedef struct {
     signed tag_id;      /* text pair - use NULL to end the list */
 } PROP_TAG_DATA;
 
-    signed bacprop_tag_by_index_default(
-        PROP_TAG_DATA * data_list,
-        signed index,
-        signed default_ret);
 
-    signed bacprop_property_tag(
-        BACNET_OBJECT_TYPE type,
-        signed prop);
+signed bacprop_tag_by_index_default(
+    PROP_TAG_DATA * data_list,
+        signed objectIndex,
+    signed default_ret);
+
+signed bacprop_property_tag(
+    BACNET_OBJECT_TYPE type,
+    signed prop);
 
 #endif

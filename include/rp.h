@@ -58,61 +58,61 @@ typedef int (
 
 
 /* encode service */
-    int rp_encode_apdu(
-        uint8_t * apdu,
-        uint8_t invoke_id,
-        BACNET_READ_PROPERTY_DATA * rpdata);
+int rp_encode_apdu(
+    uint8_t * apdu,
+    uint8_t invoke_id,
+    BACNET_READ_PROPERTY_DATA * rpdata);
 
 /* decode the service request only */
-    int rp_decode_service_request(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        BACNET_READ_PROPERTY_DATA * rpdata);
+int rp_decode_service_request(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    BACNET_READ_PROPERTY_DATA * rpdata);
 
-    /* method to encode the ack without extra buffer */
-    int rp_ack_encode_apdu_init(
-        uint8_t * apdu,
-        uint8_t invoke_id,
-        BACNET_READ_PROPERTY_DATA * rpdata);
+/* method to encode the ack without extra buffer */
+int rp_ack_encode_apdu_init(
+    uint8_t * apdu,
+    uint8_t invoke_id,
+    BACNET_READ_PROPERTY_DATA * rpdata);
 
-    int rp_ack_encode_apdu_object_property_end(
-        uint8_t * apdu);
+int rp_ack_encode_apdu_object_property_end(
+    uint8_t * apdu);
 
-    /* method to encode the ack using extra buffer */
-    int rp_ack_encode_apdu(
-        uint8_t * apdu,
-        uint8_t invoke_id,
-        BACNET_READ_PROPERTY_DATA * rpdata);
+/* method to encode the ack using extra buffer */
+int rp_ack_encode_apdu(
+    uint8_t * apdu,
+    uint8_t invoke_id,
+    BACNET_READ_PROPERTY_DATA * rpdata);
 
-    int rp_ack_decode_service_request(
-        uint8_t * apdu,
-        int apdu_len,   /* total length of the apdu */
-        BACNET_READ_PROPERTY_DATA * rpdata);
+int rp_ack_decode_service_request(
+    uint8_t * apdu,
+    int apdu_len,   /* total length of the apdu */
+    BACNET_READ_PROPERTY_DATA * rpdata);
 
-    /* Decode instead to RPM-style data structure. */
-    int rp_ack_fully_decode_service_request(
-        uint8_t * apdu,
-        int apdu_len,
-        struct BACnet_Read_Access_Data *read_access_data);
+/* Decode instead to RPM-style data structure. */
+int rp_ack_fully_decode_service_request(
+    uint8_t * apdu,
+    int apdu_len,
+    struct BACnet_Read_Access_Data *read_access_data);
 
 #ifdef TEST
 #include "ctest.h"
-    int rp_decode_apdu(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        uint8_t * invoke_id,
-        BACNET_READ_PROPERTY_DATA * rpdata);
+int rp_decode_apdu(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    uint8_t * invoke_id,
+    BACNET_READ_PROPERTY_DATA * rpdata);
 
-    int rp_ack_decode_apdu(
-        uint8_t * apdu,
-        int apdu_len,   /* total length of the apdu */
-        uint8_t * invoke_id,
-        BACNET_READ_PROPERTY_DATA * rpdata);
+int rp_ack_decode_apdu(
+    uint8_t * apdu,
+    int apdu_len,   /* total length of the apdu */
+    uint8_t * invoke_id,
+    BACNET_READ_PROPERTY_DATA * rpdata);
 
-    void test_ReadProperty(
-        Test * pTest);
-    void test_ReadPropertyAck(
-        Test * pTest);
+void test_ReadProperty(
+    Test * pTest);
+void test_ReadPropertyAck(
+    Test * pTest);
 #endif
 
 /** @defgroup DataShare Data Sharing BIBBs

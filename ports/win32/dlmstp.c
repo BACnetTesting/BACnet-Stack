@@ -591,6 +591,7 @@ bool dlmstp_init(
     /* initialize packet queue */
     Receive_Packet.ready = false;
     Receive_Packet.pdu_len = 0;
+#if 0 // todo1
     Receive_Packet_Flag = CreateSemaphore(NULL, 0, 1, "dlmstpReceivePacket");
     if (Receive_Packet_Flag == NULL)
         exit(1);
@@ -599,6 +600,7 @@ bool dlmstp_init(
         CloseHandle(Receive_Packet_Flag);
         exit(1);
     }
+#endif
     /* initialize hardware */
     timer_init();
     if (ifname) {
@@ -647,6 +649,7 @@ bool dlmstp_init(
     fprintf(stderr, "MS/TP Max_Info_Frames: %u\n",
         (unsigned) MSTP_Port.Nmax_info_frames);
 #endif
+#if 0 // todo1
     hThread = _beginthread(dlmstp_receive_fsm_task, 4096, &arg_value);
     if (hThread == 0) {
         fprintf(stderr, "Failed to start recive FSM task\n");
@@ -655,7 +658,7 @@ bool dlmstp_init(
     if (hThread == 0) {
         fprintf(stderr, "Failed to start Master Node FSM task\n");
     }
-
+#endif
     return true;
 }
 

@@ -27,12 +27,11 @@ struct fifo_buffer_t {
 typedef struct fifo_buffer_t FIFO_BUFFER;
 /** @} */
 
+unsigned FIFO_Count(
+    FIFO_BUFFER const *b);
 
-    unsigned FIFO_Count(
-        FIFO_BUFFER const *b);
-
-    bool FIFO_Full(
-        FIFO_BUFFER const *b);
+bool FIFO_Full(
+    FIFO_BUFFER const *b);
 
     bool FIFO_Available(
         FIFO_BUFFER const *b,
@@ -72,8 +71,8 @@ typedef struct fifo_buffer_t FIFO_BUFFER;
 
 #ifdef TEST
 #include "ctest.h"
-    void testFIFOBuffer(
-        Test * pTest);
+void testFIFOBuffer(
+    Test * pTest);
 #endif
 
 #endif

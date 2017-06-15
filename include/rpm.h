@@ -65,15 +65,14 @@ typedef struct BACnet_Read_Access_Data {
  */
 typedef void (
     *rpm_property_lists_function) (
-    const int **pRequired,
-    const int **pOptional,
-    const int **pProprietary);
+        const int **pRequired,
+        const int **pOptional,
+        const int **pProprietary);
 
 typedef void (
     *rpm_object_property_lists_function) (
-    BACNET_OBJECT_TYPE object_type,
-    struct special_property_list_t * pPropertyList);
-
+        BACNET_OBJECT_TYPE object_type,
+        struct special_property_list_t * pPropertyList);
 
 /* encode functions */
 /* Start with the Init function, and then add an object,
@@ -82,107 +81,107 @@ typedef void (
  until the APDU is full.*/
 
 /* RPM */
-    int rpm_encode_apdu_init(
-        uint8_t * apdu,
-        uint8_t invoke_id);
+int rpm_encode_apdu_init(
+    uint8_t * apdu,
+    uint8_t invoke_id);
 
-    int rpm_encode_apdu_object_begin(
-        uint8_t * apdu,
-        BACNET_OBJECT_TYPE object_type,
-        uint32_t object_instance);
+int rpm_encode_apdu_object_begin(
+    uint8_t * apdu,
+    BACNET_OBJECT_TYPE object_type,
+    uint32_t object_instance);
 
-    int rpm_encode_apdu_object_property(
-        uint8_t * apdu,
-        BACNET_PROPERTY_ID object_property,
-        uint32_t array_index);
+int rpm_encode_apdu_object_property(
+    uint8_t * apdu,
+    BACNET_PROPERTY_ID object_property,
+    uint32_t array_index);
 
-    int rpm_encode_apdu_object_end(
-        uint8_t * apdu);
+int rpm_encode_apdu_object_end(
+    uint8_t * apdu);
 
-    int rpm_encode_apdu(
-        uint8_t * apdu,
-        size_t max_apdu,
-        uint8_t invoke_id,
-        BACNET_READ_ACCESS_DATA * read_access_data);
+int rpm_encode_apdu(
+    uint8_t * apdu,
+    size_t max_apdu,
+    uint8_t invoke_id,
+    BACNET_READ_ACCESS_DATA * read_access_data);
 
 /* decode the object portion of the service request only */
-    int rpm_decode_object_id(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        BACNET_RPM_DATA * rpmdata);
+int rpm_decode_object_id(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    BACNET_RPM_DATA * rpmdata);
 
 /* is this the end of this object property list? */
-    int rpm_decode_object_end(
-        uint8_t * apdu,
-        unsigned apdu_len);
+int rpm_decode_object_end(
+    uint8_t * apdu,
+    unsigned apdu_len);
 
 /* decode the object property portion of the service request only */
-    int rpm_decode_object_property(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        BACNET_RPM_DATA * rpmdata);
+int rpm_decode_object_property(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    BACNET_RPM_DATA * rpmdata);
 
 /* RPM Ack - reply from server */
-    int rpm_ack_encode_apdu_init(
-        uint8_t * apdu,
-        uint8_t invoke_id);
+int rpm_ack_encode_apdu_init(
+    uint8_t * apdu,
+    uint8_t invoke_id);
 
-    int rpm_ack_encode_apdu_object_begin(
-        uint8_t * apdu,
-        BACNET_RPM_DATA * rpmdata);
+int rpm_ack_encode_apdu_object_begin(
+    uint8_t * apdu,
+    BACNET_RPM_DATA * rpmdata);
 
-    int rpm_ack_encode_apdu_object_property(
-        uint8_t * apdu,
-        BACNET_PROPERTY_ID object_property,
-        uint32_t array_index);
+int rpm_ack_encode_apdu_object_property(
+    uint8_t * apdu,
+    BACNET_PROPERTY_ID object_property,
+    uint32_t array_index);
 
-    int rpm_ack_encode_apdu_object_property_value(
-        uint8_t * apdu,
-        uint8_t * application_data,
-        unsigned application_data_len);
+int rpm_ack_encode_apdu_object_property_value(
+    uint8_t * apdu,
+    uint8_t * application_data,
+    unsigned application_data_len);
 
-    int rpm_ack_encode_apdu_object_property_error(
-        uint8_t * apdu,
-        BACNET_ERROR_CLASS error_class,
-        BACNET_ERROR_CODE error_code);
+int rpm_ack_encode_apdu_object_property_error(
+    uint8_t * apdu,
+    BACNET_ERROR_CLASS error_class,
+    BACNET_ERROR_CODE error_code);
 
     int rpm_ack_encode_apdu_object_end(
         uint8_t * apdu);
 
-    int rpm_ack_decode_object_id(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        BACNET_OBJECT_TYPE * object_type,
-        uint32_t * object_instance);
+int rpm_ack_decode_object_id(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    BACNET_OBJECT_TYPE * object_type,
+    uint32_t * object_instance);
 /* is this the end of the list of this objects properties values? */
-    int rpm_ack_decode_object_end(
-        uint8_t * apdu,
-        unsigned apdu_len);
-    int rpm_ack_decode_object_property(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        BACNET_PROPERTY_ID * object_property,
-        uint32_t * array_index);
+int rpm_ack_decode_object_end(
+    uint8_t * apdu,
+    unsigned apdu_len);
+int rpm_ack_decode_object_property(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    BACNET_PROPERTY_ID * object_property,
+    uint32_t * array_index);
 #ifdef TEST
 #include "ctest.h"
-    int rpm_decode_apdu(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        uint8_t * invoke_id,
-        uint8_t ** service_request,
-        unsigned *service_request_len);
+int rpm_decode_apdu(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    uint8_t * invoke_id,
+    uint8_t ** service_request,
+    unsigned *service_request_len);
 
-    int rpm_ack_decode_apdu(
-        uint8_t * apdu,
-        int apdu_len,   /* total length of the apdu */
-        uint8_t * invoke_id,
-        uint8_t ** service_request,
-        unsigned *service_request_len);
+int rpm_ack_decode_apdu(
+    uint8_t * apdu,
+    int apdu_len,   /* total length of the apdu */
+    uint8_t * invoke_id,
+    uint8_t ** service_request,
+    unsigned *service_request_len);
 
-    void testReadPropertyMultiple(
-        Test * pTest);
-    void testReadPropertyMultipleAck(
-        Test * pTest);
+void testReadPropertyMultiple(
+    Test * pTest);
+void testReadPropertyMultipleAck(
+    Test * pTest);
 #endif
 
 /** @defgroup DSRPM Data Sharing -Read Property Multiple Service (DS-RPM)

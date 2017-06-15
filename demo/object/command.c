@@ -163,6 +163,7 @@ int cl_decode_apdu(
     int dec_len = 0;
     uint8_t tag_number = 0;
     uint32_t len_value_type = 0;
+    uint32_t tempId ;
 
     if (decode_is_context_tag(&apdu[dec_len], 0)) {
         /* Tag 0: Device ID */
@@ -191,8 +192,8 @@ int cl_decode_apdu(
     if (tag_number != 2)
         return BACNET_STATUS_REJECT;
     len =
-        decode_enumerated(&apdu[dec_len], len_value_type,
-        &bcl->Property_Identifier);
+        decode_enumerated(&apdu[dec_len], len_value_type, &tempId);
+    bcl->Property_Identifier = (BACNET_PROPERTY_ID)tempId;
     if (len < 0)
         return BACNET_STATUS_REJECT;
     dec_len += len;

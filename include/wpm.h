@@ -32,25 +32,25 @@
 #include "wp.h"
 
 
-    struct BACnet_Write_Access_Data;
-    typedef struct BACnet_Write_Access_Data {
-        BACNET_OBJECT_TYPE object_type;
-        uint32_t object_instance;
-        /* simple linked list of values */
-        BACNET_PROPERTY_VALUE *listOfProperties;
-        struct BACnet_Write_Access_Data *next;
-    } BACNET_WRITE_ACCESS_DATA;
+struct BACnet_Write_Access_Data;
+typedef struct BACnet_Write_Access_Data {
+    BACNET_OBJECT_TYPE object_type;
+    uint32_t object_instance;
+    /* simple linked list of values */
+    BACNET_PROPERTY_VALUE *listOfProperties;
+    struct BACnet_Write_Access_Data *next;
+} BACNET_WRITE_ACCESS_DATA;
 
-    /* decode the service request only */
-    int wpm_decode_object_id(
-        uint8_t * apdu,
-        uint16_t apdu_len,
-        BACNET_WRITE_PROPERTY_DATA * data);
+/* decode the service request only */
+int wpm_decode_object_id(
+    uint8_t * apdu,
+    uint16_t apdu_len,
+    BACNET_WRITE_PROPERTY_DATA * data);
 
-    int wpm_decode_object_property(
-        uint8_t * apdu,
-        uint16_t apdu_len,
-        BACNET_WRITE_PROPERTY_DATA * wpm_data);
+int wpm_decode_object_property(
+    uint8_t * apdu,
+    uint16_t apdu_len,
+    BACNET_WRITE_PROPERTY_DATA * wpm_data);
 
 
     /* encode objects */
@@ -59,28 +59,28 @@
         uint8_t invoke_id);
     int wpm_encode_apdu_object_begin(
         uint8_t * apdu,
-        BACNET_OBJECT_TYPE object_type,
-        uint32_t object_instance);
-    int wpm_encode_apdu_object_end(
-        uint8_t * apdu);
-    int wpm_encode_apdu_object_property(
-        uint8_t * apdu,
-        BACNET_WRITE_PROPERTY_DATA * wpdata);
-    int wpm_encode_apdu(
-        uint8_t * apdu,
-        size_t max_apdu,
-        uint8_t invoke_id,
-        BACNET_WRITE_ACCESS_DATA * write_access_data);
+    BACNET_OBJECT_TYPE object_type,
+    uint32_t object_instance);
+int wpm_encode_apdu_object_end(
+    uint8_t * apdu);
+int wpm_encode_apdu_object_property(
+    uint8_t * apdu,
+    BACNET_WRITE_PROPERTY_DATA * wpdata);
+int wpm_encode_apdu(
+    uint8_t * apdu,
+    size_t max_apdu,
+    uint8_t invoke_id,
+    BACNET_WRITE_ACCESS_DATA * write_access_data);
 
-    /* encode service */
-    int wpm_ack_encode_apdu_init(
-        uint8_t * apdu,
-        uint8_t invoke_id);
+/* encode service */
+int wpm_ack_encode_apdu_init(
+    uint8_t * apdu,
+    uint8_t invoke_id);
 
-    int wpm_error_ack_encode_apdu(
-        uint8_t * apdu,
-        uint8_t invoke_id,
-        BACNET_WRITE_PROPERTY_DATA * wp_data);
+int wpm_error_ack_encode_apdu(
+    uint8_t * apdu,
+    uint8_t invoke_id,
+    BACNET_WRITE_PROPERTY_DATA * wp_data);
 
 
 /** @defgroup DSWP Data Sharing - Write Property Multiple Service (DS-WPM)

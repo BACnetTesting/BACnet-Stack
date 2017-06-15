@@ -89,7 +89,7 @@ BACnetRecipient ::= CHOICE {
 /* Information needed to send AckNotification */
     typedef struct Ack_Notification {
         bool bSendAckNotify;    /* true if need to send AckNotification */
-        uint8_t EventState;
+        BACNET_EVENT_STATE EventState;
     } ACK_NOTIFICATION;
 
 

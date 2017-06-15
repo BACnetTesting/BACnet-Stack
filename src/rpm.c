@@ -71,7 +71,7 @@ int rpm_encode_apdu_object_begin(
     if (apdu) {
         apdu_len =
             encode_context_object_id(&apdu[0], 0, object_type,
-            object_instance);
+                                     object_instance);
         /* Tag 1: sequence of ReadAccessSpecification */
         apdu_len += encode_opening_tag(&apdu[apdu_len], 1);
     }
@@ -132,7 +132,7 @@ int rpm_encode_apdu(
     len = rpm_encode_apdu_init(&apdu_temp[0], invoke_id);
     len =
         (int) memcopy(&apdu[0], &apdu_temp[0], (size_t) apdu_len, (size_t) len,
-        (size_t) max_apdu);
+                      (size_t) max_apdu);
     if (len == 0) {
         return 0;
     }
@@ -141,10 +141,10 @@ int rpm_encode_apdu(
     while (rpm_object) {
         len =
             encode_context_object_id(&apdu_temp[0], 0, rpm_object->object_type,
-            rpm_object->object_instance);
+                                     rpm_object->object_instance);
         len =
             (int) memcopy(&apdu[0], &apdu_temp[0], (size_t) apdu_len,
-            (size_t) len, (size_t) max_apdu);
+                          (size_t) len, (size_t) max_apdu);
         if (len == 0) {
             return 0;
         }
@@ -153,7 +153,7 @@ int rpm_encode_apdu(
         len = encode_opening_tag(&apdu_temp[0], 1);
         len =
             (int) memcopy(&apdu[0], &apdu_temp[0], (size_t) apdu_len,
-            (size_t) len, (size_t) max_apdu);
+                          (size_t) len, (size_t) max_apdu);
         if (len == 0) {
             return 0;
         }
@@ -163,10 +163,10 @@ int rpm_encode_apdu(
             /* stuff as many properties into it as APDU length will allow */
             len =
                 encode_context_enumerated(&apdu_temp[0], 0,
-                rpm_property->propertyIdentifier);
+                                          rpm_property->propertyIdentifier);
             len =
                 (int) memcopy(&apdu[0], &apdu_temp[0], (size_t) apdu_len,
-                (size_t) len, (size_t) max_apdu);
+                              (size_t) len, (size_t) max_apdu);
             if (len == 0) {
                 return 0;
             }
@@ -175,10 +175,10 @@ int rpm_encode_apdu(
             if (rpm_property->propertyArrayIndex != BACNET_ARRAY_ALL) {
                 len =
                     encode_context_unsigned(&apdu_temp[0], 1,
-                    rpm_property->propertyArrayIndex);
+                                            rpm_property->propertyArrayIndex);
                 len =
                     (int) memcopy(&apdu[0], &apdu_temp[0], (size_t) apdu_len,
-                    (size_t) len, (size_t) max_apdu);
+                                  (size_t) len, (size_t) max_apdu);
                 if (len == 0) {
                     return 0;
                 }
@@ -189,7 +189,7 @@ int rpm_encode_apdu(
         len = encode_closing_tag(&apdu_temp[0], 1);
         len =
             (int) memcopy(&apdu[0], &apdu_temp[0], (size_t) apdu_len,
-            (size_t) len, (size_t) max_apdu);
+                          (size_t) len, (size_t) max_apdu);
         if (len == 0) {
             return 0;
         }
@@ -211,7 +211,7 @@ int rpm_decode_object_id(
     BACNET_RPM_DATA * rpmdata)
 {
     unsigned len = 0;
-    uint16_t type = 0;  /* for decoding */
+    BACNET_OBJECT_TYPE type ;  /* for decoding */
 
     /* check for value pointers */
     if (apdu && apdu_len && rpmdata) {
@@ -281,7 +281,7 @@ int rpm_decode_object_property(
 
         len +=
             decode_tag_number_and_value(&apdu[len], &tag_number,
-            &len_value_type);
+                                        &len_value_type);
         if (tag_number != 0) {
             rpmdata->error_code = ERROR_CODE_REJECT_INVALID_TAG;
             return BACNET_STATUS_REJECT;
@@ -299,7 +299,7 @@ int rpm_decode_object_property(
         if (IS_CONTEXT_SPECIFIC(apdu[len]) && !IS_CLOSING_TAG(apdu[len])) {
             option_len =
                 (unsigned) decode_tag_number_and_value(&apdu[len], &tag_number,
-                &len_value_type);
+                        &len_value_type);
             if (tag_number == 1) {
                 len += option_len;
                 /* Should be at least the unsigned array index + 1 tag left */
@@ -344,7 +344,7 @@ int rpm_ack_encode_apdu_object_begin(
         /* Tag 0: objectIdentifier */
         apdu_len =
             encode_context_object_id(&apdu[0], 0, rpmdata->object_type,
-            rpmdata->object_instance);
+                                     rpmdata->object_instance);
         /* Tag 1: listOfResults */
         apdu_len += encode_opening_tag(&apdu[apdu_len], 1);
     }
@@ -436,7 +436,7 @@ int rpm_ack_decode_object_id(
     uint32_t * object_instance)
 {
     unsigned len = 0;
-    uint16_t type = 0;  /* for decoding */
+    BACNET_OBJECT_TYPE type ;  /* for decoding */
 
     /* check for value pointers */
     if (apdu && apdu_len && object_type && object_instance) {
@@ -501,7 +501,7 @@ int rpm_ack_decode_object_property(
             (!IS_CLOSING_TAG(apdu[len]))) {
             tag_len =
                 (unsigned) decode_tag_number_and_value(&apdu[len], &tag_number,
-                &len_value_type);
+                        &len_value_type);
             if (tag_number == 3) {
                 len += tag_len;
                 len +=
@@ -614,26 +614,26 @@ void testReadPropertyMultiple(
     /* then stuff as many properties into it as APDU length will allow */
     apdu_len +=
         rpm_encode_apdu_object_property(&apdu[apdu_len],
-        PROP_OBJECT_IDENTIFIER, BACNET_ARRAY_ALL);
+                                        PROP_OBJECT_IDENTIFIER, BACNET_ARRAY_ALL);
     apdu_len +=
         rpm_encode_apdu_object_property(&apdu[apdu_len], PROP_OBJECT_NAME,
-        BACNET_ARRAY_ALL);
+                                        BACNET_ARRAY_ALL);
     apdu_len += rpm_encode_apdu_object_end(&apdu[apdu_len]);
     /* each object has a beginning and an end */
     apdu_len +=
         rpm_encode_apdu_object_begin(&apdu[apdu_len], OBJECT_ANALOG_INPUT, 33);
     apdu_len +=
         rpm_encode_apdu_object_property(&apdu[apdu_len],
-        PROP_OBJECT_IDENTIFIER, BACNET_ARRAY_ALL);
+                                        PROP_OBJECT_IDENTIFIER, BACNET_ARRAY_ALL);
     apdu_len +=
         rpm_encode_apdu_object_property(&apdu[apdu_len], PROP_ALL,
-        BACNET_ARRAY_ALL);
+                                        BACNET_ARRAY_ALL);
     apdu_len += rpm_encode_apdu_object_end(&apdu[apdu_len]);
 
     ct_test(pTest, apdu_len != 0);
 
     test_len = rpm_decode_apdu(&apdu[0], apdu_len, &test_invoke_id, &service_request,   /* will point to the service request in the apdu */
-        &service_request_len);
+                               &service_request_len);
     ct_test(pTest, test_len != -1);
     ct_test(pTest, test_invoke_id == invoke_id);
     ct_test(pTest, service_request != NULL);
@@ -648,14 +648,14 @@ void testReadPropertyMultiple(
     /* decode the object property portion of the service request */
     test_len =
         rpm_decode_object_property(&service_request[len],
-        service_request_len - len, &rpmdata);
+                                   service_request_len - len, &rpmdata);
     ct_test(pTest, test_len > 0);
     ct_test(pTest, rpmdata.object_property == PROP_OBJECT_IDENTIFIER);
     ct_test(pTest, rpmdata.array_index == BACNET_ARRAY_ALL);
     len += test_len;
     test_len =
         rpm_decode_object_property(&service_request[len],
-        service_request_len - len, &rpmdata);
+                                   service_request_len - len, &rpmdata);
     ct_test(pTest, test_len > 0);
     ct_test(pTest, rpmdata.object_property == PROP_OBJECT_NAME);
     ct_test(pTest, rpmdata.array_index == BACNET_ARRAY_ALL);
@@ -663,18 +663,18 @@ void testReadPropertyMultiple(
     /* try again - we should fail */
     test_len =
         rpm_decode_object_property(&service_request[len],
-        service_request_len - len, &rpmdata);
+                                   service_request_len - len, &rpmdata);
     ct_test(pTest, test_len < 0);
     /* is it the end of this object? */
     test_len =
         rpm_decode_object_end(&service_request[len],
-        service_request_len - len);
+                              service_request_len - len);
     ct_test(pTest, test_len == 1);
     len += test_len;
     /* try to decode an object id */
     test_len =
         rpm_decode_object_id(&service_request[len], service_request_len - len,
-        &rpmdata);
+                             &rpmdata);
     ct_test(pTest, test_len > 0);
     ct_test(pTest, rpmdata.object_type == OBJECT_ANALOG_INPUT);
     ct_test(pTest, rpmdata.object_instance == 33);
@@ -682,26 +682,26 @@ void testReadPropertyMultiple(
     /* decode the object property portion of the service request only */
     test_len =
         rpm_decode_object_property(&service_request[len],
-        service_request_len - len, &rpmdata);
+                                   service_request_len - len, &rpmdata);
     ct_test(pTest, test_len > 0);
     ct_test(pTest, rpmdata.object_property == PROP_OBJECT_IDENTIFIER);
     ct_test(pTest, rpmdata.array_index == BACNET_ARRAY_ALL);
     len += test_len;
     test_len =
         rpm_decode_object_property(&service_request[len],
-        service_request_len - len, &rpmdata);
+                                   service_request_len - len, &rpmdata);
     ct_test(pTest, test_len > 0);
     ct_test(pTest, rpmdata.object_property == PROP_ALL);
     ct_test(pTest, rpmdata.array_index == BACNET_ARRAY_ALL);
     len += test_len;
     test_len =
         rpm_decode_object_property(&service_request[len],
-        service_request_len - len, &rpmdata);
+                                   service_request_len - len, &rpmdata);
     ct_test(pTest, test_len < 0);
     /* got an error -1, is it the end of this object? */
     test_len =
         rpm_decode_object_end(&service_request[len],
-        service_request_len - len);
+                              service_request_len - len);
     ct_test(pTest, test_len == 1);
     len += test_len;
     ct_test(pTest, len == service_request_len);
@@ -747,30 +747,30 @@ void testReadPropertyMultipleAck(
     /* reply property */
     apdu_len +=
         rpm_ack_encode_apdu_object_property(&apdu[apdu_len],
-        PROP_OBJECT_IDENTIFIER, BACNET_ARRAY_ALL);
+                                            PROP_OBJECT_IDENTIFIER, BACNET_ARRAY_ALL);
     /* reply value */
     application_data[0].tag = BACNET_APPLICATION_TAG_OBJECT_ID;
     application_data[0].type.Object_Id.type = OBJECT_DEVICE;
     application_data[0].type.Object_Id.instance = 123;
     application_data_buffer_len =
         bacapp_encode_application_data(&application_data_buffer[0],
-        &application_data[0]);
+                                       &application_data[0]);
     apdu_len +=
         rpm_ack_encode_apdu_object_property_value(&apdu[apdu_len],
-        &application_data_buffer[0], application_data_buffer_len);
+                &application_data_buffer[0], application_data_buffer_len);
     /* reply property */
     apdu_len +=
         rpm_ack_encode_apdu_object_property(&apdu[apdu_len], PROP_OBJECT_TYPE,
-        BACNET_ARRAY_ALL);
+                                            BACNET_ARRAY_ALL);
     /* reply value */
     application_data[1].tag = BACNET_APPLICATION_TAG_ENUMERATED;
     application_data[1].type.Enumerated = OBJECT_DEVICE;
     application_data_buffer_len =
         bacapp_encode_application_data(&application_data_buffer[0],
-        &application_data[1]);
+                                       &application_data[1]);
     apdu_len +=
         rpm_ack_encode_apdu_object_property_value(&apdu[apdu_len],
-        &application_data_buffer[0], application_data_buffer_len);
+                &application_data_buffer[0], application_data_buffer_len);
     /* object end */
     apdu_len += rpm_ack_encode_apdu_object_end(&apdu[apdu_len]);
 
@@ -781,31 +781,31 @@ void testReadPropertyMultipleAck(
     /* reply property */
     apdu_len +=
         rpm_ack_encode_apdu_object_property(&apdu[apdu_len],
-        PROP_PRESENT_VALUE, BACNET_ARRAY_ALL);
+                                            PROP_PRESENT_VALUE, BACNET_ARRAY_ALL);
     /* reply value */
     application_data[2].tag = BACNET_APPLICATION_TAG_REAL;
     application_data[2].type.Real = 0.0;
     application_data_buffer_len =
         bacapp_encode_application_data(&application_data_buffer[0],
-        &application_data[2]);
+                                       &application_data[2]);
     apdu_len +=
         rpm_ack_encode_apdu_object_property_value(&apdu[apdu_len],
-        &application_data_buffer[0], application_data_buffer_len);
+                &application_data_buffer[0], application_data_buffer_len);
     /* reply property */
     apdu_len +=
         rpm_ack_encode_apdu_object_property(&apdu[apdu_len], PROP_DEADBAND,
-        BACNET_ARRAY_ALL);
+                                            BACNET_ARRAY_ALL);
     /* reply error */
     apdu_len +=
         rpm_ack_encode_apdu_object_property_error(&apdu[apdu_len],
-        ERROR_CLASS_PROPERTY, ERROR_CODE_UNKNOWN_PROPERTY);
+                ERROR_CLASS_PROPERTY, ERROR_CODE_UNKNOWN_PROPERTY);
     /* object end */
     apdu_len += rpm_ack_encode_apdu_object_end(&apdu[apdu_len]);
     ct_test(pTest, apdu_len != 0);
 
-  /****** decode the packet ******/
+    /****** decode the packet ******/
     test_len = rpm_ack_decode_apdu(&apdu[0], apdu_len, &test_invoke_id, &service_request,       /* will point to the service request in the apdu */
-        &service_request_len);
+                                   &service_request_len);
     ct_test(pTest, test_len != -1);
     ct_test(pTest, test_invoke_id == invoke_id);
     ct_test(pTest, service_request != NULL);
@@ -813,7 +813,7 @@ void testReadPropertyMultipleAck(
     /* the first part should be the first object id */
     test_len =
         rpm_ack_decode_object_id(service_request, service_request_len,
-        &object_type, &object_instance);
+                                 &object_type, &object_instance);
     ct_test(pTest, test_len != -1);
     ct_test(pTest, object_type == OBJECT_DEVICE);
     ct_test(pTest, object_instance == 123);
@@ -821,7 +821,7 @@ void testReadPropertyMultipleAck(
     /* extract the property */
     test_len =
         rpm_ack_decode_object_property(&service_request[len],
-        service_request_len - len, &object_property, &array_index);
+                                       service_request_len - len, &object_property, &array_index);
     ct_test(pTest, object_property == PROP_OBJECT_IDENTIFIER);
     ct_test(pTest, array_index == BACNET_ARRAY_ALL);
     len += test_len;
@@ -833,17 +833,17 @@ void testReadPropertyMultipleAck(
        more than one element to decode */
     test_len =
         bacapp_decode_application_data(&service_request[len],
-        service_request_len - len, &test_application_data);
+                                       service_request_len - len, &test_application_data);
     ct_test(pTest, test_len > 0);
     ct_test(pTest, bacapp_same_value(&application_data[0],
-            &test_application_data));
+                                     &test_application_data));
     len += test_len;
     ct_test(pTest, decode_is_closing_tag_number(&service_request[len], 4));
     len++;
     /* see if there is another property */
     test_len =
         rpm_ack_decode_object_property(&service_request[len],
-        service_request_len - len, &object_property, &array_index);
+                                       service_request_len - len, &object_property, &array_index);
     ct_test(pTest, test_len != -1);
     ct_test(pTest, object_property == PROP_OBJECT_TYPE);
     ct_test(pTest, array_index == BACNET_ARRAY_ALL);
@@ -854,10 +854,10 @@ void testReadPropertyMultipleAck(
     /* decode the object property portion of the service request */
     test_len =
         bacapp_decode_application_data(&service_request[len],
-        service_request_len - len, &test_application_data);
+                                       service_request_len - len, &test_application_data);
     ct_test(pTest, test_len > 0);
     ct_test(pTest, bacapp_same_value(&application_data[1],
-            &test_application_data));
+                                     &test_application_data));
     len += test_len;
     ct_test(pTest, decode_is_closing_tag_number(&service_request[len], 4));
     len++;
@@ -865,18 +865,18 @@ void testReadPropertyMultipleAck(
     /* this time we should fail */
     test_len =
         rpm_ack_decode_object_property(&service_request[len],
-        service_request_len - len, &object_property, &array_index);
+                                       service_request_len - len, &object_property, &array_index);
     ct_test(pTest, test_len == -1);
     /* see if it is the end of this object */
     test_len =
         rpm_ack_decode_object_end(&service_request[len],
-        service_request_len - len);
+                                  service_request_len - len);
     ct_test(pTest, test_len == 1);
     len += test_len;
     /* try to decode another object id */
     test_len =
         rpm_ack_decode_object_id(&service_request[len],
-        service_request_len - len, &object_type, &object_instance);
+                                 service_request_len - len, &object_type, &object_instance);
     ct_test(pTest, test_len != -1);
     ct_test(pTest, object_type == OBJECT_ANALOG_INPUT);
     ct_test(pTest, object_instance == 33);
@@ -884,7 +884,7 @@ void testReadPropertyMultipleAck(
     /* decode the object property portion of the service request only */
     test_len =
         rpm_ack_decode_object_property(&service_request[len],
-        service_request_len - len, &object_property, &array_index);
+                                       service_request_len - len, &object_property, &array_index);
     ct_test(pTest, test_len != -1);
     ct_test(pTest, object_property == PROP_PRESENT_VALUE);
     ct_test(pTest, array_index == BACNET_ARRAY_ALL);
@@ -895,17 +895,17 @@ void testReadPropertyMultipleAck(
     /* decode the object property portion of the service request */
     test_len =
         bacapp_decode_application_data(&service_request[len],
-        service_request_len - len, &test_application_data);
+                                       service_request_len - len, &test_application_data);
     ct_test(pTest, test_len > 0);
     ct_test(pTest, bacapp_same_value(&application_data[2],
-            &test_application_data));
+                                     &test_application_data));
     len += test_len;
     ct_test(pTest, decode_is_closing_tag_number(&service_request[len], 4));
     len++;
     /* see if there is another property */
     test_len =
         rpm_ack_decode_object_property(&service_request[len],
-        service_request_len - len, &object_property, &array_index);
+                                       service_request_len - len, &object_property, &array_index);
     ct_test(pTest, test_len != -1);
     ct_test(pTest, object_property == PROP_DEADBAND);
     ct_test(pTest, array_index == BACNET_ARRAY_ALL);
@@ -916,7 +916,7 @@ void testReadPropertyMultipleAck(
     /* it was an error reply */
     test_len =
         bacerror_decode_error_class_and_code(&service_request[len],
-        service_request_len - len, &error_class, &error_code);
+                service_request_len - len, &error_class, &error_code);
     ct_test(pTest, test_len != 0);
     ct_test(pTest, error_class == ERROR_CLASS_PROPERTY);
     ct_test(pTest, error_code == ERROR_CODE_UNKNOWN_PROPERTY);
@@ -926,18 +926,18 @@ void testReadPropertyMultipleAck(
     /* is there another property? */
     test_len =
         rpm_ack_decode_object_property(&service_request[len],
-        service_request_len - len, &object_property, &array_index);
+                                       service_request_len - len, &object_property, &array_index);
     ct_test(pTest, test_len == -1);
     /* got an error -1, is it the end of this object? */
     test_len =
         rpm_ack_decode_object_end(&service_request[len],
-        service_request_len - len);
+                                  service_request_len - len);
     ct_test(pTest, test_len == 1);
     len += test_len;
     /* check for another object */
     test_len =
         rpm_ack_decode_object_id(&service_request[len],
-        service_request_len - len, &object_type, &object_instance);
+                                 service_request_len - len, &object_type, &object_instance);
     ct_test(pTest, test_len == 0);
     ct_test(pTest, len == service_request_len);
 }

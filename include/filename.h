@@ -25,7 +25,7 @@
 #define FILENAME_H
 
 
-    char *filename_remove_path(
-        const char *filename_in);
+const char *filename_remove_path(
+    const char *filename_in);
 
 #endif

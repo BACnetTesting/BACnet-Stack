@@ -52,33 +52,33 @@
         uint16_t minutes);
 
 /* encode service */
-    int dcc_encode_apdu(
-        uint8_t * apdu,
-        uint8_t invoke_id,
-        uint16_t timeDuration,  /* 0=optional */
-        BACNET_COMMUNICATION_ENABLE_DISABLE enable_disable,
-        BACNET_CHARACTER_STRING * password);    /* NULL=optional */
+int dcc_encode_apdu(
+    uint8_t * apdu,
+    uint8_t invoke_id,
+    uint16_t timeDuration,  /* 0=optional */
+    BACNET_COMMUNICATION_ENABLE_DISABLE enable_disable,
+    BACNET_CHARACTER_STRING * password);    /* NULL=optional */
 
 /* decode the service request only */
-    int dcc_decode_service_request(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        uint16_t * timeDuration,
-        BACNET_COMMUNICATION_ENABLE_DISABLE * enable_disable,
-        BACNET_CHARACTER_STRING * password);
+int dcc_decode_service_request(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    uint16_t * timeDuration,
+    BACNET_COMMUNICATION_ENABLE_DISABLE * enable_disable,
+    BACNET_CHARACTER_STRING * password);
 
 #ifdef TEST
 #include "ctest.h"
-    int dcc_decode_apdu(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        uint8_t * invoke_id,
-        uint16_t * timeDuration,
-        BACNET_COMMUNICATION_ENABLE_DISABLE * enable_disable,
-        BACNET_CHARACTER_STRING * password);
+int dcc_decode_apdu(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    uint8_t * invoke_id,
+    uint16_t * timeDuration,
+    BACNET_COMMUNICATION_ENABLE_DISABLE * enable_disable,
+    BACNET_CHARACTER_STRING * password);
 
-    void test_DeviceCommunicationControl(
-        Test * pTest);
+void test_DeviceCommunicationControl(
+    Test * pTest);
 #endif
 
 /** @defgroup RDMS  Device and Network Management Service BIBBs

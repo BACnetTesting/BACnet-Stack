@@ -27,30 +27,29 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+BACNET_REJECT_REASON reject_convert_error_code(
+    BACNET_ERROR_CODE error_code);
 
-    BACNET_REJECT_REASON reject_convert_error_code(
-        BACNET_ERROR_CODE error_code);
+int reject_encode_apdu(
+    uint8_t * apdu,
+    uint8_t invoke_id,
+    BACNET_REJECT_REASON reject_reason);
 
-    int reject_encode_apdu(
-        uint8_t * apdu,
-        uint8_t invoke_id,
-        uint8_t reject_reason);
-
-    int reject_decode_service_request(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        uint8_t * invoke_id,
-        uint8_t * reject_reason);
+int reject_decode_service_request(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    uint8_t * invoke_id,
+    BACNET_REJECT_REASON * reject_reason);
 
 #ifdef TEST
-    int reject_decode_apdu(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        uint8_t * invoke_id,
-        uint8_t * reject_reason);
+int reject_decode_apdu(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    uint8_t * invoke_id,
+    BACNET_REJECT_REASON * reject_reason);
 
-    void testReject(
-        Test * pTest);
+void testReject(
+    Test * pTest);
 #endif
 
 #endif

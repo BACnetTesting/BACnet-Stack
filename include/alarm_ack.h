@@ -53,28 +53,28 @@ typedef int (
 ** Creates a Alarm Acknowledge APDU
 **
 ****************************************************/
-    int alarm_ack_encode_apdu(
-        uint8_t * apdu,
-        uint8_t invoke_id,
-        BACNET_ALARM_ACK_DATA * data);
+int alarm_ack_encode_apdu(
+    uint8_t * apdu,
+    uint8_t invoke_id,
+    BACNET_ALARM_ACK_DATA * data);
 
 /***************************************************
 **
 ** Encodes the service data part of Alarm Acknowledge
 **
 ****************************************************/
-    int alarm_ack_encode_service_request(
-        uint8_t * apdu,
-        BACNET_ALARM_ACK_DATA * data);
+int alarm_ack_encode_service_request(
+    uint8_t * apdu,
+    BACNET_ALARM_ACK_DATA * data);
 
 /***************************************************
 **
 ** Decodes the service data part of Alarm Acknowledge
 **
 ****************************************************/
-    int alarm_ack_decode_service_request(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        BACNET_ALARM_ACK_DATA * data);
+int alarm_ack_decode_service_request(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    BACNET_ALARM_ACK_DATA * data);
 
 #endif /* ALARM_ACK_H_ */

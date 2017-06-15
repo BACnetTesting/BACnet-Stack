@@ -80,7 +80,7 @@ uint16_t(*datalink_receive) (BACNET_ADDRESS * src, uint8_t * pdu,
  */
 void (
     *datalink_cleanup) (
-    void);
+        void);
 
 void (
     *datalink_get_broadcast_address) (

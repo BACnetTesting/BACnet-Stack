@@ -74,17 +74,17 @@ void bacapp_timestamp_copy(
     if (dest && src) {
         dest->tag = src->tag;
         switch (src->tag) {
-            case TIME_STAMP_TIME:
-                datetime_copy_time(&dest->value.time, &src->value.time);
-                break;
-            case TIME_STAMP_SEQUENCE:
-                dest->value.sequenceNum = src->value.sequenceNum;
-                break;
-            case TIME_STAMP_DATETIME:
-                datetime_copy(&dest->value.dateTime, &src->value.dateTime);
-                break;
-            default:
-                break;
+        case TIME_STAMP_TIME:
+            datetime_copy_time(&dest->value.time, &src->value.time);
+            break;
+        case TIME_STAMP_SEQUENCE:
+            dest->value.sequenceNum = src->value.sequenceNum;
+            break;
+        case TIME_STAMP_DATETIME:
+            datetime_copy(&dest->value.dateTime, &src->value.dateTime);
+            break;
+        default:
+            break;
         }
     }
 }
@@ -97,26 +97,26 @@ int bacapp_encode_timestamp(
 
     if (value && apdu) {
         switch (value->tag) {
-            case TIME_STAMP_TIME:
-                len = encode_context_time(&apdu[0], 0, &value->value.time);
-                break;
+        case TIME_STAMP_TIME:
+            len = encode_context_time(&apdu[0], 0, &value->value.time);
+            break;
 
-            case TIME_STAMP_SEQUENCE:
-                len =
-                    encode_context_unsigned(&apdu[0], 1,
-                    value->value.sequenceNum);
-                break;
+        case TIME_STAMP_SEQUENCE:
+            len =
+                encode_context_unsigned(&apdu[0], 1,
+                                        value->value.sequenceNum);
+            break;
 
-            case TIME_STAMP_DATETIME:
-                len =
-                    bacapp_encode_context_datetime(&apdu[0], 2,
-                    &value->value.dateTime);
-                break;
+        case TIME_STAMP_DATETIME:
+            len =
+                bacapp_encode_context_datetime(&apdu[0], 2,
+                                               &value->value.dateTime);
+            break;
 
-            default:
-                len = 0;
-                assert(0);
-                break;
+        default:
+            len = 0;
+            assert(0);
+            break;
         }
     }
 
@@ -154,50 +154,50 @@ int bacapp_decode_timestamp(
     if (apdu) {
         section_len =
             decode_tag_number_and_value(&apdu[len], &value->tag,
-            &len_value_type);
+                                        &len_value_type);
 
         if (-1 == section_len) {
             return -1;
         }
         switch (value->tag) {
-            case TIME_STAMP_TIME:
-                if ((section_len =
-                        decode_context_bacnet_time(&apdu[len], TIME_STAMP_TIME,
-                            &value->value.time)) == -1) {
-                    return -1;
-                } else {
-                    len += section_len;
-                }
-                break;
-
-            case TIME_STAMP_SEQUENCE:
-                if ((section_len =
-                        decode_context_unsigned(&apdu[len],
-                            TIME_STAMP_SEQUENCE, &sequenceNum)) == -1) {
-                    return -1;
-                } else {
-                    if (sequenceNum <= 0xffff) {
-                        len += section_len;
-                        value->value.sequenceNum = (uint16_t) sequenceNum;
-                    } else {
-                        return -1;
-                    }
-                }
-                break;
-
-            case TIME_STAMP_DATETIME:
-                if ((section_len =
-                        bacapp_decode_context_datetime(&apdu[len],
-                            TIME_STAMP_DATETIME,
-                            &value->value.dateTime)) == -1) {
-                    return -1;
-                } else {
-                    len += section_len;
-                }
-                break;
-
-            default:
+        case TIME_STAMP_TIME:
+            if ((section_len =
+                     decode_context_bacnet_time(&apdu[len], TIME_STAMP_TIME,
+                                                &value->value.time)) == -1) {
                 return -1;
+            } else {
+                len += section_len;
+            }
+            break;
+
+        case TIME_STAMP_SEQUENCE:
+            if ((section_len =
+                     decode_context_unsigned(&apdu[len],
+                                             TIME_STAMP_SEQUENCE, &sequenceNum)) == -1) {
+                return -1;
+            } else {
+                if (sequenceNum <= 0xffff) {
+                    len += section_len;
+                    value->value.sequenceNum = (uint16_t) sequenceNum;
+                } else {
+                    return -1;
+                }
+            }
+            break;
+
+        case TIME_STAMP_DATETIME:
+            if ((section_len =
+                     bacapp_decode_context_datetime(&apdu[len],
+                                                    TIME_STAMP_DATETIME,
+                                                    &value->value.dateTime)) == -1) {
+                return -1;
+            } else {
+                len += section_len;
+            }
+            break;
+
+        default:
+            return -1;
         }
     }
 
@@ -256,8 +256,8 @@ void testTimestampSequence(
     ct_test(pTest, inLen == outLen);
     ct_test(pTest, testTimestampIn.tag == testTimestampOut.tag);
     ct_test(pTest,
-        testTimestampIn.value.sequenceNum ==
-        testTimestampOut.value.sequenceNum);
+            testTimestampIn.value.sequenceNum ==
+            testTimestampOut.value.sequenceNum);
 }
 
 void testTimestampTime(
@@ -284,14 +284,14 @@ void testTimestampTime(
     ct_test(pTest, inLen == outLen);
     ct_test(pTest, testTimestampIn.tag == testTimestampOut.tag);
     ct_test(pTest,
-        testTimestampIn.value.time.hour == testTimestampOut.value.time.hour);
+            testTimestampIn.value.time.hour == testTimestampOut.value.time.hour);
     ct_test(pTest,
-        testTimestampIn.value.time.min == testTimestampOut.value.time.min);
+            testTimestampIn.value.time.min == testTimestampOut.value.time.min);
     ct_test(pTest,
-        testTimestampIn.value.time.sec == testTimestampOut.value.time.sec);
+            testTimestampIn.value.time.sec == testTimestampOut.value.time.sec);
     ct_test(pTest,
-        testTimestampIn.value.time.hundredths ==
-        testTimestampOut.value.time.hundredths);
+            testTimestampIn.value.time.hundredths ==
+            testTimestampOut.value.time.hundredths);
 }
 
 void testTimestampTimeDate(
@@ -322,30 +322,30 @@ void testTimestampTimeDate(
     ct_test(pTest, inLen == outLen);
     ct_test(pTest, testTimestampIn.tag == testTimestampOut.tag);
     ct_test(pTest,
-        testTimestampIn.value.dateTime.time.hour ==
-        testTimestampOut.value.dateTime.time.hour);
+            testTimestampIn.value.dateTime.time.hour ==
+            testTimestampOut.value.dateTime.time.hour);
     ct_test(pTest,
-        testTimestampIn.value.dateTime.time.min ==
-        testTimestampOut.value.dateTime.time.min);
+            testTimestampIn.value.dateTime.time.min ==
+            testTimestampOut.value.dateTime.time.min);
     ct_test(pTest,
-        testTimestampIn.value.dateTime.time.sec ==
-        testTimestampOut.value.dateTime.time.sec);
+            testTimestampIn.value.dateTime.time.sec ==
+            testTimestampOut.value.dateTime.time.sec);
     ct_test(pTest,
-        testTimestampIn.value.dateTime.time.hundredths ==
-        testTimestampOut.value.dateTime.time.hundredths);
+            testTimestampIn.value.dateTime.time.hundredths ==
+            testTimestampOut.value.dateTime.time.hundredths);
 
     ct_test(pTest,
-        testTimestampIn.value.dateTime.date.year ==
-        testTimestampOut.value.dateTime.date.year);
+            testTimestampIn.value.dateTime.date.year ==
+            testTimestampOut.value.dateTime.date.year);
     ct_test(pTest,
-        testTimestampIn.value.dateTime.date.month ==
-        testTimestampOut.value.dateTime.date.month);
+            testTimestampIn.value.dateTime.date.month ==
+            testTimestampOut.value.dateTime.date.month);
     ct_test(pTest,
-        testTimestampIn.value.dateTime.date.wday ==
-        testTimestampOut.value.dateTime.date.wday);
+            testTimestampIn.value.dateTime.date.wday ==
+            testTimestampOut.value.dateTime.date.wday);
     ct_test(pTest,
-        testTimestampIn.value.dateTime.date.day ==
-        testTimestampOut.value.dateTime.date.day);
+            testTimestampIn.value.dateTime.date.day ==
+            testTimestampOut.value.dateTime.date.day);
 
 }
 

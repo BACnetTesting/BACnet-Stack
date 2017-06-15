@@ -27,33 +27,32 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+BACNET_ABORT_REASON abort_convert_error_code(
+    BACNET_ERROR_CODE error_code);
 
-    BACNET_ABORT_REASON abort_convert_error_code(
-        BACNET_ERROR_CODE error_code);
+int abort_encode_apdu(
+    uint8_t * apdu,
+    uint8_t invoke_id,
+    BACNET_ABORT_REASON abort_reason,
+    bool server);
 
-    int abort_encode_apdu(
-        uint8_t * apdu,
-        uint8_t invoke_id,
-        uint8_t abort_reason,
-        bool server);
-
-    int abort_decode_service_request(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        uint8_t * invoke_id,
-        uint8_t * abort_reason);
+int abort_decode_service_request(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    uint8_t * invoke_id,
+    BACNET_ABORT_REASON * abort_reason);
 
 #ifdef TEST
 #include "ctest.h"
-    int abort_decode_apdu(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        uint8_t * invoke_id,
-        uint8_t * abort_reason,
-        bool * server);
+int abort_decode_apdu(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    uint8_t * invoke_id,
+    uint8_t * abort_reason,
+    bool * server);
 
-    void testAbort(
-        Test * pTest);
+void testAbort(
+    Test * pTest);
 #endif
 
 #endif

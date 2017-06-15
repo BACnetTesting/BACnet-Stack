@@ -118,13 +118,13 @@ int lso_decode_service_request(
         if (decode_is_context_tag(&apdu[len], 3)) {
             if ((section_length =
                     decode_context_object_id(&apdu[len], 3,
-                        &data->targetObject.type,
-                        &data->targetObject.instance)) == -1) {
+                                                 &data->targetObject.type,
+                                                 &data->targetObject.instance)) == -1) {
                 return -1;
             }
             len += section_length;
         } else {
-            data->targetObject.type = 0;
+            data->targetObject.type = OBJECT_ANALOG_INPUT ;
             data->targetObject.instance = 0;
         }
         return len;

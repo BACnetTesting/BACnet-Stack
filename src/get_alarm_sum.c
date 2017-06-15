@@ -44,8 +44,8 @@
 
 /* encode service */
 int get_alarm_summary_encode_apdu(
-        uint8_t * apdu,
-        uint8_t invoke_id
+    uint8_t * apdu,
+    uint8_t invoke_id
         ) {
     int apdu_len = 0; /* total length of the apdu, return value */
 
@@ -104,16 +104,16 @@ int get_alarm_summary_ack_encode_apdu_data(
         /* tag 0 - Object Identifier */
         apdu_len +=
             encode_application_object_id(&apdu[apdu_len],
-            (int) get_alarm_data->objectIdentifier.type,
-            get_alarm_data->objectIdentifier.instance);
+                                         get_alarm_data->objectIdentifier.type,
+                                         get_alarm_data->objectIdentifier.instance);
         /* tag 1 - Alarm State */
         apdu_len +=
             encode_application_enumerated(&apdu[apdu_len],
-            get_alarm_data->alarmState);
+                                          get_alarm_data->alarmState);
         /* tag 2 - Acknowledged Transitions */
         apdu_len +=
             encode_application_bitstring(&apdu[apdu_len],
-            &get_alarm_data->acknowledgedTransitions);
+                                         &get_alarm_data->acknowledgedTransitions);
     } else {
         apdu_len = BACNET_STATUS_ABORT;
     }

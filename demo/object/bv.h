@@ -45,7 +45,7 @@
     unsigned Binary_Value_Count(
         void);
     uint32_t Binary_Value_Index_To_Instance(
-        unsigned index);
+        unsigned objectIndex);
     unsigned Binary_Value_Instance_To_Index(
         uint32_t object_instance);
     bool Binary_Value_Object_Instance_Add(

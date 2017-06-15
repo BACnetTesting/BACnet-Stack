@@ -165,7 +165,7 @@ uint8_t Send_COV_Subscribe(
             if (bytes_sent <= 0) {
 #if PRINT_ENABLED
                 fprintf(stderr, "Failed to Send SubscribeCOV Request (%s)!\n",
-                    strerror(errno));
+                        strerror(errno));
 #endif
             }
         } else {
@@ -173,8 +173,8 @@ uint8_t Send_COV_Subscribe(
             invoke_id = 0;
 #if PRINT_ENABLED
             fprintf(stderr,
-                "Failed to Send SubscribeCOV Request "
-                "(exceeds destination maximum APDU)!\n");
+                    "Failed to Send SubscribeCOV Request "
+                    "(exceeds destination maximum APDU)!\n");
 #endif
         }
     }

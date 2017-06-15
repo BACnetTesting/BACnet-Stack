@@ -13,9 +13,9 @@
  GNU General Public License for more details.
 
  You should have received a copy of the GNU General Public License
- along with this program; if not, write to 
+ along with this program; if not, write to
  The Free Software Foundation, Inc.
- 59 Temple Place - Suite 330 
+ 59 Temple Place - Suite 330
  Boston, MA  02111-1307, USA.
 
  As a special exception, if other files instantiate templates or
@@ -57,6 +57,7 @@ int stricmp(
     return (int) c1 - c2;
 }
 #endif
+
 #if defined(_MSC_VER)
 #define stricmp _stricmp
 #endif
@@ -167,7 +168,7 @@ const char *indtext_by_index_split_default(
 {
     if (index < split_index)
         return indtext_by_index_default(data_list, index,
-            before_split_default_name);
+                                        before_split_default_name);
     else
         return indtext_by_index_default(data_list, index, default_name);
 }

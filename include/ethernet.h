@@ -35,11 +35,11 @@
 #define MAX_MPDU (MAX_HEADER+MAX_PDU)
 
 
-    bool ethernet_valid(
-        void);
-    void ethernet_cleanup(
-        void);
-    bool ethernet_init(
+bool ethernet_valid(
+    void);
+void ethernet_cleanup(
+    void);
+bool ethernet_init(
         char *interface_name);
 
 /* function to send a packet out the 802.2 socket */

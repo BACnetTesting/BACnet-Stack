@@ -36,35 +36,34 @@ typedef struct BACnet_Reinitialize_Device_Data {
 
 typedef bool(
     *reinitialize_device_function) (
-    BACNET_REINITIALIZE_DEVICE_DATA * rd_data);
-
+        BACNET_REINITIALIZE_DEVICE_DATA * rd_data);
 
 
 /* encode service */
-    int rd_encode_apdu(
-        uint8_t * apdu,
-        uint8_t invoke_id,
-        BACNET_REINITIALIZED_STATE state,
-        BACNET_CHARACTER_STRING * password);
+int rd_encode_apdu(
+    uint8_t * apdu,
+    uint8_t invoke_id,
+    BACNET_REINITIALIZED_STATE state,
+    BACNET_CHARACTER_STRING * password);
 
 /* decode the service request only */
-    int rd_decode_service_request(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        BACNET_REINITIALIZED_STATE * state,
-        BACNET_CHARACTER_STRING * password);
+int rd_decode_service_request(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    BACNET_REINITIALIZED_STATE * state,
+    BACNET_CHARACTER_STRING * password);
 
 #ifdef TEST
 #include "ctest.h"
-    int rd_decode_apdu(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        uint8_t * invoke_id,
-        BACNET_REINITIALIZED_STATE * state,
-        BACNET_CHARACTER_STRING * password);
+int rd_decode_apdu(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    uint8_t * invoke_id,
+    BACNET_REINITIALIZED_STATE * state,
+    BACNET_CHARACTER_STRING * password);
 
-    void test_ReinitializeDevice(
-        Test * pTest);
+void test_ReinitializeDevice(
+    Test * pTest);
 #endif
 
 /** @defgroup DMRD Device Management-ReinitializeDevice (DM-RD)

@@ -70,33 +70,33 @@
     uint32_t bacfile_instance_from_tsm(
         uint8_t invokeID);
 
-    /* handler ACK helper */
-    bool bacfile_read_stream_data(
-        BACNET_ATOMIC_READ_FILE_DATA * data);
-    bool bacfile_read_ack_stream_data(
-        uint32_t instance,
-        BACNET_ATOMIC_READ_FILE_DATA * data);
-    bool bacfile_write_stream_data(
-        BACNET_ATOMIC_WRITE_FILE_DATA * data);
-    bool bacfile_read_record_data(
-        BACNET_ATOMIC_READ_FILE_DATA * data);
-    bool bacfile_read_ack_record_data(
-        uint32_t instance,
-        BACNET_ATOMIC_READ_FILE_DATA * data);
-    bool bacfile_write_record_data(
-        BACNET_ATOMIC_WRITE_FILE_DATA * data);
+/* handler ACK helper */
+bool bacfile_read_stream_data(
+    BACNET_ATOMIC_READ_FILE_DATA * data);
+bool bacfile_read_ack_stream_data(
+    uint32_t instance,
+    BACNET_ATOMIC_READ_FILE_DATA * data);
+bool bacfile_write_stream_data(
+    BACNET_ATOMIC_WRITE_FILE_DATA * data);
+bool bacfile_read_record_data(
+    BACNET_ATOMIC_READ_FILE_DATA * data);
+bool bacfile_read_ack_record_data(
+    uint32_t instance,
+    BACNET_ATOMIC_READ_FILE_DATA * data);
+bool bacfile_write_record_data(
+    BACNET_ATOMIC_WRITE_FILE_DATA * data);
 
-    void bacfile_init(
-        void);
-    uint32_t bacfile_file_size(
-        uint32_t instance);
+void bacfile_init(
+    void);
+uint32_t bacfile_file_size(
+    uint32_t instance);
 
-    /* handling for read property service */
-    int bacfile_read_property(
-        BACNET_READ_PROPERTY_DATA * rpdata);
+/* handling for read property service */
+int bacfile_read_property(
+    BACNET_READ_PROPERTY_DATA * rpdata);
 
-    /* handling for write property service */
-    bool bacfile_write_property(
-        BACNET_WRITE_PROPERTY_DATA * wp_data);
+/* handling for write property service */
+bool bacfile_write_property(
+    BACNET_WRITE_PROPERTY_DATA * wp_data);
 
 #endif

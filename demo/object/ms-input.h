@@ -33,95 +33,95 @@
 #include "wp.h"
 
 
-    void Multistate_Input_Property_Lists(
-        const int **pRequired,
-        const int **pOptional,
-        const int **pProprietary);
+void Multistate_Input_Property_Lists(
+    const int **pRequired,
+    const int **pOptional,
+    const int **pProprietary);
 
-    bool Multistate_Input_Valid_Instance(
-        uint32_t object_instance);
-    unsigned Multistate_Input_Count(
-        void);
-    uint32_t Multistate_Input_Index_To_Instance(
-        unsigned index);
-    unsigned Multistate_Input_Instance_To_Index(
-        uint32_t instance);
+bool Multistate_Input_Valid_Instance(
+    uint32_t object_instance);
+unsigned Multistate_Input_Count(
+    void);
+uint32_t Multistate_Input_Index_To_Instance(
+    unsigned index);
+unsigned Multistate_Input_Instance_To_Index(
+    uint32_t instance);
 
-    int Multistate_Input_Read_Property(
-        BACNET_READ_PROPERTY_DATA * rpdata);
+int Multistate_Input_Read_Property(
+    BACNET_READ_PROPERTY_DATA * rpdata);
 
     bool Multistate_Input_Write_Property(
         BACNET_WRITE_PROPERTY_DATA * wp_data);
 
-    /* optional API */
-    bool Multistate_Input_Object_Instance_Add(
-        uint32_t instance);
+/* optional API */
+bool Multistate_Input_Object_Instance_Add(
+    uint32_t instance);
 
-    bool Multistate_Input_Object_Name(
-        uint32_t object_instance,
-        BACNET_CHARACTER_STRING * object_name);
-    bool Multistate_Input_Name_Set(
-        uint32_t object_instance,
-        char *new_name);
+bool Multistate_Input_Object_Name(
+    uint32_t object_instance,
+    BACNET_CHARACTER_STRING * object_name);
+bool Multistate_Input_Name_Set(
+    uint32_t object_instance,
+    char *new_name);
 
-    uint32_t Multistate_Input_Present_Value(
-        uint32_t object_instance);
-    bool Multistate_Input_Present_Value_Set(
-        uint32_t object_instance,
-        uint32_t value);
+uint32_t Multistate_Input_Present_Value(
+    uint32_t object_instance);
+bool Multistate_Input_Present_Value_Set(
+    uint32_t object_instance,
+    uint32_t value);
 
-    bool Multistate_Input_Change_Of_Value(
-        uint32_t instance);
-    void Multistate_Input_Change_Of_Value_Clear(
-        uint32_t instance);
-    bool Multistate_Input_Encode_Value_List(
-        uint32_t object_instance,
-        BACNET_PROPERTY_VALUE * value_list);
+bool Multistate_Input_Change_Of_Value(
+    uint32_t instance);
+void Multistate_Input_Change_Of_Value_Clear(
+    uint32_t instance);
+bool Multistate_Input_Encode_Value_List(
+    uint32_t object_instance,
+    BACNET_PROPERTY_VALUE * value_list);
 
-    bool Multistate_Input_Out_Of_Service(
-        uint32_t object_instance);
-    void Multistate_Input_Out_Of_Service_Set(
-        uint32_t object_instance,
-        bool value);
+bool Multistate_Input_Out_Of_Service(
+    uint32_t object_instance);
+void Multistate_Input_Out_Of_Service_Set(
+    uint32_t object_instance,
+    bool value);
 
-    char *Multistate_Input_Description(
-        uint32_t instance);
-    bool Multistate_Input_Description_Set(
-        uint32_t object_instance,
-        char *text_string);
+char *Multistate_Input_Description(
+    uint32_t instance);
+bool Multistate_Input_Description_Set(
+    uint32_t object_instance,
+    char *text_string);
 
-    BACNET_RELIABILITY Multistate_Input_Reliability(
-        uint32_t object_instance);
-    bool Multistate_Input_Reliability_Set(
-        uint32_t object_instance,
-        BACNET_RELIABILITY value);
+BACNET_RELIABILITY Multistate_Input_Reliability(
+    uint32_t object_instance);
+bool Multistate_Input_Reliability_Set(
+    uint32_t object_instance,
+    BACNET_RELIABILITY value);
 
-    bool Multistate_Input_State_Text_Set(
-        uint32_t object_instance,
-        uint32_t state_index,
-        char *new_name);
-    bool Multistate_Input_Max_States_Set(
-        uint32_t instance,
-        uint32_t max_states_requested);
-    char *Multistate_Input_State_Text(
-        uint32_t object_instance,
-        uint32_t state_index);
+bool Multistate_Input_State_Text_Set(
+    uint32_t object_instance,
+    uint32_t state_index,
+    char *new_name);
+bool Multistate_Input_Max_States_Set(
+    uint32_t instance,
+    uint32_t max_states_requested);
+char *Multistate_Input_State_Text(
+    uint32_t object_instance,
+    uint32_t state_index);
 
-    bool Multistate_Input_Create(
-        uint32_t object_instance);
-    bool Multistate_Input_Delete(
-        uint32_t object_instance);
-    void Multistate_Input_Cleanup(
-        void);
+bool Multistate_Input_Create(
+    uint32_t object_instance);
+bool Multistate_Input_Delete(
+    uint32_t object_instance);
+void Multistate_Input_Cleanup(
+    void);
 
-    void Multistate_Input_Init(
-        void);
+void Multistate_Input_Init(
+    void);
 
 
 #ifdef TEST
 #include "ctest.h"
-    void testMultistateInput(
-        Test * pTest);
+void testMultistateInput(
+    Test * pTest);
 #endif
 
 #endif

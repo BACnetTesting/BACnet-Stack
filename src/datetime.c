@@ -271,7 +271,7 @@ void datetime_days_since_epoch_into_date(
 
 /* Jan 1, 1900 is a Monday */
 /* wday 1=Monday...7=Sunday */
-uint8_t datetime_day_of_week(
+BACNET_WEEKDAY datetime_day_of_week(
     uint16_t year,
     uint8_t month,
     uint8_t day)
@@ -280,7 +280,7 @@ uint8_t datetime_day_of_week(
 
     dow += (days_since_epoch(year, month, day) % 7);
 
-    return dow;
+    return (BACNET_WEEKDAY) dow;
 }
 
 bool datetime_time_is_valid(
@@ -442,12 +442,12 @@ int datetime_wildcard_compare(
     int diff = 0;
 
     diff = datetime_wildcard_compare_date(
-        &datetime1->date,
-        &datetime2->date);
+               &datetime1->date,
+               &datetime2->date);
     if (diff == 0) {
         diff = datetime_wildcard_compare_time(
-            &datetime1->time,
-            &datetime2->time);
+                   &datetime1->time,
+                   &datetime2->time);
     }
 
     return diff;
@@ -774,7 +774,7 @@ void datetime_wildcard_weekday_set(
     BACNET_DATE *bdate)
 {
     if (bdate) {
-        bdate->wday = 0xFF;
+        bdate->wday = BACNET_WEEKDAY_ANY;
     }
 }
 
@@ -925,7 +925,7 @@ void datetime_date_wildcard_set(
         bdate->year = BACNET_EPOCH_YEAR + 0xFF;
         bdate->month = 0xFF;
         bdate->day = 0xFF;
-        bdate->wday = 0xFF;
+        bdate->wday = BACNET_WEEKDAY_ANY;
     }
 }
 
@@ -936,7 +936,7 @@ void datetime_time_wildcard_set(
         btime->hour = 0xFF;
         btime->min = 0xFF;
         btime->sec = 0xFF;
-        btime->hundredths = 0xFF;
+        btime->hundredths = BACNET_WEEKDAY_ANY ;
     }
 }
 

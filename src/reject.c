@@ -52,40 +52,40 @@ BACNET_REJECT_REASON reject_convert_error_code(
     BACNET_REJECT_REASON reject_code = REJECT_REASON_OTHER;
 
     switch (error_code) {
-        case ERROR_CODE_REJECT_BUFFER_OVERFLOW:
-            reject_code = REJECT_REASON_BUFFER_OVERFLOW;
-            break;
-        case ERROR_CODE_REJECT_INCONSISTENT_PARAMETERS:
-            reject_code = REJECT_REASON_INCONSISTENT_PARAMETERS;
-            break;
-        case ERROR_CODE_REJECT_INVALID_PARAMETER_DATA_TYPE:
-            reject_code = REJECT_REASON_INVALID_PARAMETER_DATA_TYPE;
-            break;
-        case ERROR_CODE_REJECT_INVALID_TAG:
-            reject_code = REJECT_REASON_INVALID_TAG;
-            break;
-        case ERROR_CODE_REJECT_MISSING_REQUIRED_PARAMETER:
-            reject_code = REJECT_REASON_MISSING_REQUIRED_PARAMETER;
-            break;
-        case ERROR_CODE_REJECT_PARAMETER_OUT_OF_RANGE:
-            reject_code = REJECT_REASON_PARAMETER_OUT_OF_RANGE;
-            break;
-        case ERROR_CODE_REJECT_TOO_MANY_ARGUMENTS:
-            reject_code = REJECT_REASON_TOO_MANY_ARGUMENTS;
-            break;
-        case ERROR_CODE_REJECT_UNDEFINED_ENUMERATION:
-            reject_code = REJECT_REASON_UNDEFINED_ENUMERATION;
-            break;
-        case ERROR_CODE_REJECT_UNRECOGNIZED_SERVICE:
-            reject_code = REJECT_REASON_UNRECOGNIZED_SERVICE;
-            break;
-        case ERROR_CODE_REJECT_PROPRIETARY:
-            reject_code = REJECT_REASON_PROPRIETARY_FIRST;
-            break;
-        case ERROR_CODE_REJECT_OTHER:
-        default:
-            reject_code = REJECT_REASON_OTHER;
-            break;
+    case ERROR_CODE_REJECT_BUFFER_OVERFLOW:
+        reject_code = REJECT_REASON_BUFFER_OVERFLOW;
+        break;
+    case ERROR_CODE_REJECT_INCONSISTENT_PARAMETERS:
+        reject_code = REJECT_REASON_INCONSISTENT_PARAMETERS;
+        break;
+    case ERROR_CODE_REJECT_INVALID_PARAMETER_DATA_TYPE:
+        reject_code = REJECT_REASON_INVALID_PARAMETER_DATA_TYPE;
+        break;
+    case ERROR_CODE_REJECT_INVALID_TAG:
+        reject_code = REJECT_REASON_INVALID_TAG;
+        break;
+    case ERROR_CODE_REJECT_MISSING_REQUIRED_PARAMETER:
+        reject_code = REJECT_REASON_MISSING_REQUIRED_PARAMETER;
+        break;
+    case ERROR_CODE_REJECT_PARAMETER_OUT_OF_RANGE:
+        reject_code = REJECT_REASON_PARAMETER_OUT_OF_RANGE;
+        break;
+    case ERROR_CODE_REJECT_TOO_MANY_ARGUMENTS:
+        reject_code = REJECT_REASON_TOO_MANY_ARGUMENTS;
+        break;
+    case ERROR_CODE_REJECT_UNDEFINED_ENUMERATION:
+        reject_code = REJECT_REASON_UNDEFINED_ENUMERATION;
+        break;
+    case ERROR_CODE_REJECT_UNRECOGNIZED_SERVICE:
+        reject_code = REJECT_REASON_UNRECOGNIZED_SERVICE;
+        break;
+    case ERROR_CODE_REJECT_PROPRIETARY:
+        reject_code = REJECT_REASON_PROPRIETARY_FIRST;
+        break;
+    case ERROR_CODE_REJECT_OTHER:
+    default:
+        reject_code = REJECT_REASON_OTHER;
+        break;
     }
 
     return (reject_code);
@@ -153,7 +153,7 @@ int reject_decode_apdu(
         if (apdu_len > 1) {
             len =
                 reject_decode_service_request(&apdu[1], apdu_len - 1,
-                invoke_id, reject_reason);
+                                              invoke_id, reject_reason);
         }
     }
 
@@ -177,7 +177,7 @@ void testReject(
 
     len =
         reject_decode_apdu(&apdu[0], apdu_len, &test_invoke_id,
-        &test_reject_reason);
+                           &test_reject_reason);
     ct_test(pTest, len != -1);
     ct_test(pTest, test_invoke_id == invoke_id);
     ct_test(pTest, test_reject_reason == reject_reason);
@@ -186,13 +186,13 @@ void testReject(
     apdu[0] = PDU_TYPE_ABORT;
     len =
         reject_decode_apdu(&apdu[0], apdu_len, &test_invoke_id,
-        &test_reject_reason);
+                           &test_reject_reason);
     ct_test(pTest, len == -1);
 
     /* test NULL APDU */
     len =
         reject_decode_apdu(NULL, apdu_len, &test_invoke_id,
-        &test_reject_reason);
+                           &test_reject_reason);
     ct_test(pTest, len == -1);
 
     /* force a zero length */
@@ -209,7 +209,7 @@ void testReject(
             ct_test(pTest, len != 0);
             len =
                 reject_decode_apdu(&apdu[0], apdu_len, &test_invoke_id,
-                &test_reject_reason);
+                                   &test_reject_reason);
             ct_test(pTest, len != -1);
             ct_test(pTest, test_invoke_id == invoke_id);
             ct_test(pTest, test_reject_reason == reject_reason);

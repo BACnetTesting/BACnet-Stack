@@ -53,42 +53,42 @@ typedef struct BACnet_Recipient_List {
     int timesync_encode_apdu(
         uint8_t * apdu,
         BACNET_DATE * my_date,
-        BACNET_TIME * my_time);
-    int timesync_encode_apdu_service(
-        uint8_t * apdu,
-        BACNET_UNCONFIRMED_SERVICE service,
-        BACNET_DATE * my_date,
-        BACNET_TIME * my_time);
-    /* decode the service request only */
-    int timesync_decode_service_request(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        BACNET_DATE * my_date,
-        BACNET_TIME * my_time);
-    int timesync_utc_decode_apdu(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        BACNET_DATE * my_date,
-        BACNET_TIME * my_time);
-    int timesync_decode_apdu(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        BACNET_DATE * my_date,
-        BACNET_TIME * my_time);
+    BACNET_TIME * my_time);
+int timesync_encode_apdu_service(
+    uint8_t * apdu,
+    BACNET_UNCONFIRMED_SERVICE service,
+    BACNET_DATE * my_date,
+    BACNET_TIME * my_time);
+/* decode the service request only */
+int timesync_decode_service_request(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    BACNET_DATE * my_date,
+    BACNET_TIME * my_time);
+int timesync_utc_decode_apdu(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    BACNET_DATE * my_date,
+    BACNET_TIME * my_time);
+int timesync_decode_apdu(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    BACNET_DATE * my_date,
+    BACNET_TIME * my_time);
 
-    int timesync_encode_timesync_recipients(
-        uint8_t * apdu,
-        unsigned max_apdu,
-        BACNET_RECIPIENT_LIST * recipient);
-    int timesync_decode_timesync_recipients(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        BACNET_RECIPIENT_LIST * recipient);
+int timesync_encode_timesync_recipients(
+    uint8_t * apdu,
+    unsigned max_apdu,
+    BACNET_RECIPIENT_LIST * recipient);
+int timesync_decode_timesync_recipients(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    BACNET_RECIPIENT_LIST * recipient);
 
 #ifdef TEST
 #include "ctest.h"
-    void testTimeSync(
-        Test * pTest);
+void testTimeSync(
+    Test * pTest);
 #endif
 
 #endif /* TIMESYNC_H */

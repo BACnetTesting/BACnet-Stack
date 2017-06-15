@@ -164,87 +164,89 @@
 /* from clause 20.2.14 Encoding of an Object Identifier Value */
 /* and 20.2.1 General Rules for Encoding BACnet Tags */
 /* returns the number of apdu bytes consumed */
-    int decode_object_id(
-        uint8_t * apdu,
-        uint16_t * object_type,
-        uint32_t * instance);
+int decode_object_id(
+    uint8_t * apdu,
+    BACNET_OBJECT_TYPE * object_type,
+    uint32_t * instance);
 
-    int decode_object_id_safe(
-        uint8_t * apdu,
-        uint32_t len_value,
-        uint16_t * object_type,
-        uint32_t * instance);
+int decode_object_id_safe(
+    uint8_t * apdu,
+    uint32_t len_value,
+    BACNET_OBJECT_TYPE * object_type,
+    uint32_t * instance);
 
-    int decode_context_object_id(
-        uint8_t * apdu,
-        uint8_t tag_number,
-        uint16_t * object_type,
-        uint32_t * instance);
+int decode_context_object_id(
+    uint8_t * apdu,
+    uint8_t tag_number,
+    BACNET_OBJECT_TYPE * object_type,
+    uint32_t * instance);
 
-    int encode_bacnet_object_id(
-        uint8_t * apdu,
-        int object_type,
-        uint32_t instance);
-    int encode_context_object_id(
-        uint8_t * apdu,
-        uint8_t tag_number,
-        int object_type,
-        uint32_t instance);
-    int encode_application_object_id(
-        uint8_t * apdu,
-        int object_type,
-        uint32_t instance);
+int encode_bacnet_object_id(
+    uint8_t * apdu,
+    BACNET_OBJECT_TYPE object_type,
+    uint32_t instance);
+
+int encode_context_object_id(
+    uint8_t * apdu,
+    uint8_t tag_number,
+    BACNET_OBJECT_TYPE object_type,
+    uint32_t instance);
+
+int encode_application_object_id(
+    uint8_t * apdu,
+    BACNET_OBJECT_TYPE object_type,
+    uint32_t instance);
 
 /* from clause 20.2.8 Encoding of an Octet String Value */
 /* and 20.2.1 General Rules for Encoding BACnet Tags */
 /* returns the number of apdu bytes consumed */
-    int encode_octet_string(
-        uint8_t * apdu,
-        BACNET_OCTET_STRING * octet_string);
-    int encode_application_octet_string(
-        uint8_t * apdu,
-        BACNET_OCTET_STRING * octet_string);
-    int encode_context_octet_string(
-        uint8_t * apdu,
-        uint8_t tag_number,
-        BACNET_OCTET_STRING * octet_string);
-    int decode_octet_string(
-        uint8_t * apdu,
-        uint32_t len_value,
-        BACNET_OCTET_STRING * octet_string);
-    int decode_context_octet_string(
-        uint8_t * apdu,
-        uint8_t tag_number,
-        BACNET_OCTET_STRING * octet_string);
+int encode_octet_string(
+    uint8_t * apdu,
+    BACNET_OCTET_STRING * octet_string);
+int encode_application_octet_string(
+    uint8_t * apdu,
+    BACNET_OCTET_STRING * octet_string);
+int encode_context_octet_string(
+    uint8_t * apdu,
+    uint8_t tag_number,
+    BACNET_OCTET_STRING * octet_string);
+int decode_octet_string(
+    uint8_t * apdu,
+    uint32_t len_value,
+    BACNET_OCTET_STRING * octet_string);
+int decode_context_octet_string(
+    uint8_t * apdu,
+    uint8_t tag_number,
+    BACNET_OCTET_STRING * octet_string);
 
 
 /* from clause 20.2.9 Encoding of a Character String Value */
 /* and 20.2.1 General Rules for Encoding BACnet Tags */
 /* returns the number of apdu bytes consumed */
-    uint32_t encode_bacnet_character_string_safe(
-        uint8_t * apdu,
-        uint32_t max_apdu,
-        uint8_t encoding,
-        char *pString,
-        uint32_t length);
-    int encode_bacnet_character_string(
-        uint8_t * apdu,
-        BACNET_CHARACTER_STRING * char_string);
-    int encode_application_character_string(
-        uint8_t * apdu,
-        BACNET_CHARACTER_STRING * char_string);
-    int encode_context_character_string(
-        uint8_t * apdu,
-        uint8_t tag_number,
-        BACNET_CHARACTER_STRING * char_string);
-    int decode_character_string(
-        uint8_t * apdu,
-        uint32_t len_value,
-        BACNET_CHARACTER_STRING * char_string);
-    int decode_context_character_string(
-        uint8_t * apdu,
-        uint8_t tag_number,
-        BACNET_CHARACTER_STRING * char_string);
+uint32_t encode_bacnet_character_string_safe(
+    uint8_t * apdu,
+    uint32_t max_apdu,
+    uint8_t encoding,
+    char *pString,
+    uint32_t length);
+int encode_bacnet_character_string(
+    uint8_t * apdu,
+    BACNET_CHARACTER_STRING * char_string);
+int encode_application_character_string(
+    uint8_t * apdu,
+    BACNET_CHARACTER_STRING * char_string);
+int encode_context_character_string(
+    uint8_t * apdu,
+    uint8_t tag_number,
+    BACNET_CHARACTER_STRING * char_string);
+int decode_character_string(
+    uint8_t * apdu,
+    uint32_t len_value,
+    BACNET_CHARACTER_STRING * char_string);
+int decode_context_character_string(
+    uint8_t * apdu,
+    uint8_t tag_number,
+    BACNET_CHARACTER_STRING * char_string);
 
 
 /* from clause 20.2.4 Encoding of an Unsigned Integer Value */
@@ -272,75 +274,75 @@
 /* from clause 20.2.5 Encoding of a Signed Integer Value */
 /* and 20.2.1 General Rules for Encoding BACnet Tags */
 /* returns the number of apdu bytes consumed */
-    int encode_bacnet_signed(
-        uint8_t * apdu,
-        int32_t value);
-    int encode_application_signed(
-        uint8_t * apdu,
-        int32_t value);
-    int encode_context_signed(
-        uint8_t * apdu,
-        uint8_t tag_number,
-        int32_t value);
-    int decode_signed(
-        uint8_t * apdu,
-        uint32_t len_value,
-        int32_t * value);
-    int decode_context_signed(
-        uint8_t * apdu,
-        uint8_t tag_number,
-        int32_t * value);
+int encode_bacnet_signed(
+    uint8_t * apdu,
+    int32_t value);
+int encode_application_signed(
+    uint8_t * apdu,
+    int32_t value);
+int encode_context_signed(
+    uint8_t * apdu,
+    uint8_t tag_number,
+    int32_t value);
+int decode_signed(
+    uint8_t * apdu,
+    uint32_t len_value,
+    int32_t * value);
+int decode_context_signed(
+    uint8_t * apdu,
+    uint8_t tag_number,
+    int32_t * value);
 
 
 /* from clause 20.2.11 Encoding of an Enumerated Value */
 /* and 20.2.1 General Rules for Encoding BACnet Tags */
 /* returns the number of apdu bytes consumed */
-    int decode_enumerated(
-        uint8_t * apdu,
-        uint32_t len_value,
-        uint32_t * value);
-    int decode_context_enumerated(
-        uint8_t * apdu,
-        uint8_t tag_value,
-        uint32_t * value);
-    int encode_bacnet_enumerated(
-        uint8_t * apdu,
-        uint32_t value);
-    int encode_application_enumerated(
-        uint8_t * apdu,
-        uint32_t value);
-    int encode_context_enumerated(
-        uint8_t * apdu,
-        uint8_t tag_number,
-        uint32_t value);
+int decode_enumerated(
+    uint8_t * apdu,
+    uint32_t len_value,
+    uint32_t * value);
+int decode_context_enumerated(
+    uint8_t * apdu,
+    uint8_t tag_value,
+    uint32_t * value);
+int encode_bacnet_enumerated(
+    uint8_t * apdu,
+    uint32_t value);
+int encode_application_enumerated(
+    uint8_t * apdu,
+    uint32_t value);
+int encode_context_enumerated(
+    uint8_t * apdu,
+    uint8_t tag_number,
+    uint32_t value);
 
 /* from clause 20.2.13 Encoding of a Time Value */
 /* and 20.2.1 General Rules for Encoding BACnet Tags */
 /* returns the number of apdu bytes consumed */
-    int encode_bacnet_time(
-        uint8_t * apdu,
-        BACNET_TIME * btime);
-    int encode_application_time(
-        uint8_t * apdu,
-        BACNET_TIME * btime);
-    int decode_bacnet_time(
-        uint8_t * apdu,
-        BACNET_TIME * btime);
-    int decode_bacnet_time_safe(
-        uint8_t * apdu,
-        uint32_t len_value,
-        BACNET_TIME * btime);
-    int encode_context_time(
-        uint8_t * apdu,
-        uint8_t tag_number,
-        BACNET_TIME * btime);
-    int decode_application_time(
-        uint8_t * apdu,
-        BACNET_TIME * btime);
-    int decode_context_bacnet_time(
-        uint8_t * apdu,
-        uint8_t tag_number,
-        BACNET_TIME * btime);
+int encode_bacnet_time(
+    uint8_t * apdu,
+    BACNET_TIME * btime);
+int encode_application_time(
+    uint8_t * apdu,
+    BACNET_TIME * btime);
+int decode_bacnet_time(
+    uint8_t * apdu,
+    BACNET_TIME * btime);
+int decode_bacnet_time_safe(
+    uint8_t * apdu,
+    uint32_t len_value,
+    BACNET_TIME * btime);
+int encode_context_time(
+    uint8_t * apdu,
+    uint8_t tag_number,
+    BACNET_TIME * btime);
+int decode_application_time(
+    uint8_t * apdu,
+    BACNET_TIME * btime);
+int decode_context_bacnet_time(
+    uint8_t * apdu,
+    uint8_t tag_number,
+    BACNET_TIME * btime);
 
 
 /* BACnet Date */
@@ -352,47 +354,47 @@
 /* from clause 20.2.12 Encoding of a Date Value */
 /* and 20.2.1 General Rules for Encoding BACnet Tags */
 /* returns the number of apdu bytes consumed */
-    int encode_bacnet_date(
-        uint8_t * apdu,
-        BACNET_DATE * bdate);
-    int encode_application_date(
-        uint8_t * apdu,
-        BACNET_DATE * bdate);
-    int encode_context_date(
-        uint8_t * apdu,
-        uint8_t tag_number,
-        BACNET_DATE * bdate);
-    int decode_date(
-        uint8_t * apdu,
-        BACNET_DATE * bdate);
-    int decode_date_safe(
-        uint8_t * apdu,
-        uint32_t len_value,
-        BACNET_DATE * bdate);
-    int decode_application_date(
-        uint8_t * apdu,
-        BACNET_DATE * bdate);
-    int decode_context_date(
-        uint8_t * apdu,
-        uint8_t tag_number,
-        BACNET_DATE * bdate);
+int encode_bacnet_date(
+    uint8_t * apdu,
+    BACNET_DATE * bdate);
+int encode_application_date(
+    uint8_t * apdu,
+    BACNET_DATE * bdate);
+int encode_context_date(
+    uint8_t * apdu,
+    uint8_t tag_number,
+    BACNET_DATE * bdate);
+int decode_date(
+    uint8_t * apdu,
+    BACNET_DATE * bdate);
+int decode_date_safe(
+    uint8_t * apdu,
+    uint32_t len_value,
+    BACNET_DATE * bdate);
+int decode_application_date(
+    uint8_t * apdu,
+    BACNET_DATE * bdate);
+int decode_context_date(
+    uint8_t * apdu,
+    uint8_t tag_number,
+    BACNET_DATE * bdate);
 
 /* from clause 20.1.2.4 max-segments-accepted */
 /* and clause 20.1.2.5 max-APDU-length-accepted */
 /* returns the encoded octet */
-    uint8_t encode_max_segs_max_apdu(
-        int max_segs,
-        int max_apdu);
-    int decode_max_segs(
-        uint8_t octet);
-    int decode_max_apdu(
-        uint8_t octet);
+uint8_t encode_max_segs_max_apdu(
+    int max_segs,
+    int max_apdu);
+int decode_max_segs(
+    uint8_t octet);
+int decode_max_apdu(
+    uint8_t octet);
 
 /* returns the number of apdu bytes consumed */
-    int encode_simple_ack(
-        uint8_t * apdu,
-        uint8_t invoke_id,
-        uint8_t service_choice);
+int encode_simple_ack(
+    uint8_t * apdu,
+    uint8_t invoke_id,
+    uint8_t service_choice);
 
     int encode_bacnet_address(
         uint8_t * apdu,
@@ -431,8 +433,8 @@
 
 #ifdef TEST
 #include "ctest.h"
-    void test_BACDCode(
-        Test * pTest);
+void test_BACDCode(
+    Test * pTest);
 #endif
 
 #endif

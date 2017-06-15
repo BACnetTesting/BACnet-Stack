@@ -115,14 +115,14 @@ void handler_get_event_information(
             true);
 #if PRINT_ENABLED
         fprintf(stderr,
-            "GetEventInformation: " "Segmented message. Sending Abort!\n");
+                "GetEventInformation: " "Segmented message. Sending Abort!\n");
 #endif
         goto GET_EVENT_ABORT;
     }
 
     len =
         getevent_decode_service_request(service_request, service_len,
-        &object_id);
+                                        &object_id);
     if (len < 0) {
         /* bad decoding - send an abort */
         len =
@@ -130,7 +130,7 @@ void handler_get_event_information(
             service_data->invoke_id, ABORT_REASON_OTHER, true);
 #if PRINT_ENABLED
         fprintf(stderr,
-            "GetEventInformation: Bad Encoding.  Sending Abort!\n");
+                "GetEventInformation: Bad Encoding.  Sending Abort!\n");
 #endif
         goto GET_EVENT_ABORT;
     }
@@ -205,7 +205,7 @@ void handler_get_event_information(
 #if PRINT_ENABLED
     fprintf(stderr, "Got a GetEventInformation request: Sending Ack!\n");
 #endif
-  GET_EVENT_ERROR:
+GET_EVENT_ERROR:
     if (error) {
         pdu_len =
             npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
@@ -231,7 +231,7 @@ void handler_get_event_information(
 #endif
         }
     }
-  GET_EVENT_ABORT:
+GET_EVENT_ABORT:
     pdu_len += len;
     bytes_sent =
         datalink_send_pdu(src, &npci_data, &Handler_Transmit_Buffer[0],

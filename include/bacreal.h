@@ -28,46 +28,45 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+int decode_real_safe(
+    uint8_t * apdu,
+    uint32_t len_value,
+    float *real_value);
 
-    int decode_real_safe(
-        uint8_t * apdu,
-        uint32_t len_value,
-        float *real_value);
+int decode_real(
+    uint8_t * apdu,
+    float *real_value);
 
-    int decode_real(
-        uint8_t * apdu,
-        float *real_value);
+int decode_context_real(
+    uint8_t * apdu,
+    uint8_t tag_number,
+    float *real_value);
+int encode_bacnet_real(
+    float value,
+    uint8_t * apdu);
+int decode_double(
+    uint8_t * apdu,
+    double *real_value);
+int decode_context_double(
+    uint8_t * apdu,
+    uint8_t tag_number,
+    double *double_value);
+int decode_double_safe(
+    uint8_t * apdu,
+    uint32_t len_value,
+    double *double_value);
 
-    int decode_context_real(
-        uint8_t * apdu,
-        uint8_t tag_number,
-        float *real_value);
-    int encode_bacnet_real(
-        float value,
-        uint8_t * apdu);
-    int decode_double(
-        uint8_t * apdu,
-        double *real_value);
-    int decode_context_double(
-        uint8_t * apdu,
-        uint8_t tag_number,
-        double *double_value);
-    int decode_double_safe(
-        uint8_t * apdu,
-        uint32_t len_value,
-        double *double_value);
-
-    int encode_bacnet_double(
-        double value,
-        uint8_t * apdu);
+int encode_bacnet_double(
+    double value,
+    uint8_t * apdu);
 
 #ifdef TEST
 #include "ctest.h"
 
-    void testBACreal(
-        Test * pTest);
-    void testBACdouble(
-        Test * pTest);
+void testBACreal(
+    Test * pTest);
+void testBACdouble(
+    Test * pTest);
 #endif
 
 #endif

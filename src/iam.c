@@ -59,13 +59,13 @@ int iam_encode_apdu(
         apdu_len = 2;
         len =
             encode_application_object_id(&apdu[apdu_len], OBJECT_DEVICE,
-            device_id);
+                                         device_id);
         apdu_len += len;
         len = encode_application_unsigned(&apdu[apdu_len], max_apdu);
         apdu_len += len;
         len =
             encode_application_enumerated(&apdu[apdu_len],
-            (uint32_t) segmentation);
+                                          (uint32_t) segmentation);
         apdu_len += len;
         len = encode_application_unsigned(&apdu[apdu_len], vendor_id);
         apdu_len += len;
@@ -73,6 +73,7 @@ int iam_encode_apdu(
 
     return apdu_len;
 }
+
 
 int iam_decode_service_request(
     uint8_t * apdu,
@@ -83,7 +84,7 @@ int iam_decode_service_request(
 {
     int len = 0;
     int apdu_len = 0;   /* total length of the apdu, return value */
-    uint16_t object_type = 0;   /* should be a Device Object */
+    BACNET_OBJECT_TYPE object_type ;   /* should be a Device Object */
     uint32_t object_instance = 0;
     uint8_t tag_number = 0;
     uint32_t len_value = 0;
@@ -163,7 +164,7 @@ int iam_decode_apdu(
         return -1;
     apdu_len =
         iam_decode_service_request(&apdu[2], pDevice_id, pMax_apdu,
-        pSegmentation, pVendor_id);
+                                   pSegmentation, pVendor_id);
 
     return apdu_len;
 }
@@ -184,12 +185,12 @@ void testIAm(
 
     len =
         iam_encode_apdu(&apdu[0], device_id, max_apdu, segmentation,
-        vendor_id);
+                        vendor_id);
     ct_test(pTest, len != 0);
 
     len =
         iam_decode_apdu(&apdu[0], &test_device_id, &test_max_apdu,
-        &test_segmentation, &test_vendor_id);
+                        &test_segmentation, &test_vendor_id);
 
     ct_test(pTest, len != -1);
     ct_test(pTest, test_device_id == device_id);

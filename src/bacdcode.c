@@ -147,32 +147,32 @@ int decode_max_segs(
     int max_segs = 0;
 
     switch (octet & 0xF0) {
-        case 0:
-            max_segs = 0;
-            break;
-        case 0x10:
-            max_segs = 2;
-            break;
-        case 0x20:
-            max_segs = 4;
-            break;
-        case 0x30:
-            max_segs = 8;
-            break;
-        case 0x40:
-            max_segs = 16;
-            break;
-        case 0x50:
-            max_segs = 32;
-            break;
-        case 0x60:
-            max_segs = 64;
-            break;
-        case 0x70:
-            max_segs = 65;
-            break;
-        default:
-            break;
+    case 0:
+        max_segs = 0;
+        break;
+    case 0x10:
+        max_segs = 2;
+        break;
+    case 0x20:
+        max_segs = 4;
+        break;
+    case 0x30:
+        max_segs = 8;
+        break;
+    case 0x40:
+        max_segs = 16;
+        break;
+    case 0x50:
+        max_segs = 32;
+        break;
+    case 0x60:
+        max_segs = 64;
+        break;
+    case 0x70:
+        max_segs = 65;
+        break;
+    default:
+        break;
     }
 
     return max_segs;
@@ -184,26 +184,26 @@ int decode_max_apdu(
     int max_apdu = 0;
 
     switch (octet & 0x0F) {
-        case 0:
-            max_apdu = 50;
-            break;
-        case 1:
-            max_apdu = 128;
-            break;
-        case 2:
-            max_apdu = 206;
-            break;
-        case 3:
-            max_apdu = 480;
-            break;
-        case 4:
-            max_apdu = 1024;
-            break;
-        case 5:
-            max_apdu = 1476;
-            break;
-        default:
-            break;
+    case 0:
+        max_apdu = 50;
+        break;
+    case 1:
+        max_apdu = 128;
+        break;
+    case 2:
+        max_apdu = 206;
+        break;
+    case 3:
+        max_apdu = 480;
+        break;
+    case 4:
+        max_apdu = 1024;
+        break;
+    case 5:
+        max_apdu = 1476;
+        break;
+    default:
+        break;
     }
 
     return max_apdu;
@@ -479,7 +479,7 @@ bool decode_is_context_tag(
 
     decode_tag_number(apdu, &my_tag_number);
     return (bool) (IS_CONTEXT_SPECIFIC(*apdu) &&
-        (my_tag_number == tag_number));
+                   (my_tag_number == tag_number));
 }
 
 bool decode_is_context_tag_with_length(
@@ -492,7 +492,7 @@ bool decode_is_context_tag_with_length(
     *tag_length = decode_tag_number(apdu, &my_tag_number);
 
     return (bool) (IS_CONTEXT_SPECIFIC(*apdu) &&
-        (my_tag_number == tag_number));
+                   (my_tag_number == tag_number));
 }
 
 /* from clause 20.2.1.3.2 Constructed Data */
@@ -766,7 +766,7 @@ int encode_context_bitstring(
 /* returns the number of apdu bytes consumed */
 int decode_object_id(
     uint8_t * apdu,
-    uint16_t * object_type,
+    BACNET_OBJECT_TYPE *object_type,
     uint32_t * instance)
 {
     uint32_t value = 0;
@@ -774,7 +774,7 @@ int decode_object_id(
 
     len = decode_unsigned32(apdu, &value);
     *object_type =
-        (uint16_t) (((value >> BACNET_INSTANCE_BITS) & BACNET_MAX_OBJECT));
+        (BACNET_OBJECT_TYPE) (((value >> BACNET_INSTANCE_BITS) & BACNET_MAX_OBJECT));
     *instance = (value & BACNET_MAX_INSTANCE);
 
     return len;
@@ -783,7 +783,7 @@ int decode_object_id(
 int decode_object_id_safe(
     uint8_t * apdu,
     uint32_t len_value,
-    uint16_t * object_type,
+    BACNET_OBJECT_TYPE * object_type,
     uint32_t * instance)
 {
     if (len_value != 4) {
@@ -796,7 +796,7 @@ int decode_object_id_safe(
 int decode_context_object_id(
     uint8_t * apdu,
     uint8_t tag_number,
-    uint16_t * object_type,
+    BACNET_OBJECT_TYPE * object_type,
     uint32_t * instance)
 {
     int len = 0;
@@ -814,7 +814,7 @@ int decode_context_object_id(
 /* returns the number of apdu bytes consumed */
 int encode_bacnet_object_id(
     uint8_t * apdu,
-    int object_type,
+    BACNET_OBJECT_TYPE object_type,
     uint32_t instance)
 {
     uint32_t value = 0;
@@ -824,7 +824,7 @@ int encode_bacnet_object_id(
     type = (uint32_t) object_type;
     value =
         ((type & BACNET_MAX_OBJECT) << BACNET_INSTANCE_BITS) | (instance &
-        BACNET_MAX_INSTANCE);
+                BACNET_MAX_INSTANCE);
     len = encode_unsigned32(apdu, value);
 
     return len;
@@ -836,7 +836,7 @@ int encode_bacnet_object_id(
 int encode_context_object_id(
     uint8_t * apdu,
     uint8_t tag_number,
-    int object_type,
+    BACNET_OBJECT_TYPE object_type,
     uint32_t instance)
 {
     int len = 0;
@@ -854,7 +854,7 @@ int encode_context_object_id(
 /* returns the number of apdu bytes consumed */
 int encode_application_object_id(
     uint8_t * apdu,
-    int object_type,
+    BACNET_OBJECT_TYPE object_type,
     uint32_t instance)
 {
     int len = 0;
@@ -863,7 +863,7 @@ int encode_application_object_id(
     len = encode_bacnet_object_id(&apdu[1], object_type, instance);
     len +=
         encode_tag(&apdu[0], BACNET_APPLICATION_TAG_OBJECT_ID, false,
-        (uint32_t) len);
+                   (uint32_t) len);
 
     return len;
 }
@@ -1081,8 +1081,8 @@ int decode_character_string(
     bool status = false;
 
     status =
-        characterstring_init(char_string, apdu[0], (char *) &apdu[1],
-        len_value - 1);
+        characterstring_init(char_string, (BACNET_CHARACTER_STRING_ENCODING) apdu[0], (char *)&apdu[1],
+                             len_value - 1);
     if (status) {
         len = (int) len_value;
     }
@@ -1105,8 +1105,8 @@ int decode_context_character_string(
             decode_tag_number_and_value(&apdu[len], &tag_number, &len_value);
 
         status =
-            characterstring_init(char_string, apdu[len],
-            (char *) &apdu[len + 1], len_value - 1);
+            characterstring_init(char_string, (BACNET_CHARACTER_STRING_ENCODING) apdu[len],
+                                 (char *) &apdu[len + 1], len_value - 1);
         if (status) {
             len += len_value;
         }
@@ -1129,22 +1129,22 @@ int decode_unsigned(
 
     if (value) {
         switch (len_value) {
-            case 1:
-                *value = apdu[0];
-                break;
-            case 2:
-                decode_unsigned16(&apdu[0], &unsigned16_value);
-                *value = unsigned16_value;
-                break;
-            case 3:
-                decode_unsigned24(&apdu[0], value);
-                break;
-            case 4:
-                decode_unsigned32(&apdu[0], value);
-                break;
-            default:
-                *value = 0;
-                break;
+        case 1:
+            *value = apdu[0];
+            break;
+        case 2:
+            decode_unsigned16(&apdu[0], &unsigned16_value);
+            *value = unsigned16_value;
+            break;
+        case 3:
+            decode_unsigned24(&apdu[0], value);
+            break;
+        case 4:
+            decode_unsigned32(&apdu[0], value);
+            break;
+        default:
+            *value = 0;
+            break;
         }
     }
 
@@ -1233,7 +1233,7 @@ int encode_application_unsigned(
     len = encode_bacnet_unsigned(&apdu[1], value);
     len +=
         encode_tag(&apdu[0], BACNET_APPLICATION_TAG_UNSIGNED_INT, false,
-        (uint32_t) len);
+                   (uint32_t) len);
 
     return len;
 }
@@ -1300,7 +1300,7 @@ int encode_application_enumerated(
     len = encode_bacnet_enumerated(&apdu[1], value);
     len +=
         encode_tag(&apdu[0], BACNET_APPLICATION_TAG_ENUMERATED, false,
-        (uint32_t) len);
+                   (uint32_t) len);
 
     return len;
 }
@@ -1343,21 +1343,21 @@ int decode_signed(
 {
     if (value) {
         switch (len_value) {
-            case 1:
-                decode_signed8(&apdu[0], value);
-                break;
-            case 2:
-                decode_signed16(&apdu[0], value);
-                break;
-            case 3:
-                decode_signed24(&apdu[0], value);
-                break;
-            case 4:
-                decode_signed32(&apdu[0], value);
-                break;
-            default:
-                *value = 0;
-                break;
+        case 1:
+            decode_signed8(&apdu[0], value);
+            break;
+        case 2:
+            decode_signed16(&apdu[0], value);
+            break;
+        case 3:
+            decode_signed24(&apdu[0], value);
+            break;
+        case 4:
+            decode_signed32(&apdu[0], value);
+            break;
+        default:
+            *value = 0;
+            break;
         }
     }
 
@@ -1423,7 +1423,7 @@ int encode_application_signed(
     len = encode_bacnet_signed(&apdu[1], value);
     len +=
         encode_tag(&apdu[0], BACNET_APPLICATION_TAG_SIGNED_INT, false,
-        (uint32_t) len);
+                   (uint32_t) len);
 
     return len;
 }
@@ -1661,6 +1661,7 @@ int encode_bacnet_date(
          */
         return BACNET_STATUS_ERROR;
     }
+
     apdu[1] = bdate->month;
     apdu[2] = bdate->day;
     apdu[3] = bdate->wday;
@@ -1710,10 +1711,10 @@ int decode_date(
     BACNET_DATE * bdate)
 {
 
-    bdate->year = (uint16_t)apdu[0] + 1900;
+    bdate->year = (uint16_t) (apdu[0] + 1900);
     bdate->month = apdu[1];
     bdate->day = apdu[2];
-    bdate->wday = apdu[3];
+    bdate->wday = (BACNET_WEEKDAY) apdu[3];
 
     return 4;
 }
@@ -1726,7 +1727,7 @@ int decode_date_safe(
     if (len_value != 4) {
         bdate->day = 0;
         bdate->month = 0;
-        bdate->wday = 0;
+        bdate->wday = BACNET_WEEKDAY_ANY;
         bdate->year = 0;
         return (int) len_value;
     } else {
@@ -2406,7 +2407,7 @@ static void testBACDCodeObject(
         0
     };
     uint16_t type = OBJECT_BINARY_INPUT;
-    uint16_t decoded_type = OBJECT_ANALOG_OUTPUT;
+    BACNET_OBJECT_TYPE decoded_type ;
     uint32_t instance = 123;
     uint32_t decoded_instance = 0;
 
@@ -2891,10 +2892,10 @@ static void testObjectIDContextDecodes(
     uint8_t large_context_tag = 0xfe;
 
     /* 32 bit number */
-    uint16_t in_type;
+    BACNET_OBJECT_TYPE in_type;
     uint32_t in_id;
 
-    uint16_t out_type;
+    BACNET_OBJECT_TYPE out_type;
     uint32_t out_id;
 
     in_type = 0xde;
@@ -3148,28 +3149,40 @@ void test_BACDCode(
     assert(rc);
     rc = ct_addTestFunction(pTest, testBACDCodeBitString);
     assert(rc);
+
     rc = ct_addTestFunction(pTest, testUnsignedContextDecodes);
     assert(rc);
+
     rc = ct_addTestFunction(pTest, testSignedContextDecodes);
     assert(rc);
+
     rc = ct_addTestFunction(pTest, testEnumeratedContextDecodes);
     assert(rc);
+
     rc = ct_addTestFunction(pTest, testCharacterStringContextDecodes);
     assert(rc);
+
     rc = ct_addTestFunction(pTest, testFloatContextDecodes);
     assert(rc);
+
     rc = ct_addTestFunction(pTest, testDoubleContextDecodes);
     assert(rc);
+
     rc = ct_addTestFunction(pTest, testObjectIDContextDecodes);
     assert(rc);
+
     rc = ct_addTestFunction(pTest, testBitStringContextDecodes);
     assert(rc);
+
     rc = ct_addTestFunction(pTest, testTimeContextDecodes);
     assert(rc);
+
     rc = ct_addTestFunction(pTest, testDateContextDecodes);
     assert(rc);
+
     rc = ct_addTestFunction(pTest, testOctetStringContextDecodes);
     assert(rc);
+
     rc = ct_addTestFunction(pTest, testBACDCodeDouble);
     assert(rc);
 }

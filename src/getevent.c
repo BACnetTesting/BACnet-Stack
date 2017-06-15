@@ -58,8 +58,8 @@ int getevent_encode_apdu(
         if (lastReceivedObjectIdentifier) {
             len =
                 encode_context_object_id(&apdu[apdu_len], 0,
-                (int) lastReceivedObjectIdentifier->type,
-                lastReceivedObjectIdentifier->instance);
+                                         lastReceivedObjectIdentifier->type,
+                                         lastReceivedObjectIdentifier->instance);
             apdu_len += len;
         }
     }
@@ -82,7 +82,7 @@ int getevent_decode_service_request(
             return -1;
         len +=
             decode_object_id(&apdu[len], &lastReceivedObjectIdentifier->type,
-            &lastReceivedObjectIdentifier->instance);
+                             &lastReceivedObjectIdentifier->instance);
     }
 
     return (int) len;
@@ -130,33 +130,33 @@ int getevent_ack_encode_apdu_data(
             /* Tag 1: eventState */
             apdu_len +=
                 encode_context_enumerated(&apdu[apdu_len], 1,
-                event_data->eventState);
+                                          event_data->eventState);
             /* Tag 2: acknowledgedTransitions */
             apdu_len +=
                 encode_context_bitstring(&apdu[apdu_len], 2,
-                &event_data->acknowledgedTransitions);
+                                         &event_data->acknowledgedTransitions);
             /* Tag 3: eventTimeStamps */
             apdu_len += encode_opening_tag(&apdu[apdu_len], 3);
             for (i = 0; i < 3; i++) {
                 apdu_len +=
                     bacapp_encode_timestamp(&apdu[apdu_len],
-                    &event_data->eventTimeStamps[i]);
+                                            &event_data->eventTimeStamps[i]);
             }
             apdu_len += encode_closing_tag(&apdu[apdu_len], 3);
             /* Tag 4: notifyType */
             apdu_len +=
                 encode_context_enumerated(&apdu[apdu_len], 4,
-                event_data->notifyType);
+                                          event_data->notifyType);
             /* Tag 5: eventEnable */
             apdu_len +=
                 encode_context_bitstring(&apdu[apdu_len], 5,
-                &event_data->eventEnable);
+                                         &event_data->eventEnable);
             /* Tag 6: eventPriorities */
             apdu_len += encode_opening_tag(&apdu[apdu_len], 6);
             for (i = 0; i < 3; i++) {
                 apdu_len +=
                     encode_application_unsigned(&apdu[apdu_len],
-                    event_data->eventPriorities[i]);
+                                                event_data->eventPriorities[i]);
             }
             apdu_len += encode_closing_tag(&apdu[apdu_len], 6);
             event_data = event_data->next;
@@ -208,11 +208,11 @@ int getevent_ack_decode_service_request(
             if (decode_is_context_tag(&apdu[len], 0)) {
                 len +=
                     decode_tag_number_and_value(&apdu[len], &tag_number,
-                    &len_value);
+                                                &len_value);
                 len +=
                     decode_object_id(&apdu[len],
-                    &event_data->objectIdentifier.type,
-                    &event_data->objectIdentifier.instance);
+                                     &event_data->objectIdentifier.type,
+                                     &event_data->objectIdentifier.instance);
             } else {
                 return -1;
             }
@@ -220,9 +220,9 @@ int getevent_ack_decode_service_request(
             if (decode_is_context_tag(&apdu[len], 1)) {
                 len +=
                     decode_tag_number_and_value(&apdu[len], &tag_number,
-                    &len_value);
+                                                &len_value);
                 len += decode_enumerated(&apdu[len], len_value, &enum_value);
-                event_data->eventState = enum_value;
+                event_data->eventState = (BACNET_EVENT_STATE) enum_value;
             } else {
                 return -1;
             }
@@ -230,10 +230,10 @@ int getevent_ack_decode_service_request(
             if (decode_is_context_tag(&apdu[len], 2)) {
                 len +=
                     decode_tag_number_and_value(&apdu[len], &tag_number,
-                    &len_value);
+                                                &len_value);
                 len +=
                     decode_bitstring(&apdu[len], len_value,
-                    &event_data->acknowledgedTransitions);
+                                     &event_data->acknowledgedTransitions);
             } else {
                 return -1;
             }
@@ -241,11 +241,11 @@ int getevent_ack_decode_service_request(
             if (decode_is_opening_tag_number(&apdu[len], 3)) {
                 len +=
                     decode_tag_number_and_value(&apdu[len], &tag_number,
-                    &len_value);
+                                                &len_value);
                 for (i = 0; i < 3; i++) {
                     len +=
                         bacapp_decode_timestamp(&apdu[len],
-                        &event_data->eventTimeStamps[i]);
+                                                &event_data->eventTimeStamps[i]);
                 }
             } else {
                 return -1;
@@ -253,7 +253,7 @@ int getevent_ack_decode_service_request(
             if (decode_is_closing_tag_number(&apdu[len], 3)) {
                 len +=
                     decode_tag_number_and_value(&apdu[len], &tag_number,
-                    &len_value);
+                                                &len_value);
             } else {
                 return -1;
             }
@@ -261,9 +261,9 @@ int getevent_ack_decode_service_request(
             if (decode_is_context_tag(&apdu[len], 4)) {
                 len +=
                     decode_tag_number_and_value(&apdu[len], &tag_number,
-                    &len_value);
+                                                &len_value);
                 len += decode_enumerated(&apdu[len], len_value, &enum_value);
-                event_data->notifyType = enum_value;
+                event_data->notifyType = (BACNET_NOTIFY_TYPE) enum_value;
             } else {
                 return -1;
             }
@@ -271,10 +271,10 @@ int getevent_ack_decode_service_request(
             if (decode_is_context_tag(&apdu[len], 5)) {
                 len +=
                     decode_tag_number_and_value(&apdu[len], &tag_number,
-                    &len_value);
+                                                &len_value);
                 len +=
                     decode_bitstring(&apdu[len], len_value,
-                    &event_data->eventEnable);
+                                     &event_data->eventEnable);
             } else {
                 return -1;
             }
@@ -282,14 +282,14 @@ int getevent_ack_decode_service_request(
             if (decode_is_opening_tag_number(&apdu[len], 6)) {
                 len +=
                     decode_tag_number_and_value(&apdu[len], &tag_number,
-                    &len_value);
+                                                &len_value);
                 for (i = 0; i < 3; i++) {
                     len +=
                         decode_tag_number_and_value(&apdu[len], &tag_number,
-                        &len_value);
+                                                    &len_value);
                     len +=
                         decode_unsigned(&apdu[len], len_value,
-                        &event_data->eventPriorities[i]);
+                                        &event_data->eventPriorities[i]);
                 }
             } else {
                 return -1;
@@ -297,14 +297,14 @@ int getevent_ack_decode_service_request(
             if (decode_is_closing_tag_number(&apdu[len], 6)) {
                 len +=
                     decode_tag_number_and_value(&apdu[len], &tag_number,
-                    &len_value);
+                                                &len_value);
             } else {
                 return -1;
             }
             if (decode_is_closing_tag_number(&apdu[len], 0)) {
                 len +=
                     decode_tag_number_and_value(&apdu[len], &tag_number,
-                    &len_value);
+                                                &len_value);
                 event_data->next = NULL;
             }
             event_data = event_data->next;
@@ -312,7 +312,7 @@ int getevent_ack_decode_service_request(
         if (decode_is_context_tag(&apdu[len], 1)) {
             len +=
                 decode_tag_number_and_value(&apdu[len], &tag_number,
-                &len_value);
+                                            &len_value);
             if (len_value == 1)
                 *moreEvents = decode_context_boolean(&apdu[len++]);
             else
@@ -353,7 +353,7 @@ int getevent_decode_apdu(
     if (apdu_len > offset) {
         len =
             getevent_decode_service_request(&apdu[offset], apdu_len - offset,
-            lastReceivedObjectIdentifier);
+                                            lastReceivedObjectIdentifier);
     }
 
     return len;
@@ -381,7 +381,7 @@ int getevent_ack_decode_apdu(
     if (apdu_len > offset) {
         len =
             getevent_ack_decode_service_request(&apdu[offset],
-            apdu_len - offset, get_event_data, moreEvents);
+                                                apdu_len - offset, get_event_data, moreEvents);
     }
 
     return len;
@@ -406,11 +406,11 @@ void testGetEventInformationAck(
     event_data.eventState = EVENT_STATE_NORMAL;
     bitstring_init(&event_data.acknowledgedTransitions);
     bitstring_set_bit(&event_data.acknowledgedTransitions,
-        TRANSITION_TO_OFFNORMAL, false);
+                      TRANSITION_TO_OFFNORMAL, false);
     bitstring_set_bit(&event_data.acknowledgedTransitions, TRANSITION_TO_FAULT,
-        false);
+                      false);
     bitstring_set_bit(&event_data.acknowledgedTransitions,
-        TRANSITION_TO_NORMAL, false);
+                      TRANSITION_TO_NORMAL, false);
     for (i = 0; i < 3; i++) {
         event_data.eventTimeStamps[i].tag = TIME_STAMP_SEQUENCE;
         event_data.eventTimeStamps[i].value.sequenceNum = 0;
@@ -431,27 +431,27 @@ void testGetEventInformationAck(
     apdu_len = len;
     len =
         getevent_ack_encode_apdu_data(&apdu[apdu_len], sizeof(apdu) - apdu_len,
-        &event_data);
+                                      &event_data);
     ct_test(pTest, len != 0);
     ct_test(pTest, len != -1);
     apdu_len += len;
     len =
         getevent_ack_encode_apdu_end(&apdu[apdu_len], sizeof(apdu) - apdu_len,
-        moreEvents);
+                                     moreEvents);
     ct_test(pTest, len != 0);
     ct_test(pTest, len != -1);
     apdu_len += len;
     len = getevent_ack_decode_apdu(&apdu[0], apdu_len,  /* total length of the apdu */
-        &test_invoke_id, &test_event_data, &test_moreEvents);
+                                   &test_invoke_id, &test_event_data, &test_moreEvents);
     ct_test(pTest, len != -1);
     ct_test(pTest, test_invoke_id == invoke_id);
 
     ct_test(pTest,
-        event_data.objectIdentifier.type ==
-        test_event_data.objectIdentifier.type);
+            event_data.objectIdentifier.type ==
+            test_event_data.objectIdentifier.type);
     ct_test(pTest,
-        event_data.objectIdentifier.instance ==
-        test_event_data.objectIdentifier.instance);
+            event_data.objectIdentifier.instance ==
+            test_event_data.objectIdentifier.instance);
 
     ct_test(pTest, event_data.eventState == test_event_data.eventState);
 }
@@ -471,21 +471,21 @@ void testGetEventInformation(
     lastReceivedObjectIdentifier.instance = 12345;
     len =
         getevent_encode_apdu(&apdu[0], invoke_id,
-        &lastReceivedObjectIdentifier);
+                             &lastReceivedObjectIdentifier);
     ct_test(pTest, len != 0);
     apdu_len = len;
 
     len =
         getevent_decode_apdu(&apdu[0], apdu_len, &test_invoke_id,
-        &test_lastReceivedObjectIdentifier);
+                             &test_lastReceivedObjectIdentifier);
     ct_test(pTest, len != -1);
     ct_test(pTest, test_invoke_id == invoke_id);
     ct_test(pTest,
-        test_lastReceivedObjectIdentifier.type ==
-        lastReceivedObjectIdentifier.type);
+            test_lastReceivedObjectIdentifier.type ==
+            lastReceivedObjectIdentifier.type);
     ct_test(pTest,
-        test_lastReceivedObjectIdentifier.instance ==
-        lastReceivedObjectIdentifier.instance);
+            test_lastReceivedObjectIdentifier.instance ==
+            lastReceivedObjectIdentifier.instance);
 
     return;
 }

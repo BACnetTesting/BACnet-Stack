@@ -52,7 +52,7 @@ int bacerror_encode_apdu(
     if (apdu) {
         apdu[0] = PDU_TYPE_ERROR;
         apdu[1] = invoke_id;
-        apdu[2] = service;
+        apdu[2] = (uint8_t) service;
         apdu_len = 3;
         /* service parameters */
         apdu_len +=
@@ -119,7 +119,7 @@ int bacerror_decode_service_request(
         /* decode the application class and code */
         len =
             bacerror_decode_error_class_and_code(&apdu[2], apdu_len - 2,
-            error_class, error_code);
+                    error_class, error_code);
     }
 
     return len;
@@ -151,7 +151,7 @@ int bacerror_decode_apdu(
         if (apdu_len > 1) {
             len =
                 bacerror_decode_service_request(&apdu[1], apdu_len - 1,
-                invoke_id, service, error_class, error_code);
+                                                invoke_id, service, error_class, error_code);
         }
     }
 
@@ -175,13 +175,13 @@ void testBACError(
 
     len =
         bacerror_encode_apdu(&apdu[0], invoke_id, service, error_class,
-        error_code);
+                             error_code);
     ct_test(pTest, len != 0);
     apdu_len = len;
 
     len =
         bacerror_decode_apdu(&apdu[0], apdu_len, &test_invoke_id,
-        &test_service, &test_error_class, &test_error_code);
+                             &test_service, &test_error_class, &test_error_code);
     ct_test(pTest, len != -1);
     ct_test(pTest, test_invoke_id == invoke_id);
     ct_test(pTest, test_service == service);
@@ -192,19 +192,19 @@ void testBACError(
     apdu[0] = PDU_TYPE_ABORT;
     len =
         bacerror_decode_apdu(&apdu[0], apdu_len, &test_invoke_id,
-        &test_service, &test_error_class, &test_error_code);
+                             &test_service, &test_error_class, &test_error_code);
     ct_test(pTest, len == -1);
 
     /* test NULL APDU */
     len =
         bacerror_decode_apdu(NULL, apdu_len, &test_invoke_id, &test_service,
-        &test_error_class, &test_error_code);
+                             &test_error_class, &test_error_code);
     ct_test(pTest, len == -1);
 
     /* force a zero length */
     len =
         bacerror_decode_apdu(&apdu[0], 0, &test_invoke_id, &test_service,
-        &test_error_class, &test_error_code);
+                             &test_error_class, &test_error_code);
     ct_test(pTest, len == 0);
 
 

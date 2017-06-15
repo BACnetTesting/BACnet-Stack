@@ -56,17 +56,17 @@ int wp_encode_apdu(
         apdu_len = 4;
         len =
             encode_context_object_id(&apdu[apdu_len], 0, wpdata->object_type,
-            wpdata->object_instance);
+                                     wpdata->object_instance);
         apdu_len += len;
         len =
             encode_context_enumerated(&apdu[apdu_len], 1,
-            wpdata->object_property);
+                                      wpdata->object_property);
         apdu_len += len;
         /* optional array index; ALL is -1 which is assumed when missing */
         if (wpdata->array_index != BACNET_ARRAY_ALL) {
             len =
                 encode_context_unsigned(&apdu[apdu_len], 2,
-                wpdata->array_index);
+                                        wpdata->array_index);
             apdu_len += len;
         }
         /* propertyValue */
@@ -102,7 +102,7 @@ int wp_decode_service_request(
     int tag_len = 0;
     uint8_t tag_number = 0;
     uint32_t len_value_type = 0;
-    uint16_t type = 0;  /* for decoding */
+    BACNET_OBJECT_TYPE type;  /* for decoding */
     uint32_t property = 0;      /* for decoding */
     uint32_t unsigned_value = 0;
     int i = 0;  /* loop counter */
@@ -158,12 +158,12 @@ int wp_decode_service_request(
         if ((unsigned) len < apdu_len) {
             tag_len =
                 decode_tag_number_and_value(&apdu[len], &tag_number,
-                &len_value_type);
+                                            &len_value_type);
             if (tag_number == 4) {
                 len += tag_len;
                 len =
                     decode_unsigned(&apdu[len], len_value_type,
-                    &unsigned_value);
+                                    &unsigned_value);
                 if ((unsigned_value >= BACNET_MIN_PRIORITY)
                     && (unsigned_value <= BACNET_MAX_PRIORITY)) {
                     wpdata->priority = (uint8_t) unsigned_value;
@@ -204,7 +204,7 @@ int wp_decode_apdu(
     if (apdu_len > offset) {
         len =
             wp_decode_service_request(&apdu[offset], apdu_len - offset,
-            wpdata);
+                                      wpdata);
     }
 
     return len;
@@ -241,50 +241,50 @@ void testWritePropertyTag(
         test_data.application_data_len, &test_value);
     ct_test(pTest, test_value.tag == value->tag);
     switch (test_value.tag) {
-        case BACNET_APPLICATION_TAG_NULL:
-            break;
-        case BACNET_APPLICATION_TAG_BOOLEAN:
-            ct_test(pTest, test_value.type.Boolean == value->type.Boolean);
-            break;
-        case BACNET_APPLICATION_TAG_UNSIGNED_INT:
-            ct_test(pTest,
+    case BACNET_APPLICATION_TAG_NULL:
+        break;
+    case BACNET_APPLICATION_TAG_BOOLEAN:
+        ct_test(pTest, test_value.type.Boolean == value->type.Boolean);
+        break;
+    case BACNET_APPLICATION_TAG_UNSIGNED_INT:
+        ct_test(pTest,
                 test_value.type.Unsigned_Int == value->type.Unsigned_Int);
-            break;
-        case BACNET_APPLICATION_TAG_SIGNED_INT:
-            ct_test(pTest,
+        break;
+    case BACNET_APPLICATION_TAG_SIGNED_INT:
+        ct_test(pTest,
                 test_value.type.Signed_Int == value->type.Signed_Int);
-            break;
-        case BACNET_APPLICATION_TAG_REAL:
-            ct_test(pTest, test_value.type.Real == value->type.Real);
-            break;
-        case BACNET_APPLICATION_TAG_ENUMERATED:
-            ct_test(pTest,
+        break;
+    case BACNET_APPLICATION_TAG_REAL:
+        ct_test(pTest, test_value.type.Real == value->type.Real);
+        break;
+    case BACNET_APPLICATION_TAG_ENUMERATED:
+        ct_test(pTest,
                 test_value.type.Enumerated == value->type.Enumerated);
-            break;
-        case BACNET_APPLICATION_TAG_DATE:
-            ct_test(pTest, test_value.type.Date.year == value->type.Date.year);
-            ct_test(pTest,
+        break;
+    case BACNET_APPLICATION_TAG_DATE:
+        ct_test(pTest, test_value.type.Date.year == value->type.Date.year);
+        ct_test(pTest,
                 test_value.type.Date.month == value->type.Date.month);
-            ct_test(pTest, test_value.type.Date.day == value->type.Date.day);
-            ct_test(pTest, test_value.type.Date.wday == value->type.Date.wday);
-            break;
-        case BACNET_APPLICATION_TAG_TIME:
-            ct_test(pTest, test_value.type.Time.hour == value->type.Time.hour);
-            ct_test(pTest, test_value.type.Time.min == value->type.Time.min);
-            ct_test(pTest, test_value.type.Time.sec == value->type.Time.sec);
-            ct_test(pTest,
+        ct_test(pTest, test_value.type.Date.day == value->type.Date.day);
+        ct_test(pTest, test_value.type.Date.wday == value->type.Date.wday);
+        break;
+    case BACNET_APPLICATION_TAG_TIME:
+        ct_test(pTest, test_value.type.Time.hour == value->type.Time.hour);
+        ct_test(pTest, test_value.type.Time.min == value->type.Time.min);
+        ct_test(pTest, test_value.type.Time.sec == value->type.Time.sec);
+        ct_test(pTest,
                 test_value.type.Time.hundredths ==
                 value->type.Time.hundredths);
-            break;
-        case BACNET_APPLICATION_TAG_OBJECT_ID:
-            ct_test(pTest,
+        break;
+    case BACNET_APPLICATION_TAG_OBJECT_ID:
+        ct_test(pTest,
                 test_value.type.Object_Id.type == value->type.Object_Id.type);
-            ct_test(pTest,
+        ct_test(pTest,
                 test_value.type.Object_Id.instance ==
                 value->type.Object_Id.instance);
-            break;
-        default:
-            break;
+        break;
+    default:
+        break;
     }
 }
 

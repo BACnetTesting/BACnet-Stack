@@ -74,22 +74,22 @@ typedef struct BACnet_Subscribe_COV_Data {
         uint8_t invoke_id,
         BACNET_COV_DATA * data);
 
-    int ccov_notify_decode_apdu(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        uint8_t * invoke_id,
-        BACNET_COV_DATA * data);
+int ccov_notify_decode_apdu(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    uint8_t * invoke_id,
+    BACNET_COV_DATA * data);
 
-    /* common for both confirmed and unconfirmed */
-    int cov_notify_decode_service_request(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        BACNET_COV_DATA * data);
+/* common for both confirmed and unconfirmed */
+int cov_notify_decode_service_request(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    BACNET_COV_DATA * data);
 
-    int cov_subscribe_property_decode_service_request(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        BACNET_SUBSCRIBE_COV_DATA * data);
+int cov_subscribe_property_decode_service_request(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    BACNET_SUBSCRIBE_COV_DATA * data);
 
     int cov_subscribe_property_encode_apdu(
         uint8_t * apdu,
@@ -97,10 +97,10 @@ typedef struct BACnet_Subscribe_COV_Data {
         uint8_t invoke_id,
         BACNET_SUBSCRIBE_COV_DATA * data);
 
-    int cov_subscribe_decode_service_request(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        BACNET_SUBSCRIBE_COV_DATA * data);
+int cov_subscribe_decode_service_request(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    BACNET_SUBSCRIBE_COV_DATA * data);
 
     int cov_subscribe_encode_apdu(
         uint8_t * apdu,
@@ -108,19 +108,19 @@ typedef struct BACnet_Subscribe_COV_Data {
         uint8_t invoke_id,
         BACNET_SUBSCRIBE_COV_DATA * data);
 
-    void cov_data_value_list_link(
-        BACNET_COV_DATA *data,
-        BACNET_PROPERTY_VALUE *value_list,
-        size_t count);
+void cov_data_value_list_link(
+    BACNET_COV_DATA *data,
+    BACNET_PROPERTY_VALUE *value_list,
+    size_t count);
 
 #ifdef TEST
 #include "ctest.h"
-    void testCOVNotify(
-        Test * pTest);
-    void testCOVSubscribeProperty(
-        Test * pTest);
-    void testCOVSubscribe(
-        Test * pTest);
+void testCOVNotify(
+    Test * pTest);
+void testCOVSubscribeProperty(
+    Test * pTest);
+void testCOVSubscribe(
+    Test * pTest);
 #endif
 
 /** @defgroup DSCOV Data Sharing - Change of Value Service (DS-COV)

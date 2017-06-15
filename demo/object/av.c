@@ -829,10 +829,10 @@ bool Analog_Value_Write_Property(
             if (status) {
                 switch ((BACNET_NOTIFY_TYPE) value.type.Enumerated) {
                     case NOTIFY_EVENT:
-                        CurrentAV->Notify_Type = 1;
+                        CurrentAV->Notify_Type = NOTIFY_EVENT;
                         break;
                     case NOTIFY_ALARM:
-                        CurrentAV->Notify_Type = 0;
+                        CurrentAV->Notify_Type = NOTIFY_ALARM;
                         break;
                     default:
                         wp_data->error_class = ERROR_CLASS_PROPERTY;
@@ -876,8 +876,8 @@ void Analog_Value_Intrinsic_Reporting(
     BACNET_CHARACTER_STRING msgText;
     ANALOG_VALUE_DESCR *CurrentAV;
     unsigned int object_index;
-    uint8_t FromState = 0;
-    uint8_t ToState;
+    BACNET_EVENT_STATE FromState ;
+    BACNET_EVENT_STATE ToState;
     float ExceededLimit = 0.0f;
     float PresentVal = 0.0f;
     bool SendNotify = false;

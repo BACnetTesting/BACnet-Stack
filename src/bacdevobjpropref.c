@@ -80,7 +80,7 @@ int bacapp_encode_device_obj_property_ref(
     /* object-identifier       [0] BACnetObjectIdentifier */
     len =
         encode_context_object_id(&apdu[apdu_len], 0,
-        (int) value->objectIdentifier.type, value->objectIdentifier.instance);
+        value->objectIdentifier.type, value->objectIdentifier.instance);
     apdu_len += len;
     /* property-identifier     [1] BACnetPropertyIdentifier */
     len =
@@ -100,7 +100,7 @@ int bacapp_encode_device_obj_property_ref(
     if (value->deviceIdentifier.type == OBJECT_DEVICE) {
         len =
             encode_context_object_id(&apdu[apdu_len], 3,
-            (int) value->deviceIdentifier.type,
+            value->deviceIdentifier.type,
             value->deviceIdentifier.instance);
         apdu_len += len;
     }
@@ -163,7 +163,7 @@ int bacapp_decode_device_obj_property_ref(
         }
         apdu_len += len;
     } else {
-    	value->deviceIdentifier.type = BACNET_NO_DEV_TYPE;
+    	value->deviceIdentifier.type = OBJECT_NO_TYPE ;
     	value->deviceIdentifier.instance = BACNET_NO_DEV_ID;
     }
 
@@ -242,14 +242,14 @@ int bacapp_encode_device_obj_ref(
     if (value->deviceIdentifier.type == OBJECT_DEVICE) {
         len =
             encode_context_object_id(&apdu[apdu_len], 0,
-            (int) value->deviceIdentifier.type,
+            value->deviceIdentifier.type,
             value->deviceIdentifier.instance);
         apdu_len += len;
     }
     /* object-identifier [1] BACnetObjectIdentifier */
     len =
         encode_context_object_id(&apdu[apdu_len], 1,
-        (int) value->objectIdentifier.type, value->objectIdentifier.instance);
+        value->objectIdentifier.type, value->objectIdentifier.instance);
     apdu_len += len;
 
     return apdu_len;
@@ -277,7 +277,7 @@ int bacapp_decode_device_obj_ref(
         }
         apdu_len += len;
     } else {
-    	value->deviceIdentifier.type = BACNET_NO_DEV_TYPE;
+    	value->deviceIdentifier.type = OBJECT_NO_TYPE;
     	value->deviceIdentifier.instance = BACNET_NO_DEV_ID;
     }
     /* object-identifier [1] BACnetObjectIdentifier */

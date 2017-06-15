@@ -97,6 +97,7 @@ void Analog_Output_Property_Lists(
     return;
 }
 
+
 void Analog_Output_Init(
     void)
 {
@@ -268,6 +269,7 @@ bool Analog_Output_Object_Name(
     return status;
 }
 
+
 bool Analog_Output_Out_Of_Service(
     uint32_t instance)
 {
@@ -310,7 +312,7 @@ int Analog_Output_Read_Property(
 
     if ((rpdata == NULL) || (rpdata->application_data == NULL) ||
         (rpdata->application_data_len == 0)) {
-        return 0;
+        return BACNET_STATUS_ERROR;
     }
     apdu = rpdata->application_data;
     switch (rpdata->object_property) {
@@ -325,14 +327,17 @@ int Analog_Output_Read_Property(
             apdu_len =
                 encode_application_character_string(&apdu[0], &char_string);
             break;
+
         case PROP_OBJECT_TYPE:
             apdu_len =
                 encode_application_enumerated(&apdu[0], OBJECT_ANALOG_OUTPUT);
             break;
+
         case PROP_PRESENT_VALUE:
             real_value = Analog_Output_Present_Value(rpdata->object_instance);
             apdu_len = encode_application_real(&apdu[0], real_value);
             break;
+
         case PROP_STATUS_FLAGS:
             bitstring_init(&bit_string);
             bitstring_set_bit(&bit_string, STATUS_FLAG_IN_ALARM, false);

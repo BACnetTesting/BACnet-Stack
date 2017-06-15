@@ -76,10 +76,10 @@ typedef struct ring_buffer_t RING_BUFFER;
 
 #ifdef TEST
 #include "ctest.h"
-    void testRingBufPowerOfTwo(Test * pTest);
-    void testRingBufSizeSmall(Test * pTest);
-    void testRingBufSizeLarge(Test * pTest);
-    void testRingBufSizeInvalid(Test * pTest);
+void testRingBufPowerOfTwo(Test * pTest);
+void testRingBufSizeSmall(Test * pTest);
+void testRingBufSizeLarge(Test * pTest);
+void testRingBufSizeInvalid(Test * pTest);
 #endif
 
 #endif

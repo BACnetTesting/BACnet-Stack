@@ -76,8 +76,8 @@ static void MyErrorHandler(
     if (address_match(&Target_Address, src) &&
         (invoke_id == Request_Invoke_ID)) {
         printf("BACnet Error: %s: %s\n",
-            bactext_error_class_name((int) error_class),
-            bactext_error_code_name((int) error_code));
+            bactext_error_class_name((int)error_class),
+            bactext_error_code_name((int)error_code));
         Error_Detected = true;
     }
 }
@@ -85,14 +85,14 @@ static void MyErrorHandler(
 void MyAbortHandler(
     BACNET_ADDRESS * src,
     uint8_t invoke_id,
-    uint8_t abort_reason,
+    BACNET_ABORT_REASON abort_reason,
     bool server)
 {
     (void) server;
     if (address_match(&Target_Address, src) &&
         (invoke_id == Request_Invoke_ID)) {
         printf("BACnet Abort: %s\n",
-            bactext_abort_reason_name((int) abort_reason));
+            bactext_abort_reason_name((int)abort_reason));
         Error_Detected = true;
     }
 }
@@ -106,7 +106,7 @@ void MyRejectHandler(
     if (address_match(&Target_Address, src) &&
         (invoke_id == Request_Invoke_ID)) {
         printf("BACnet Reject: %s\n",
-            bactext_reject_reason_name((int) reject_reason));
+            bactext_reject_reason_name((int)reject_reason));
         Error_Detected = true;
     }
 }
@@ -142,7 +142,7 @@ void My_Read_Property_Multiple_Ack_Handler(
         if (rpm_data) {
             len =
                 rpm_ack_decode_service_request(service_request, service_len,
-                rpm_data);
+                    rpm_data);
         }
         if (len > 0) {
             while (rpm_data) {
@@ -163,7 +163,8 @@ void My_Read_Property_Multiple_Ack_Handler(
                 rpm_data = rpm_data->next;
                 free(old_rpm_data);
             }
-        } else {
+        }
+        else {
             fprintf(stderr, "RPM Ack Malformed! Freeing memory...\n");
             while (rpm_data) {
                 rpm_property = rpm_data->listOfProperties;
@@ -384,7 +385,7 @@ int main(
         while (rpm_property) {
             scan_count =
                 sscanf(property_token, "%u[%u]", &property_id,
-                &property_array_index);
+                    &property_array_index);
             if (scan_count > 0) {
                 rpm_property->propertyIdentifier = (BACNET_PROPERTY_ID) property_id;
                 if (rpm_property->propertyIdentifier > MAX_BACNET_PROPERTY_ID) {
@@ -494,5 +495,6 @@ int main(
 
     if (Error_Detected)
         return 1;
+        
     return 0;
 }

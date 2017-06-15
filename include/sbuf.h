@@ -38,10 +38,10 @@ struct static_buffer_t {
 typedef struct static_buffer_t STATIC_BUFFER;
 
 
-    void sbuf_init(
-        STATIC_BUFFER * b,      /* static buffer structure */
-        char *data,     /* data block */
-        unsigned size); /* actual size, in bytes, of the data block or array of data */
+void sbuf_init(
+    STATIC_BUFFER * b,      /* static buffer structure */
+    char *data,     /* data block */
+    unsigned size); /* actual size, in bytes, of the data block or array of data */
 
     /* returns true if size==0, false if size > 0 */
     bool sbuf_empty(
@@ -65,10 +65,10 @@ typedef struct static_buffer_t STATIC_BUFFER;
     bool sbuf_append(
         STATIC_BUFFER * b,      /* static buffer structure */
         char *data,     /* data to append */
-        unsigned data_size);    /* how many to append */
-    /* returns true if successful, false if count is bigger than size */
-    bool sbuf_truncate(
-        STATIC_BUFFER * b,      /* static buffer structure */
-        unsigned count);        /* new number of bytes used in buffer */
+    unsigned data_size);    /* how many to append */
+/* returns true if successful, false if count is bigger than size */
+bool sbuf_truncate(
+    STATIC_BUFFER * b,      /* static buffer structure */
+    unsigned count);        /* new number of bytes used in buffer */
 
 #endif

@@ -190,7 +190,7 @@ void my_i_am_handler(
 void MyAbortHandler(
     BACNET_ADDRESS * src,
     uint8_t invoke_id,
-    uint8_t abort_reason,
+    BACNET_ABORT_REASON abort_reason,
     bool server)
 {
     /* FIXME: verify src and invoke id */
@@ -500,12 +500,14 @@ int main(
             bvlc_maintenance_timer(elapsed_seconds);
 #endif
         }
+        
         total_seconds += elapsed_seconds;
         if (total_seconds > timeout_seconds)
             break;
         /* keep track of time for next check */
         last_seconds = current_seconds;
     }
+    
     print_address_cache();
 
     return 0;

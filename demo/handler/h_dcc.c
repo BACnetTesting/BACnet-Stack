@@ -42,7 +42,7 @@
 
 /** @file h_dcc.c  Handles Device Communication Control request. */
 
-static char My_Password[32] = "filister";
+static char My_Password[32] = "BITS01";
 
 /** Sets (non-volatile hold) the password to be used for DCC requests.
  * @param new_password [in] The new DCC password, of up to 31 characters.
@@ -60,7 +60,8 @@ void handler_dcc_password_set(
                 break;
             }
         }
-    } else {
+    }
+    else {
         for (i = 0; i < sizeof(My_Password); i++) {
             My_Password[i] = 0;
         }
