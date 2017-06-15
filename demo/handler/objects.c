@@ -127,7 +127,7 @@ void objects_device_delete(
             free(pDevice);
         }
     }
-    return pDevice;
+    // return pDevice;
 }
 
 #ifdef TEST

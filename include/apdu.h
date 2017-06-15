@@ -54,8 +54,8 @@ typedef struct _confirmed_service_ack_data {
 /* Unconfirmed_Event_Notification, Unconfirmed_Private_Transfer, */
 /* Unconfirmed_Text_Message, Time_Synchronization, Who_Has, */
 /* UTC_Time_Synchronization */
-    typedef void (
-        *unconfirmed_function) (
+typedef void(
+    *unconfirmed_function) (
         uint8_t * service_request,
         uint16_t len,
         BACNET_ADDRESS * src);
@@ -76,46 +76,46 @@ typedef struct _confirmed_service_ack_data {
 /* Confirmed_Text_Message, Reinitialize_Device, */
 /* VT_Open, VT_Close, VT_Data_Handler, */
 /* Authenticate, Request_Key */
-    typedef void (
-        *confirmed_function) (
+typedef void(
+    *confirmed_function) (
         uint8_t * service_request,
         uint16_t service_len,
         BACNET_ADDRESS * src,
         BACNET_CONFIRMED_SERVICE_DATA * service_data);
 
 /* generic confirmed simple ack function handler */
-    typedef void (
-        *confirmed_simple_ack_function) (
+typedef void(
+    *confirmed_simple_ack_function) (
         BACNET_ADDRESS * src,
         uint8_t invoke_id);
 
 /* generic confirmed ack function handler */
-    typedef void (
-        *confirmed_ack_function) (
+typedef void(
+    *confirmed_ack_function) (
         uint8_t * service_request,
         uint16_t service_len,
         BACNET_ADDRESS * src,
         BACNET_CONFIRMED_SERVICE_ACK_DATA * service_data);
 
 /* generic error reply function */
-    typedef void (
-        *error_function) (
+typedef void(
+    *error_function) (
         BACNET_ADDRESS * src,
         uint8_t invoke_id,
         BACNET_ERROR_CLASS error_class,
         BACNET_ERROR_CODE error_code);
 
 /* generic abort reply function */
-    typedef void (
-        *abort_function) (
+typedef void(
+    *abort_function) (
         BACNET_ADDRESS * src,
         uint8_t invoke_id,
-        uint8_t abort_reason,
+        BACNET_ABORT_REASON abort_reason,
         bool server);
 
 /* generic reject reply function */
-    typedef void (
-        *reject_function) (
+typedef void(
+    *reject_function) (
         BACNET_ADDRESS * src,
         uint8_t invoke_id,
         uint8_t reject_reason);
@@ -147,10 +147,10 @@ bool apdu_service_supported(
 /* Function to translate a SERVICE_SUPPORTED_ enum to its SERVICE_CONFIRMED_
  *  or SERVICE_UNCONFIRMED_ index.
  */
-    bool apdu_service_supported_to_index(
-        BACNET_SERVICES_SUPPORTED service_supported,
-        size_t * index,
-        bool * bIsConfirmed);
+bool apdu_service_supported_to_index(
+    BACNET_SERVICES_SUPPORTED service_supported,
+    size_t * index,
+    bool * bIsConfirmed);
 
 
 void apdu_set_error_handler(
@@ -180,9 +180,9 @@ uint8_t apdu_retries(
 void apdu_retries_set(
     uint8_t value);
 
-    void apdu_handler(
-        BACNET_ADDRESS * src,   /* source address */
-        uint8_t * apdu, /* APDU data */
-        uint16_t pdu_len);      /* for confirmed messages */
+void apdu_handler(
+    BACNET_ADDRESS * src,   /* source address */
+    uint8_t * apdu, /* APDU data */
+    uint16_t pdu_len);      /* for confirmed messages */
 
 #endif

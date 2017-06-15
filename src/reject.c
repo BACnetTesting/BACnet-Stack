@@ -95,7 +95,7 @@ BACNET_REJECT_REASON reject_convert_error_code(
 int reject_encode_apdu(
     uint8_t * apdu,
     uint8_t invoke_id,
-    uint8_t reject_reason)
+    BACNET_REJECT_REASON reject_reason)
 {
     int apdu_len = 0;   /* total length of the apdu, return value */
 

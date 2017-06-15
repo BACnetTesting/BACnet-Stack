@@ -125,7 +125,7 @@ int getevent_ack_encode_apdu_data(
             /* Tag 0: objectIdentifier */
             apdu_len +=
                 encode_context_object_id(&apdu[apdu_len], 0,
-                (int) event_data->objectIdentifier.type,
+                event_data->objectIdentifier.type,
                 event_data->objectIdentifier.instance);
             /* Tag 1: eventState */
             apdu_len +=

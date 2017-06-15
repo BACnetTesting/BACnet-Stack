@@ -293,7 +293,7 @@ void *Keylist_Data_Pop(
 }
 
 /* returns the data from the node specified by key */
-void *Keylist_Data(
+struct Keylist_Node *Keylist_Data(
     OS_Keylist list,
     KEY key)
 {
@@ -305,7 +305,7 @@ void *Keylist_Data(
             node = list->array[index];
     }
 
-    return node ? node->data : NULL;
+    return node ? (struct Keylist_Node *) node->data : NULL;
 }
 
 /* returns the index from the node specified by key */

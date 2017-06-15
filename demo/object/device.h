@@ -218,226 +218,226 @@ typedef struct devObj_s {
 
 
 
-    void Device_Init(
-        object_functions_t * object_table);
+void Device_Init(
+    object_functions_t * object_table);
 
-    bool Device_Reinitialize(
-        BACNET_REINITIALIZE_DEVICE_DATA * rd_data);
-    bool Device_Reinitialize_State_Set(BACNET_REINITIALIZED_STATE state);
-    BACNET_REINITIALIZED_STATE Device_Reinitialized_State(
-        void);
+bool Device_Reinitialize(
+    BACNET_REINITIALIZE_DEVICE_DATA * rd_data);
+bool Device_Reinitialize_State_Set(BACNET_REINITIALIZED_STATE state);
+BACNET_REINITIALIZED_STATE Device_Reinitialized_State(
+    void);
 
-    rr_info_function Device_Objects_RR_Info(
-        BACNET_OBJECT_TYPE object_type);
+rr_info_function Device_Objects_RR_Info(
+    BACNET_OBJECT_TYPE object_type);
 
-    void Device_getCurrentDateTime(
-        BACNET_DATE_TIME * DateTime);
+void Device_getCurrentDateTime(
+    BACNET_DATE_TIME * DateTime);
 
-    int32_t Device_UTC_Offset(void);
-    void Device_UTC_Offset_Set(int16_t offset);
+int32_t Device_UTC_Offset(void);
+void Device_UTC_Offset_Set(int16_t offset);
 
-    bool Device_Daylight_Savings_Status(void);
-    bool Device_Align_Intervals(void);
-    bool Device_Align_Intervals_Set(bool flag);
-    uint32_t Device_Time_Sync_Interval(void);
-    bool Device_Time_Sync_Interval_Set(uint32_t value);
-    uint32_t Device_Interval_Offset(void);
-    bool Device_Interval_Offset_Set(uint32_t value);
+bool Device_Daylight_Savings_Status(void);
+bool Device_Align_Intervals(void);
+bool Device_Align_Intervals_Set(bool flag);
+uint32_t Device_Time_Sync_Interval(void);
+bool Device_Time_Sync_Interval_Set(uint32_t value);
+uint32_t Device_Interval_Offset(void);
+bool Device_Interval_Offset_Set(uint32_t value);
 
-    void Device_Property_Lists(
-        const int **pRequired,
-        const int **pOptional,
-        const int **pProprietary);
-    void Device_Objects_Property_List(
-        BACNET_OBJECT_TYPE object_type,
-        uint32_t object_instance,
-        struct special_property_list_t *pPropertyList);
-    /* functions to support COV */
-    bool Device_Encode_Value_List(
-        BACNET_OBJECT_TYPE object_type,
-        uint32_t object_instance,
-        BACNET_PROPERTY_VALUE * value_list);
-    bool Device_Value_List_Supported(
-        BACNET_OBJECT_TYPE object_type);
-    bool Device_COV(
-        BACNET_OBJECT_TYPE object_type,
-        uint32_t object_instance);
-    void Device_COV_Clear(
-        BACNET_OBJECT_TYPE object_type,
-        uint32_t object_instance);
+void Device_Property_Lists(
+    const int **pRequired,
+    const int **pOptional,
+    const int **pProprietary);
+void Device_Objects_Property_List(
+    BACNET_OBJECT_TYPE object_type,
+    uint32_t object_instance,
+    struct special_property_list_t *pPropertyList);
+/* functions to support COV */
+bool Device_Encode_Value_List(
+    BACNET_OBJECT_TYPE object_type,
+    uint32_t object_instance,
+    BACNET_PROPERTY_VALUE * value_list);
+bool Device_Value_List_Supported(
+    BACNET_OBJECT_TYPE object_type);
+bool Device_COV(
+    BACNET_OBJECT_TYPE object_type,
+    uint32_t object_instance);
+void Device_COV_Clear(
+    BACNET_OBJECT_TYPE object_type,
+    uint32_t object_instance);
 
-    uint32_t Device_Object_Instance_Number(
-        void);
-    bool Device_Set_Object_Instance_Number(
-        uint32_t object_id);
-    bool Device_Valid_Object_Instance_Number(
-        uint32_t object_id);
-    unsigned Device_Object_List_Count(
-        void);
+uint32_t Device_Object_Instance_Number(
+    void);
+bool Device_Set_Object_Instance_Number(
+    uint32_t object_id);
+bool Device_Valid_Object_Instance_Number(
+    uint32_t object_id);
+unsigned Device_Object_List_Count(
+    void);
 
-    bool Device_Object_List_Identifier(
-        uint32_t array_index,
-        BACNET_OBJECT_TYPE *object_type,
-        uint32_t * instance);
+bool Device_Object_List_Identifier(
+    uint32_t array_index,
+    BACNET_OBJECT_TYPE *object_type,
+    uint32_t * instance);
 
-    unsigned Device_Count(
-        void);
-    uint32_t Device_Index_To_Instance(
-        unsigned index);
+unsigned Device_Count(
+    void);
+uint32_t Device_Index_To_Instance(
+    unsigned index);
 
-    bool Device_Object_Name(
-        uint32_t object_instance,
-        BACNET_CHARACTER_STRING * object_name);
-    bool Device_Set_Object_Name(
-        BACNET_CHARACTER_STRING * object_name);
-    /* Copy a child object name, given its ID. */
-    bool Device_Object_Name_Copy(
-        BACNET_OBJECT_TYPE object_type,
-        uint32_t object_instance,
-        BACNET_CHARACTER_STRING * object_name);
-    bool Device_Object_Name_ANSI_Init(const char * object_name);
-    char * Device_Object_Name_ANSI(void);
+bool Device_Object_Name(
+    uint32_t object_instance,
+    BACNET_CHARACTER_STRING * object_name);
+bool Device_Set_Object_Name(
+    BACNET_CHARACTER_STRING * object_name);
+/* Copy a child object name, given its ID. */
+bool Device_Object_Name_Copy(
+    BACNET_OBJECT_TYPE object_type,
+    uint32_t object_instance,
+    BACNET_CHARACTER_STRING * object_name);
+bool Device_Object_Name_ANSI_Init(const char * object_name);
+char * Device_Object_Name_ANSI(void);
 
-    BACNET_DEVICE_STATUS Device_System_Status(
-        void);
-    int Device_Set_System_Status(
-        BACNET_DEVICE_STATUS status,
-        bool local);
+BACNET_DEVICE_STATUS Device_System_Status(
+    void);
+int Device_Set_System_Status(
+    BACNET_DEVICE_STATUS status,
+    bool local);
 
-    const char *Device_Vendor_Name(
-        void);
+const char *Device_Vendor_Name(
+    void);
 
-    uint16_t Device_Vendor_Identifier(
-        void);
-    void Device_Set_Vendor_Identifier(
-        uint16_t vendor_id);
+uint16_t Device_Vendor_Identifier(
+    void);
+void Device_Set_Vendor_Identifier(
+    uint16_t vendor_id);
 
-    const char *Device_Model_Name(
-        void);
-    bool Device_Set_Model_Name(
-        const char *name,
-        size_t length);
+const char *Device_Model_Name(
+    void);
+bool Device_Set_Model_Name(
+    const char *name,
+    size_t length);
 
-    const char *Device_Firmware_Revision(
-        void);
+const char *Device_Firmware_Revision(
+    void);
 
-    const char *Device_Application_Software_Version(
-        void);
-    bool Device_Set_Application_Software_Version(
-        const char *name,
-        size_t length);
+const char *Device_Application_Software_Version(
+    void);
+bool Device_Set_Application_Software_Version(
+    const char *name,
+    size_t length);
 
-    const char *Device_Description(
-        void);
-    bool Device_Set_Description(
-        const char *name,
-        size_t length);
+const char *Device_Description(
+    void);
+bool Device_Set_Description(
+    const char *name,
+    size_t length);
 
-    const char *Device_Location(
-        void);
-    bool Device_Set_Location(
-        const char *name,
-        size_t length);
+const char *Device_Location(
+    void);
+bool Device_Set_Location(
+    const char *name,
+    size_t length);
 
-    /* some stack-centric constant values - no set methods */
-    uint8_t Device_Protocol_Version(
-        void);
-    uint8_t Device_Protocol_Revision(
-        void);
-    BACNET_SEGMENTATION Device_Segmentation_Supported(
-        void);
+/* some stack-centric constant values - no set methods */
+uint8_t Device_Protocol_Version(
+    void);
+uint8_t Device_Protocol_Revision(
+    void);
+BACNET_SEGMENTATION Device_Segmentation_Supported(
+    void);
 
-    uint32_t Device_Database_Revision(
-        void);
-    void Device_Set_Database_Revision(
-        uint32_t revision);
-    void Device_Inc_Database_Revision(
-        void);
+uint32_t Device_Database_Revision(
+    void);
+void Device_Set_Database_Revision(
+    uint32_t revision);
+void Device_Inc_Database_Revision(
+    void);
 
-    bool Device_Valid_Object_Name(
-        BACNET_CHARACTER_STRING * object_name,
-        int *object_type,
-        uint32_t * object_instance);
+bool Device_Valid_Object_Name(
+    BACNET_CHARACTER_STRING * object_name,
+    BACNET_OBJECT_TYPE *object_type,
+    uint32_t * object_instance);
 
-    bool Device_Valid_Object_Id(
-        BACNET_OBJECT_TYPE object_type,
-        uint32_t object_instance);
+bool Device_Valid_Object_Id(
+    BACNET_OBJECT_TYPE object_type,
+    uint32_t object_instance);
 
-    int Device_Read_Property(
-        BACNET_READ_PROPERTY_DATA * rpdata);
-    bool Device_Write_Property(
-        BACNET_WRITE_PROPERTY_DATA * wp_data);
+int Device_Read_Property(
+    BACNET_READ_PROPERTY_DATA * rpdata);
+bool Device_Write_Property(
+    BACNET_WRITE_PROPERTY_DATA * wp_data);
 
-    bool DeviceGetRRInfo(
-        BACNET_READ_RANGE_DATA * pRequest,      /* Info on the request */
-        RR_PROP_INFO * pInfo);  /* Where to put the information */
+bool DeviceGetRRInfo(
+    BACNET_READ_RANGE_DATA * pRequest,      /* Info on the request */
+    RR_PROP_INFO * pInfo);  /* Where to put the information */
 
-    int Device_Read_Property_Local(
-        BACNET_READ_PROPERTY_DATA * rpdata);
-    bool Device_Write_Property_Local(
-        BACNET_WRITE_PROPERTY_DATA * wp_data);
+int Device_Read_Property_Local(
+    BACNET_READ_PROPERTY_DATA * rpdata);
+bool Device_Write_Property_Local(
+    BACNET_WRITE_PROPERTY_DATA * wp_data);
 
 #if defined(INTRINSIC_REPORTING)
-    void Device_local_reporting(
-        void);
+void Device_local_reporting(
+    void);
 #endif
 
-    /* Prototypes for Routing functionality in the Device Object.
-     * Enable by defining BAC_ROUTING in config.h and including gw_device.c
-     * in the build (lib/Makefile).
-     */
-    void Routing_Device_Init(
-        uint32_t first_object_instance);
+/* Prototypes for Routing functionality in the Device Object.
+ * Enable by defining BAC_ROUTING in config.h and including gw_device.c
+ * in the build (lib/Makefile).
+ */
+void Routing_Device_Init(
+    uint32_t first_object_instance);
 
-    uint16_t Add_Routed_Device(
-        uint32_t Object_Instance,
-        BACNET_CHARACTER_STRING * Object_Name,
-        const char *Description);
-    DEVICE_OBJECT_DATA *Get_Routed_Device_Object(
-        int idx);
-    BACNET_ADDRESS *Get_Routed_Device_Address(
-        int idx);
+uint16_t Add_Routed_Device(
+    uint32_t Object_Instance,
+    BACNET_CHARACTER_STRING * Object_Name,
+    const char *Description);
+DEVICE_OBJECT_DATA *Get_Routed_Device_Object(
+    int idx);
+BACNET_ADDRESS *Get_Routed_Device_Address(
+    int idx);
 
-    void routed_get_my_address(
-        BACNET_ADDRESS * my_address);
+void routed_get_my_address(
+    BACNET_ADDRESS * my_address);
 
-    bool Routed_Device_Address_Lookup(
-        int idx,
-        uint8_t address_len,
-        uint8_t * mac_adress);
-    bool Routed_Device_GetNext(
-        BACNET_ADDRESS * dest,
-        int *DNET_list,
-        int *cursor);
-    bool Routed_Device_Is_Valid_Network(
-        uint16_t dest_net,
-        int *DNET_list);
+bool Routed_Device_Address_Lookup(
+    int idx,
+    uint8_t address_len,
+    uint8_t * mac_adress);
+bool Routed_Device_GetNext(
+    BACNET_ADDRESS * dest,
+    int *DNET_list,
+    int *cursor);
+bool Routed_Device_Is_Valid_Network(
+    uint16_t dest_net,
+    int *DNET_list);
 
-    uint32_t Routed_Device_Index_To_Instance(
-        unsigned index);
-    bool Routed_Device_Valid_Object_Instance_Number(
-        uint32_t object_id);
-    bool Routed_Device_Name(
-        uint32_t object_instance,
-        BACNET_CHARACTER_STRING * object_name);
-    uint32_t Routed_Device_Object_Instance_Number(
-        void);
-    bool Routed_Device_Set_Object_Instance_Number(
-        uint32_t object_id);
-    bool Routed_Device_Set_Object_Name(
-        uint8_t encoding,
-        const char *value,
-        size_t length);
-    bool Routed_Device_Set_Description(
-        const char *name,
-        size_t length);
-    void Routed_Device_Inc_Database_Revision(
-        void);
-    int Routed_Device_Service_Approval(
-        BACNET_CONFIRMED_SERVICE service,
-        int service_argument,
-        uint8_t * apdu_buff,
-        uint8_t invoke_id);
+uint32_t Routed_Device_Index_To_Instance(
+    unsigned index);
+bool Routed_Device_Valid_Object_Instance_Number(
+    uint32_t object_id);
+bool Routed_Device_Name(
+    uint32_t object_instance,
+    BACNET_CHARACTER_STRING * object_name);
+uint32_t Routed_Device_Object_Instance_Number(
+    void);
+bool Routed_Device_Set_Object_Instance_Number(
+    uint32_t object_id);
+bool Routed_Device_Set_Object_Name(
+    uint8_t encoding,
+    const char *value,
+    size_t length);
+bool Routed_Device_Set_Description(
+    const char *name,
+    size_t length);
+void Routed_Device_Inc_Database_Revision(
+    void);
+int Routed_Device_Service_Approval(
+    BACNET_CONFIRMED_SERVICE service,
+    int service_argument,
+    uint8_t * apdu_buff,
+    uint8_t invoke_id);
 
 
 
