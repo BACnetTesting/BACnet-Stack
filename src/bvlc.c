@@ -1162,7 +1162,7 @@ uint16_t bvlc_receive(
     if (npdu[0] != BVLL_TYPE_BACNET_IP) {
         return 0;
     }
-    BVLC_Function_Code = (BACNET_BVLC_FUNCTION) npdu[1];
+    BVLC_Function_Code = npdu[1];
     /* decode the length of the PDU - length is inclusive of BVLC */
     (void) decode_unsigned16(&npdu[2], &npdu_len);
     /* subtract off the BVLC header */
@@ -1427,7 +1427,7 @@ uint16_t bvlc_receive(
 /** Send a packet out the BACnet/IP socket (Annex J)
  *
  * @param dest - destination address
- * @param npdu_data - network information
+ * @param npci_data - network information
  * @param pdu - any data to be sent - may be null
  * @param pdu_len - number of bytes of data
  *
@@ -1435,7 +1435,7 @@ uint16_t bvlc_receive(
  */
 int bvlc_send_pdu(
     BACNET_ADDRESS * dest,
-    BACNET_NPDU_DATA * npdu_data,
+    BACNET_NPCI_DATA * npci_data,
     uint8_t * pdu,
     unsigned pdu_len)
 {
@@ -1448,7 +1448,7 @@ int bvlc_send_pdu(
     uint16_t BVLC_length = 0;
 
     /* bip datalink doesn't need to know the npdu data */
-    (void) npdu_data;
+    (void) npci_data;
     mtu[0] = BVLL_TYPE_BACNET_IP;
     /* handle various broadcasts: */
     /* mac_len = 0 is a broadcast address */
@@ -1579,19 +1579,18 @@ int bvlc_for_non_bbmd(
     uint8_t * npdu,
     uint16_t received_bytes)
 {
-    BACNET_BVLC_RESULT result_code ;   /* aka, BVLC_RESULT_SUCCESSFUL_COMPLETION */
-    uint16_t tValue;
+    uint16_t result_code = 0;   /* aka, BVLC_RESULT_SUCCESSFUL_COMPLETION */
 
-    BVLC_Function_Code = (BACNET_BVLC_FUNCTION) npdu[1];       /* The BVLC function */
+    BVLC_Function_Code = npdu[1];       /* The BVLC function */
     switch (BVLC_Function_Code) {
         case BVLC_RESULT:
             if (received_bytes >= 6) {
                 /* This is the result of our foreign device registration */
-                (void) decode_unsigned16(&npdu[4], &tValue);
-                BVLC_Result_Code = (BACNET_BVLC_RESULT) tValue ;
+                (void) decode_unsigned16(&npdu[4], &result_code);
+                BVLC_Result_Code = (BACNET_BVLC_RESULT) result_code;
                 debug_printf("BVLC: Result Code=%d\n", BVLC_Result_Code);
                 /* But don't send any response */
-                result_code = BVLC_RESULT_SUCCESSFUL_COMPLETION;
+                result_code = 0;
             }
             break;
         case BVLC_WRITE_BROADCAST_DISTRIBUTION_TABLE:

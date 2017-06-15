@@ -54,7 +54,7 @@ typedef struct dlmstp_packet {
     /* returns number of bytes sent on success, negative on failure */
     int dlmstp_send_pdu(
         BACNET_ADDRESS * dest,  /* destination address */
-        BACNET_NPDU_DATA * npdu_data,   /* network information */
+        BACNET_NPCI_DATA * npci_data,   /* network information */
         uint8_t * pdu,  /* any data to be sent - may be null */
         unsigned pdu_len);      /* number of bytes of data */
 

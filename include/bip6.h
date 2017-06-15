@@ -40,7 +40,7 @@
         BACNET_ADDRESS * my_address);
     int bip6_send_pdu(
         BACNET_ADDRESS * dest,
-        BACNET_NPDU_DATA * npdu_data,
+        BACNET_NPCI_DATA * npci_data,
         uint8_t * pdu,
         unsigned pdu_len);
     uint16_t bip6_receive(

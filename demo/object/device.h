@@ -277,7 +277,7 @@ typedef struct devObj_s {
 
     bool Device_Object_List_Identifier(
         uint32_t array_index,
-        BACNET_OBJECT_TYPE *object_type,
+        int *object_type,
         uint32_t * instance);
 
     unsigned Device_Count(
@@ -356,11 +356,11 @@ typedef struct devObj_s {
 
     bool Device_Valid_Object_Name(
         BACNET_CHARACTER_STRING * object_name,
-        BACNET_OBJECT_TYPE *object_type,
+        int *object_type,
         uint32_t * object_instance);
 
     bool Device_Valid_Object_Id(
-        BACNET_OBJECT_TYPE object_type,
+        int object_type,
         uint32_t object_instance);
 
     int Device_Read_Property(

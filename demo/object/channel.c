@@ -243,7 +243,7 @@ unsigned Channel_Last_Priority(uint32_t object_instance)
 BACNET_WRITE_STATUS Channel_Write_Status(uint32_t object_instance)
 {
     unsigned index = 0;
-    BACNET_WRITE_STATUS priority = BACNET_WRITE_STATUS_IDLE;
+    unsigned priority = 0;
 
     index = Channel_Instance_To_Index(object_instance);
     if (index < BACNET_CHANNELS_MAX) {
@@ -464,14 +464,12 @@ unsigned Channel_Reference_List_Member_Element_Add(uint32_t object_instance,
  */
 unsigned Channel_Reference_List_Member_Local_Add(
     uint32_t object_instance,
-    BACNET_OBJECT_TYPE type,
+    uint16_t type,
     uint32_t instance,
     BACNET_PROPERTY_ID propertyIdentifier,
     uint32_t arrayIndex)
 {
-    BACNET_DEVICE_OBJECT_PROPERTY_REFERENCE member ;
-
-    memset(&member, 0, sizeof(member));
+    BACNET_DEVICE_OBJECT_PROPERTY_REFERENCE member = {{0}};
 
     member.objectIdentifier.type = type;
     member.objectIdentifier.instance = instance;
@@ -1207,12 +1205,10 @@ static bool Channel_Write_Members(
     BACNET_APPLICATION_DATA_VALUE * value,
     uint8_t priority)
 {
-    BACNET_WRITE_PROPERTY_DATA wp_data ;
+    BACNET_WRITE_PROPERTY_DATA wp_data = {0};
     bool status = false;
     unsigned m = 0;
     BACNET_DEVICE_OBJECT_PROPERTY_REFERENCE *pMember = NULL;
-
-    memset(&wp_data, 0, sizeof(wp_data));
 
     if (pChannel && value) {
         pChannel->Write_Status = BACNET_WRITE_STATUS_IN_PROGRESS;

@@ -578,7 +578,7 @@ bool Trend_Log_Write_Property(
                 &wp_data->error_class, &wp_data->error_code);
             if (status) {
                 if (value.type.Enumerated != LOGGING_TYPE_COV) {
-                    CurrentLog->LoggingType = (BACNET_LOGGING_TYPE) value.type.Enumerated;
+                    CurrentLog->LoggingType = value.type.Enumerated;
                     if (value.type.Enumerated == LOGGING_TYPE_POLLED) {
                         /* As per 12.25.27 pick a suitable default if interval is 0 */
                         if (CurrentLog->ulLogInterval == 0) {

@@ -65,7 +65,7 @@ void Send_WhoHas_Name(
     BACNET_ADDRESS dest;
     int bytes_sent = 0;
     BACNET_WHO_HAS_DATA data;
-    BACNET_NPDU_DATA npdu_data;
+    BACNET_NPCI_DATA npci_data;
     BACNET_ADDRESS my_address;
 
     /* if we are forbidden to send, don't send! */
@@ -75,10 +75,10 @@ void Send_WhoHas_Name(
     datalink_get_broadcast_address(&dest);
     datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
         npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest, &my_address,
-        &npdu_data);
+        &npci_data);
 
     /* encode the APDU portion of the packet */
     data.low_limit = low_limit;
@@ -89,7 +89,7 @@ void Send_WhoHas_Name(
     pdu_len += len;
     /* send the data */
     bytes_sent =
-        datalink_send_pdu(&dest, &npdu_data, &Handler_Transmit_Buffer[0],
+        datalink_send_pdu(&dest, &npci_data, &Handler_Transmit_Buffer[0],
         pdu_len);
 #if PRINT_ENABLED
     if (bytes_sent <= 0)
@@ -120,7 +120,7 @@ void Send_WhoHas_Object(
     BACNET_ADDRESS dest;
     int bytes_sent = 0;
     BACNET_WHO_HAS_DATA data;
-    BACNET_NPDU_DATA npdu_data;
+    BACNET_NPCI_DATA npci_data;
     BACNET_ADDRESS my_address;
 
     /* if we are forbidden to send, don't send! */
@@ -130,10 +130,10 @@ void Send_WhoHas_Object(
     datalink_get_broadcast_address(&dest);
     datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
         npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest, &my_address,
-        &npdu_data);
+        &npci_data);
 
     /* encode the APDU portion of the packet */
     data.low_limit = low_limit;
@@ -144,7 +144,7 @@ void Send_WhoHas_Object(
     len = whohas_encode_apdu(&Handler_Transmit_Buffer[pdu_len], &data);
     pdu_len += len;
     bytes_sent =
-        datalink_send_pdu(&dest, &npdu_data, &Handler_Transmit_Buffer[0],
+        datalink_send_pdu(&dest, &npci_data, &Handler_Transmit_Buffer[0],
         pdu_len);
 #if PRINT_ENABLED
     if (bytes_sent <= 0)

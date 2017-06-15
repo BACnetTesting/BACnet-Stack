@@ -832,10 +832,10 @@ bool Analog_Input_Write_Property(
             if (status) {
                 switch ((BACNET_NOTIFY_TYPE) value.type.Enumerated) {
                     case NOTIFY_EVENT:
-                        CurrentAI->Notify_Type = NOTIFY_EVENT;
+                        CurrentAI->Notify_Type = 1;
                         break;
                     case NOTIFY_ALARM:
-                        CurrentAI->Notify_Type = NOTIFY_ALARM;
+                        CurrentAI->Notify_Type = 0;
                         break;
                     default:
                         wp_data->error_class = ERROR_CLASS_PROPERTY;
@@ -881,7 +881,7 @@ void Analog_Input_Intrinsic_Reporting(
     BACNET_CHARACTER_STRING msgText;
     ANALOG_INPUT_DESCR *CurrentAI;
     unsigned int object_index;
-    BACNET_EVENT_STATE FromState = EVENT_STATE_NORMAL;
+    uint8_t FromState = 0;
     uint8_t ToState;
     float ExceededLimit = 0.0f;
     float PresentVal = 0.0f;
@@ -1050,6 +1050,10 @@ void Analog_Input_Intrinsic_Reporting(
                 bactext_event_state_name(FromState),
                 bactext_event_state_name(ToState));
 #endif /* PRINT_ENABLED */
+
+#ifdef __cplusplus
+#error
+#endif
 
             /* Notify Type */
             event_data.notifyType = CurrentAI->Notify_Type;
