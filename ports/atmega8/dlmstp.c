@@ -486,14 +486,14 @@ static void MSTP_Slave_Node_FSM(
 /* returns number of bytes sent on success, zero on failure */
 int dlmstp_send_pdu(
     BACNET_ADDRESS * dest,      /* destination address */
-    BACNET_NPDU_DATA * npdu_data,       /* network information */
+    BACNET_NPCI_DATA * npci_data,       /* network information */
     uint8_t * pdu,      /* any data to be sent - may be null */
     unsigned pdu_len)
 {       /* number of bytes of data */
     int bytes_sent = 0;
 
     if (MSTP_Flag.TransmitPacketPending == false) {
-        MSTP_Flag.TransmitPacketDER = npdu_data->data_expecting_reply;
+        MSTP_Flag.TransmitPacketDER = npci_data->data_expecting_reply;
         TransmitPacket = pdu;
         TransmitPacketLen = pdu_len;
         bytes_sent = pdu_len;

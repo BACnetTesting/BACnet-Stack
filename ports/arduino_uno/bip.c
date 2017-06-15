@@ -159,14 +159,14 @@ static int bip_decode_bip_address(BACNET_ADDRESS * bac_addr,
  * @ingroup DLBIP
  *
  * @param dest [in] Destination address (may encode an IP address and port #).
- * @param npdu_data [in] The NPDU header (Network) information (not used).
+ * @param npci_data [in] The NPDU header (Network) information (not used).
  * @param pdu [in] Buffer of data to be sent - may be null (why?).
  * @param pdu_len [in] Number of bytes in the pdu buffer.
  * @return Number of bytes sent on success, negative number on failure.
  */
 int bip_send_pdu(BACNET_ADDRESS * dest, /* destination address */
 
-    BACNET_NPDU_DATA * npdu_data,       /* network information */
+    BACNET_NPCI_DATA * npci_data,       /* network information */
 
     uint8_t * pdu,      /* any data to be sent - may be null */
 
@@ -180,7 +180,7 @@ int bip_send_pdu(BACNET_ADDRESS * dest, /* destination address */
     uint8_t address[] = { 0, 0, 0, 0 };
     uint16_t port = 0;
 
-    (void) npdu_data;
+    (void) npci_data;
     /* assumes that the driver has already been initialized */
     if (BIP_Socket < 0) {
         return BIP_Socket;
