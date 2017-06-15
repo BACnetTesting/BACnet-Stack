@@ -22,9 +22,6 @@ struct vmac_data {
 };
 /** @} */
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     unsigned int VMAC_Count(void);
     struct vmac_data *VMAC_Find_By_Key(uint32_t device_id);
@@ -46,7 +43,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

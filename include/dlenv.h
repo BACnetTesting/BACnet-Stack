@@ -25,9 +25,7 @@
 #ifndef DLENV_H
 #define DLENV_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+#include "datalink.h"
 
     void dlenv_init(
         void);
@@ -36,17 +34,14 @@ extern "C" {
     void dlenv_maintenance_timer(
         uint16_t elapsed_seconds);
 
-    /* Simple setters and getter. */
-    void dlenv_bbmd_address_set(
-        long address);
-    void dlenv_bbmd_port_set(
-        int port);
-    void dlenv_bbmd_ttl_set(
-        int ttl_secs);
-    int dlenv_bbmd_result(
-        void);
+/* Simple setters and getter. */
+void dlenv_bbmd_address_set(
+    long address);
+void dlenv_bbmd_port_set(
+    int port);
+void dlenv_bbmd_ttl_set(
+    int ttl_secs);
+int dlenv_bbmd_result(
+    void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

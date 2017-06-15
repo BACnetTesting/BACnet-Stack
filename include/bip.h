@@ -39,9 +39,6 @@
 
 extern bool BIP_Debug;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     /* note: define init, set_interface, and cleanup in your port */
     /* on Linux, ifname is eth0, ath0, arc0, and others.
@@ -112,9 +109,6 @@ extern "C" {
         const char *host_name);
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 /** @defgroup DLBIP BACnet/IP DataLink Network Layer
  * @ingroup DataLink
  * Implementation of the Network Layer using BACnet/IP as the transport, as

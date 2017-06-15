@@ -169,9 +169,6 @@ struct mstp_port_struct_t {
 
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     void MSTP_Init(
         volatile struct mstp_port_struct_t *mstp_port);
@@ -226,7 +223,4 @@ extern "C" {
         volatile struct mstp_port_struct_t *mstp_port,
         unsigned timeout);      /* milliseconds to wait for a packet */
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

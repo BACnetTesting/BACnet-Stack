@@ -43,9 +43,6 @@ struct special_property_list_t {
     struct property_list_t Proprietary;
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     unsigned property_list_count(
         const int *pList);
@@ -69,7 +66,4 @@ extern "C" {
         const int *pListOptional,
         const int *pListProprietary);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

@@ -71,10 +71,6 @@ typedef struct BACnet_Weeknday {
     uint8_t dayofweek;  /* 1=Monday-7=Sunday, FF=any */
 } BACNET_WEEKNDAY;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
     /* utility initialization functions */
     void datetime_set_date(
         BACNET_DATE * bdate,
@@ -249,7 +245,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif /* DATE_TIME_H */

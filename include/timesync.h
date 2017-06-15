@@ -45,10 +45,6 @@ typedef struct BACnet_Recipient_List {
     struct BACnet_Recipient_List *next;
 } BACNET_RECIPIENT_LIST;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
     /* encode service */
     int timesync_utc_encode_apdu(
         uint8_t * apdu,
@@ -95,7 +91,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-#endif
+#endif /* TIMESYNC_H */

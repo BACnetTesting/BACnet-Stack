@@ -59,9 +59,6 @@ typedef bool(
     *write_property_function) (
     BACNET_WRITE_PROPERTY_DATA * wp_data);
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     /* encode service */
     int wp_encode_apdu(
@@ -90,9 +87,6 @@ extern "C" {
         BACNET_APPLICATION_DATA_VALUE * value);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 /** @defgroup DSWP Data Sharing - Write Property Service (DS-WP)
  * @ingroup DataShare
  * 15.9 WriteProperty Service <br>

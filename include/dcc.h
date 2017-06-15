@@ -29,9 +29,6 @@
 #include "bacenum.h"
 #include "bacstr.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /* return the status */
     BACNET_COMMUNICATION_ENABLE_DISABLE dcc_enable_status(
@@ -84,9 +81,6 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 /** @defgroup RDMS  Device and Network Management Service BIBBs
  * These device management BIBBs prescribe the BACnet capabilities required
  * to interoperably perform the device management functions enumerated in

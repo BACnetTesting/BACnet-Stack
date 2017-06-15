@@ -30,9 +30,6 @@
 #include "bacdef.h"
 #include "readrange.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     void address_init(
         void);
@@ -121,7 +118,4 @@ extern "C" {
     void address_protected_entry_index_set(uint32_t top_protected_entry_index);
     void address_own_device_id_set(uint32_t own_id);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

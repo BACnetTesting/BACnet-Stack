@@ -24,9 +24,6 @@
 #ifndef MSTPTEXT_H
 #define MSTPTEXT_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     const char *mstptext_receive_state(
         unsigned index);
@@ -35,7 +32,4 @@ extern "C" {
     const char *mstptext_frame_type(
         unsigned index);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

@@ -29,14 +29,8 @@
 
 /** @file txbuf.c  Declare the global Transmit Buffer for handler functions. */
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     uint8_t Handler_Transmit_Buffer[MAX_PDU] = { 0 };
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 
 

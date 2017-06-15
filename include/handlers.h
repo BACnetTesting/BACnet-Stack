@@ -43,10 +43,6 @@
 #include "alarm_ack.h"
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
     void handler_unrecognized_service(
         uint8_t * service_request,
         uint16_t service_len,
@@ -359,9 +355,6 @@ extern "C" {
         BACNET_CONFIRMED_SERVICE_ACK_DATA *service_data);
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 /** @defgroup MISCHNDLR Miscellaneous Handler Utilities
  * Various utilities and functions to support the Handlers.
  */

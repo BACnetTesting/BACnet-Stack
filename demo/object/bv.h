@@ -32,10 +32,6 @@
 #include "rp.h"
 #include "wp.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
     void Binary_Value_Init(
         void);
 
@@ -146,7 +142,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

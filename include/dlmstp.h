@@ -43,9 +43,6 @@ typedef struct dlmstp_packet {
     uint8_t pdu[MAX_MPDU];      /* packet */
 } DLMSTP_PACKET;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     bool dlmstp_init(
         char *ifname);
@@ -116,7 +113,4 @@ extern "C" {
     bool dlmstp_send_pdu_queue_empty(void);
     bool dlmstp_send_pdu_queue_full(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

@@ -56,9 +56,6 @@
 #define MAX_COMMAND_ACTIONS 8
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     typedef struct bacnet_action_list {
         BACNET_OBJECT_ID Device_Id;     /* Optional */
@@ -169,7 +166,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

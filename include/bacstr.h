@@ -52,9 +52,6 @@ typedef struct BACnet_Octet_String {
     uint8_t value[MAX_OCTET_STRING_BYTES];
 } BACNET_OCTET_STRING;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     void bitstring_init(
         BACNET_BIT_STRING * bit_string);
@@ -201,7 +198,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

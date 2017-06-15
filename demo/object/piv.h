@@ -32,9 +32,6 @@
 #include "wp.h"
 #include "rp.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     typedef struct positiveinteger_value_descr {
         bool Out_Of_Service:1;
@@ -89,7 +86,4 @@ extern "C" {
     void testPositiveInteger_Value(Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

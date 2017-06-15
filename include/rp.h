@@ -56,9 +56,6 @@ typedef int (
     *read_property_function) (
     BACNET_READ_PROPERTY_DATA * rp_data);
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /* encode service */
     int rp_encode_apdu(
@@ -118,9 +115,6 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 /** @defgroup DataShare Data Sharing BIBBs
  * These BIBBs prescribe the BACnet capabilities required to interoperably
  * perform the data sharing functions enumerated in 22.2.1.1 for the BACnet

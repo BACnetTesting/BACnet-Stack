@@ -64,10 +64,6 @@
 #include "ucix.h"
 #endif /* defined(BAC_UCI) */
 
-#ifdef __cplusplus
-// just checking
-#error 
-#endif /* __cplusplus */
 
 
 /** @file server/main.c  Example server application using the BACnet Stack. */

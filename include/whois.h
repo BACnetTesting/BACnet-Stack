@@ -27,9 +27,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /* encode service  - use -1 for limit if you want unlimited */
     int whois_encode_apdu(
@@ -54,9 +51,6 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 /** @defgroup DMDDB Device Management-Dynamic Device Binding (DM-DDB)
  * @ingroup RDMS
  * 16.10 Who-Is and I-Am Services <br>

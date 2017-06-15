@@ -34,10 +34,7 @@
 
 struct sockaddr_in;     /* Defined elsewhere, needed here. */
 
-#ifdef __cplusplus
-extern "C" {
 
-#endif /* __cplusplus */
 
 #if defined(BBMD_ENABLED) && BBMD_ENABLED
     void bvlc_maintenance_timer(
@@ -111,24 +108,24 @@ extern "C" {
         uint8_t * npdu,
         uint16_t received_bytes);
 
-    /* Returns the last BVLL Result we received, either as the result of a BBMD
-     * request we sent, or (if not a BBMD or Client), from trying to register
-     * as a foreign device. */
-    BACNET_BVLC_RESULT bvlc_get_last_result(
-        void);
+/* Returns the last BVLL Result we received, either as the result of a BBMD
+ * request we sent, or (if not a BBMD or Client), from trying to register
+ * as a foreign device. */
+BACNET_BVLC_RESULT bvlc_get_last_result(
+    void);
 
-    /* Returns the current BVLL Function Code we are processing.
-     * We have to store this higher layer code for when the lower layers
-     * need to know what it is, especially to differentiate between
-     * BVLC_ORIGINAL_UNICAST_NPDU and BVLC_ORIGINAL_BROADCAST_NPDU.  */
-    BACNET_BVLC_FUNCTION bvlc_get_function_code(
-        void);
+/* Returns the current BVLL Function Code we are processing.
+ * We have to store this higher layer code for when the lower layers
+ * need to know what it is, especially to differentiate between
+ * BVLC_ORIGINAL_UNICAST_NPDU and BVLC_ORIGINAL_BROADCAST_NPDU.  */
+BACNET_BVLC_FUNCTION bvlc_get_function_code(
+    void);
 
 
-    /* Local interface to manage BBMD.
-     * The interface user needs to handle mutual exclusion if needed i.e.
-     * BACnet packet is not being handled when the BBMD table is modified.
-     */
+/* Local interface to manage BBMD.
+ * The interface user needs to handle mutual exclusion if needed i.e.
+ * BACnet packet is not being handled when the BBMD table is modified.
+ */
 
     /* Get handle to broadcast distribution table. Returns the number of
      * valid entries in the table. */
@@ -144,28 +141,25 @@ extern "C" {
         BBMD_TABLE_ENTRY* entry);
 
 
-    /* NAT handling
-     * If the communication between BBMDs goes through a NAT enabled internet
-     * router, special considerations are needed as stated in Annex J.7.8.
-     *
-     * In short, the local IP address of the BBMD is different than the global
-     * address which is visible to the other BBMDs or foreign devices. This is
-     * why the source address in forwarded messages needs to be changed to the
-     * global IP address.
-     *
-     * For other considerations/limitations see Annex J.7.8.
-     */
+/* NAT handling
+ * If the communication between BBMDs goes through a NAT enabled internet
+ * router, special considerations are needed as stated in Annex J.7.8.
+ *
+ * In short, the local IP address of the BBMD is different than the global
+ * address which is visible to the other BBMDs or foreign devices. This is
+ * why the source address in forwarded messages needs to be changed to the
+ * global IP address.
+ *
+ * For other considerations/limitations see Annex J.7.8.
+ */
 
     /* Set global IP address of a NAT enabled router which is used in forwarded
      * messages. Enables NAT handling.
      */
     void bvlc_set_global_address_for_nat(const struct in_addr* addr);
 
-    /* Disable NAT handling of BBMD.
-     */
-    void bvlc_disable_nat(void);
+/* Disable NAT handling of BBMD.
+ */
+void bvlc_disable_nat(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif /* */

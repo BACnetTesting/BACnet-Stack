@@ -35,14 +35,8 @@
 #define BACNET_VERSION_MINOR ((BACNET_VERSION_CODE>>8)&0xFF)
 #define BACNET_VERSION_MAINTENANCE (BACNET_VERSION_CODE&0xFF)
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 extern char *BACnet_Version;
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 
 #endif

@@ -188,9 +188,6 @@ typedef struct Set_Master_Key {
     BACNET_KEY_ENTRY key;
 } BACNET_SET_MASTER_KEY;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /* helper functions */
     BACNET_KEY_IDENTIFIER_ALGORITHM key_algorithm(uint16_t id);
@@ -284,7 +281,4 @@ extern "C" {
         uint32_t apdu_len_remaining,
         BACNET_SET_MASTER_KEY * set_master_key);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

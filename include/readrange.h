@@ -27,9 +27,6 @@
 #include "bacstr.h"
 #include "datetime.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     struct BACnet_Read_Range_Data;
     typedef struct BACnet_Read_Range_Data {
@@ -155,9 +152,6 @@ extern "C" {
         uint32_t device_id,     /* destination device */
         BACNET_READ_RANGE_DATA * read_access_data);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 /** @defgroup Trend Trending BIBBs
  * These BIBBs prescribe the BACnet capabilities required to interoperably
  * perform the trending functions enumerated in clause 22.2.1.4 for the

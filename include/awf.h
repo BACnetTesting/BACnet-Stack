@@ -48,9 +48,6 @@ typedef struct BACnet_Atomic_Write_File_Data {
     BACNET_OCTET_STRING fileData[BACNET_WRITE_FILE_RECORD_COUNT];
 } BACNET_ATOMIC_WRITE_FILE_DATA;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /* Atomic Write File */
 /* encode service */
@@ -99,7 +96,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

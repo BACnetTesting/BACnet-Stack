@@ -39,20 +39,20 @@
 #include "rpm.h"
 #include "readrange.h"
 
-/** Called so a BACnet object can perform any necessary initialization.
- * @ingroup ObjHelpers
- */
-typedef void (
+ /** Called so a BACnet object can perform any necessary initialization.
+  * @ingroup ObjHelpers
+  */
+typedef void(
     *object_init_function) (
-    void);
+        void);
 
 /** Counts the number of objects of this type.
  * @ingroup ObjHelpers
  * @return Count of implemented objects of this type.
  */
-typedef unsigned (
+typedef unsigned(
     *object_count_function) (
-    void);
+        void);
 
 /** Maps an object index position to its corresponding BACnet object instance number.
  * @ingroup ObjHelpers
@@ -61,8 +61,8 @@ typedef unsigned (
  */
 typedef uint32_t(
     *object_index_to_instance_function)
-        (
-    unsigned index);
+    (
+        unsigned index);
 
 /** Provides the BACnet Object_Name for a given object instance of this type.
  * @ingroup ObjHelpers
@@ -74,9 +74,9 @@ typedef uint32_t(
  */
 typedef bool(
     *object_name_function)
-        (
-    uint32_t object_instance,
-    BACNET_CHARACTER_STRING * object_name);
+    (
+        uint32_t object_instance,
+        BACNET_CHARACTER_STRING * object_name);
 
 /** Look in the table of objects of this type, and see if this is a valid
  *  instance number.
@@ -86,7 +86,7 @@ typedef bool(
  */
 typedef bool(
     *object_valid_instance_function) (
-    uint32_t object_instance);
+        uint32_t object_instance);
 
 /** Helper function to step through an array of objects and find either the
  * first one or the next one of a given type. Used to step through an array
@@ -98,9 +98,9 @@ typedef bool(
  * @return The index of the next object of the required type or ~0 (all bits
  * == 1) to indicate no more objects found.
  */
-typedef unsigned (
+typedef unsigned(
     *object_iterate_function) (
-    unsigned current_index);
+        unsigned current_index);
 
 /** Look in the table of objects of this type, and get the COV Value List.
  * @ingroup ObjHelpers
@@ -110,8 +110,8 @@ typedef unsigned (
  */
 typedef bool(
     *object_value_list_function) (
-    uint32_t object_instance,
-    BACNET_PROPERTY_VALUE * value_list);
+        uint32_t object_instance,
+        BACNET_PROPERTY_VALUE * value_list);
 
 /** Look in the table of objects for this instance to see if value changed.
  * @ingroup ObjHelpers
@@ -120,23 +120,23 @@ typedef bool(
  */
 typedef bool(
     *object_cov_function) (
-    uint32_t object_instance);
+        uint32_t object_instance);
 
 /** Look in the table of objects for this instance to clear the changed flag.
  * @ingroup ObjHelpers
  * @param [in] The object instance number to be looked up.
  */
-typedef void (
+typedef void(
     *object_cov_clear_function) (
-    uint32_t object_instance);
+        uint32_t object_instance);
 
 /** Intrinsic Reporting funcionality.
  * @ingroup ObjHelpers
  * @param [in] Object instance.
  */
-typedef void (
+typedef void(
     *object_intrinsic_reporting_function) (
-    uint32_t object_instance);
+        uint32_t object_instance);
 
 
 /** Defines the group of object helper functions for any supported Object.
@@ -217,9 +217,6 @@ typedef struct devObj_s {
 } DEVICE_OBJECT_DATA;
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     void Device_Init(
         object_functions_t * object_table);
@@ -360,6 +357,7 @@ extern "C" {
         BACNET_CHARACTER_STRING * object_name,
         BACNET_OBJECT_TYPE *object_type,
         uint32_t * object_instance);
+
     bool Device_Valid_Object_Id(
         BACNET_OBJECT_TYPE object_type,
         uint32_t object_instance);
@@ -383,10 +381,10 @@ extern "C" {
         void);
 #endif
 
-/* Prototypes for Routing functionality in the Device Object.
- * Enable by defining BAC_ROUTING in config.h and including gw_device.c
- * in the build (lib/Makefile).
- */
+    /* Prototypes for Routing functionality in the Device Object.
+     * Enable by defining BAC_ROUTING in config.h and including gw_device.c
+     * in the build (lib/Makefile).
+     */
     void Routing_Device_Init(
         uint32_t first_object_instance);
 
@@ -442,9 +440,6 @@ extern "C" {
 
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 /** @defgroup ObjFrmwk Object Framework
  * The modules in this section describe the BACnet-stack's framework for
  * BACnet-defined Objects (Device, Analog Input, etc). There are two submodules

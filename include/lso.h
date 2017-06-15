@@ -30,9 +30,6 @@
 #include "bacdef.h"
 #include "bacstr.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /* Life Safety Operation Service */
 
@@ -61,7 +58,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

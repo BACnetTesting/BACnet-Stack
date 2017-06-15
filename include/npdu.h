@@ -60,9 +60,6 @@ typedef struct router_port_t {
     struct router_port_t *next;         /**< Point to next in linked list */
 } BACNET_ROUTER_PORT;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     uint8_t npdu_encode_max_seg_max_apdu(
         int max_segs,
@@ -89,7 +86,4 @@ extern "C" {
         BACNET_ADDRESS * src,
         BACNET_NPDU_DATA * npdu_data);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

@@ -39,9 +39,6 @@
 #include "get_alarm_sum.h"
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     typedef struct analog_value_descr {
         BACNET_EVENT_STATE Event_State:3;
@@ -174,7 +171,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

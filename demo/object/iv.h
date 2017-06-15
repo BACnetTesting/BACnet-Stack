@@ -40,9 +40,6 @@
 #include "wp.h"
 #include "rp.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     void Integer_Value_Property_Lists(
         const int **pRequired,
@@ -114,7 +111,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

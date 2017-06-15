@@ -33,9 +33,6 @@
 #define DEBUG_ENABLED 0
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     void debug_printf(
         const char *format,
@@ -51,7 +48,4 @@ extern "C" {
        }
      */
 #endif
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

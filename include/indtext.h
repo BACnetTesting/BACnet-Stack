@@ -34,9 +34,6 @@ typedef const struct {
     const char *pString;        /* text pair - use NULL to end the list */
 } INDTEXT_DATA;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /*  Searches for a matching string and returns the index to the string
     in the parameter found_index.
@@ -102,7 +99,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

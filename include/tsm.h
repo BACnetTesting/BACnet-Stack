@@ -85,9 +85,6 @@ typedef void (
     uint8_t invoke_id);
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     void tsm_set_timeout_handler(
         tsm_timeout_function pFunction);
@@ -126,9 +123,6 @@ extern "C" {
     bool tsm_invoke_id_failed(
         uint8_t invokeID);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 /* define out any functions necessary for compile */
 #endif
 #endif

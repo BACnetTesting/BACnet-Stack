@@ -34,9 +34,6 @@
 #define MAX_HEADER (6+6+2+1+1+1)
 #define MAX_MPDU (MAX_HEADER+MAX_PDU)
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     bool ethernet_valid(
         void);
@@ -76,7 +73,4 @@ extern "C" {
         uint8_t * mtu,
         int mtu_len);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

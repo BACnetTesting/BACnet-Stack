@@ -157,10 +157,6 @@ typedef struct BACnet_IP6_Foreign_Device_Table_Entry {
 } BACNET_IP6_FOREIGN_DEVICE_TABLE_ENTRY;
 /** @} */
 
-#ifdef __cplusplus
-extern "C" {
-
-#endif /* __cplusplus */
     int bvlc6_encode_address(
         uint8_t * pdu,
         uint16_t pdu_size,
@@ -397,7 +393,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif /* */

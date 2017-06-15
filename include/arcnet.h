@@ -34,9 +34,6 @@
 #define MAX_HEADER (1+1+2+2+1+1+1+1)
 #define MAX_MPDU (MAX_HEADER+MAX_PDU)
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     bool arcnet_valid(
         void);
@@ -66,7 +63,4 @@ extern "C" {
     void arcnet_get_broadcast_address(
         BACNET_ADDRESS * dest); /* destination address */
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

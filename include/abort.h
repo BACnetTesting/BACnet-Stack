@@ -27,9 +27,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     BACNET_ABORT_REASON abort_convert_error_code(
         BACNET_ERROR_CODE error_code);
@@ -59,7 +56,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

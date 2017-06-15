@@ -131,9 +131,6 @@ typedef struct BACnet_Object_Property_Value {
     BACNET_APPLICATION_DATA_VALUE *value;
 } BACNET_OBJECT_PROPERTY_VALUE;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
     int bacapp_encode_data(
         uint8_t * apdu,
         BACNET_APPLICATION_DATA_VALUE * value);
@@ -242,7 +239,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

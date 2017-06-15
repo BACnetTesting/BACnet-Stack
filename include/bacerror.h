@@ -28,9 +28,6 @@
 #include <stdbool.h>
 #include "bacenum.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     int bacerror_encode_apdu(
         uint8_t * apdu,
@@ -67,7 +64,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

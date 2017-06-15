@@ -41,10 +41,6 @@
 #include "wp.h"
 #include "lo.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 /* BACNET_CHANNEL_VALUE decodes WriteProperty service requests
    Choose the datatypes that your application supports */
 #if !(defined(CHANNEL_NUMERIC) || \
@@ -197,7 +193,4 @@ extern "C" {
     void testChannelObject(Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

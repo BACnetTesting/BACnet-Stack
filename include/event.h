@@ -142,9 +142,6 @@ typedef struct BACnet_Event_Notification_Data {
 } BACNET_EVENT_NOTIFICATION_DATA;
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /***************************************************
 **
@@ -195,9 +192,6 @@ extern "C" {
         BACNET_ADDRESS * dest);
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 /** @defgroup ALMEVNT Alarm and Event Management BIBBs
  * These BIBBs prescribe the BACnet capabilities required to interoperably
  * perform the alarm and event management functions enumerated in 22.2.1.2

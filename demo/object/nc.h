@@ -28,9 +28,6 @@
 #include "event.h"
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 
 #define NC_RESCAN_RECIPIENTS_SECS   60
@@ -135,7 +132,4 @@ BACnetRecipient ::= CHOICE {
 #endif /* defined(INTRINSIC_REPORTING) */
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif /* NC_H */

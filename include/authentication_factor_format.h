@@ -35,9 +35,6 @@ typedef struct {
     uint32_t vendor_id, vendor_format;
 } BACNET_AUTHENTICATION_FACTOR_FORMAT;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     int bacapp_encode_authentication_factor_format(
         uint8_t * apdu,
@@ -54,7 +51,4 @@ extern "C" {
         uint8_t tag_number,
         BACNET_AUTHENTICATION_FACTOR_FORMAT * aff);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

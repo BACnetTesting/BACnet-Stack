@@ -26,9 +26,6 @@
 /* for legacy demo applications */
 #define MAX_MPDU BIP6_MPDU_MAX
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     /* 6 datalink functions used by demo handlers and applications:
        init, send, receive, cleanup, unicast/broadcast address.
@@ -78,7 +75,4 @@ extern "C" {
         uint16_t mtu_len);
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

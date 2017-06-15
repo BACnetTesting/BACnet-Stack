@@ -37,9 +37,6 @@ struct static_buffer_t {
 };
 typedef struct static_buffer_t STATIC_BUFFER;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     void sbuf_init(
         STATIC_BUFFER * b,      /* static buffer structure */
@@ -74,7 +71,4 @@ extern "C" {
         STATIC_BUFFER * b,      /* static buffer structure */
         unsigned count);        /* new number of bytes used in buffer */
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

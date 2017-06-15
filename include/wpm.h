@@ -31,9 +31,6 @@
 #include "bacapp.h"
 #include "wp.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     struct BACnet_Write_Access_Data;
     typedef struct BACnet_Write_Access_Data {
@@ -86,9 +83,6 @@ extern "C" {
         BACNET_WRITE_PROPERTY_DATA * wp_data);
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 /** @defgroup DSWP Data Sharing - Write Property Multiple Service (DS-WPM)
  * @ingroup DataShare
  * 15.10 WriteProperty Multiple Service <br>

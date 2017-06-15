@@ -46,9 +46,6 @@
 #endif
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     typedef struct bacnet_daily_schedule {
         BACNET_TIME_VALUE Time_Values[BACNET_WEEKLY_SCHEDULE_SIZE];
@@ -102,7 +99,4 @@ extern "C" {
         BACNET_WEEKDAY wday,
         BACNET_TIME * time);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

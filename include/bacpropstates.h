@@ -67,10 +67,6 @@ typedef struct {
     } state;
 } BACNET_PROPERTY_STATE;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
     int bacapp_decode_property_state(
         uint8_t * apdu,
         BACNET_PROPERTY_STATE * value);
@@ -84,7 +80,4 @@ extern "C" {
         uint8_t * apdu,
         BACNET_PROPERTY_STATE * value);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

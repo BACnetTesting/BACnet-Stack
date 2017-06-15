@@ -34,9 +34,6 @@
 #include "bacreal.h"
 #include "bits.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /* from clause 20.2.1 General Rules for Encoding BACnet Tags */
 /* returns the number of apdu bytes consumed */
@@ -438,7 +435,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

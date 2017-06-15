@@ -27,9 +27,6 @@ struct fifo_buffer_t {
 typedef struct fifo_buffer_t FIFO_BUFFER;
 /** @} */
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     unsigned FIFO_Count(
         FIFO_BUFFER const *b);
@@ -79,7 +76,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

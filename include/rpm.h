@@ -74,9 +74,6 @@ typedef void (
     BACNET_OBJECT_TYPE object_type,
     struct special_property_list_t * pPropertyList);
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /* encode functions */
 /* Start with the Init function, and then add an object,
@@ -188,9 +185,6 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 /** @defgroup DSRPM Data Sharing -Read Property Multiple Service (DS-RPM)
  * @ingroup DataShare
  * 15.7 ReadPropertyMultiple Service <br>

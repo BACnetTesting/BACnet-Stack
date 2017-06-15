@@ -41,9 +41,6 @@
 #include "alarm_ack.h"
 #include "ptransfer.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /* unconfirmed requests */
     void Send_I_Am(
@@ -299,7 +296,4 @@ extern "C" {
         BACNET_ERROR_CLASS error_class,
         BACNET_ERROR_CODE error_code);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

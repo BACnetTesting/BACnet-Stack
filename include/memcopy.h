@@ -29,9 +29,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     bool memcopylen(
         size_t offset,
@@ -44,7 +41,4 @@ extern "C" {
         size_t len,
         size_t max);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif
