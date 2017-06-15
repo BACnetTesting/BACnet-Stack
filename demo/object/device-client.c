@@ -513,7 +513,7 @@ unsigned Device_Object_List_Count(
  */
 bool Device_Object_List_Identifier(
     uint32_t array_index,
-    int *object_type,
+    BACNET_OBJECT_TYPE *object_type,
     uint32_t * instance)
 {
     bool status = false;
