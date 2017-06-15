@@ -796,7 +796,7 @@ uint16_t process_msg(
 {
 
     BACNET_ADDRESS addr;
-    BACNET_NPDU_DATA npdu_data;
+    BACNET_NPCI_DATA npci_data;
     ROUTER_PORT *srcport;
     ROUTER_PORT *destport;
     uint8_t npdu[MAX_NPDU];
@@ -807,7 +807,7 @@ uint16_t process_msg(
 
     memmove(data, msg->data, sizeof(MSG_DATA));
 
-    apdu_offset = npdu_decode(data->pdu, &data->dest, &addr, &npdu_data);
+    apdu_offset = npdu_decode(data->pdu, &data->dest, &addr, &npci_data);
     apdu_len = data->pdu_len - apdu_offset;
 
     srcport = find_snet(msg->origin);
@@ -826,9 +826,9 @@ uint16_t process_msg(
         if (data->dest.net == BACNET_BROADCAST_NETWORK ||
             destport->route_info.net != data->dest.net) {
             npdu_len =
-                npdu_encode_pdu(npdu, &data->dest, &data->src, &npdu_data);
+                npdu_encode_pdu(npdu, &data->dest, &data->src, &npci_data);
         } else {
-            npdu_len = npdu_encode_pdu(npdu, NULL, &data->src, &npdu_data);
+            npdu_len = npdu_encode_pdu(npdu, NULL, &data->src, &npci_data);
         }
 
         buff_len = npdu_len + data->pdu_len - apdu_offset;

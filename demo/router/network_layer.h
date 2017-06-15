@@ -57,8 +57,9 @@ void send_network_message(
     uint8_t ** buff,
     void *val);
 
+
 void init_network_npci(
-    BACNET_NPCI_DATA * npdu_data,
+    BACNET_NPCI_DATA * npci_data,
     BACNET_NETWORK_MESSAGE_TYPE network_message_type,
     bool data_expecting_reply);
 

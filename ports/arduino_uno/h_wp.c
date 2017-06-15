@@ -51,7 +51,7 @@ void handler_write_property(uint8_t * service_request,
 {
     int len = 0;
     int pdu_len = 0;
-    BACNET_NPDU_DATA npdu_data;
+    BACNET_NPCI_DATA npci_data;
     BACNET_ERROR_CLASS error_class = ERROR_CLASS_OBJECT;
     BACNET_ERROR_CODE error_code = ERROR_CODE_UNKNOWN_OBJECT;
     BACNET_ADDRESS my_address;
@@ -60,10 +60,10 @@ void handler_write_property(uint8_t * service_request,
     len = wp_decode_service_request(service_request, service_len, &wp_data);
     /* encode the NPDU portion of the packet */
     datalink_get_my_address(&my_address);
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_encode_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
         npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
-        &npdu_data);
+        &npci_data);
     /* bad decoding or something we didn't understand - send an abort */
     if (len <= 0) {
         len =
@@ -129,7 +129,7 @@ void handler_write_property(uint8_t * service_request,
         }
     }
     pdu_len += len;
-    datalink_send_pdu(src, &npdu_data, &Handler_Transmit_Buffer[0], pdu_len);
+    datalink_send_pdu(src, &npci_data, &Handler_Transmit_Buffer[0], pdu_len);
 
     return;
 }

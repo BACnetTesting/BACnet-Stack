@@ -2,3 +2,7 @@
 *.tlog 
 *.db 
 *.opendb 
+*.vpwhist
+/*.vpw
+/*.vtg
+/*.vpj
