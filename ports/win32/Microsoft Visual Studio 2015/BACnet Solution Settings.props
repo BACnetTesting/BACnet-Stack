@@ -16,8 +16,9 @@
       <AdditionalIncludeDirectories>
       </AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4214;4245;4389;4244;4996;4018;4100;4267;4701;4189;</DisableSpecificWarnings>
-      <CompileAs>CompileAsC</CompileAs>
-      <UndefinePreprocessorDefinitions>__cplusplus</UndefinePreprocessorDefinitions>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <UndefinePreprocessorDefinitions>
+      </UndefinePreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup />

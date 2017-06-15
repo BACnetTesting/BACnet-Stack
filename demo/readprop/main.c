@@ -1,4 +1,5 @@
 /*************************************************************************
+*
 * Copyright (C) 2006 Steve Karg <skarg@users.sourceforge.net>
 *
 * Permission is hereby granted, free of charge, to any person obtaining
@@ -19,6 +20,14 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*
+*   This file contains changes made by BACnet Interoperability Testing 
+*   Services, Inc. If published,
+*   these changes are subject to the permissions, warranty
+*   terms and limitations above. If not published, then these terms
+*   apply to ConnectEx, Inc's customers to whom the code has
+*   been supplied. For more details info@connect-ex.com
+*   Where appropriate, the changes are Copyright (C) 2014-2017 ConnectEx, Inc.
 *
 *********************************************************************/
 
@@ -168,7 +177,7 @@ static void Init_Service_Handlers(
     apdu_set_reject_handler(MyRejectHandler);
 }
 
-static void print_usage(char *filename)
+static void print_usage(const char *filename)
 {
     printf("Usage: %s device-instance object-type object-instance "
         "property [index]\n", filename);
@@ -176,7 +185,7 @@ static void print_usage(char *filename)
     printf("       [--version][--help]\n");
 }
 
-static void print_help(char *filename)
+static void print_help(const char *filename)
 {
     printf("Read a property from an object in a BACnet device\n"
         "and print the value.\n");
@@ -253,7 +262,7 @@ int main(
     bool specific_address = false;
     int argi = 0;
     unsigned int target_args = 0;
-    char *filename = NULL;
+    const char *filename = NULL;
 
     filename = filename_remove_path(argv[0]);
     for (argi = 1; argi < argc; argi++) {
@@ -294,13 +303,13 @@ int main(
                 Target_Device_Object_Instance = strtol(argv[argi], NULL, 0);
                 target_args++;
             } else if (target_args == 1) {
-                Target_Object_Type = strtol(argv[argi], NULL, 0);
+                Target_Object_Type = (BACNET_OBJECT_TYPE) strtol(argv[argi], NULL, 0);
                 target_args++;
             } else if (target_args == 2) {
                 Target_Object_Instance = strtol(argv[argi], NULL, 0);
                 target_args++;
             } else if (target_args == 3) {
-                Target_Object_Property = strtol(argv[argi], NULL, 0);
+                Target_Object_Property = (BACNET_PROPERTY_ID) strtol(argv[argi], NULL, 0);
                 target_args++;
             } else if (target_args == 4) {
                 Target_Object_Index = strtol(argv[argi], NULL, 0);

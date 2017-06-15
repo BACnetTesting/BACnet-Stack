@@ -274,6 +274,7 @@ typedef struct devObj_s {
         uint32_t object_id);
     unsigned Device_Object_List_Count(
         void);
+
     bool Device_Object_List_Identifier(
         uint32_t array_index,
         BACNET_OBJECT_TYPE *object_type,

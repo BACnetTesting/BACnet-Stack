@@ -157,14 +157,14 @@ static void Init_Service_Handlers(
     apdu_set_reject_handler(MyRejectHandler);
 }
 
-static void print_usage(char *filename)
+static void print_usage(const char *filename)
 {
     printf("Usage: %s device-instance object-type object-instance "
         "property priority index tag value [tag value...]\n",
         filename);
 }
 
-static void print_help(char *filename)
+static void print_help(const char *filename)
 {
     printf("device-instance:\n"
         "BACnet Device Object Instance number that you are trying to\n"
@@ -269,9 +269,9 @@ int main(
     }
     /* decode the command line parameters */
     Target_Device_Object_Instance = strtol(argv[1], NULL, 0);
-    Target_Object_Type = strtol(argv[2], NULL, 0);
+    Target_Object_Type = (BACNET_OBJECT_TYPE) strtol(argv[2], NULL, 0);
     Target_Object_Instance = strtol(argv[3], NULL, 0);
-    Target_Object_Property = strtol(argv[4], NULL, 0);
+    Target_Object_Property = (BACNET_PROPERTY_ID)strtol(argv[4], NULL, 0);
     Target_Object_Property_Priority = (uint8_t) strtol(argv[5], NULL, 0);
     Target_Object_Property_Index = strtol(argv[6], NULL, 0);
     if (Target_Object_Property_Index == -1)
@@ -309,7 +309,7 @@ int main(
         } else {
             Target_Object_Property_Value[i].context_specific = false;
         }
-        property_tag = strtol(argv[tag_value_arg], NULL, 0);
+        property_tag = (BACNET_APPLICATION_TAG) strtol(argv[tag_value_arg], NULL, 0);
         args_remaining--;
         if (args_remaining <= 0) {
             fprintf(stderr, "Error: not enough tag-value pairs\n");

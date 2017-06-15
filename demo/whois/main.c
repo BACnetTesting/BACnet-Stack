@@ -301,7 +301,7 @@ static void print_address_cache(
 }
 
 static void print_usage(
-    char *filename)
+    const char *filename)
 {
     printf("Usage: %s", filename);
     printf(" [device-instance-min [device-instance-max]]\n");
@@ -310,7 +310,7 @@ static void print_usage(
 }
 
 static void print_help(
-    char *filename)
+    const char *filename)
 {
     printf("Send BACnet WhoIs service request to a device or multiple\n"
         "devices, and wait for responses. Displays any devices found\n"
@@ -376,7 +376,7 @@ int main(
     bool global_broadcast = true;
     int argi = 0;
     unsigned int target_args = 0;
-    char *filename = NULL;
+    const char *filename = NULL;
 
     /* decode any command line parameters */
     filename = filename_remove_path(argv[0]);

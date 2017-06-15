@@ -53,7 +53,7 @@
 #if defined(__BORLANDC__) || defined(_WIN32)
 /* seems to not be defined in time.h as specified by The Open Group */
 /* difference from UTC and local standard time  */
-long int timezone;
+extern long int timezone;
 #endif
 
 /* note: you really only need to define variables for
@@ -809,7 +809,7 @@ int Device_Read_Property_Local(
     BACNET_BIT_STRING bit_string;
     BACNET_CHARACTER_STRING char_string;
     uint32_t i = 0;
-    int object_type = 0;
+    BACNET_OBJECT_TYPE object_type = OBJECT_ANALOG_INPUT;
     uint32_t instance = 0;
     uint32_t count = 0;
     uint8_t *apdu = NULL;
