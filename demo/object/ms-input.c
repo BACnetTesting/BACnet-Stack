@@ -788,7 +788,7 @@ bool Multistate_Input_Write_Property(
 
 bool Device_Valid_Object_Name(
     BACNET_CHARACTER_STRING * object_name,
-    int *object_type,
+    BACNET_OBJECT_TYPE *object_type,
     uint32_t * object_instance)
 {
     return true;
