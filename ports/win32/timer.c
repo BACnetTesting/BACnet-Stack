@@ -104,7 +104,7 @@ int gettimeofday(
             _tzset();
             tzflag++;
         }
-        tz = (struct timezone *) tzp;
+        tz = tzp;
         tz->tz_minuteswest = _timezone / 60;
         tz->tz_dsttime = _daylight;
     }

@@ -39,7 +39,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
@@ -87,7 +87,6 @@
       </PrecompiledHeader>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <CompileAs>CompileAsC</CompileAs>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -101,7 +100,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <CompileAs>CompileAsCpp</CompileAs>
+      <UndefinePreprocessorDefinitions />
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -148,6 +147,7 @@
     <ClCompile Include="..\..\demo\handler\h_arf.c" />
     <ClCompile Include="..\..\demo\handler\h_arf_a.c" />
     <ClCompile Include="..\..\demo\handler\h_awf.c" />
+    <ClCompile Include="..\..\demo\handler\h_bbmd6.c" />
     <ClCompile Include="..\..\demo\handler\h_ccov.c" />
     <ClCompile Include="..\..\demo\handler\h_cov.c" />
     <ClCompile Include="..\..\demo\handler\h_dcc.c" />
@@ -206,6 +206,12 @@
     <ClCompile Include="..\..\demo\handler\s_wp.c" />
     <ClCompile Include="..\..\demo\handler\s_wpm.c" />
     <ClCompile Include="..\..\demo\handler\txbuf.c" />
+    <ClCompile Include="..\..\demo\object\access_credential.c" />
+    <ClCompile Include="..\..\demo\object\access_door.c" />
+    <ClCompile Include="..\..\demo\object\access_point.c" />
+    <ClCompile Include="..\..\demo\object\access_rights.c" />
+    <ClCompile Include="..\..\demo\object\access_user.c" />
+    <ClCompile Include="..\..\demo\object\access_zone.c" />
     <ClCompile Include="..\..\demo\object\ai.c" />
     <ClCompile Include="..\..\demo\object\ao.c" />
     <ClCompile Include="..\..\demo\object\av.c" />
@@ -215,7 +221,9 @@
     <ClCompile Include="..\..\demo\object\bv.c" />
     <ClCompile Include="..\..\demo\object\channel.c" />
     <ClCompile Include="..\..\demo\object\command.c" />
+    <ClCompile Include="..\..\demo\object\credential_data_input.c" />
     <ClCompile Include="..\..\demo\object\csv.c" />
+    <ClCompile Include="..\..\demo\object\device-client.c" />
     <ClCompile Include="..\..\demo\object\device.c" />
     <ClCompile Include="..\..\demo\object\gw_device.c" />
     <ClCompile Include="..\..\demo\object\iv.c" />
@@ -249,7 +257,6 @@
     <ClCompile Include="..\..\src\bacprop.c" />
     <ClCompile Include="..\..\src\bacpropstates.c" />
     <ClCompile Include="..\..\src\bacreal.c" />
-    <ClCompile Include="..\..\src\bacsec.c" />
     <ClCompile Include="..\..\src\bacstr.c" />
     <ClCompile Include="..\..\src\bactext.c" />
     <ClCompile Include="..\..\src\bactimevalue.c" />

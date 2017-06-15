@@ -483,14 +483,38 @@
     <ClCompile Include="..\..\ports\win32\timer.c">
       <Filter>Source Files\ports\win32</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\demo\handler\h_routed_npdu.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\..\demo\object\access_credential.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\access_door.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\access_point.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\access_rights.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\access_user.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\access_zone.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\credential_data_input.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\device-client.c">
+      <Filter>Source Files\demo\object</Filter>
     </ClCompile>
     <ClCompile Include="..\..\demo\object\gw_device.c">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\demo\object</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\bacsec.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\..\demo\handler\h_bbmd6.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_routed_npdu.c">
+      <Filter>Source Files\demo\hander</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

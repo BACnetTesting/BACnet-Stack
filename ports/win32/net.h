@@ -45,11 +45,11 @@
 #include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#ifndef IPPROTO_IPV6
+//#ifndef IPPROTO_IPV6
    // If the version of winsock does not by default include IPV6 then
    // use the tech preview if it is avaliable.
 //   #include <tpipv6.h>
-#endif
+//#endif
 #include <stdlib.h>
 #include <stdio.h>
 #ifdef __MINGW32__

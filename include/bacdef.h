@@ -161,7 +161,7 @@ typedef struct BACnet_MAC_Address BACNET_MAC_ADDRESS;
    it might be better to have a packed encoding with a library to
    easily access the data. */
 typedef struct BACnet_Object_Id {
-    BACNET_OBJECT_TYPE type;
+    uint16_t type;
     uint32_t instance;
 } BACNET_OBJECT_ID;
 

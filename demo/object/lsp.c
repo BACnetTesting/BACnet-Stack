@@ -213,7 +213,7 @@ int Life_Safety_Point_Read_Property(
     BACNET_BIT_STRING bit_string;
     BACNET_CHARACTER_STRING char_string;
     BACNET_LIFE_SAFETY_STATE present_value = LIFE_SAFETY_STATE_QUIET;
-    int mode = (int) LIFE_SAFETY_MODE_DEFAULT;
+    BACNET_LIFE_SAFETY_MODE mode = LIFE_SAFETY_MODE_DEFAULT;
     BACNET_SILENCED_STATE silenced_state = SILENCED_STATE_UNSILENCED;
     BACNET_LIFE_SAFETY_OPERATION operation = LIFE_SAFETY_OP_NONE;
     unsigned object_index = 0;
@@ -356,7 +356,7 @@ bool Life_Safety_Point_Write_Property(
                         Life_Safety_Point_Instance_To_Index
                         (wp_data->object_instance);
                     Life_Safety_Point_Mode[object_index] =
-                        (BACNET_LIFE_SAFETY_MODE) value.type.Enumerated;
+                        value.type.Enumerated;
                 } else {
                     status = false;
                     wp_data->error_class = ERROR_CLASS_PROPERTY;

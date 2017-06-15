@@ -1127,8 +1127,7 @@ typedef enum {
        which is used to store decoding */
     OBJECT_PROPRIETARY_MIN = 128,
     OBJECT_PROPRIETARY_MAX = 1023,
-    MAX_BACNET_OBJECT_TYPE = 1024,
-    BACNET_NO_OBJECT_TYPE = 0x7fff 
+    MAX_BACNET_OBJECT_TYPE = 1024
 } BACNET_OBJECT_TYPE;
 
 typedef enum {

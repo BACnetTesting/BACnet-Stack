@@ -140,10 +140,8 @@ bool RS485_Interface_Valid(
     char ifname[255] = "";
 
     sprintf(ifname, "\\\\.\\COM%u", port_number);
-#if 0   // todo1
     h = CreateFile(ifname, GENERIC_READ | GENERIC_WRITE, 0, NULL,
         OPEN_EXISTING, 0, NULL);
-#endif
     if (h == INVALID_HANDLE_VALUE) {
         err = GetLastError();
         if ((err == ERROR_ACCESS_DENIED) || (err == ERROR_GEN_FAILURE) ||
@@ -172,9 +170,7 @@ void RS485_Print_Error(
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
         NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
         (LPTSTR) & lpMsgBuf, 0, NULL);
-#if 0   // todo1
     MessageBox(NULL, lpMsgBuf, "GetLastError", MB_OK | MB_ICONINFORMATION);
-#endif 
     LocalFree(lpMsgBuf);
 
     return;
@@ -275,13 +271,11 @@ static void RS485_Cleanup(
 void RS485_Initialize(
     void)
 {
-#if 0   // todo1
     RS485_Handle =
         CreateFile(RS485_Port_Name, GENERIC_READ | GENERIC_WRITE, 0, 0,
         OPEN_EXISTING,
         /*FILE_FLAG_OVERLAPPED */ 0,
         0);
-#endif
     if (RS485_Handle == INVALID_HANDLE_VALUE) {
         fprintf(stderr, "Unable to open %s\n", RS485_Port_Name);
         RS485_Print_Error();
