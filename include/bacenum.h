@@ -1858,6 +1858,7 @@ typedef enum {
 
 /* Door Value */
 typedef enum {
+    DOOR_VALUE_UNKNOWN = -1,
     DOOR_VALUE_LOCK = 0,
     DOOR_VALUE_UNLOCK = 1,
     DOOR_VALUE_PULSE_UNLOCK = 2,

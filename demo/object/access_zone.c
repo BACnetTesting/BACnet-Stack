@@ -346,7 +346,7 @@ bool Access_Zone_Write_Property(
                     BACNET_APPLICATION_TAG_ENUMERATED, &wp_data->error_class,
                     &wp_data->error_code);
                 if (status) {
-                    az_descr[object_index].reliability = value.type.Enumerated;
+                    az_descr[object_index].reliability = (BACNET_RELIABILITY) value.type.Enumerated;
                 }
             } else {
                 wp_data->error_class = ERROR_CLASS_PROPERTY;

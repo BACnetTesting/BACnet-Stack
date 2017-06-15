@@ -31,7 +31,9 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#ifndef _MSC_VER
 #include <pthread.h>
+#endif
 #include "msgqueue.h"
 #include "bacdef.h"
 #include "npdu.h"

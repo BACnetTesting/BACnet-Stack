@@ -32,12 +32,16 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <sys/types.h>
+#ifndef _MSC_VER
 #include <sys/ipc.h>
 #include <sys/msg.h>
+#endif
 #include "bacdef.h"
 #include "npdu.h"
 
+#ifndef _MSC_VER
 extern pthread_mutex_t msg_lock;
+#endif
 
 #define INVALID_MSGBOX_ID -1
 

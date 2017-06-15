@@ -30,7 +30,9 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+#ifndef _MSC_VER
 #include <pthread.h>
+#endif
 #include "msgqueue.h"
 
 pthread_mutex_t msg_lock = PTHREAD_MUTEX_INITIALIZER;

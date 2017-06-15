@@ -576,7 +576,7 @@ bool Device_Valid_Object_Name(
     uint32_t * object_instance)
 {
     bool found = false;
-    int type = 0;
+    BACNET_OBJECT_TYPE type ;
     uint32_t instance;
     uint32_t max_objects = 0, i = 0;
     bool check_id = false;
@@ -612,7 +612,7 @@ bool Device_Valid_Object_Name(
  * @return True if found, else False if no such Object in this device.
  */
 bool Device_Valid_Object_Id(
-    int object_type,
+    BACNET_OBJECT_TYPE object_type,
     uint32_t object_instance)
 {
     bool status = false;        /* return value */

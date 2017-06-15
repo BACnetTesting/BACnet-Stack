@@ -260,7 +260,7 @@ bool Access_Door_Present_Value_Relinquish(
 BACNET_DOOR_VALUE Access_Door_Relinquish_Default(
     uint32_t object_instance)
 {
-    BACNET_DOOR_VALUE status = -1;
+    BACNET_DOOR_VALUE status = DOOR_VALUE_UNKNOWN;
     unsigned index = 0;
     index = Access_Door_Instance_To_Index(object_instance);
     if (index < MAX_ACCESS_DOORS) {
@@ -515,7 +515,7 @@ bool Access_Door_Write_Property(
                    object. */
                 status =
                     Access_Door_Present_Value_Set(wp_data->object_instance,
-                    value.type.Enumerated, wp_data->priority);
+                    (BACNET_DOOR_VALUE) value.type.Enumerated, wp_data->priority);
                 if (wp_data->priority == 6) {
                     /* Command priority 6 is reserved for use by Minimum On/Off
                        algorithm and may not be used for other purposes in any
@@ -557,7 +557,7 @@ bool Access_Door_Write_Property(
                     BACNET_APPLICATION_TAG_ENUMERATED, &wp_data->error_class,
                     &wp_data->error_code);
                 if (status) {
-                    ad_descr[object_index].door_status = value.type.Enumerated;
+                    ad_descr[object_index].door_status = (BACNET_DOOR_STATUS) value.type.Enumerated;
                 }
             } else {
                 wp_data->error_class = ERROR_CLASS_PROPERTY;
@@ -571,7 +571,7 @@ bool Access_Door_Write_Property(
                     BACNET_APPLICATION_TAG_ENUMERATED, &wp_data->error_class,
                     &wp_data->error_code);
                 if (status) {
-                    ad_descr[object_index].lock_status = value.type.Enumerated;
+                    ad_descr[object_index].lock_status = (BACNET_LOCK_STATUS) value.type.Enumerated;
                 }
             } else {
                 wp_data->error_class = ERROR_CLASS_PROPERTY;
@@ -586,7 +586,7 @@ bool Access_Door_Write_Property(
                     &wp_data->error_code);
                 if (status) {
                     ad_descr[object_index].door_alarm_state =
-                        value.type.Enumerated;
+                        (BACNET_DOOR_ALARM_STATE) value.type.Enumerated;
                 }
             } else {
                 wp_data->error_class = ERROR_CLASS_PROPERTY;

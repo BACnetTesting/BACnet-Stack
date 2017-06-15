@@ -8,7 +8,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;PRINT_ENABLED=1;BIP_DEBUG;INTRINSIC_REPORTING=1;BBMD_ENABLED=1;DEBUG_ENABLED=1;BACFILE;WIN32;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;PRINT_ENABLED=1;BIP_DEBUG;INTRINSIC_REPORTING=1;BBMD_ENABLED=1;DEBUG_ENABLED=1;BACFILE;WIN32;BAC_ROUTING=1;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <WarningLevel>Level4</WarningLevel>
@@ -18,6 +18,7 @@
       <DisableSpecificWarnings>4214;4245;4389;4244;4996;4018;4100;4267;4701;4189;</DisableSpecificWarnings>
       <CompileAs>CompileAsC</CompileAs>
       <UndefinePreprocessorDefinitions>__cplusplus</UndefinePreprocessorDefinitions>
+      <CompileAsManaged>false</CompileAsManaged>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup />
