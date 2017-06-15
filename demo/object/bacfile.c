@@ -411,9 +411,11 @@ uint32_t bacfile_instance_from_tsm(
     uint8_t apdu[MAX_PDU] = { 0 };      /* original APDU packet */
     uint16_t apdu_len = 0;      /* original APDU packet length */
     int len = 0;        /* apdu header length */
-    BACNET_ATOMIC_READ_FILE_DATA data = { 0 };
+    BACNET_ATOMIC_READ_FILE_DATA data ;
     uint32_t object_instance = BACNET_MAX_INSTANCE + 1; /* return value */
     bool found = false;
+
+    memset(&data, 0, sizeof(data));
 
     found =
         tsm_get_transaction_pdu(invokeID, &dest, &npdu_data, &apdu[0],

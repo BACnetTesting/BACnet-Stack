@@ -766,7 +766,7 @@ int encode_context_bitstring(
 /* returns the number of apdu bytes consumed */
 int decode_object_id(
     uint8_t * apdu,
-    uint16_t * object_type,
+    BACNET_OBJECT_TYPE * object_type,
     uint32_t * instance)
 {
     uint32_t value = 0;
@@ -774,7 +774,7 @@ int decode_object_id(
 
     len = decode_unsigned32(apdu, &value);
     *object_type =
-        (uint16_t) (((value >> BACNET_INSTANCE_BITS) & BACNET_MAX_OBJECT));
+        (BACNET_OBJECT_TYPE) (((value >> BACNET_INSTANCE_BITS) & BACNET_MAX_OBJECT));
     *instance = (value & BACNET_MAX_INSTANCE);
 
     return len;
@@ -783,7 +783,7 @@ int decode_object_id(
 int decode_object_id_safe(
     uint8_t * apdu,
     uint32_t len_value,
-    uint16_t * object_type,
+    BACNET_OBJECT_TYPE * object_type,
     uint32_t * instance)
 {
     if (len_value != 4) {
@@ -796,7 +796,7 @@ int decode_object_id_safe(
 int decode_context_object_id(
     uint8_t * apdu,
     uint8_t tag_number,
-    uint16_t * object_type,
+    BACNET_OBJECT_TYPE * object_type,
     uint32_t * instance)
 {
     int len = 0;

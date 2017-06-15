@@ -4,7 +4,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_PropertySheetDisplayName>BACnet Solution Settings</_PropertySheetDisplayName>
-    <IncludePath>..\..;..\..\..\..\include;..\..\..\..\demo\object;..\..\..\..\demo\handler;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)..\..\..\ports\win32;$(SolutionDir)..\..\..\demo\object;$(SolutionDir)..\..\..\demo\handler;$(SolutionDir)..\..\..\include;$(SolutionDir)..\..\..\demo\router;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -17,6 +17,7 @@
       </AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4214;4245;4389;4244;4996;4018;4100;4267;4701;4189;</DisableSpecificWarnings>
       <CompileAs>CompileAsC</CompileAs>
+      <UndefinePreprocessorDefinitions>__cplusplus</UndefinePreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup />

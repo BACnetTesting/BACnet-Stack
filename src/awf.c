@@ -104,7 +104,7 @@ int awf_decode_service_request(
     uint32_t len_value_type = 0;
     int32_t signed_value = 0;
     uint32_t unsigned_value = 0;
-    uint16_t type = 0;  /* for decoding */
+    BACNET_OBJECT_TYPE type;
     uint32_t i = 0;
 
     /* check for value pointers */

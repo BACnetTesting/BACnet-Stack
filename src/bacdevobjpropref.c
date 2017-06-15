@@ -163,7 +163,7 @@ int bacapp_decode_device_obj_property_ref(
         }
         apdu_len += len;
     } else {
-    	value->deviceIdentifier.type = BACNET_NO_DEV_TYPE;
+    	value->deviceIdentifier.type = BACNET_NO_OBJECT_TYPE;
     	value->deviceIdentifier.instance = BACNET_NO_DEV_ID;
     }
 
@@ -277,7 +277,7 @@ int bacapp_decode_device_obj_ref(
         }
         apdu_len += len;
     } else {
-    	value->deviceIdentifier.type = BACNET_NO_DEV_TYPE;
+    	value->deviceIdentifier.type = BACNET_NO_OBJECT_TYPE;
     	value->deviceIdentifier.instance = BACNET_NO_DEV_ID;
     }
     /* object-identifier [1] BACnetObjectIdentifier */

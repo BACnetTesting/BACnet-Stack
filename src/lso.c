@@ -124,7 +124,7 @@ int lso_decode_service_request(
             }
             len += section_length;
         } else {
-            data->targetObject.type = 0;
+            data->targetObject.type = OBJECT_ANALOG_INPUT ;
             data->targetObject.instance = 0;
         }
         return len;

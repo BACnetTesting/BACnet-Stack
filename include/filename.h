@@ -28,7 +28,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-    char *filename_remove_path(
+    const char *filename_remove_path(
         const char *filename_in);
 
 #ifdef __cplusplus

@@ -1,0 +1,786 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\demo">
+      <UniqueIdentifier>{7a8c7e61-cbe9-4452-a265-e3fb78ba8f15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\src">
+      <UniqueIdentifier>{16b44bd1-c4bd-4ac2-b844-04f685e5d811}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\demo\hander">
+      <UniqueIdentifier>{fed2f215-3c59-4729-a291-6aa8332675cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\demo\object">
+      <UniqueIdentifier>{363e75a5-f907-4b21-b8b2-03f159342bc1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ports">
+      <UniqueIdentifier>{b915cff4-f771-4ac9-a4ad-a6a15a00bdab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ports\win32">
+      <UniqueIdentifier>{5c693a3c-1442-4d89-bbb2-5f7c491231d8}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\demo\handler\h_cov.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bvlc.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bip.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\abort.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\address.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\alarm_ack.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\apdu.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\arf.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\awf.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacaddr.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacapp.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacdcode.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacdevobjpropref.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacerror.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacint.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacprop.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacpropstates.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacreal.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacstr.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bactext.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bactimevalue.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bigend.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\cov.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\crc.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\datalink.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\datetime.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\dcc.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\debug.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\event.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\fifo.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\filename.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\get_alarm_sum.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\getevent.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\iam.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ihave.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\indtext.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\key.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\keylist.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lighting.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lso.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\memcopy.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\mstp.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\mstptext.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\npdu.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\proplist.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ptransfer.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rd.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\readrange.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\reject.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ringbuf.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rp.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rpm.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sbuf.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\timestamp.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\timesync.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\tsm.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\version.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\vmac.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\whohas.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\whois.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\wp.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\wpm.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\s_ts.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\dlenv.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_alarm_ack.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_arf.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_arf_a.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_awf.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_ccov.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_dcc.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_gas_a.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_get_alarm_sum.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_getevent.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_getevent_a.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_iam.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_ihave.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_lso.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_npdu.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_pt.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_pt_a.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_rd.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_rp.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_rp_a.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_rpm.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_rpm_a.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_rr.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_rr_a.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_ts.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_ucov.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_upt.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_whohas.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_whois.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_wp.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_wpm.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\noserv.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\objects.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\s_abort.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\s_ack_alarm.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\s_arfs.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\s_awfs.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\s_cevent.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\s_cov.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\s_dcc.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\s_error.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\s_get_alarm_sum.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\s_get_event.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\s_getevent.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\s_iam.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\s_ihave.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\s_lso.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\s_ptransfer.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\s_rd.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\s_readrange.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\s_router.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\s_rp.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\s_rpm.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\s_uevent.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\s_upt.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\s_whohas.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\s_whois.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\s_wp.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\s_wpm.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\txbuf.c">
+      <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\ai.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\ao.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\av.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\bacfile.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\bi.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\bo.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\bv.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\channel.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\command.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\csv.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\device.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\iv.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\lc.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\lo.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\lsp.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\ms-input.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\mso.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\msv.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\nc.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\osv.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\piv.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\schedule.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\trendlog.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ports\win32\bip-init.c">
+      <Filter>Source Files\ports\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ports\win32\dlmstp.c">
+      <Filter>Source Files\ports\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ports\win32\rs485.c">
+      <Filter>Source Files\ports\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ports\win32\timer.c">
+      <Filter>Source Files\ports\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\handler\h_routed_npdu.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\gw_device.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacsec.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\include\config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\abort.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\access_rule.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\address.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\alarm_ack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\apdu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\arcnet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\arf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\awf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\bacaddr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\bacapp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\bacdcode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\bacdef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\bacdevobjpropref.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\bacenum.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\bacerror.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\bacint.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\bacnet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\bacprop.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\bacpropstates.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\bacreal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\bacsec.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\bacstr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\bactext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\bactimevalue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\bbmd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\bigend.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\bip.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\bip6.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\bits.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\bvlc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\bvlc6.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\bytes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\client.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\cov.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\crc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\datalink.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\datetime.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\dcc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\debug.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\dlenv.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\dlmstp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ethernet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\event.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\fifo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\filename.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\get_alarm_sum.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\getevent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\handlers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\iam.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ihave.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\indtext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\key.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\keylist.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\lighting.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\listmanip.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\lso.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\memcopy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\mstp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\mstpdef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\mstptext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\mydata.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ngwdevice.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\npdu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\objects.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\proplist.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ptransfer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\readrange.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\reject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ringbuf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\router.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rpm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rxDetails.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\sbuf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\timestamp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\timesync.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\tsm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\txbuf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ucix.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vmac.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\whohas.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\whois.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\wp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\wpm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ConnectExUtil\BACnetToString.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ConnectExUtil\btaDebug.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ConnectExUtil\CEDebug.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ConnectExUtil\CEUtil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ConnectExUtil\configParams.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ConnectExUtil\emm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ConnectExUtil\ese.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ConnectExUtil\linklist.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ConnectExUtil\llist.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
