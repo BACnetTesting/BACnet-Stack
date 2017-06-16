@@ -92,6 +92,9 @@ void handler_atomic_write_file(
     BACNET_ERROR_CLASS error_class = ERROR_CLASS_OBJECT;
     BACNET_ERROR_CODE error_code = ERROR_CODE_UNKNOWN_OBJECT;
 
+	DLCB *dlcb = alloc_dlcb_response('E', rxDetails->portParams );
+	if (dlcb == NULL) return;
+
 #if PRINT_ENABLED
     fprintf(stderr, "Received AtomicWriteFile Request!\n");
 #endif
@@ -103,7 +106,7 @@ void handler_atomic_write_file(
         &npci_data);
     if (service_data->segmented_message) {
         len =
-            abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
+            abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, ABORT_REASON_SEGMENTATION_NOT_SUPPORTED,
             true);
 #if PRINT_ENABLED
@@ -115,7 +118,7 @@ void handler_atomic_write_file(
     /* bad decoding - send an abort */
     if (len < 0) {
         len =
-            abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
+            abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, ABORT_REASON_OTHER, true);
 #if PRINT_ENABLED
         fprintf(stderr, "Bad Encoding. Sending Abort!\n");
@@ -148,7 +151,7 @@ void handler_atomic_write_file(
                     data.type.record.returnedRecordCount);
 #endif
                 len =
-                    awf_ack_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
+                    awf_ack_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
                     service_data->invoke_id, &data);
             } else {
                 error = true;
@@ -170,15 +173,15 @@ void handler_atomic_write_file(
     }
     if (error) {
         len =
-            bacerror_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
+            bacerror_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, SERVICE_CONFIRMED_ATOMIC_WRITE_FILE,
             error_class, error_code);
     }
   AWF_ABORT:
     pdu_len += len;
+        dlcb->optr = pdu_len;
     bytes_sent =
-        datalink_send_pdu(src, &npci_data, &Handler_Transmit_Buffer[0],
-        pdu_len);
+        datalink_send_pdu(src, &npci_data, dlcb );
 #if PRINT_ENABLED
     if (bytes_sent <= 0) {
         fprintf(stderr, "Failed to send PDU (%s)!\n", strerror(errno));

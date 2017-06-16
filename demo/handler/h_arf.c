@@ -112,6 +112,9 @@ void handler_atomic_read_file(
     BACNET_ERROR_CLASS error_class = ERROR_CLASS_OBJECT;
     BACNET_ERROR_CODE error_code = ERROR_CODE_UNKNOWN_OBJECT;
 
+	DLCB *dlcb = alloc_dlcb_response('B', rxDetails->portParams);
+	if (dlcb == NULL) return;
+
 #if PRINT_ENABLED
     fprintf(stderr, "Received Atomic-Read-File Request!\n");
 #endif
@@ -119,11 +122,11 @@ void handler_atomic_read_file(
     datalink_get_my_address(&my_address);
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
-        npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], src, &my_address,
         &npci_data);
     if (service_data->segmented_message) {
         len =
-            abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
+            abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, ABORT_REASON_SEGMENTATION_NOT_SUPPORTED,
             true);
 #if PRINT_ENABLED
@@ -135,7 +138,7 @@ void handler_atomic_read_file(
     /* bad decoding - send an abort */
     if (len < 0) {
         len =
-            abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
+            abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, ABORT_REASON_OTHER, true);
 #if PRINT_ENABLED
         fprintf(stderr, "Bad Encoding. Sending Abort!\n");
@@ -155,11 +158,11 @@ void handler_atomic_read_file(
 					data.type.stream.requestedOctetCount);
 #endif
 				len =
-					arf_ack_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
+					arf_ack_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
 					service_data->invoke_id, &data);
             } else {
                 len =
-                    abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
+                    abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
                     service_data->invoke_id,
                     ABORT_REASON_SEGMENTATION_NOT_SUPPORTED, true);
 #if PRINT_ENABLED
@@ -181,7 +184,7 @@ void handler_atomic_read_file(
                     data.type.record.RecordCount);
 #endif
                 len =
-                    arf_ack_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
+                    arf_ack_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
                     service_data->invoke_id, &data);
             } else {
                 error = true;
@@ -203,15 +206,16 @@ void handler_atomic_read_file(
     }
     if (error) {
         len =
-            bacerror_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
+            bacerror_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, SERVICE_CONFIRMED_ATOMIC_READ_FILE,
             error_class, error_code);
     }
   ARF_ABORT:
     pdu_len += len;
+        dlcb->optr = pdu_len;
     bytes_sent =
-        datalink_send_pdu(src, &npci_data, &Handler_Transmit_Buffer[0],
-        pdu_len);
+        datalink_send_pdu(src, &npci_data, dlcb );
+        
 #if PRINT_ENABLED
     if (bytes_sent <= 0) {
         fprintf(stderr, "Failed to send PDU (%s)!\n", strerror(errno));

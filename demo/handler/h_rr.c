@@ -129,8 +129,8 @@ void handler_read_range(
     if (len < 0) {
         /* bad decoding - send an abort */
         len =
-            abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-            service_data->invoke_id, ABORT_REASON_OTHER, true);
+            abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
+                              service_data->invoke_id, ABORT_REASON_OTHER, true);
 #if PRINT_ENABLED
         fprintf(stderr, "RR: Bad Encoding.  Sending Abort!\n");
 #endif
@@ -146,8 +146,8 @@ void handler_read_range(
         data.application_data_len = len;
         /* FIXME: probably need a length limitation sent with encode */
         len =
-            rr_ack_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-            service_data->invoke_id, &data);
+            rr_ack_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
+                               service_data->invoke_id, &data);
 #if PRINT_ENABLED
         fprintf(stderr, "RR: Sending Ack!\n");
 #endif
@@ -157,17 +157,17 @@ void handler_read_range(
         if (len == -2) {
             /* BACnet APDU too small to fit data, so proper response is Abort */
             len =
-                abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-                service_data->invoke_id,
-                ABORT_REASON_SEGMENTATION_NOT_SUPPORTED, true);
+                abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
+                                  service_data->invoke_id,
+                                  ABORT_REASON_SEGMENTATION_NOT_SUPPORTED, true);
 #if PRINT_ENABLED
             fprintf(stderr, "RR: Reply too big to fit into APDU!\n");
 #endif
         } else {
             len =
-                bacerror_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-                service_data->invoke_id, SERVICE_CONFIRMED_READ_RANGE,
-                data.error_class, data.error_code);
+                bacerror_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
+                                     service_data->invoke_id, SERVICE_CONFIRMED_READ_RANGE,
+                                     data.error_class, data.error_code);
 #if PRINT_ENABLED
             fprintf(stderr, "RR: Sending Error!\n");
 #endif
@@ -175,9 +175,10 @@ void handler_read_range(
     }
   RR_ABORT:
     pdu_len += len;
+        dlcb->optr = pdu_len;
+        
     bytes_sent =
-        datalink_send_pdu(src, &npci_data, &Handler_Transmit_Buffer[0],
-        pdu_len);
+        datalink_send_pdu(src, &npci_data,dlcb );
 #if PRINT_ENABLED
     if (bytes_sent <= 0)
         fprintf(stderr, "Failed to send PDU (%s)!\n", strerror(errno));

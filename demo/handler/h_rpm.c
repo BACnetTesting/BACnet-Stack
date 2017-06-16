@@ -202,13 +202,16 @@ void handler_read_property_multiple(
     int npdu_len = 0;
     int error = 0;
 
+	DLCB *dlcb = alloc_dlcb_response('j', srcRoute );
+	if (dlcb == NULL) return;
+
     /* jps_debug - see if we are utilizing all the buffer */
     /* memset(&Handler_Transmit_Buffer[0], 0xff, sizeof(Handler_Transmit_Buffer)); */
     /* encode the NPDU portion of the packet */
     datalink_get_my_address(&my_address);
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     npdu_len =
-        npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], src, &my_address,
         &npci_data);
     if (service_data->segmented_message) {
         rpmdata.error_code = ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
@@ -221,7 +224,7 @@ void handler_read_property_multiple(
     /* decode apdu request & encode apdu reply
        encode complex ack, invoke id, service choice */
     apdu_len =
-        rpm_ack_encode_apdu_init(&Handler_Transmit_Buffer[npdu_len],
+        rpm_ack_encode_apdu_init(&dlcb->Handler_Transmit_Buffer[npdu_len],
         service_data->invoke_id);
     for (;;) {
         /* Start by looking for an object ID */
@@ -249,7 +252,7 @@ void handler_read_property_multiple(
         /* Stick this object id into the reply - if it will fit */
         len = rpm_ack_encode_apdu_object_begin(&Temp_Buf[0], &rpmdata);
         copy_len =
-            memcopy(&Handler_Transmit_Buffer[npdu_len], &Temp_Buf[0], apdu_len,
+            memcopy(&dlcb->Handler_Transmit_Buffer[npdu_len], &Temp_Buf[0], apdu_len,
             len, MAX_APDU);
         if (copy_len == 0) {
 #if PRINT_ENABLED
@@ -266,7 +269,7 @@ void handler_read_property_multiple(
             /* Fetch a property */
             len =
                 rpm_decode_object_property(&service_request[decode_len],
-                service_len - decode_len, &rpmdata);
+                    service_len - decode_len, &rpmdata);
             if (len < 0) {
                 /* bad encoding - skip to error/reject/abort handling */
 #if PRINT_ENABLED
@@ -290,9 +293,9 @@ void handler_read_property_multiple(
                        Encode error for this object property response */
                     len =
                         rpm_ack_encode_apdu_object_property(&Temp_Buf[0],
-                        rpmdata.object_property, rpmdata.array_index);
+                            rpmdata.object_property, rpmdata.array_index);
                     copy_len =
-                        memcopy(&Handler_Transmit_Buffer[npdu_len],
+                        memcopy(&dlcb->Handler_Transmit_Buffer[npdu_len],
                         &Temp_Buf[0], apdu_len, len, MAX_APDU);
                     if (copy_len == 0) {
 #if PRINT_ENABLED
@@ -307,10 +310,10 @@ void handler_read_property_multiple(
                     apdu_len += len;
                     len =
                         rpm_ack_encode_apdu_object_property_error(&Temp_Buf[0],
-                        ERROR_CLASS_PROPERTY,
-                        ERROR_CODE_PROPERTY_IS_NOT_AN_ARRAY);
+                            ERROR_CLASS_PROPERTY,
+                            ERROR_CODE_PROPERTY_IS_NOT_AN_ARRAY);
                     copy_len =
-                        memcopy(&Handler_Transmit_Buffer[npdu_len],
+                        memcopy(&dlcb->Handler_Transmit_Buffer[npdu_len],
                         &Temp_Buf[0], apdu_len, len, MAX_APDU);
                     if (copy_len == 0) {
 #if PRINT_ENABLED
@@ -342,7 +345,8 @@ void handler_read_property_multiple(
                                 RPM_Object_Property(&property_list,
                                 special_object_property, index);
                             len =
-                                RPM_Encode_Property(&Handler_Transmit_Buffer
+                                RPM_Encode_Property(
+                                &dlcb->Handler_Transmit_Buffer
                                 [npdu_len], (uint16_t) apdu_len, MAX_APDU,
                                 &rpmdata);
                             if (len > 0) {
@@ -361,7 +365,8 @@ void handler_read_property_multiple(
             } else {
                 /* handle an individual property */
                 len =
-                    RPM_Encode_Property(&Handler_Transmit_Buffer[npdu_len],
+                    RPM_Encode_Property(
+                    &dlcb->Handler_Transmit_Buffer[npdu_len],
                     (uint16_t) apdu_len, MAX_APDU, &rpmdata);
                 if (len > 0) {
                     apdu_len += len;
@@ -379,7 +384,7 @@ void handler_read_property_multiple(
                 decode_len++;
                 len = rpm_ack_encode_apdu_object_end(&Temp_Buf[0]);
                 copy_len =
-                    memcopy(&Handler_Transmit_Buffer[npdu_len], &Temp_Buf[0],
+                    memcopy(&dlcb->Handler_Transmit_Buffer[npdu_len], &Temp_Buf[0],
                     apdu_len, len, MAX_APDU);
                 if (copy_len == 0) {
 #if PRINT_ENABLED
@@ -393,8 +398,8 @@ void handler_read_property_multiple(
                     apdu_len += copy_len;
                 }
                 break;  /* finished with this property list */
-            }
         }
+    }
         if (decode_len >= service_len) {
             /* Reached the end so finish up */
             break;
@@ -411,11 +416,11 @@ void handler_read_property_multiple(
         goto RPM_FAILURE;
     }
 
-  RPM_FAILURE:
+RPM_FAILURE:
     if (error) {
         if (error == BACNET_STATUS_ABORT) {
             apdu_len =
-                abort_encode_apdu(&Handler_Transmit_Buffer[npdu_len],
+                abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[npdu_len],
                 service_data->invoke_id,
                 abort_convert_error_code(rpmdata.error_code), true);
 #if PRINT_ENABLED
@@ -423,7 +428,7 @@ void handler_read_property_multiple(
 #endif
         } else if (error == BACNET_STATUS_ERROR) {
             apdu_len =
-                bacerror_encode_apdu(&Handler_Transmit_Buffer[npdu_len],
+                bacerror_encode_apdu(&dlcb->Handler_Transmit_Buffer[npdu_len],
                 service_data->invoke_id, SERVICE_CONFIRMED_READ_PROP_MULTIPLE,
                 rpmdata.error_class, rpmdata.error_code);
 #if PRINT_ENABLED
@@ -431,7 +436,7 @@ void handler_read_property_multiple(
 #endif
         } else if (error == BACNET_STATUS_REJECT) {
             apdu_len =
-                reject_encode_apdu(&Handler_Transmit_Buffer[npdu_len],
+                reject_encode_apdu(&dlcb->Handler_Transmit_Buffer[npdu_len],
                 service_data->invoke_id,
                 reject_convert_error_code(rpmdata.error_code));
 #if PRINT_ENABLED
@@ -441,9 +446,9 @@ void handler_read_property_multiple(
     }
 
     pdu_len = apdu_len + npdu_len;
+        dlcb->optr = pdu_len;
     bytes_sent =
-        datalink_send_pdu(src, &npci_data, &Handler_Transmit_Buffer[0],
-        pdu_len);
+        datalink_send_pdu(src, &npci_data, dlcb);
     if (bytes_sent <= 0) {
 #if PRINT_ENABLED
         fprintf(stderr, "RPM: Failed to send PDU (%s)!\n", strerror(errno));

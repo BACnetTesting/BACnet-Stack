@@ -67,9 +67,11 @@ extern bool BIP_Debug;
     int bip_send_pdu(
         BACNET_ADDRESS * dest,  /* destination address */
         BACNET_NPCI_DATA * npci_data,   /* network information */
-        uint8_t * pdu,  /* any data to be sent - may be null */
-        unsigned pdu_len);      /* number of bytes of data */
-
+        //uint8_t * pdu,  /* any data to be sent - may be null */
+        //unsigned pdu_len);      /* number of bytes of data */
+    const DLCB *dlcb);
+    
+    
     /* receives a BACnet/IP packet */
     /* returns the number of octets in the PDU, or zero on failure */
     uint16_t bip_receive(

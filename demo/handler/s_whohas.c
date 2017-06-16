@@ -74,10 +74,14 @@ void Send_WhoHas_Name(
     /* Who-Has is a global broadcast */
     datalink_get_broadcast_address(&dest);
     datalink_get_my_address(&my_address);
+
+    DLCB *dlcb = alloc_dlcb_response('t', &dest);
+    if (dlcb == NULL) return;
+
     /* encode the NPDU portion of the packet */
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
-        npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest, &my_address,
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &dest, &my_address,
         &npci_data);
 
     /* encode the APDU portion of the packet */
@@ -87,10 +91,11 @@ void Send_WhoHas_Name(
     characterstring_init_ansi(&data.object.name, object_name);
     len = whohas_encode_apdu(&Handler_Transmit_Buffer[pdu_len], &data);
     pdu_len += len;
+
     /* send the data */
     bytes_sent =
-        datalink_send_pdu(&dest, &npci_data, &Handler_Transmit_Buffer[0],
-        pdu_len);
+        datalink_send_pdu(&dest, &npci_data, dlcb );
+        
 #if PRINT_ENABLED
     if (bytes_sent <= 0)
         fprintf(stderr, "Failed to Send Who-Has Request (%s)!\n",
@@ -126,13 +131,17 @@ void Send_WhoHas_Object(
     /* if we are forbidden to send, don't send! */
     if (!dcc_communication_enabled())
         return;
+
+    DLCB *dlcb = alloc_dlcb_response('t', &dest);
+    if (dlcb == NULL) return;
+
     /* Who-Has is a global broadcast */
     datalink_get_broadcast_address(&dest);
     datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
-        npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest, &my_address,
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &dest, &my_address,
         &npci_data);
 
     /* encode the APDU portion of the packet */
@@ -144,8 +153,8 @@ void Send_WhoHas_Object(
     len = whohas_encode_apdu(&Handler_Transmit_Buffer[pdu_len], &data);
     pdu_len += len;
     bytes_sent =
-        datalink_send_pdu(&dest, &npci_data, &Handler_Transmit_Buffer[0],
-        pdu_len);
+        datalink_send_pdu(&dest, &npci_data, dlcb );
+
 #if PRINT_ENABLED
     if (bytes_sent <= 0)
         fprintf(stderr, "Failed to Send Who-Has Request (%s)!\n",

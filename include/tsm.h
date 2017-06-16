@@ -108,15 +108,21 @@ typedef void (
         uint8_t invokeID,
         BACNET_ADDRESS * dest,
         BACNET_NPCI_DATA * ndpu_data,
-        uint8_t * apdu,
-        uint16_t apdu_len);
+        // uint8_t * apdu,
+        // uint16_t apdu_len);
+            DLCB *dlcb
+          );
+    
 /* returns true if transaction is found */
     bool tsm_get_transaction_pdu(
         uint8_t invokeID,
         BACNET_ADDRESS * dest,
         BACNET_NPCI_DATA * ndpu_data,
-        uint8_t * apdu,
-        uint16_t * apdu_len);
+        //uint8_t * apdu,
+        //uint16_t * apdu_len);
+            DLCB **dlcb
+    );
+
 
     bool tsm_invoke_id_free(
         uint8_t invokeID);

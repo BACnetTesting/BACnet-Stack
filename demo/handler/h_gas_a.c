@@ -68,7 +68,7 @@ void get_alarm_summary_ack_handler(
     while (service_len - len) {
         apdu_len =
             get_alarm_summary_ack_decode_apdu_data(&service_request[len],
-            service_len - len, &data);
+                    service_len - len, &data);
 
         len += apdu_len;
 

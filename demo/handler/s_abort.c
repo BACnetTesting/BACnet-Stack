@@ -102,7 +102,7 @@ int Send_Abort_To_Network(
     datalink_get_my_address(&src);
     pdu_len = abort_encode_pdu(buffer, dest, &src, &npci_data,
         invoke_id, reason, server);
-    bytes_sent = datalink_send_pdu(dest, &npci_data, &buffer[0], pdu_len);
+    bytes_sent = datalink_send_pdu(dest, &npci_data, dlcb);
 
     return bytes_sent;
 }

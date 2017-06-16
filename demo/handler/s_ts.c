@@ -78,8 +78,8 @@ void Send_TimeSync_Remote(
     pdu_len += len;
     /* send it out the datalink */
     bytes_sent =
-        datalink_send_pdu(dest, &npci_data, &Handler_Transmit_Buffer[0],
-        pdu_len);
+        datalink_send_pdu(dest, &npci_data, dlcb );
+
 #if PRINT_ENABLED
     if (bytes_sent <= 0)
         fprintf(stderr, "Failed to Send Time-Synchronization Request (%s)!\n",
@@ -136,8 +136,8 @@ void Send_TimeSyncUTC_Remote(
         bdate, btime);
     pdu_len += len;
     bytes_sent =
-        datalink_send_pdu(dest, &npci_data, &Handler_Transmit_Buffer[0],
-        pdu_len);
+        datalink_send_pdu(dest, &npci_data, dlcb );
+
 #if PRINT_ENABLED
     if (bytes_sent <= 0)
         fprintf(stderr,

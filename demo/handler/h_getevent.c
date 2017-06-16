@@ -234,8 +234,7 @@ GET_EVENT_ERROR:
 GET_EVENT_ABORT:
     pdu_len += len;
     bytes_sent =
-        datalink_send_pdu(src, &npci_data, &Handler_Transmit_Buffer[0],
-        pdu_len);
+        datalink_send_pdu(src, &npci_data, dlcb );
 #if PRINT_ENABLED
     if (bytes_sent <= 0)
         fprintf(stderr, "Failed to send PDU (%s)!\n", strerror(errno));

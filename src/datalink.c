@@ -69,8 +69,7 @@ int (
     *datalink_send_pdu) (
     BACNET_ADDRESS * dest,
     BACNET_NPCI_DATA * npci_data,
-    uint8_t * pdu,
-    unsigned pdu_len);
+        DLCB *dlcb);
 
 uint16_t(*datalink_receive) (BACNET_ADDRESS * src, uint8_t * pdu,
     uint16_t max_pdu, unsigned timeout);
@@ -89,6 +88,141 @@ void (
 void (
     *datalink_get_my_address) (
     BACNET_ADDRESS * my_address);
+
+DLCB *alloc_dlcb_sys(char typ, const BACNET_ROUTE *route)
+{
+    DLCB *dlcb = (DLCB *)emm_dmalloc(typ, sizeof(DLCB));
+    if (dlcb == NULL) return NULL;
+
+    dlcb->Handler_Transmit_Buffer = (uint8_t *)emm_dmalloc(typ, route->portParams->max_lpdu );
+    if (dlcb->Handler_Transmit_Buffer == NULL)
+    {
+        emm_free(dlcb);
+        return NULL;
+    }
+
+#if ( BAC_DEBUG == 1 )
+    dlcb->signature = 'd';
+#endif
+
+    bacnet_route_copy ( &dlcb->route, route ) ;
+    dlcb->source = typ;            // 'a'pp or 'm'stp (in future, ethernet(s), other mstp(s) wifi
+    dlcb->lpduMax = route->portParams->max_lpdu ;
+    dlcb->optr = 0 ;
+    // memset ( &dlcb->npciData, 0, sizeof ( dlcb->npciData ));
+    // no. route is passed to us as a parameter bacnet_route_clear( &dlcb->route ) ;
+    dlcb->expectingReply = false;
+
+    return dlcb;
+}
+
+
+static DLCB *dlcb_clone_common(const DLCB *dlcb, uint16_t len )
+{
+#if (BAC_DEBUG == 1 )
+  dlcb_check ( dlcb ) ;
+#endif
+  
+    DLCB *newdlcb = (DLCB *)emm_dmalloc('k', sizeof(DLCB));
+    if (newdlcb == NULL) return NULL;
+
+    newdlcb->Handler_Transmit_Buffer = (uint8_t *)emm_dmalloc('h', len );
+    if (newdlcb->Handler_Transmit_Buffer == NULL)
+    {
+        emm_free(newdlcb);
+        return NULL;
+    }
+
+#if ( BAC_DEBUG == 1 )
+    newdlcb->signature = dlcb->signature ;
+#else
+#error
+#endif
+
+    bacnet_route_copy( &newdlcb->route, &dlcb->route ) ;
+    // bacnet_mac_copy ( &newdlcb->phyDest, &dlcb->phyDest) ;
+    // newdlcb->npciData = dlcb->npciData ; 
+    newdlcb->source =  dlcb->source ;
+    newdlcb->expectingReply = dlcb->expectingReply;
+    
+    return newdlcb;
+}
+
+  
+DLCB *dlcb_clone_with_copy_of_buffer(const DLCB *dlcb, const uint16_t len, const uint8_t *buffer )
+{
+  DLCB *newdlcb = dlcb_clone_common ( dlcb, len ) ;
+  if ( newdlcb == NULL ) return NULL ;
+  
+  newdlcb->lpduMax = len;
+  newdlcb->optr = len ;
+  memcpy(newdlcb->Handler_Transmit_Buffer, buffer, len );	// todo3, start using safebuffers, with associated lengths
+  return newdlcb;
+}
+
+    
+DLCB *dlcb_clone_deep(const DLCB *dlcb)
+{
+#if (BAC_DEBUG == 1 )
+  if ( dlcb->lpduMax > 1500 )
+  {
+    panic();
+    return NULL;
+  }
+  if ( dlcb->optr == 0 )
+  {
+    panic();
+    return NULL;
+  }
+#else
+#error
+#endif
+  
+  DLCB *newdlcb = dlcb_clone_common ( dlcb, dlcb->lpduMax) ;
+  if ( newdlcb == NULL ) return NULL ;
+  
+  newdlcb->lpduMax = dlcb->lpduMax;
+  newdlcb->optr = dlcb->optr ;
+  memcpy(newdlcb->Handler_Transmit_Buffer, dlcb->Handler_Transmit_Buffer, dlcb->lpduMax);
+  return newdlcb;
+}
+
+#if ( BAC_DEBUG == 1 )
+bool dlcb_check ( const DLCB *dlcb )
+{
+    if (dlcb->signature != 'd')
+    {
+        if ( dlcb->signature == 'Z' ) {
+          // DLCB is already freed!
+          ese_enqueue(ese008_08_duplicate_free) ;
+          panic();
+        }
+        else {
+          // probably a bad pointer to block
+          ese_enqueue(ese007_07_bad_malloc_free) ;
+          panic();
+        }
+        return false ;
+    }
+    return true ;
+}
+#else
+#error
+#endif
+
+void dlcb_free(const DLCB *dlcb)
+{
+#if (BAC_DEBUG == 1 )
+  dlcb_check ( dlcb ) ;
+ ((DLCB *)dlcb)->signature = 'Z';
+#else 
+#error
+#endif // DEBUG
+
+    emm_free(dlcb->Handler_Transmit_Buffer);
+    emm_free((void *) dlcb);
+}
+
 
 void datalink_set(
     char *datalink_string)

@@ -83,20 +83,22 @@ void handler_ucov_notification(
         pProperty_value = pProperty_value->next;
     }
     cov_data.listOfValues = &property_value[0];
+
 #if PRINT_ENABLED
     fprintf(stderr, "UCOV: Received Notification!\n");
 #endif
     /* decode the service request only */
     len =
         cov_notify_decode_service_request(service_request, service_len,
-        &cov_data);
+                                          &cov_data);
+
 #if PRINT_ENABLED
     if (len > 0) {
         fprintf(stderr, "UCOV: PID=%u ", cov_data.subscriberProcessIdentifier);
         fprintf(stderr, "instance=%u ", cov_data.initiatingDeviceIdentifier);
         fprintf(stderr, "%s %u ",
-            bactext_object_type_name(cov_data.monitoredObjectIdentifier.type),
-            cov_data.monitoredObjectIdentifier.instance);
+                bactext_object_type_name(cov_data.monitoredObjectIdentifier.type),
+                cov_data.monitoredObjectIdentifier.instance);
         fprintf(stderr, "time remaining=%u seconds ", cov_data.timeRemaining);
         fprintf(stderr, "\n");
         pProperty_value = &property_value[0];
@@ -104,11 +106,11 @@ void handler_ucov_notification(
             fprintf(stderr, "UCOV: ");
             if (pProperty_value->propertyIdentifier < 512) {
                 fprintf(stderr, "%s ",
-                    bactext_property_name
-                    (pProperty_value->propertyIdentifier));
+                        bactext_property_name
+                        (pProperty_value->propertyIdentifier));
             } else {
                 fprintf(stderr, "proprietary %u ",
-                    pProperty_value->propertyIdentifier);
+                        pProperty_value->propertyIdentifier);
             }
             if (pProperty_value->propertyArrayIndex != BACNET_ARRAY_ALL) {
                 fprintf(stderr, "%u ", pProperty_value->propertyArrayIndex);

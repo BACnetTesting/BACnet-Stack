@@ -102,8 +102,8 @@ uint8_t Send_Write_Property_Multiple_Request_Data(
             tsm_set_confirmed_unsegmented_transaction(invoke_id, &dest,
                 &npci_data, &Handler_Transmit_Buffer[0], (uint16_t) pdu_len);
             bytes_sent =
-                datalink_send_pdu(&dest, &npci_data,
-                &Handler_Transmit_Buffer[0], pdu_len);
+                datalink_send_pdu(&dest, &npci_data, dlcb ) ;
+
 #if PRINT_ENABLED
             if (bytes_sent <= 0)
                 fprintf(stderr, "Failed to Send WriteProperty Request (%s)!\n",

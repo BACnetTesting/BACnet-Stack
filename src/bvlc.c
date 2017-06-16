@@ -1436,8 +1436,9 @@ uint16_t bvlc_receive(
 int bvlc_send_pdu(
     BACNET_ADDRESS * dest,
     BACNET_NPCI_DATA * npci_data,
-    uint8_t * pdu,
-    unsigned pdu_len)
+//    uint8_t * pdu,
+//    unsigned pdu_len)
+        const DLCB *dlcb )
 {
     struct sockaddr_in bvlc_dest = { 0 };
     uint8_t mtu[MAX_MPDU] = { 0 };

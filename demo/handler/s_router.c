@@ -118,6 +118,14 @@ int Send_Network_Layer_Message(
         datalink_get_broadcast_address(&bcastDest);
         dst = &bcastDest;
     }
+    
+
+    DLCB *dlcb = alloc_dlcb_application('u', dst );
+    if (dlcb == NULL)
+    {
+        return -1 ;
+    }
+
 
     if (network_message_type == NETWORK_MESSAGE_INIT_RT_TABLE)
         data_expecting_reply = true;    /* DER in this one case */
@@ -128,14 +136,14 @@ int Send_Network_Layer_Message(
      * our downstream BACnet network.
      */
     pdu_len =
-        npdu_encode_pdu(&Handler_Transmit_Buffer[0], dst, NULL, &npci_data);
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], dst, NULL, &npci_data);
 
     /* Now encode the optional payload bytes, per message type */
     switch (network_message_type) {
         case NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK:
             if (*pVal >= 0) {
                 len =
-                    encode_unsigned16(&Handler_Transmit_Buffer[pdu_len],
+                    encode_unsigned16(&dlcb->Handler_Transmit_Buffer[pdu_len],
                     (uint16_t) * pVal);
                 pdu_len += len;
             }
@@ -147,7 +155,7 @@ int Send_Network_Layer_Message(
         case NETWORK_MESSAGE_ROUTER_AVAILABLE_TO_NETWORK:
             while (*pVal >= 0) {
                 len =
-                    encode_unsigned16(&Handler_Transmit_Buffer[pdu_len],
+                    encode_unsigned16(&dlcb->Handler_Transmit_Buffer[pdu_len],
                     (uint16_t) * pVal);
                 pdu_len += len;
                 pVal++;
@@ -156,10 +164,10 @@ int Send_Network_Layer_Message(
 
         case NETWORK_MESSAGE_REJECT_MESSAGE_TO_NETWORK:
             /* Encode the Reason byte, then the DNET */
-            Handler_Transmit_Buffer[pdu_len++] = (uint8_t) * pVal;
+            dlcb->Handler_Transmit_Buffer[pdu_len++] = (uint8_t) * pVal;
             pVal++;
             len =
-                encode_unsigned16(&Handler_Transmit_Buffer[pdu_len],
+                encode_unsigned16(&dlcb->Handler_Transmit_Buffer[pdu_len],
                 (uint16_t) * pVal);
             pdu_len += len;
             break;
@@ -172,7 +180,7 @@ int Send_Network_Layer_Message(
                 len++;
                 pVal++;
             }
-            Handler_Transmit_Buffer[pdu_len++] = (uint8_t) len;
+            dlcb->Handler_Transmit_Buffer[pdu_len++] = (uint8_t) len;
 
             if (len > 0) {
                 uint8_t portID = 1;
@@ -183,11 +191,11 @@ int Send_Network_Layer_Message(
                  */
                 while (*pVal >= 0) {
                     len =
-                        encode_unsigned16(&Handler_Transmit_Buffer[pdu_len],
+                        encode_unsigned16(&dlcb->Handler_Transmit_Buffer[pdu_len],
                         (uint16_t) * pVal);
                     pdu_len += len;
-                    Handler_Transmit_Buffer[pdu_len++] = portID++;
-                    Handler_Transmit_Buffer[pdu_len++] = 0;
+                    dlcb->Handler_Transmit_Buffer[pdu_len++] = portID++;
+                    dlcb->Handler_Transmit_Buffer[pdu_len++] = 0;
                     debug_printf("  Sending Routing Table entry for %u \n",
                         *pVal);
                     pVal++;

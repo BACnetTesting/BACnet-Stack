@@ -114,7 +114,7 @@ void handler_unconfirmed_private_transfer(
 #endif
     len =
         ptransfer_decode_service_request(service_request, service_len,
-        &private_data);
+                                         &private_data);
     if (len >= 0) {
         private_transfer_print_data(&private_data);
     }

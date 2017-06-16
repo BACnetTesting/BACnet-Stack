@@ -80,6 +80,14 @@ uint8_t Send_Read_Property_Multiple_Request(
     if (status)
         invoke_id = tsm_next_free_invokeID();
     if (invoke_id) {
+
+        DLCB *dlcb = alloc_dlcb_application('r', &dest);
+        if (dlcb == NULL)
+        {
+            panic();
+            return 0;   // todo, make a real flag here.
+        }
+
         /* encode the NPDU portion of the packet */
         datalink_get_my_address(&my_address);
         npdu_setup_npci_data(&npci_data, true, MESSAGE_PRIORITY_NORMAL);
@@ -101,7 +109,9 @@ uint8_t Send_Read_Property_Multiple_Request(
             tsm_set_confirmed_unsegmented_transaction(invoke_id, &dest,
                 &npci_data, &pdu[0], (uint16_t) pdu_len);
             bytes_sent =
-                datalink_send_pdu(&dest, &npci_data, &pdu[0], pdu_len);
+                datalink_send_pdu(&dest, &npci_data, 
+                dlcb );
+                
 #if PRINT_ENABLED
             if (bytes_sent <= 0)
                 fprintf(stderr,

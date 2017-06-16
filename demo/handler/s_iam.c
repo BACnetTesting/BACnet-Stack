@@ -63,13 +63,18 @@ void Send_I_Am_To_Network(
     int bytes_sent = 0;
     BACNET_NPCI_DATA npci_data;
     BACNET_ADDRESS my_address;
+    
+    DLCB *dlcb = alloc_dlcb_application('r', dest);
+    if (dlcb == NULL)
+    {
+        return;
+    }
 
-    datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
 
     pdu_len =
-        npdu_encode_pdu(&Handler_Transmit_Buffer[0], target_address,
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], target_address,
         &my_address, &npci_data);
     /* encode the APDU portion of the packet */
     /* encode the APDU portion of the packet */
@@ -79,7 +84,7 @@ void Send_I_Am_To_Network(
     pdu_len += len;
     bytes_sent =
         datalink_send_pdu(target_address, &npci_data,
-        &Handler_Transmit_Buffer[0], pdu_len);
+        dlcb );
     if (bytes_sent <= 0) {
 #if PRINT_ENABLED
         fprintf(stderr, "Failed to Send I-Am Request (%s)!\n",
@@ -97,6 +102,7 @@ void Send_I_Am_To_Network(
  */
 int iam_encode_pdu(
     uint8_t * buffer,
+    DLCB *dlcb,
     BACNET_ADDRESS * dest,
     BACNET_NPCI_DATA * npci_data)
 {
@@ -108,16 +114,17 @@ int iam_encode_pdu(
     datalink_get_broadcast_address(dest);
     /* encode the NPDU portion of the packet */
     npdu_setup_npci_data(npci_data, false, MESSAGE_PRIORITY_NORMAL);
-    pdu_len = npdu_encode_pdu(&buffer[0], dest, &my_address, npci_data);
+    pdu_len = npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], dest, &my_address, npci_data);
 
     /* encode the APDU portion of the packet */
     len =
-        iam_encode_apdu(&buffer[pdu_len], Device_Object_Instance_Number(),
+        iam_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len], Device_Object_Instance_Number(),
         MAX_APDU, SEGMENTATION_NONE, Device_Vendor_Identifier());
     pdu_len += len;
 
     return pdu_len;
 }
+
 
 /** Broadcast an I Am message.
  * @ingroup DMDDB
@@ -144,10 +151,16 @@ void Send_I_Am(
         return 0;
 #endif
 
+    DLCB *dlcb = alloc_dlcb_application('u', &dest);
+    if (dlcb == NULL)
+    {
+        return;
+    }
+
     /* encode the data */
     pdu_len = iam_encode_pdu(buffer, &dest, &npci_data);
     /* send data */
-    bytes_sent = datalink_send_pdu(&dest, &npci_data, &buffer[0], pdu_len);
+    bytes_sent = datalink_send_pdu(&dest, &npci_data, dlcb );
 
     if (bytes_sent <= 0) {
 #if PRINT_ENABLED
@@ -185,7 +198,7 @@ int iam_unicast_encode_pdu(
     npdu_len = npdu_encode_pdu(&buffer[0], dest, &my_address, npci_data);
     /* encode the APDU portion of the packet */
     apdu_len =
-        iam_encode_apdu(&buffer[npdu_len], Device_Object_Instance_Number(),
+        iam_encode_apdu(&dlcb->Handler_Transmit_Buffer[npdu_len], Device_Object_Instance_Number(),
         MAX_APDU, SEGMENTATION_NONE, Device_Vendor_Identifier());
     pdu_len = npdu_len + apdu_len;
 
@@ -224,10 +237,13 @@ void Send_I_Am_Unicast(
         return 0;
 #endif
 
+    DLCB *dlcb = alloc_dlcb_response('r', dest );     // todo2 where is the rxDetail?
+    if (dlcb == NULL) return;
+    
     /* encode the data */
     pdu_len = iam_unicast_encode_pdu(buffer, src, &dest, &npci_data);
     /* send data */
-    bytes_sent = datalink_send_pdu(&dest, &npci_data, &buffer[0], pdu_len);
+    bytes_sent = datalink_send_pdu(&dest, &npci_data, dlcb );
 
     if (bytes_sent <= 0) {
 #if PRINT_ENABLED

@@ -67,6 +67,9 @@ void Send_I_Have(
     BACNET_NPCI_DATA npci_data;
     BACNET_ADDRESS my_address;
 
+    DLCB *dlcb = alloc_dlcb_response('s', dest2);
+    if (dlcb == NULL) return;
+
     datalink_get_my_address(&my_address);
     /* if we are forbidden to send, don't send! */
     if (!dcc_communication_enabled())
@@ -76,7 +79,7 @@ void Send_I_Have(
     /* encode the NPDU portion of the packet */
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
-        npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest, &my_address,
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &dest, &my_address,
         &npci_data);
 
     /* encode the APDU portion of the packet */
@@ -89,8 +92,7 @@ void Send_I_Have(
     pdu_len += len;
     /* send the data */
     bytes_sent =
-        datalink_send_pdu(&dest, &npci_data, &Handler_Transmit_Buffer[0],
-        pdu_len);
+        datalink_send_pdu(&dest, &npci_data, dlcb );
     if (bytes_sent <= 0) {
 #if PRINT_ENABLED
         fprintf(stderr, "Failed to Send I-Have Reply (%s)!\n",

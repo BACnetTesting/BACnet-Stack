@@ -94,30 +94,30 @@ void handler_write_property_multiple(
         /* decode Object Identifier */
         len =
             wpm_decode_object_id(&service_request[decode_len],
-            service_len - decode_len, &wp_data);
+                                 service_len - decode_len, &wp_data);
         if (len > 0) {
             uint8_t tag_number = 0;
 
             decode_len += len;
             /* Opening tag 1 - List of Properties */
             if (decode_is_opening_tag_number(&service_request[decode_len++],
-                    1)) {
+                                             1)) {
                 do {
                     /* decode a 'Property Identifier'; (3) an optional 'Property Array Index' */
                     /* (4) a 'Property Value'; and (5) an optional 'Priority'. */
                     len =
                         wpm_decode_object_property(&service_request
-                        [decode_len], service_len - decode_len, &wp_data);
+                                                   [decode_len], service_len - decode_len, &wp_data);
                     if (len > 0) {
                         decode_len += len;
 #if PRINT_ENABLED
                         fprintf(stderr,
-                            "WPM: type=%lu instance=%lu property=%lu priority=%lu index=%ld\n",
-                            (unsigned long) wp_data.object_type,
-                            (unsigned long) wp_data.object_instance,
-                            (unsigned long) wp_data.object_property,
-                            (unsigned long) wp_data.priority,
-                            (long) wp_data.array_index);
+                                "WPM: type=%lu instance=%lu property=%lu priority=%lu index=%ld\n",
+                                (unsigned long) wp_data.object_type,
+                                (unsigned long) wp_data.object_instance,
+                                (unsigned long) wp_data.object_property,
+                                (unsigned long) wp_data.priority,
+                                (long) wp_data.array_index);
 #endif
                         if (Device_Write_Property(&wp_data) == false) {
                             error = true;
@@ -134,7 +134,7 @@ void handler_write_property_multiple(
 
                     /* Closing tag 1 - List of Properties */
                     if (decode_is_closing_tag_number(&service_request
-                            [decode_len], 1)) {
+                                                     [decode_len], 1)) {
                         tag_number = 1;
                         decode_len++;
                     } else
@@ -168,41 +168,41 @@ void handler_write_property_multiple(
     if (error) {
         if (len == BACNET_STATUS_ABORT) {
             apdu_len =
-                abort_encode_apdu(&Handler_Transmit_Buffer[npdu_len],
-                service_data->invoke_id,
-                abort_convert_error_code(wp_data.error_code), true);
+                abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[npdu_len],
+                                  service_data->invoke_id,
+                                  abort_convert_error_code(wp_data.error_code), true);
 #if PRINT_ENABLED
             fprintf(stderr, "WPM: Sending Abort!\n");
 #endif
         } else if (len == BACNET_STATUS_ERROR) {
             apdu_len =
-                wpm_error_ack_encode_apdu(&Handler_Transmit_Buffer[npdu_len],
-                service_data->invoke_id, &wp_data);
+                wpm_error_ack_encode_apdu(&dlcb->Handler_Transmit_Buffer[npdu_len],
+                                          service_data->invoke_id, &wp_data);
 #if PRINT_ENABLED
             fprintf(stderr, "WPM: Sending Error!\n");
 #endif
         } else if (len == BACNET_STATUS_REJECT) {
             apdu_len =
-                reject_encode_apdu(&Handler_Transmit_Buffer[npdu_len],
-                service_data->invoke_id,
-                reject_convert_error_code(wp_data.error_code));
+                reject_encode_apdu(&dlcb->Handler_Transmit_Buffer[npdu_len],
+                                   service_data->invoke_id,
+                                   reject_convert_error_code(wp_data.error_code));
 #if PRINT_ENABLED
             fprintf(stderr, "WPM: Sending Reject!\n");
 #endif
         }
     } else {
         apdu_len =
-            wpm_ack_encode_apdu_init(&Handler_Transmit_Buffer[npdu_len],
-            service_data->invoke_id);
+            wpm_ack_encode_apdu_init(&dlcb->Handler_Transmit_Buffer[npdu_len],
+                                     service_data->invoke_id);
 #if PRINT_ENABLED
         fprintf(stderr, "WPM: Sending Ack!\n");
 #endif
     }
 
     pdu_len = npdu_len + apdu_len;
+        dlcb->optr = pdu_len;
     bytes_sent =
-        datalink_send_pdu(src, &npci_data, &Handler_Transmit_Buffer[0],
-        pdu_len);
+        datalink_send_pdu(src, &npci_data, dlcb );
 #if PRINT_ENABLED
     if (bytes_sent <= 0) {
         fprintf(stderr, "Failed to send PDU (%s)!\n", strerror(errno));

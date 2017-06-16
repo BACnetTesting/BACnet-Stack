@@ -74,18 +74,21 @@ void handler_write_property(
     int bytes_sent = 0;
     BACNET_ADDRESS my_address;
 
+	DLCB *dlcb = alloc_dlcb_response('n', src);
+	if (dlcb == NULL) return;
+
     /* encode the NPDU portion of the packet */
     datalink_get_my_address(&my_address);
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
-        npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], src, &my_address,
         &npci_data);
 #if PRINT_ENABLED
     fprintf(stderr, "WP: Received Request!\n");
 #endif
     if (service_data->segmented_message) {
         len =
-            abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
+            abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, ABORT_REASON_SEGMENTATION_NOT_SUPPORTED,
             true);
 #if PRINT_ENABLED
@@ -108,7 +111,7 @@ void handler_write_property(
     /* bad decoding or something we didn't understand - send an abort */
     if (len <= 0) {
         len =
-            abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
+            abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, ABORT_REASON_OTHER, true);
 #if PRINT_ENABLED
         fprintf(stderr, "WP: Bad Encoding. Sending Abort!\n");
@@ -117,14 +120,14 @@ void handler_write_property(
     }
     if (Device_Write_Property(&wp_data)) {
         len =
-            encode_simple_ack(&Handler_Transmit_Buffer[pdu_len],
+            encode_simple_ack(&dlcb->Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, SERVICE_CONFIRMED_WRITE_PROPERTY);
 #if PRINT_ENABLED
         fprintf(stderr, "WP: Sending Simple Ack!\n");
 #endif
     } else {
         len =
-            bacerror_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
+            bacerror_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, SERVICE_CONFIRMED_WRITE_PROPERTY,
             wp_data.error_class, wp_data.error_code);
 #if PRINT_ENABLED
@@ -133,9 +136,10 @@ void handler_write_property(
     }
   WP_ABORT:
     pdu_len += len;
+        dlcb->optr = pdu_len;
+        
     bytes_sent =
-        datalink_send_pdu(src, &npci_data, &Handler_Transmit_Buffer[0],
-        pdu_len);
+        datalink_send_pdu(src, &npci_data, dlcb );
     if (bytes_sent <= 0) {
 #if PRINT_ENABLED
         fprintf(stderr, "WP: Failed to send PDU (%s)!\n", strerror(errno));

@@ -119,6 +119,35 @@ extern void routed_get_my_address(
         char *datalink_string);
 
 #endif
+typedef struct _DLCB
+{
+#if ( BAC_DEBUG == 1 )
+    uint8_t signature;
+#endif
+
+    char                source;                     // is this packet due to an external (MSTP) or internal (App) event
+    uint16_t            lpduMax;                    // This is NOT the MAX APDU !!! it is the maximum available buffer to build into MAX_LPDU)
+    uint16_t            optr;
+    uint8_t             *Handler_Transmit_Buffer;
+
+    //BACNET_NPCI_DATA    npciData ;                  // this is only needed to carry expecting_reply for MSTP. Review...
+    //BACNET_MAC_ADDRESS  phyDest;
+    //const PORT_SUPPORT *portParams;                 // this is the datalink port that the packet must go out on - does not make sense ... just checking todo1
+    // rolling up the above 3
+    bool            expectingReply;
+    BACNET_ROUTE    route;
+
+} DLCB;
+bool dlcb_check(const DLCB *dlcb);
+DLCB *alloc_dlcb_sys(char typ, const BACNET_ROUTE *portParams );
+void dlcb_free(const DLCB *dlcb);
+DLCB *dlcb_clone_deep(const DLCB *dlcb);
+DLCB *dlcb_clone_with_copy_of_buffer(const DLCB *dlcb, const uint16_t len, const uint8_t *buffer);
+
+// renaming to allow tracing during debugging
+#define alloc_dlcb_response(tag, route)     alloc_dlcb_sys(tag, route)
+#define alloc_dlcb_application(tag, route)  alloc_dlcb_sys(tag, route)
+#define alloc_dlcb_app2(tag, route)	        alloc_dlcb_sys(tag, route)
 /** @defgroup DataLink The BACnet Network (DataLink) Layer
  * <b>6 THE NETWORK LAYER </b><br>
  * The purpose of the BACnet network layer is to provide the means by which

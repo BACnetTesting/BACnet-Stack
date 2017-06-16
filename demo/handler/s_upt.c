@@ -71,8 +71,8 @@ int Send_UnconfirmedPrivateTransfer(
         private_data);
     pdu_len += len;
     bytes_sent =
-        datalink_send_pdu(dest, &npci_data, &Handler_Transmit_Buffer[0],
-        pdu_len);
+        datalink_send_pdu(dest, &npci_data, dlcb );
+        
     if (bytes_sent <= 0) {
 #if PRINT_ENABLED
         fprintf(stderr,

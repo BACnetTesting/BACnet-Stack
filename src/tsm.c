@@ -209,17 +209,17 @@ void tsm_set_confirmed_unsegmented_transaction(
         index = tsm_find_invokeID_index(invokeID);
         if (index < MAX_TSM_TRANSACTIONS) {
             /* SendConfirmedUnsegmented */
+            TSM_List[index].dlcb = dlcb_clone_deep(dlcb); // nah, need txdetails. (viz. port) // todo 3 - probably don't have to clone the _whole_ buffer, check optr?
+            if (pDev->TSM_List[index].dlcb2 != NULL)
+            {
             TSM_List[index].state = TSM_STATE_AWAIT_CONFIRMATION;
             TSM_List[index].RetryCount = 0;
             /* start the timer */
             TSM_List[index].RequestTimer = apdu_timeout();
-            /* copy the data */
-            for (j = 0; j < apdu_len; j++) {
-                TSM_List[index].apdu[j] = apdu[j];
             }
-            TSM_List[index].apdu_len = apdu_len;
-            npdu_copy_data(&TSM_List[index].npci_data, ndpu_data);
-            bacnet_address_copy(&TSM_List[index].dest, dest);
+            // TSM_List[index].apdu_len = apdu_len;
+            // npdu_copy_data(&TSM_List[index].npci_data, ndpu_data);
+            // bacnet_address_copy(&TSM_List[index].dest, dest);
         }
     }
 
@@ -232,12 +232,13 @@ bool tsm_get_transaction_pdu(
     uint8_t invokeID,
     BACNET_ADDRESS * dest,
     BACNET_NPCI_DATA * ndpu_data,
-    uint8_t * apdu,
-    uint16_t * apdu_len)
+    // uint8_t * apdu,
+    //uint16_t * apdu_len)
+    DLCB **dlcb)
 {
     uint16_t j = 0;
     uint8_t index;
-    bool found = false;
+    // bool found = false;
 
     if (invokeID) {
         index = tsm_find_invokeID_index(invokeID);
@@ -252,11 +253,12 @@ bool tsm_get_transaction_pdu(
             }
             npdu_copy_data(ndpu_data, &TSM_List[index].npci_data);
             bacnet_address_copy(dest, &TSM_List[index].dest);
-            found = true;
+            *dlcb = pDev->TSM_List[index].dlcb2;
+            return true;
         }
     }
 
-    return found;
+    return false;
 }
 
 /* called once a millisecond or slower */
@@ -276,15 +278,22 @@ void tsm_timer_milliseconds(
                 if (TSM_List[i].RetryCount < apdu_retries()) {
                     TSM_List[i].RequestTimer = apdu_timeout();
                     TSM_List[i].RetryCount++;
-                    datalink_send_pdu(&TSM_List[i].dest,
-                        &TSM_List[i].npci_data, &TSM_List[i].apdu[0],
-                        TSM_List[i].apdu_len);
+                    // make a copy of the dclb (and its attachments)
+                    DLCB *dlcb = dlcb_clone_deep(pDev->TSM_List[i].dlcb2);
+                    if (dlcb != NULL)
+                    {                    
+                      datalink_send_pdu(&TSM_List[i].dest,
+                          &TSM_List[i].npci_data, dlcb ) ;
+                    }
                 } else {
                     /* note: the invoke id has not been cleared yet
                        and this indicates a failed message:
                        IDLE and a valid invoke id */
                     TSM_List[i].state = TSM_STATE_IDLE;
                     if (TSM_List[i].InvokeID != 0) {
+                        dlcb_free(pDev->TSM_List[i].dlcb2);
+                        pDev->TSM_List[i].dlcb2 = NULL;
+                    
                         if (Timeout_Function) {
                             Timeout_Function(TSM_List[i].InvokeID);
                         }
@@ -305,6 +314,11 @@ void tsm_free_invoke_id(
     if (index < MAX_TSM_TRANSACTIONS) {
         TSM_List[index].state = TSM_STATE_IDLE;
         TSM_List[index].InvokeID = 0;
+        if (pDev->TSM_List[index].dlcb2 != NULL)
+        {
+            dlcb_free(pDev->TSM_List[index].dlcb2);
+        }
+        pDev->TSM_List[index].dlcb2 = NULL;
     }
 }
 

@@ -42,6 +42,7 @@
  */
 int Send_UEvent_Notify(
     uint8_t * buffer,
+    DLCB *dlcb, // todo3 - why is this created here?
     BACNET_EVENT_NOTIFICATION_DATA * data,
     BACNET_ADDRESS * dest)
 {
@@ -59,7 +60,7 @@ int Send_UEvent_Notify(
     len = uevent_notify_encode_apdu(&buffer[pdu_len], data);
     pdu_len += len;
     /* send the data */
-    bytes_sent = datalink_send_pdu(dest, &npci_data, &buffer[0], pdu_len);
+    bytes_sent = datalink_send_pdu(dest, &npci_data, dlcb );
 
     return bytes_sent;
 }

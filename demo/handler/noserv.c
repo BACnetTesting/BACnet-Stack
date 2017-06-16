@@ -64,6 +64,12 @@ void handler_unrecognized_service(
     (void) service_request;
     (void) service_len;
 
+	DLCB *dlcb = alloc_dlcb_response('q', src);
+	if (dlcb == NULL)
+	{
+		return ;
+	}
+
     /* encode the NPDU portion of the packet */
     datalink_get_my_address(&my_address);
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
@@ -72,13 +78,12 @@ void handler_unrecognized_service(
         &npci_data);
     /* encode the APDU portion of the packet */
     len =
-        reject_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-        service_data->invoke_id, REJECT_REASON_UNRECOGNIZED_SERVICE);
+        reject_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
+                           service_data->invoke_id, REJECT_REASON_UNRECOGNIZED_SERVICE);
     pdu_len += len;
     /* send the data */
     bytes_sent =
-        datalink_send_pdu(src, &npci_data, &Handler_Transmit_Buffer[0],
-        pdu_len);
+        datalink_send_pdu(src, &npci_data, dlcb );
     if (bytes_sent > 0) {
 #if PRINT_ENABLED
         fprintf(stderr, "Sent Reject!\n");

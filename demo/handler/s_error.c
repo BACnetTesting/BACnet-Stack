@@ -104,7 +104,7 @@ int Send_Error_To_Network(
     datalink_get_my_address(&src);
     pdu_len = error_encode_pdu(buffer, dest, &src, &npci_data,
         invoke_id, service, error_class, error_code);
-    bytes_sent = datalink_send_pdu(dest, &npci_data, &buffer[0], pdu_len);
+    bytes_sent = datalink_send_pdu(dest, &npci_data, dlcb );
 
     return bytes_sent;
 }

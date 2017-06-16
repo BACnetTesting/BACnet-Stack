@@ -75,6 +75,9 @@ void handler_reinitialize_device(
     BACNET_NPCI_DATA npci_data;
     BACNET_ADDRESS my_address;
 
+    DLCB *dlcb = alloc_dlcb_response('e', src);
+    if (dlcb == NULL) return;
+
     /* encode the NPDU portion of the packet */
     datalink_get_my_address(&my_address);
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
@@ -98,21 +101,22 @@ void handler_reinitialize_device(
     /* decode the service request only */
     len =
         rd_decode_service_request(service_request, service_len, &rd_data.state,
-        &rd_data.password);
+            &rd_data.password);
 #if PRINT_ENABLED
     if (len > 0) {
         fprintf(stderr, "ReinitializeDevice: state=%u password=%s\n",
-            (unsigned) rd_data.state,
+            (unsigned)rd_data.state,
             characterstring_value(&rd_data.password));
-    } else {
+    }
+    else {
         fprintf(stderr, "ReinitializeDevice: Unable to decode request!\n");
     }
 #endif
     /* bad decoding or something we didn't understand - send an abort */
     if (len < 0) {
         len =
-            abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-            service_data->invoke_id, ABORT_REASON_OTHER, true);
+            abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
+                service_data->invoke_id, ABORT_REASON_OTHER, true);
 #if PRINT_ENABLED
         fprintf(stderr,
             "ReinitializeDevice: Sending Abort - could not decode.\n");
@@ -122,8 +126,8 @@ void handler_reinitialize_device(
     /* check the data from the request */
     if (rd_data.state >= MAX_BACNET_REINITIALIZED_STATE) {
         len =
-            reject_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-            service_data->invoke_id, REJECT_REASON_UNDEFINED_ENUMERATION);
+            reject_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
+                service_data->invoke_id, REJECT_REASON_UNDEFINED_ENUMERATION);
 #if PRINT_ENABLED
         fprintf(stderr,
             "ReinitializeDevice: Sending Reject - undefined enumeration\n");
@@ -133,8 +137,8 @@ void handler_reinitialize_device(
         /* Check to see if the current Device supports this service. */
         len =
             Routed_Device_Service_Approval
-            (SERVICE_CONFIRMED_REINITIALIZE_DEVICE, (int) rd_data.state,
-            &Handler_Transmit_Buffer[pdu_len], service_data->invoke_id);
+            (SERVICE_CONFIRMED_REINITIALIZE_DEVICE, (int)rd_data.state,
+                &dlcb->Handler_Transmit_Buffer[pdu_len], service_data->invoke_id);
         if (len > 0)
             goto RD_ABORT;
 #endif
@@ -149,19 +153,21 @@ void handler_reinitialize_device(
 #endif
         } else {
             len =
-                bacerror_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-                service_data->invoke_id, SERVICE_CONFIRMED_REINITIALIZE_DEVICE,
-                rd_data.error_class, rd_data.error_code);
+                bacerror_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
+                    service_data->invoke_id, SERVICE_CONFIRMED_REINITIALIZE_DEVICE,
+                    rd_data.error_class, rd_data.error_code);
 #if PRINT_ENABLED
             fprintf(stderr, "ReinitializeDevice: Sending Error.\n");
 #endif
         }
     }
-  RD_ABORT:
+
+RD_ABORT:
     pdu_len += len;
+        dlcb->optr = pdu_len;
     len =
-        datalink_send_pdu(src, &npci_data, &Handler_Transmit_Buffer[0],
-        pdu_len);
+        datalink_send_pdu(src, &npci_data, dlcb);
+
     if (len <= 0) {
 #if PRINT_ENABLED
         fprintf(stderr, "ReinitializeDevice: Failed to send PDU (%s)!\n",

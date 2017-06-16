@@ -265,8 +265,8 @@ static int cov_encode_subscription(
     /* objectIdentifier [0] */
     len =
         encode_context_object_id(&apdu[apdu_len], 0,
-        cov_subscription->monitoredObjectIdentifier.type,
-        cov_subscription->monitoredObjectIdentifier.instance);
+                                 cov_subscription->monitoredObjectIdentifier.type,
+                                 cov_subscription->monitoredObjectIdentifier.instance);
     apdu_len += len;
     /* propertyIdentifier [1] */
     /* FIXME: we are monitoring 2 properties! How to encode? */
@@ -278,12 +278,12 @@ static int cov_encode_subscription(
     /* IssueConfirmedNotifications [2] BOOLEAN, */
     len =
         encode_context_boolean(&apdu[apdu_len], 2,
-        cov_subscription->flag.issueConfirmedNotifications);
+                               cov_subscription->flag.issueConfirmedNotifications);
     apdu_len += len;
     /* TimeRemaining [3] Unsigned, */
     len =
         encode_context_unsigned(&apdu[apdu_len], 3,
-        cov_subscription->lifetime);
+                                cov_subscription->lifetime);
     apdu_len += len;
 
     return apdu_len;
@@ -473,10 +473,17 @@ static bool cov_send_request(
 #endif
         return status;
     }
+
+    DLCB *dlcb = alloc_dlcb_response('C', dest->portParams);
+    if (dlcb == NULL)
+    {
+        return false;
+    }
+
     datalink_get_my_address(&my_address);
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
-        npdu_encode_pdu(&Handler_Transmit_Buffer[0], dest, &my_address,
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], dest, &my_address,
         &npci_data);
     /* load the COV data structure for outgoing message */
     cov_data.subscriberProcessIdentifier =
@@ -494,24 +501,24 @@ static bool cov_send_request(
         if (invoke_id) {
             cov_subscription->invokeID = invoke_id;
             len =
-                ccov_notify_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-                sizeof(Handler_Transmit_Buffer) - pdu_len, invoke_id, &cov_data);
+                ccov_notify_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
+                dlcb->used - pdu_len, invoke_id, &cov_data);
         } else {
             goto COV_FAILED;
         }
     } else {
         len =
-            ucov_notify_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-            sizeof(Handler_Transmit_Buffer) - pdu_len, &cov_data);
+            ucov_notify_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
+            dlcb->used - pdu_len, &cov_data);
     }
     pdu_len += len;
     if (cov_subscription->flag.issueConfirmedNotifications) {
         tsm_set_confirmed_unsegmented_transaction(invoke_id, dest, &npci_data,
-            &Handler_Transmit_Buffer[0], (uint16_t) pdu_len);
+            dlcb );
     }
+    dlcb->optr = pdu_len;
     bytes_sent =
-        datalink_send_pdu(dest, &npci_data, &Handler_Transmit_Buffer[0],
-        pdu_len);
+        datalink_send_pdu(dest, &npci_data, dlcb );
     if (bytes_sent > 0) {
         status = true;
 #if PRINT_ENABLED
@@ -519,8 +526,7 @@ static bool cov_send_request(
 #endif
     }
 
-  COV_FAILED:
-
+COV_FAILED:
     return status;
 }
 
@@ -815,13 +821,17 @@ void handler_cov_subscribe(
     BACNET_ADDRESS my_address;
     bool error = false;
 
+
+  	DLCB *dlcb = alloc_dlcb_response('D', rxDetails->portParams);
+  	if (dlcb == NULL) return;
+
     /* initialize a common abort code */
     cov_data.error_code = ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
     /* encode the NPDU portion of the packet */
     datalink_get_my_address(&my_address);
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     npdu_len =
-        npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], src, &my_address,
         &npci_data);
     if (service_data->segmented_message) {
         /* we don't support segmentation - send an abort */
@@ -834,7 +844,7 @@ void handler_cov_subscribe(
     }
     len =
         cov_subscribe_decode_service_request(service_request, service_len,
-        &cov_data);
+                &cov_data);
 #if PRINT_ENABLED
     if (len <= 0)
         fprintf(stderr, "SubscribeCOV: Unable to decode Request!\n");
@@ -851,7 +861,7 @@ void handler_cov_subscribe(
     if (success) {
         apdu_len =
             encode_simple_ack(&Handler_Transmit_Buffer[npdu_len],
-            service_data->invoke_id, SERVICE_CONFIRMED_SUBSCRIBE_COV);
+                              service_data->invoke_id, SERVICE_CONFIRMED_SUBSCRIBE_COV);
 #if PRINT_ENABLED
         fprintf(stderr, "SubscribeCOV: Sending Simple Ack!\n");
 #endif
@@ -862,38 +872,39 @@ void handler_cov_subscribe(
         fprintf(stderr, "SubscribeCOV: Sending Error!\n");
 #endif
     }
-  COV_ABORT:
+COV_ABORT:
     if (error) {
         if (len == BACNET_STATUS_ABORT) {
             apdu_len =
-                abort_encode_apdu(&Handler_Transmit_Buffer[npdu_len],
-                service_data->invoke_id,
-                abort_convert_error_code(cov_data.error_code), true);
+                abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[npdu_len],
+                                  service_data->invoke_id,
+                                  abort_convert_error_code(cov_data.error_code), true);
 #if PRINT_ENABLED
             fprintf(stderr, "SubscribeCOV: Sending Abort!\n");
 #endif
         } else if (len == BACNET_STATUS_ERROR) {
             apdu_len =
-                bacerror_encode_apdu(&Handler_Transmit_Buffer[npdu_len],
-                service_data->invoke_id, SERVICE_CONFIRMED_SUBSCRIBE_COV,
-                cov_data.error_class, cov_data.error_code);
+                bacerror_encode_apdu(&dlcb->Handler_Transmit_Buffer[npdu_len],
+                                     service_data->invoke_id, SERVICE_CONFIRMED_SUBSCRIBE_COV,
+                                     cov_data.error_class, cov_data.error_code);
 #if PRINT_ENABLED
             fprintf(stderr, "SubscribeCOV: Sending Error!\n");
 #endif
         } else if (len == BACNET_STATUS_REJECT) {
             apdu_len =
-                reject_encode_apdu(&Handler_Transmit_Buffer[npdu_len],
-                service_data->invoke_id,
-                reject_convert_error_code(cov_data.error_code));
+                reject_encode_apdu(&dlcb->Handler_Transmit_Buffer[npdu_len],
+                                   service_data->invoke_id,
+                                   reject_convert_error_code(cov_data.error_code));
 #if PRINT_ENABLED
             fprintf(stderr, "SubscribeCOV: Sending Reject!\n");
 #endif
         }
     }
     pdu_len = npdu_len + apdu_len;
+        dlcb->optr = pdu_len;
     bytes_sent =
-        datalink_send_pdu(src, &npci_data, &Handler_Transmit_Buffer[0],
-        pdu_len);
+        datalink_send_pdu(src, &npci_data, dlcb );
+        
     if (bytes_sent <= 0) {
 #if PRINT_ENABLED
         fprintf(stderr, "SubscribeCOV: Failed to send PDU (%s)!\n",

@@ -70,7 +70,7 @@ int ucov_notify_encode_pdu(
     datalink_get_broadcast_address(dest);
     /* encode the NPDU portion of the packet */
     npdu_setup_npci_data(npci_data, false, MESSAGE_PRIORITY_NORMAL);
-    pdu_len = npdu_encode_pdu(&buffer[0], dest, &my_address, npci_data);
+    pdu_len = npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], dest, &my_address, npci_data);
 
     /* encode the APDU portion of the packet */
     len = ucov_notify_encode_apdu(&buffer[pdu_len],
@@ -95,6 +95,7 @@ int ucov_notify_encode_pdu(
 int Send_UCOV_Notify(
     uint8_t * buffer,
     unsigned buffer_len,
+    DLCB *dlcb,
     BACNET_COV_DATA * cov_data)
 {
     int pdu_len = 0;
@@ -104,7 +105,7 @@ int Send_UCOV_Notify(
 
     pdu_len = ucov_notify_encode_pdu(buffer, buffer_len, &dest, &npci_data,
         cov_data);
-    bytes_sent = datalink_send_pdu(&dest, &npci_data, &buffer[0], pdu_len);
+    bytes_sent = datalink_send_pdu(&dest, &npci_data, dlcb);
 
     return bytes_sent;
 }

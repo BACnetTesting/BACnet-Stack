@@ -107,8 +107,7 @@ void handler_lso(
   LSO_ABORT:
     pdu_len += len;
     bytes_sent =
-        datalink_send_pdu(src, &npci_data, &Handler_Transmit_Buffer[0],
-        pdu_len);
+        datalink_send_pdu(src, &npci_data, dlcb );
 #if PRINT_ENABLED
     if (bytes_sent <= 0)
         fprintf(stderr, "Life Safety Operation: " "Failed to send PDU (%s)!\n",

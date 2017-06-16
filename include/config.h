@@ -76,7 +76,7 @@
 #define BACNET_VENDOR_ID 260
 #endif
 #if !defined(BACNET_VENDOR_NAME)
-#define BACNET_VENDOR_NAME "BACnet Stack at SourceForge"
+#define BACNET_VENDOR_NAME "BITS BACnet Stack"
 #endif
 
 /* Max number of bytes in an APDU. */
