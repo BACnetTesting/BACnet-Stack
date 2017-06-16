@@ -142,7 +142,6 @@ void handler_write_property(
 #endif
     }
 
-    return;
 }
 
 

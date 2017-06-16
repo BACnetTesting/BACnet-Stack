@@ -464,7 +464,6 @@ void testSchedule(Test * pTest)
     ct_test(pTest, decoded_type == rpdata.object_type);
     ct_test(pTest, decoded_instance == rpdata.object_instance);
 
-    return;
 }
 
 

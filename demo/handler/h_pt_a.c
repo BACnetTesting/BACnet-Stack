@@ -219,7 +219,6 @@ void handler_conf_private_trans_ack(
 
     ProcessPTA(&data);  /* See what to do with the response */
 
-    return;
 }
 
 #if 0

@@ -639,5 +639,4 @@ void apdu_handler(
                 break;
         }
     }
-    return;
 }

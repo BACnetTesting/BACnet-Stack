@@ -108,7 +108,6 @@ void Life_Safety_Point_Property_Lists(
         *pProprietary = Life_Safety_Point_Properties_Proprietary;
     }
 
-    return;
 }
 
 void Life_Safety_Point_Init(
@@ -129,7 +128,6 @@ void Life_Safety_Point_Init(
         }
     }
 
-    return;
 }
 
 /* we simply have 0-n object instances.  Yours might be */
@@ -449,7 +447,6 @@ void testLifeSafetyPoint(
     ct_test(pTest, decoded_type == rpdata.object_type);
     ct_test(pTest, decoded_instance == rpdata.object_instance);
 
-    return;
 }
 
 #ifdef TEST_LIFE_SAFETY_POINT

@@ -474,5 +474,4 @@ void bip_cleanup(
     bip_set_socket(-1);
     WSACleanup();
 
-    return;
 }

@@ -53,7 +53,6 @@ void debug_printf(
     va_end(ap);
     fflush(stdout);
 
-    return;
 }
 #else
 void debug_printf(

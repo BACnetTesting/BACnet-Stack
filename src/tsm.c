@@ -223,7 +223,6 @@ void tsm_set_confirmed_unsegmented_transaction(
         }
     }
 
-    return;
 }
 
 /* used to retrieve the transaction payload */
@@ -383,7 +382,6 @@ void testTSM(
     Test * pTest)
 {
     /* FIXME: add some unit testing... */
-    return;
 }
 
 #ifdef TEST_TSM

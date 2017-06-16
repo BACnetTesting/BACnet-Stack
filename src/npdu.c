@@ -61,7 +61,6 @@ void npdu_copy_data(
         dest->hop_count = src->hop_count;
     }
 
-    return;
 }
 
 /*

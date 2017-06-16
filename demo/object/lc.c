@@ -180,7 +180,6 @@ void Load_Control_Property_Lists(
     if (pProprietary)
         *pProprietary = Load_Control_Properties_Proprietary;
 
-    return;
 }
 
 void Load_Control_Init(
@@ -211,7 +210,6 @@ void Load_Control_Init(
         }
     }
 
-    return;
 }
 
 /* we simply have 0-n object instances.  Yours might be */
@@ -649,7 +647,6 @@ void Load_Control_State_Machine(
             break;
     }
 
-    return;
 }
 
 /* call every second or so */
@@ -1482,7 +1479,6 @@ void testLoadControl(
     ct_test(pTest, decoded_type == rpdata.object_type);
     ct_test(pTest, decoded_instance == rpdata.object_instance);
 
-    return;
 }
 
 #ifdef TEST_LOAD_CONTROL

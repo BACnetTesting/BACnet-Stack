@@ -169,5 +169,4 @@ void handler_reinitialize_device(
 #endif
     }
 
-    return;
 }

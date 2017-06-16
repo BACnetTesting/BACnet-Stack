@@ -175,7 +175,11 @@ void RS485_Print_Error(
 #if 0 // todo1
     MessageBox(NULL, lpMsgBuf, "GetLastError", MB_OK | MB_ICONINFORMATION);
     LocalFree(lpMsgBuf);
+<<<<<<< HEAD
 #endif
+=======
+
+>>>>>>> remotes/origin/SyntaxFixups
 }
 
 static void RS485_Configure_Status(
@@ -295,7 +299,6 @@ void RS485_Initialize(
 
     atexit(RS485_Cleanup);
 
-    return;
 }
 
 /****************************************************************************
@@ -464,7 +467,6 @@ void RS485_Send_Frame(
         mstp_port->SilenceTimerReset(NULL);
     }
 
-    return;
 }
 
 /* called by timer, interrupt(?) or other thread */

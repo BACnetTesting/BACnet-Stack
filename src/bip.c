@@ -375,7 +375,6 @@ void bip_get_my_address(
         }
     }
 
-    return;
 }
 
 void bip_get_broadcast_address(
@@ -395,5 +394,4 @@ void bip_get_broadcast_address(
         }
     }
 
-    return;
 }

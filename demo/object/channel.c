@@ -122,7 +122,6 @@ void Channel_Property_Lists(const int **pRequired,
     if (pProprietary)
         *pProprietary = Channel_Properties_Proprietary;
 
-    return;
 }
 
 /**
@@ -1708,5 +1707,4 @@ void Channel_Init(void)
         }
     }
 
-    return;
 }

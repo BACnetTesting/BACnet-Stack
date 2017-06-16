@@ -308,5 +308,4 @@ void handler_conf_private_trans(
     }
 #endif
 
-    return;
 }

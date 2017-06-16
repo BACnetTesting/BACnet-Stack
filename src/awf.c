@@ -384,7 +384,6 @@ void testAtomicWriteFile(
         sizeof(test_octet_string));
     testAtomicWriteFileAccess(pTest, &data);
 
-    return;
 }
 
 void testAtomicWriteFileAckAccess(
@@ -429,7 +428,6 @@ void testAtomicWriteFileAck(
     data.type.record.fileStartRecord = 54;
     testAtomicWriteFileAckAccess(pTest, &data);
 
-    return;
 }
 
 #ifdef TEST_ATOMIC_WRITE_FILE

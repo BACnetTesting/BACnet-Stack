@@ -314,7 +314,6 @@ void test_DeviceCommunicationControl(
     test_DeviceCommunicationControlData(pTest, invoke_id, timeDuration,
                                         enable_disable, NULL);
 
-    return;
 }
 
 #ifdef TEST_DEVICE_COMMUNICATION_CONTROL

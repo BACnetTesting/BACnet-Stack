@@ -160,7 +160,6 @@ static void day_of_year_into_md(
         *pDay = day;
     }
 
-    return;
 }
 
 void datetime_day_of_year_into_date(
@@ -254,7 +253,6 @@ static void days_since_epoch_into_ymd(
     if (pDay)
         *pDay = day;
 
-    return;
 }
 
 void datetime_days_since_epoch_into_date(
@@ -1186,7 +1184,6 @@ static void testBACnetDate(
     diff = datetime_compare_date(&bdate1, &bdate2);
     ct_test(pTest, diff < 0);
 
-    return;
 }
 
 static void testBACnetTime(
@@ -1236,7 +1233,6 @@ static void testBACnetTime(
     diff = datetime_compare_time(&btime1, &btime2);
     ct_test(pTest, diff > 0);
 
-    return;
 }
 
 static void testBACnetDateTime(
@@ -1304,7 +1300,6 @@ static void testBACnetDateTime(
     ct_test(pTest, diff > 0);
 
 
-    return;
 }
 
 static void testWildcardDateTime(
@@ -1327,7 +1322,6 @@ static void testWildcardDateTime(
     diff = datetime_wildcard_compare(&bdatetime1, &bdatetime2);
     ct_test(pTest, diff == 0);
 
-    return;
 }
 
 static void testDayOfYear(

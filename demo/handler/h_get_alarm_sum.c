@@ -158,5 +158,4 @@ GET_ALARM_SUMMARY_ABORT:
     bytes_sent = bytes_sent;
 #endif
 
-    return;
 }

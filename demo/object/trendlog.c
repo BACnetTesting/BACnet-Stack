@@ -112,7 +112,6 @@ void Trend_Log_Property_Lists(
     if (pProprietary)
         *pProprietary = Trend_Log_Properties_Proprietary;
 
-    return;
 }
 
 /* we simply have 0-n object instances.  Yours might be */
@@ -248,7 +247,6 @@ void Trend_Log_Init(
         }
     }
 
-    return;
 }
 
 

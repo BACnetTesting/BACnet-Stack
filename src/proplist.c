@@ -1056,7 +1056,6 @@ void property_list_special(
         property_list_count(pPropertyList->Optional.pList);
     pPropertyList->Proprietary.count = 0;
 
-    return;
 }
 
 BACNET_PROPERTY_ID property_list_special_property(

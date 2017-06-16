@@ -199,5 +199,4 @@ void handler_read_property(
 #endif
     }
 
-    return;
 }

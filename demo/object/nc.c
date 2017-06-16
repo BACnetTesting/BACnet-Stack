@@ -82,7 +82,6 @@ void Notification_Class_Property_Lists(
         *pOptional = Notification_Properties_Optional;
     if (pProprietary)
         *pProprietary = Notification_Properties_Proprietary;
-    return;
 }
 
 void Notification_Class_Init(
@@ -100,7 +99,6 @@ void Notification_Class_Init(
         NC_Info[NotifyIdx].Priority[TRANSITION_TO_NORMAL] = 255;        /* The lowest priority for Normal message. */
     }
 
-    return;
 }
 
 

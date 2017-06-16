@@ -302,5 +302,4 @@ void routing_npdu_handler(
             (unsigned) pdu[0]);
     }
 
-    return;
 }

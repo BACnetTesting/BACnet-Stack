@@ -555,7 +555,6 @@ void Device_Objects_Property_List(
         pPropertyList->Proprietary.pList ==
         NULL ? 0 : property_list_count(pPropertyList->Proprietary.pList);
 
-    return;
 }
 
 /** Commands a Device re-initialization, to a given state.
@@ -671,7 +670,6 @@ void Device_Property_Lists(
     if (pProprietary)
         *pProprietary = Device_Properties_Proprietary;
 
-    return;
 }
 
 /* note: you really only need to define variables for
@@ -2318,7 +2316,6 @@ void testDevice(
     Device_Set_Model_Name(name, strlen(name));
     ct_test(pTest, strcmp(Device_Model_Name(), name) == 0);
 
-    return;
 }
 
 #ifdef TEST_DEVICE

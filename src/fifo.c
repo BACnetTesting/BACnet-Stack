@@ -344,7 +344,6 @@ void FIFO_Init(
         b->buffer_len = buffer_len;
     }
 
-    return;
 }
 
 #ifdef TEST
@@ -469,7 +468,6 @@ void testFIFOBuffer(
     FIFO_Flush(&test_buffer);
     ct_test(pTest, FIFO_Empty(&test_buffer));
 
-    return;
 }
 
 #ifdef TEST_FIFO_BUFFER

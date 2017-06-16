@@ -152,7 +152,6 @@ static void bvlc_internet_to_bacnet_address(
         src->len = 0;
     }
 
-    return;
 }
 
 /** Encode the address entry.  Used for both read and write entries.
@@ -892,7 +891,6 @@ static void bvlc_bdt_forward_npdu(
         }
     }
 
-    return;
 }
 
 /** Send a BVLL Forwarded-NPDU message on its local IP subnet using
@@ -990,7 +988,6 @@ static void bvlc_fdt_forward_npdu(
         }
     }
 
-    return;
 }
 #endif
 
@@ -1773,7 +1770,6 @@ static void bvlc_bacnet_to_internet_address(
         }
     }
 
-    return;
 }
 
 void testBIPAddress(

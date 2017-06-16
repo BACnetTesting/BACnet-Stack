@@ -467,7 +467,6 @@ void testAtomicReadFileAck(
     }
     testAtomicReadFileAckAccess(pTest, &data);
 
-    return;
 }
 
 void testAtomicReadFileAccess(
@@ -526,7 +525,6 @@ void testAtomicReadFile(
     data.type.record.RecordCount = 2;
     testAtomicReadFileAccess(pTest, &data);
 
-    return;
 }
 
 #ifdef TEST_ATOMIC_READ_FILE

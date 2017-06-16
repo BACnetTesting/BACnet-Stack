@@ -142,7 +142,6 @@ void address_remove_device(
         index++;
     }
 
-    return;
 }
 
 /*****************************************************************************
@@ -349,7 +348,6 @@ static void address_file_init(
         fclose(pFile);
     }
 
-    return;
 }
 
 
@@ -372,7 +370,6 @@ void address_init(
     }
     address_file_init(Address_Cache_Filename);
 
-    return;
 }
 
 /****************************************************************************
@@ -404,7 +401,6 @@ void address_init_partial(
     }
     address_file_init(Address_Cache_Filename);
 
-    return;
 }
 
 
@@ -567,7 +563,6 @@ void address_add(
             pMatch->TimeToLive = BAC_ADDR_SHORT_TIME;   /* Opportunistic entry so leave on short fuse */
         }
     }
-    return;
 }
 
 /* returns true if device is already bound */
@@ -668,7 +663,6 @@ void address_add_binding(
         }
         pMatch++;
     }
-    return;
 }
 
 bool address_device_get_by_index(

@@ -176,7 +176,6 @@ void testAbortAPDU(
     ct_test(pTest, test_abort_reason == abort_reason);
     ct_test(pTest, test_server == server);
 
-    return;
 }
 
 

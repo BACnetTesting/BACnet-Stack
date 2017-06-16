@@ -427,7 +427,6 @@ void testReadProperty(
     ct_test(pTest, test_data.object_property == rpdata.object_property);
     ct_test(pTest, test_data.array_index == rpdata.array_index);
 
-    return;
 }
 
 #ifdef TEST_READ_PROPERTY

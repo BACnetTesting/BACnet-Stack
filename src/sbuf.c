@@ -53,7 +53,6 @@ void sbuf_init(
         b->count = 0;
     }
 
-    return;
 }
 
 /* returns true if count==0, false if count > 0 */
@@ -194,7 +193,6 @@ void testStaticBuffer(
     ct_test(pTest, memcmp(data, data4, count) == 0);
     ct_test(pTest, count == strlen(data4));
 
-    return;
 }
 
 #ifdef TEST_STATIC_BUFFER

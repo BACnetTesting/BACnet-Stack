@@ -241,5 +241,4 @@ GET_EVENT_ABORT:
         fprintf(stderr, "Failed to send PDU (%s)!\n", strerror(errno));
 #endif
 
-    return;
 }
