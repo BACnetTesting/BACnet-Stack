@@ -29,6 +29,7 @@
 #include <stdbool.h>
 #include "bacapp.h"
 #include "timestamp.h"
+#include "device.h"
 
 typedef struct {
     uint32_t ackProcessIdentifier;
@@ -44,7 +45,9 @@ typedef struct {
    return -2 abort */
 typedef int (
     *alarm_ack_function) (
+    DEVICE_OBJECT_DATA *pDev,
     BACNET_ALARM_ACK_DATA * alarmack_data,
+    BACNET_ERROR_CLASS *error_class,
     BACNET_ERROR_CODE * error_code);
 
 

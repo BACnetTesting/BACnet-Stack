@@ -400,6 +400,7 @@ uint32_t bacfile_instance(
 /* invokeID and file instance in a list or table */
 /* when the request was sent */
 uint32_t bacfile_instance_from_tsm(
+    DEVICE_OBJECT_DATA *pDev,
     uint8_t invokeID)
 {
     BACNET_NPCI_DATA npci_data = { 0 }; /* dummy for getting npdu length */

@@ -72,27 +72,37 @@
         const int **pOptional,
         const int **pProprietary);
     bool Analog_Value_Valid_Instance(
+    DEVICE_OBJECT_DATA *pDev,
         uint32_t object_instance);
     unsigned Analog_Value_Count(
-        void);
+    DEVICE_OBJECT_DATA *pDev);
+
     uint32_t Analog_Value_Index_To_Instance(
+    DEVICE_OBJECT_DATA *pDev,
         unsigned index);
     unsigned Analog_Value_Instance_To_Index(
         uint32_t object_instance);
 
     bool Analog_Value_Object_Name(
+    DEVICE_OBJECT_DATA *pDev,
         uint32_t object_instance,
         BACNET_CHARACTER_STRING * object_name);
     bool Analog_Value_Name_Set(
+    DEVICE_OBJECT_DATA *pDev,
         uint32_t object_instance,
         char *new_name);
 
     int Analog_Value_Read_Property(
+    DEVICE_OBJECT_DATA *pDev,
         BACNET_READ_PROPERTY_DATA * rpdata);
 
     bool Analog_Value_Write_Property(
+    DEVICE_OBJECT_DATA *pDev,
         BACNET_WRITE_PROPERTY_DATA * wp_data);
 
+char *Analog_Value_Description(
+    DEVICE_OBJECT_DATA *pDev,
+    uint32_t instance);
     bool Analog_Value_Present_Value_Set(
         uint32_t object_instance,
         float value,
@@ -120,26 +130,34 @@
         char *new_name);
 
     BACNET_RELIABILITY Analog_Value_Reliability(
+    DEVICE_OBJECT_DATA *pDev,
         uint32_t object_instance);
     bool Analog_Value_Reliability_Set(
+    DEVICE_OBJECT_DATA *pDev,
         uint32_t object_instance,
         BACNET_RELIABILITY value);
 
     uint16_t Analog_Value_Units(
+    DEVICE_OBJECT_DATA *pDev,
         uint32_t instance);
     bool Analog_Value_Units_Set(
+    DEVICE_OBJECT_DATA *pDev,
         uint32_t instance,
         uint16_t unit);
 
     bool Analog_Value_Out_Of_Service(
+    DEVICE_OBJECT_DATA *pDev,
         uint32_t instance);
     void Analog_Value_Out_Of_Service_Set(
+    DEVICE_OBJECT_DATA *pDev,
         uint32_t instance,
         bool oos_flag);
 
     /* note: header of Intrinsic_Reporting function is required
        even when INTRINSIC_REPORTING is not defined */
     void Analog_Value_Intrinsic_Reporting(
+    PORT_SUPPORT  *portParams,
+    DEVICE_OBJECT_DATA *pDev,
         uint32_t object_instance);
 
 #if defined(INTRINSIC_REPORTING)

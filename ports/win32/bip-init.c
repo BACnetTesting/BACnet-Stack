@@ -136,14 +136,15 @@ static uint32_t getIpMaskForIpAddress(
 }
 #endif
 
-static void set_broadcast_address(
+void set_broadcast_address(
+    PORT_SUPPORT *portParams,
     uint32_t net_address)
 {
 #if defined(USE_INADDR) && USE_INADDR
     /*   Note: sometimes INADDR_BROADCAST does not let me get
        any unicast messages.  Not sure why... */
     net_address = net_address;
-    bip_set_broadcast_addr(INADDR_BROADCAST);
+    bip_set_broadcast_addr(portParams, INADDR_BROADCAST);
 #elif defined(USE_CLASSADDR) && USE_CLASSADDR
     long broadcast_address = 0;
 
@@ -174,30 +175,25 @@ static void set_broadcast_address(
         printf("IP Mask: %s\n", inet_ntoa(address));
     }
     broadcast_address = (net_address & net_mask) | (~net_mask);
-    bip_set_broadcast_addr(broadcast_address);
+    bip_set_broadcast_addr(portParams, broadcast_address);
 #endif
 }
 
 /* on Windows, ifname is the dotted ip address of the interface */
-void bip_set_interface(
-    char *ifname)
-{
-    struct in_addr address;
+//void bip_set_interface(
+//    char *ifname)
+//{
 
     /* setup local address */
-    if (bip_get_addr() == 0) {
-        bip_set_addr(inet_addr(ifname));
-    }
-    if (BIP_Debug) {
-        address.s_addr = bip_get_addr();
-        fprintf(stderr, "Interface: %s\n", ifname);
-    }
+//    if (portParams->bipParams.nwoLocal_addr  == 0) {
+//        portParams->bipParams.nwoLocal_addr = inet_addr(ifname) ;
+//    }
+//
     /* setup local broadcast address */
-    if (bip_get_broadcast_addr() == 0) {
-        address.s_addr = bip_get_addr();
-        set_broadcast_address(address.s_addr);
-    }
-}
+//    if (portParams->bipParams.nwoBroadcast_addr == 0) {
+//        set_broadcast_address( portParams, portParams->bipParams.nwoLocal_addr);
+//    }
+//}
 
 static char *winsock_error_code_text(
     int code)
@@ -333,7 +329,7 @@ static char *winsock_error_code_text(
  * @return True if the socket is successfully opened for BACnet/IP,
  *         else False if the socket functions fail.
  */
-bool bip_init(
+bool bip_init( PORT_SUPPORT *portParams,
     char *ifname)
 {
     int rv = 0; /* return from socket lib calls */
@@ -356,8 +352,8 @@ bool bip_init(
     }
     atexit(bip_cleanup);
 
-    if (ifname)
-        bip_set_interface(ifname);
+    //if (ifname)
+    //    bip_set_interface( portParams, ifname);
     /* has address been set? */
     address.s_addr = bip_get_addr();
     if (address.s_addr == 0) {
@@ -386,7 +382,7 @@ bool bip_init(
     }
     /* assumes that the driver has already been initialized */
     sock_fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    bip_set_socket(sock_fd);
+    portParams->datalink.bipParams.socket = sock_fd ;
     if (sock_fd < 0) {
         fprintf(stderr, "bip: failed to allocate a socket.\n");
         return false;
@@ -397,8 +393,8 @@ bool bip_init(
         sizeof(value));
     if (rv < 0) {
         fprintf(stderr, "bip: failed to set REUSEADDR socket option.\n");
-        close(sock_fd);
-        bip_set_socket(-1);
+        closesocket(sock_fd);
+        portParams->datalink.bipParams.socket = -1;
         return false;
     }
     /* Enables transmission and receipt of broadcast messages on the socket. */
@@ -406,8 +402,8 @@ bool bip_init(
         sizeof(value));
     if (rv < 0) {
         fprintf(stderr, "bip: failed to set BROADCAST socket option.\n");
-        close(sock_fd);
-        bip_set_socket(-1);
+        closesocket(sock_fd);
+        portParams->datalink.bipParams.socket = -1;
         return false;
     }
 #if 0
@@ -418,8 +414,8 @@ bool bip_init(
         sizeof(value));
     if (rv < 0) {
         fprintf(stderr, "bip: failed to set REUSEPORT socket option.\n");
-        close(sock_fd);
-        bip_set_socket(-1);
+        closesocket(sock_fd);
+        portParams->datalink.bipParams.socket = -1;
         return false;
     }
 #endif
@@ -444,7 +440,7 @@ bool bip_init(
        note: already in network byte order */
     sin.sin_addr.s_addr = address.s_addr;
 #endif
-    sin.sin_port = bip_get_port();
+    sin.sin_port = bip_get_local_port( portParams);
     memset(&(sin.sin_zero), '\0', sizeof(sin.sin_zero));
     rv = bind(sock_fd, (const struct sockaddr *) &sin,
         sizeof(struct sockaddr));

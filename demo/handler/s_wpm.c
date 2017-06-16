@@ -58,11 +58,12 @@
  */
 uint8_t Send_Write_Property_Multiple_Request_Data(
     PORT_SUPPORT *portParams,
+    DEVICE_OBJECT_DATA *destDev,
     uint32_t device_id,
     BACNET_WRITE_ACCESS_DATA * write_access_data)
 {
     BACNET_PATH dest;
-    BACNET_ADDRESS my_address;
+    //BACNET_PATH my_address;
     unsigned max_apdu = 0;
     uint8_t invoke_id = 0;
     bool status = false;
@@ -72,14 +73,14 @@ uint8_t Send_Write_Property_Multiple_Request_Data(
     BACNET_NPCI_DATA npci_data;
     
     /* if we are forbidden to send, don't send! */
-    if (!dcc_communication_enabled())
+    if (!dcc_communication_enabled(destDev))
         return 0;
 
     /* is the device bound? */
     status = address_get_by_device(device_id, &max_apdu, &dest);
     /* is there a tsm available? */
     if (status)
-        invoke_id = tsm_next_free_invokeID();
+        invoke_id = tsm_next_free_invokeID(destDev);
     if (invoke_id) {
         /* encode the NPDU portion of the packet */
         datalink_get_my_address(&my_address);

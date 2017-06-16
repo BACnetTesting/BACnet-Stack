@@ -134,6 +134,7 @@ typedef void (
 
 
     bool tsm_invoke_id_free(
+    DEVICE_OBJECT_DATA *pDev,
         uint8_t invokeID);
     bool tsm_invoke_id_failed(
         uint8_t invokeID);

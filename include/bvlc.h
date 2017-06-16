@@ -38,6 +38,7 @@ struct sockaddr_in;     /* Defined elsewhere, needed here. */
 
 #if defined(BBMD_ENABLED) && BBMD_ENABLED
     void bvlc_maintenance_timer(
+    PORT_SUPPORT *portParams,
         time_t seconds);
 #else
 #define bvlc_maintenance_timer(x)
@@ -63,8 +64,8 @@ struct sockaddr_in;     /* Defined elsewhere, needed here. */
     int bvlc_send_pdu(
         BACNET_ADDRESS * dest,  /* destination address */
         BACNET_NPCI_DATA * npci_data,   /* network information */
-        uint8_t * pdu,  /* any data to be sent - may be null */
-        unsigned pdu_len);
+    const DLCB *dlcb);
+
 
     int bvlc_send_mpdu(
         struct sockaddr_in *dest,
@@ -98,12 +99,14 @@ struct sockaddr_in;     /* Defined elsewhere, needed here. */
 
     /* registers with a bbmd as a foreign device */
     int bvlc_register_with_bbmd(
+    PORT_SUPPORT *portParams,
         uint32_t bbmd_address,  /* in network byte order */
         uint16_t bbmd_port,     /* in network byte order */
         uint16_t time_to_live_seconds);
 
     /* Note any BVLC_RESULT code, or NAK the BVLL message in the unsupported cases. */
     int bvlc_for_non_bbmd(
+    const PORT_SUPPORT *portParams, 
         struct sockaddr_in *sout,
         uint8_t * npdu,
         uint16_t received_bytes);

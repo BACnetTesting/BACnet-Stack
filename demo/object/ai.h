@@ -72,17 +72,22 @@
         const int **pProprietary);
 
     bool Analog_Input_Valid_Instance(
+    DEVICE_OBJECT_DATA *pDev,
         uint32_t object_instance);
     unsigned Analog_Input_Count(
-        void);
+    DEVICE_OBJECT_DATA *pDev );
+
     uint32_t Analog_Input_Index_To_Instance(
+    DEVICE_OBJECT_DATA *pDev,
         unsigned index);
-    unsigned Analog_Input_Instance_To_Index(
-        uint32_t instance);
+int Analog_Input_Instance_To_Index(
+    const DEVICE_OBJECT_DATA *pDev,
+    const uint32_t object_instance);
     bool Analog_Input_Object_Instance_Add(
         uint32_t instance);
 
     bool Analog_Input_Object_Name(
+    DEVICE_OBJECT_DATA *pDev,
         uint32_t object_instance,
         BACNET_CHARACTER_STRING * object_name);
     bool Analog_Input_Name_Set(
@@ -102,21 +107,26 @@
         uint32_t instance);
 
     int Analog_Input_Read_Property(
+    DEVICE_OBJECT_DATA *pDev,
         BACNET_READ_PROPERTY_DATA * rpdata);
     bool Analog_Input_Write_Property(
+    DEVICE_OBJECT_DATA *pDev,
         BACNET_WRITE_PROPERTY_DATA * wp_data);
 
     float Analog_Input_Present_Value(
+    DEVICE_OBJECT_DATA *pDev,
         uint32_t object_instance);
     void Analog_Input_Present_Value_Set(
-        uint32_t object_instance,
-        float value);
+    const DEVICE_OBJECT_DATA *pDev,
+    const uint32_t object_instance,
+    const float value);
 
-    bool Analog_Input_Out_Of_Service(
-        uint32_t object_instance);
+//bool Analog_Input_Out_Of_Service(
+//    uint32_t object_instance);
     void Analog_Input_Out_Of_Service_Set(
-        uint32_t object_instance,
-        bool oos_flag);
+    DEVICE_OBJECT_DATA *pDev,
+    const uint32_t object_instance,
+    const bool oos_flag);
 
     bool Analog_Input_Change_Of_Value(
         uint32_t instance);
@@ -134,18 +144,23 @@
     /* note: header of Intrinsic_Reporting function is required
        even when INTRINSIC_REPORTING is not defined */
     void Analog_Input_Intrinsic_Reporting(
+    PORT_SUPPORT  *portParams,
+    DEVICE_OBJECT_DATA *pDev,
         uint32_t object_instance);
 
-#if defined(INTRINSIC_REPORTING)
+#if (INTRINSIC_REPORTING == 1)
     int Analog_Input_Event_Information(
+    DEVICE_OBJECT_DATA *pDev,
         unsigned index,
         BACNET_GET_EVENT_INFORMATION_DATA * getevent_data);
 
     int Analog_Input_Alarm_Ack(
+    DEVICE_OBJECT_DATA *pDev,
         BACNET_ALARM_ACK_DATA * alarmack_data,
         BACNET_ERROR_CODE * error_code);
 
     int Analog_Input_Alarm_Summary(
+    DEVICE_OBJECT_DATA *pDev,
         unsigned index,
         BACNET_GET_ALARM_SUMMARY_DATA * getalarm_data);
 #endif

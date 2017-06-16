@@ -72,7 +72,7 @@ void dlmstp_cleanup(
 void dlmstp_send_pdu(
     //const DLINK_SUPPORT          *portParams,
     //const BACNET_MAC_ADDRESS    *bacnetMac,
-    //const BACNET_NPCI_DATA      *npdu_data,
+    //const BACNET_NPCI_DATA      *npci_data,
     const DLCB                  *dlcb);
 
 /* returns the number of octets in the PDU, or zero on failure */

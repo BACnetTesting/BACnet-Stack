@@ -48,9 +48,9 @@ typedef struct BACnet_Get_Event_Information_Data {
    return +1 if active event */
 typedef int (
     *get_event_info_function) (
-    unsigned index,
-    BACNET_GET_EVENT_INFORMATION_DATA * getevent_data);
-
+        DEVICE_OBJECT_DATA *pDev,
+        unsigned index,
+        BACNET_GET_EVENT_INFORMATION_DATA * getevent_data);
 
 int getevent_encode_apdu(
     uint8_t * apdu,

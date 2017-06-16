@@ -135,10 +135,13 @@
         char *new_name);
 
     int Channel_Read_Property(BACNET_READ_PROPERTY_DATA * rpdata);
-    bool Channel_Write_Property(BACNET_WRITE_PROPERTY_DATA * wp_data);
+bool Channel_Write_Property(
+    DEVICE_OBJECT_DATA *pDev,
+    BACNET_WRITE_PROPERTY_DATA * wp_data);
 
     BACNET_CHANNEL_VALUE * Channel_Present_Value(uint32_t object_instance);
     bool Channel_Present_Value_Set(
+    DEVICE_OBJECT_DATA *pDev,
         BACNET_WRITE_PROPERTY_DATA * wp_data,
         BACNET_APPLICATION_DATA_VALUE * value);
 
@@ -161,6 +164,7 @@
     unsigned Channel_Reference_List_Member_Element_Add(uint32_t object_instance,
         BACNET_DEVICE_OBJECT_PROPERTY_REFERENCE *pMemberSrc);
     unsigned Channel_Reference_List_Member_Local_Add(
+    DEVICE_OBJECT_DATA *pDev,
         uint32_t object_instance,
         BACNET_OBJECT_TYPE type,
         uint32_t instance,

@@ -50,24 +50,23 @@ static BACNET_COMMUNICATION_ENABLE_DISABLE DCC_Enable_Disable =
 /* password is optionally supported */
 
 BACNET_COMMUNICATION_ENABLE_DISABLE dcc_enable_status(
-    void)
+    DEVICE_OBJECT_DATA *pDev)
 {
-    return DCC_Enable_Disable;
+    return pDev->DCC_Enable_Disable;
 }
 
 bool dcc_communication_enabled(
-    void)
+    DEVICE_OBJECT_DATA *pDev)
 {
-    return (DCC_Enable_Disable == COMMUNICATION_ENABLE);
+    return (pDev->DCC_Enable_Disable == COMMUNICATION_ENABLE);
 }
 
 /* When network communications are completely disabled,
    only DeviceCommunicationControl and ReinitializeDevice APDUs
    shall be processed and no messages shall be initiated.*/
-bool dcc_communication_disabled(
-    void)
+bool dcc_communication_disabled(DEVICE_OBJECT_DATA *pDev)
 {
-    return (DCC_Enable_Disable == COMMUNICATION_DISABLE);
+    return (pDev->DCC_Enable_Disable == COMMUNICATION_DISABLE);
 }
 
 /* When the initiation of communications is disabled,
@@ -80,9 +79,9 @@ bool dcc_communication_disabled(
    the Who-Is request does not contain an address range or
    the device is included in the address range. */
 bool dcc_communication_initiation_disabled(
-    void)
+    DEVICE_OBJECT_DATA *pDev)
 {
-    return (DCC_Enable_Disable == COMMUNICATION_DISABLE_INITIATION);
+    return (pDev->DCC_Enable_Disable == COMMUNICATION_DISABLE_INITIATION);
 }
 
 /* note: 0 indicates either expired, or infinite duration */

@@ -50,8 +50,9 @@ unsigned Multistate_Input_Instance_To_Index(
 int Multistate_Input_Read_Property(
     BACNET_READ_PROPERTY_DATA * rpdata);
 
-    bool Multistate_Input_Write_Property(
-        BACNET_WRITE_PROPERTY_DATA * wp_data);
+bool Multistate_Input_Write_Property(
+    DEVICE_OBJECT_DATA *pDev,
+    BACNET_WRITE_PROPERTY_DATA * wp_data);
 
 /* optional API */
 bool Multistate_Input_Object_Instance_Add(

@@ -58,7 +58,8 @@ typedef struct BACnet_Write_Property_Data {
  */
 typedef bool(
     *write_property_function) (
-    BACNET_WRITE_PROPERTY_DATA * wp_data);
+        DEVICE_OBJECT_DATA *pDev,
+        BACNET_WRITE_PROPERTY_DATA * wp_data);
 
 /* encode service */
 int wp_encode_apdu(

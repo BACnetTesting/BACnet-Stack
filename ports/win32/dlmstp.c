@@ -98,7 +98,7 @@ void dlmstp_cleanup(
 
 /* returns number of bytes sent on success, zero on failure */
 int dlmstp_send_pdu(
-    BACNET_ADDRESS * dest,      /* destination address */
+    BACNET_PATH * dest,      /* destination address */
     BACNET_NPCI_DATA * npci_data,       /* network information */
     uint8_t * pdu,      /* any data to be sent - may be null */
     unsigned pdu_len)
@@ -119,7 +119,7 @@ int dlmstp_send_pdu(
             Transmit_Packet.pdu[i] = pdu[i];
         }
         bacnet_address_copy(&Transmit_Packet.address, dest);
-        bytes_sent = pdu_len + MAX_HEADER;
+        bytes_sent = pdu_len + MAX_HEADER_MSTP;
         Transmit_Packet.ready = true;
     }
 
@@ -127,7 +127,7 @@ int dlmstp_send_pdu(
 }
 
 uint16_t dlmstp_receive(
-    BACNET_ADDRESS * src,       /* source address */
+    BACNET_PATH * src,       /* source address */
     uint8_t * pdu,      /* PDU data */
     uint16_t max_pdu,   /* amount of space available in the PDU  */
     unsigned timeout)
@@ -216,26 +216,26 @@ static void dlmstp_master_fsm_task(
 }
 
 void dlmstp_fill_bacnet_address(
-    BACNET_ADDRESS * src,
+    BACNET_PATH * src,
     uint8_t mstp_address)
 {
     int i = 0;
 
     if (mstp_address == MSTP_BROADCAST_ADDRESS) {
         /* mac_len = 0 if broadcast address */
-        src->mac_len = 0;
+        src->localMac.len = 0;
         src->mac[0] = 0;
     } else {
-        src->mac_len = 1;
+        src->localMac.len = 1;
         src->mac[0] = mstp_address;
     }
     /* fill with 0's starting with index 1; index 0 filled above */
-    for (i = 1; i < MAX_MAC_LEN; i++) {
+    for (i = 1; i < MAX_localMac.len; i++) {
         src->mac[i] = 0;
     }
     src->net = 0;
     src->len = 0;
-    for (i = 0; i < MAX_MAC_LEN; i++) {
+    for (i = 0; i < MAX_localMac.len; i++) {
         src->adr[i] = 0;
     }
 }
@@ -279,12 +279,12 @@ uint16_t MSTP_Get_Send(
         return 0;
     }
     /* load destination MAC address */
-    if (Transmit_Packet.address.mac_len) {
+    if (Transmit_Packet.address.localMac.len) {
         destination = Transmit_Packet.address.mac[0];
     } else {
         destination = MSTP_BROADCAST_ADDRESS;
     }
-    if ((MAX_HEADER + Transmit_Packet.pdu_len) > MAX_MPDU) {
+    if ((MAX_HEADER_MSTP + Transmit_Packet.pdu_len) > MAX_MPDU_MSTP) {
         return 0;
     }
     /* convert the PDU into the MSTP Frame */
@@ -303,7 +303,7 @@ static bool dlmstp_compare_data_expecting_reply(
     uint8_t src_address,
     uint8_t * reply_pdu,
     uint16_t reply_pdu_len,
-    BACNET_ADDRESS * dest_address)
+    BACNET_PATH * dest_address)
 {
     uint16_t offset;
     /* One way to check the message is to compare NPDU
@@ -311,7 +311,7 @@ static bool dlmstp_compare_data_expecting_reply(
        Seems a bit overkill */
     struct DER_compare_t {
         BACNET_NPCI_DATA npci_data;
-        BACNET_ADDRESS address;
+        BACNET_PATH address;
         uint8_t pdu_type;
         uint8_t invoke_id;
         uint8_t service_choice;
@@ -324,7 +324,7 @@ static bool dlmstp_compare_data_expecting_reply(
     reply_pdu_len = reply_pdu_len;
     /* decode the request data */
     request.address.mac[0] = src_address;
-    request.address.mac_len = 1;
+    request.address.localMac.len = 1;
     offset =
         (uint16_t) npdu_decode(&request_pdu[0], NULL, &request.address,
         &request.npci_data);
@@ -429,12 +429,12 @@ uint16_t MSTP_Get_Reply(
         return 0;
     }
     /* load destination MAC address */
-    if (Transmit_Packet.address.mac_len == 1) {
+    if (Transmit_Packet.address.localMac.len == 1) {
         destination = Transmit_Packet.address.mac[0];
     } else {
         return 0;
     }
-    if ((MAX_HEADER + Transmit_Packet.pdu_len) > MAX_MPDU) {
+    if ((MAX_HEADER_MSTP + Transmit_Packet.pdu_len) > MAX_MPDU_MSTP) {
         return 0;
     }
     /* is this the reply to the DER? */
@@ -549,15 +549,15 @@ uint32_t dlmstp_baud_rate(
 }
 
 void dlmstp_get_my_address(
-    BACNET_ADDRESS * my_address)
+    BACNET_PATH * my_address)
 {
     int i = 0;  /* counter */
 
-    my_address->mac_len = 1;
+    my_address->localMac.len = 1;
     my_address->mac[0] = MSTP_Port.This_Station;
     my_address->net = 0;        /* local only, no routing */
     my_address->len = 0;
-    for (i = 0; i < MAX_MAC_LEN; i++) {
+    for (i = 0; i < MAX_localMac.len; i++) {
         my_address->adr[i] = 0;
     }
 
@@ -565,16 +565,16 @@ void dlmstp_get_my_address(
 }
 
 void dlmstp_get_broadcast_address(
-    BACNET_ADDRESS * dest)
+    BACNET_PATH * dest)
 {       /* destination address */
     int i = 0;  /* counter */
 
     if (dest) {
-        dest->mac_len = 1;
+        dest->localMac.len = 1;
         dest->mac[0] = MSTP_BROADCAST_ADDRESS;
         dest->net = BACNET_BROADCAST_NETWORK;
         dest->len = 0;  /* always zero when DNET is broadcast */
-        for (i = 0; i < MAX_MAC_LEN; i++) {
+        for (i = 0; i < MAX_localMac.len; i++) {
             dest->adr[i] = 0;
         }
     }
@@ -666,7 +666,7 @@ bool dlmstp_init(
 #include <stdio.h>
 
 void apdu_handler(
-    BACNET_ADDRESS * src,       /* source address */
+    BACNET_PATH * src,       /* source address */
     uint8_t * apdu,     /* APDU data */
     uint16_t pdu_len)
 {       /* for confirmed messages */

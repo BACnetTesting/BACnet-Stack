@@ -379,7 +379,7 @@ int Analog_Output_Read_Property(
                             real_value);
                     }
                     /* add it if we have room */
-                    if ((apdu_len + len) < MAX_APDU)
+                    if ((apdu_len + len) < MAX_LPDU_IP)
                         apdu_len += len;
                     else {
                         rpdata->error_code =
