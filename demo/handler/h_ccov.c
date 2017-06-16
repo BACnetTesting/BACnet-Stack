@@ -169,5 +169,4 @@ void handler_ccov_notification(
     bytes_sent = bytes_sent;
 #endif
 
-    return;
 }

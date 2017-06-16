@@ -183,5 +183,4 @@ void handler_read_range(
         fprintf(stderr, "Failed to send PDU (%s)!\n", strerror(errno));
 #endif
 
-    return;
 }

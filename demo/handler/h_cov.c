@@ -902,5 +902,4 @@ void handler_cov_subscribe(
     }
 
 
-    return;
 }

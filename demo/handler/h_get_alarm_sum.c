@@ -158,5 +158,4 @@ void handler_get_alarm_summary(
     bytes_sent = bytes_sent;
 #endif
 
-    return;
 }

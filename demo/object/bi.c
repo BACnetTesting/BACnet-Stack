@@ -89,7 +89,6 @@ void Binary_Input_Property_Lists(
         *pProprietary = Binary_Input_Properties_Proprietary;
     }
 
-    return;
 }
 
 /* we simply have 0-n object instances.  Yours might be */
@@ -137,7 +136,6 @@ void Binary_Input_Init(
         }
     }
 
-    return;
 }
 
 /* we simply have 0-n object instances.  Yours might be */
@@ -214,7 +212,6 @@ void Binary_Input_Change_Of_Value_Clear(
         Change_Of_Value[index] = false;
     }
 
-    return;
 }
 
 /**
@@ -310,7 +307,6 @@ void Binary_Input_Out_Of_Service_Set(
         Out_Of_Service[index] = value;
     }
 
-    return;
 }
 
 bool Binary_Input_Object_Name(
@@ -567,7 +563,6 @@ void testBinaryInput(
     ct_test(pTest, decoded_type == rpdata.object_type);
     ct_test(pTest, decoded_instance == rpdata.object_instance);
 
-    return;
 }
 
 #ifdef TEST_BINARY_INPUT

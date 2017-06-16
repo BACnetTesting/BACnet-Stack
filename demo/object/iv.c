@@ -101,7 +101,6 @@ void Integer_Value_Property_Lists(
     if (pProprietary)
         *pProprietary = Integer_Value_Properties_Proprietary;
 
-    return;
 }
 
 /**

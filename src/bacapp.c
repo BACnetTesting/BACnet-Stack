@@ -2210,7 +2210,6 @@ void testBACnetApplicationData(
     ct_test(pTest, status == true);
     ct_test(pTest, testBACnetApplicationDataValue(&value));
 
-    return;
 }
 
 

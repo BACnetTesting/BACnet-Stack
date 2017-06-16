@@ -70,7 +70,6 @@ void handler_who_is(
         }
     }
 
-    return;
 }
 
 /** Handler for Who-Is requests, with Unicast I-Am response (per Addendum 135-2004q).
@@ -103,7 +102,6 @@ void handler_who_is_unicast(
         }
     }
 
-    return;
 }
 
 

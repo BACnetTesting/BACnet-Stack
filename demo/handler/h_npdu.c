@@ -108,5 +108,4 @@ void npdu_handler(
 #endif
     }
 
-    return;
 }

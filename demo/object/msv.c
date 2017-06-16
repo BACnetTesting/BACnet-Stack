@@ -91,7 +91,6 @@ void Multistate_Value_Property_Lists(
     if (pProprietary)
         *pProprietary = Properties_Proprietary;
 
-    return;
 }
 
 void Multistate_Value_Init(
@@ -106,7 +105,6 @@ void Multistate_Value_Init(
         sprintf(&Object_Description[i][0], "MULTISTATE VALUE %u", i);
     }
 
-    return;
 }
 
 /* we simply have 0-n object instances.  Yours might be */
@@ -210,7 +208,6 @@ void Multistate_Value_Out_Of_Service_Set(
         Out_Of_Service[index] = value;
     }
 
-    return;
 }
 
 char *Multistate_Value_Description(
@@ -599,7 +596,6 @@ void testMultistateInput(
     ct_test(pTest, decoded_type == rpdata.object_type);
     ct_test(pTest, decoded_instance == rpdata.object_instance);
 
-    return;
 }
 
 #ifdef TEST_MULTISTATE_VALUE

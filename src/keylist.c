@@ -413,7 +413,6 @@ void Keylist_Delete(
         free(list);
     }
 
-    return;
 }
 
 #ifdef TEST
@@ -463,7 +462,6 @@ static void testKeyListFIFO(
 
     Keylist_Delete(list);
 
-    return;
 }
 
 /* test the FILO */
@@ -511,7 +509,6 @@ static void testKeyListFILO(
 
     Keylist_Delete(list);
 
-    return;
 }
 
 static void testKeyListDataKey(
@@ -592,7 +589,6 @@ static void testKeyListDataKey(
 
     Keylist_Delete(list);
 
-    return;
 }
 
 static void testKeyListDataIndex(
@@ -663,7 +659,6 @@ static void testKeyListDataIndex(
 
     Keylist_Delete(list);
 
-    return;
 }
 
 /* test access of a lot of entries */
@@ -695,7 +690,6 @@ static void testKeyListLarge(
     }
     Keylist_Delete(list);
 
-    return;
 }
 
 /* test access of a lot of entries */

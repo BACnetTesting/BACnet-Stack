@@ -84,7 +84,6 @@ void Access_Door_Property_Lists(
     if (pProprietary)
         *pProprietary = Properties_Proprietary;
 
-    return;
 }
 
 void Access_Door_Init(
@@ -117,7 +116,6 @@ void Access_Door_Init(
         }
     }
 
-    return;
 }
 
 /* we simply have 0-n object instances.  Yours might be */
@@ -664,7 +662,6 @@ void testAccessDoor(
     ct_test(pTest, decoded_type == rpdata.object_type);
     ct_test(pTest, decoded_instance == rpdata.object_instance);
 
-    return;
 }
 
 #ifdef TEST_ACCESS_DOOR

@@ -218,6 +218,5 @@ void handler_atomic_read_file(
     }
 #endif
 
-    return;
 }
 #endif

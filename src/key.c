@@ -61,7 +61,6 @@ void testKeys(
         }
     }
 
-    return;
 }
 
 /* test the encode and decode macros */
@@ -92,7 +91,6 @@ void testKeySample(
         type_index++;
     }
 
-    return;
 }
 
 #ifdef TEST_KEY

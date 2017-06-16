@@ -82,7 +82,6 @@ void CharacterString_Value_Property_Lists(
     if (pProprietary)
         *pProprietary = Properties_Proprietary;
 
-    return;
 }
 
 void CharacterString_Value_Init(
@@ -95,7 +94,6 @@ void CharacterString_Value_Init(
         characterstring_init_ansi(&Present_Value[i], "");
     }
 
-    return;
 }
 
 /* we simply have 0-n object instances.  Yours might be */
@@ -198,7 +196,6 @@ static void CharacterString_Value_Out_Of_Service_Set(
         Out_Of_Service[index] = value;
     }
 
-    return;
 }
 
 static char *CharacterString_Value_Description(
@@ -487,7 +484,6 @@ void testCharacterStringValue(
     ct_test(pTest, decoded_type == rpdata.object_type);
     ct_test(pTest, decoded_instance == rpdata.object_instance);
 
-    return;
 }
 
 #ifdef TEST_CHARACTERSTRING_VALUE

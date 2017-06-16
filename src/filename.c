@@ -87,7 +87,6 @@ void testFilename(
     filename = filename_remove_path(data5);
     ct_test(pTest, strcmp("run", filename) == 0);
 
-    return;
 }
 
 #ifdef TEST_FILENAME

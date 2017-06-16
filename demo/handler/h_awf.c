@@ -185,6 +185,5 @@ void handler_atomic_write_file(
     }
 #endif
 
-    return;
 }
 #endif

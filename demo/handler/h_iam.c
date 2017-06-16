@@ -73,7 +73,6 @@ void handler_i_am_add(
 #endif
     }
 
-    return;
 }
 
 /** Handler for I-Am responses (older binding-update-only version).
@@ -104,5 +103,4 @@ void handler_i_am_bind(
         address_add_binding(device_id, max_apdu, src);
     }
 
-    return;
 }

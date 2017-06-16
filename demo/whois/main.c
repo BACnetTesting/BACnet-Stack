@@ -135,7 +135,6 @@ void address_table_add(
     pMatch->max_apdu = max_apdu;
     pMatch->address = *src;
 
-    return;
 }
 
 
@@ -184,7 +183,6 @@ void my_i_am_handler(
 #endif
     }
 
-    return;
 }
 
 void MyAbortHandler(

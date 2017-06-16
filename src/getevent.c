@@ -487,7 +487,6 @@ void testGetEventInformation(
         test_lastReceivedObjectIdentifier.instance ==
         lastReceivedObjectIdentifier.instance);
 
-    return;
 }
 
 #ifdef TEST_GET_EVENT_INFORMATION

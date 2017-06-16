@@ -170,7 +170,6 @@ void test_ReinitializeDevice(
     ct_test(pTest, test_state == state);
     ct_test(pTest, characterstring_same(&test_password, &password));
 
-    return;
 }
 
 #ifdef TEST_REINITIALIZE_DEVICE

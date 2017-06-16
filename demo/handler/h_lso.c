@@ -115,5 +115,4 @@ void handler_lso(
             strerror(errno));
 #endif
 
-    return;
 }

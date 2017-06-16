@@ -362,7 +362,6 @@ void testWriteProperty(
     value.type.Object_Id.instance = BACNET_MAX_INSTANCE;
     testWritePropertyTag(pTest, &value);
 
-    return;
 }
 
 #ifdef TEST_WRITE_PROPERTY

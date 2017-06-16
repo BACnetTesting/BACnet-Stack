@@ -620,7 +620,6 @@ void test_Private_Transfer_Request(
         test_data.serviceParametersLen, &test_data_value);
     ct_test(pTest, bacapp_same_value(&data_value, &test_data_value) == true);
 
-    return;
 }
 
 void test_Unconfirmed_Private_Transfer_Request(
@@ -664,7 +663,6 @@ void test_Unconfirmed_Private_Transfer_Request(
         test_data.serviceParametersLen, &test_data_value);
     ct_test(pTest, bacapp_same_value(&data_value, &test_data_value) == true);
 
-    return;
 }
 
 #ifdef TEST_PRIVATE_TRANSFER

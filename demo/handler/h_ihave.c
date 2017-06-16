@@ -66,5 +66,4 @@ void handler_i_have(
 #endif
     }
 
-    return;
 }

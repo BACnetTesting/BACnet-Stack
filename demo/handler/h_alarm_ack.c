@@ -201,5 +201,4 @@ void handler_alarm_ack(
             strerror(errno));
 #endif
 
-    return;
 }

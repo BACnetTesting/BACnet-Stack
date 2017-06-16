@@ -241,5 +241,4 @@ void handler_get_event_information(
         fprintf(stderr, "Failed to send PDU (%s)!\n", strerror(errno));
 #endif
 
-    return;
 }

@@ -208,5 +208,4 @@ void handler_device_communication_control(
 #endif
     }
 
-    return;
 }

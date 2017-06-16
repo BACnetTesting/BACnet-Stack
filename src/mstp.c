@@ -578,7 +578,6 @@ void MSTP_Receive_Frame_FSM(
         printf_receive_data("\n");
         fflush(stderr);
     }
-    return;
 }
 
 /* returns true if we need to transition immediately */
@@ -1689,7 +1688,6 @@ void testReceiveNodeFSM(
     ct_test(pTest, mstp_port.ReceivedInvalidFrame == false);
     ct_test(pTest, mstp_port.ReceivedValidFrame == true);
     ct_test(pTest, mstp_port.receive_state == MSTP_RECEIVE_STATE_IDLE);
-    return;
 }
 
 void testMasterNodeFSM(

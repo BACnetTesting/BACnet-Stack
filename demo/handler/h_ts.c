@@ -93,7 +93,6 @@ void handler_timesync(
         }
     }
 
-    return;
 }
 
 void handler_timesync_utc(
@@ -121,7 +120,6 @@ void handler_timesync_utc(
         }
     }
 
-    return;
 }
 
 #if defined(BACNET_TIME_MASTER)

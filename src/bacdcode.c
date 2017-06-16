@@ -1962,7 +1962,6 @@ static void print_apdu(
         }
     }
 
-    return;
 }
 
 static void testBACDCodeTags(
@@ -2012,7 +2011,6 @@ static void testBACDCodeTags(
         }
     }
 
-    return;
 }
 
 static void testBACDCodeEnumerated(
@@ -2056,7 +2054,6 @@ static void testBACDCodeEnumerated(
         value = value << 1;
     }
 
-    return;
 }
 
 static void testBACDCodeReal(
@@ -2090,7 +2087,6 @@ static void testBACDCodeReal(
     decode_real(&apdu[len], &decoded_value);
     ct_test(pTest, decoded_value == value);
 
-    return;
 }
 
 static void testBACDCodeDouble(
@@ -2124,7 +2120,6 @@ static void testBACDCodeDouble(
     decode_double(&apdu[len], &decoded_value);
     ct_test(pTest, decoded_value == value);
 
-    return;
 }
 
 static void testBACDCodeUnsignedValue(
@@ -2173,7 +2168,6 @@ static void testBACDCodeUnsigned(
         value = value << 1;
     }
 
-    return;
 }
 
 static void testBACnetUnsigned(
@@ -2232,7 +2226,6 @@ static void testBACDCodeSignedValue(
     ct_test(pTest, tag_number == BACNET_APPLICATION_TAG_SIGNED_INT);
     ct_test(pTest, IS_CONTEXT_SPECIFIC(apdu[0]) == false);
 
-    return;
 }
 
 static void testBACDCodeSigned(
@@ -2257,7 +2250,6 @@ static void testBACDCodeSigned(
         value = value << 1;
     }
 
-    return;
 }
 
 static void testBACnetSigned(
@@ -2335,7 +2327,6 @@ static void testBACDCodeOctetString(
         ct_test(pTest, diff == 0);
     }
 
-    return;
 }
 
 static void testBACDCodeCharacterString(
@@ -2393,7 +2384,6 @@ static void testBACDCodeCharacterString(
         ct_test(pTest, diff == 0);
     }
 
-    return;
 }
 
 static void testBACDCodeObject(
@@ -2430,7 +2420,6 @@ static void testBACDCodeObject(
         }
     }
 
-    return;
 }
 
 static void testBACDCodeMaxSegsApdu(

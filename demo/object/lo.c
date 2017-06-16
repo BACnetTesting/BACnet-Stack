@@ -127,7 +127,6 @@ void Lighting_Output_Property_Lists(
     if (pProprietary)
         *pProprietary = Lighting_Output_Properties_Proprietary;
 
-    return;
 }
 
 /**
@@ -1402,7 +1401,6 @@ void Lighting_Output_Init(
         Lighting_Output[i].Lighting_Command_Default_Priority = 16;
     }
 
-    return;
 }
 
 #ifdef TEST
@@ -1450,7 +1448,6 @@ void testLightingOutput(
     ct_test(pTest, decoded_type == rpdata.object_type);
     ct_test(pTest, decoded_instance == rpdata.object_instance);
 
-    return;
 }
 
 #ifdef TEST_LIGHTING_OUTPUT

@@ -470,7 +470,6 @@ void dlmstp_set_mac_address(
             dlmstp_set_max_master(mac_address);
     }
 
-    return;
 }
 
 uint8_t dlmstp_mac_address(
@@ -498,7 +497,6 @@ void dlmstp_set_max_info_frames(
            EEPROM_MSTP_MAX_INFO_FRAMES_ADDR); */
     }
 
-    return;
 }
 
 uint8_t dlmstp_max_info_frames(
@@ -526,7 +524,6 @@ void dlmstp_set_max_master(
         }
     }
 
-    return;
 }
 
 uint8_t dlmstp_max_master(
@@ -561,7 +558,6 @@ void dlmstp_get_my_address(
         my_address->adr[i] = 0;
     }
 
-    return;
 }
 
 void dlmstp_get_broadcast_address(
@@ -579,7 +575,6 @@ void dlmstp_get_broadcast_address(
         }
     }
 
-    return;
 }
 
 bool dlmstp_init(

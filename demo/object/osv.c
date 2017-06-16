@@ -79,7 +79,6 @@ void OctetString_Value_Property_Lists(const int **pRequired,
     if (pProprietary)
         *pProprietary = OctetString_Value_Properties_Proprietary;
 
-    return;
 }
 
 void OctetString_Value_Init(void)
@@ -413,7 +412,6 @@ void testOctetString_Value(Test * pTest)
     ct_test(pTest, decoded_type == rpdata.object_type);
     ct_test(pTest, decoded_instance == rpdata.object_instance);
 
-    return;
 }
 
 #ifdef TEST_OCTETSTRING_VALUE

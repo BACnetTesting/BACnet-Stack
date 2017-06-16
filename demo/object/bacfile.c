@@ -95,7 +95,6 @@ void BACfile_Property_Lists(
     if (pProprietary)
         *pProprietary = bacfile_Properties_Proprietary;
 
-    return;
 }
 
 static char *bacfile_name(

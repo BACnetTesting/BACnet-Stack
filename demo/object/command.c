@@ -383,7 +383,6 @@ void Command_Property_Lists(
     if (pProprietary)
         *pProprietary = Command_Properties_Proprietary;
 
-    return;
 }
 
 
@@ -936,7 +935,6 @@ void testCommand(
     ct_test(pTest, clist.Post_Delay == clist_test.Post_Delay);
     ct_test(pTest, clist.Quit_On_Failure == clist_test.Quit_On_Failure);
     ct_test(pTest, clist.Write_Successful == clist_test.Write_Successful);
-    return;
 }
 
 #ifdef TEST_COMMAND
