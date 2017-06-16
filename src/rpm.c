@@ -52,7 +52,7 @@ int rpm_encode_apdu_init(
 
     if (apdu) {
         apdu[0] = PDU_TYPE_CONFIRMED_SERVICE_REQUEST;
-        apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU);
+        apdu[1] = encode_max_segs_max_apdu(0, MAX_LPDU_IP); // todo1
         apdu[2] = invoke_id;
         apdu[3] = SERVICE_CONFIRMED_READ_PROP_MULTIPLE; /* service choice */
         apdu_len = 4;
@@ -567,7 +567,7 @@ int rpm_decode_apdu(
     /* optional checking - most likely was already done prior to this call */
     if (apdu[0] != PDU_TYPE_CONFIRMED_SERVICE_REQUEST)
         return -1;
-    /*  apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU); */
+    /*  apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU); */ 
     *invoke_id = apdu[2];       /* invoke id - filled in by net layer */
     if (apdu[3] != SERVICE_CONFIRMED_READ_PROP_MULTIPLE)
         return -1;
@@ -724,7 +724,7 @@ void testReadPropertyMultipleAck(
     uint32_t array_index = 0;
     BACNET_APPLICATION_DATA_VALUE application_data[4] = { {0} };
     BACNET_APPLICATION_DATA_VALUE test_application_data = { 0 };
-    uint8_t application_data_buffer[MAX_APDU] = { 0 };
+    uint8_t application_data_buffer[MAX_LPDU_IP] = { 0 };
     int application_data_buffer_len = 0;
     BACNET_ERROR_CLASS error_class;
     BACNET_ERROR_CODE error_code;

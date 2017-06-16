@@ -45,11 +45,11 @@
 void handler_i_am_add(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src)
+    BACNET_ROUTE * srcRoute )
 {
     int len = 0;
     uint32_t device_id = 0;
-    unsigned max_apdu = 0;
+    uint16_t max_apdu = 0;
     int segmentation = 0;
     uint16_t vendor_id = 0;
 
@@ -87,11 +87,11 @@ void handler_i_am_add(
 void handler_i_am_bind(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src)
+    BACNET_ROUTE * srcRoute)
 {
     int len = 0;
     uint32_t device_id = 0;
-    unsigned max_apdu = 0;
+    uint16_t max_apdu ;
     int segmentation = 0;
     uint16_t vendor_id = 0;
 
@@ -101,8 +101,6 @@ void handler_i_am_bind(
                                    &segmentation, &vendor_id);
     if (len > 0) {
         /* only add address if requested to bind */
-        address_add_binding(device_id, max_apdu, src);
+        address_add_binding(device_id, max_apdu, srcRoute);
     }
-
-    return;
 }

@@ -60,18 +60,19 @@ BACnetRecipient ::= CHOICE {
 
 
 /* BACnetDestination structure */
-    typedef struct BACnet_Destination {
-        uint8_t ValidDays;
-        BACNET_TIME FromTime;
-        BACNET_TIME ToTime;
-        BACNET_RECIPIENT Recipient;
-        uint32_t ProcessIdentifier;
-        uint8_t Transitions;
-        bool ConfirmedNotify;
-    } BACNET_DESTINATION;
+typedef struct BACnet_Destination {
+    uint8_t     ValidDays;      // bitfield, not typedef
+    BACNET_TIME FromTime;
+    BACNET_TIME ToTime;
+    BACNET_RECIPIENT Recipient;
+    uint32_t ProcessIdentifier;
+    uint8_t Transitions;
+    bool ConfirmedNotify;
+} BACNET_DESTINATION;
 
 
 /* Structure containing configuration for a Notification Class */
+
     typedef struct Notification_Class_info {
         uint8_t Priority[MAX_BACNET_EVENT_TRANSITION];  /* BACnetARRAY[3] of Unsigned */
         uint8_t Ack_Required;   /* BACnetEventTransitionBits */
@@ -80,24 +81,24 @@ BACnetRecipient ::= CHOICE {
 
 
 /* Indicates whether the transaction has been confirmed */
-    typedef struct Acked_info {
-        bool bIsAcked;  /* true when transitions is acked */
-        BACNET_DATE_TIME Time_Stamp;    /* time stamp of when a alarm was generated */
-    } ACKED_INFO;
+typedef struct Acked_info {
+    bool bIsAcked;  /* true when transitions is acked */
+    BACNET_DATE_TIME Time_Stamp;    /* time stamp of when a alarm was generated */
+} ACKED_INFO;
 
 
 /* Information needed to send AckNotification */
-    typedef struct Ack_Notification {
-        bool bSendAckNotify;    /* true if need to send AckNotification */
-        BACNET_EVENT_STATE EventState;
-    } ACK_NOTIFICATION;
+typedef struct Ack_Notification {
+    bool                bSendAckNotify;    /* true if need to send AckNotification */
+    BACNET_EVENT_STATE  EventState;
+} ACK_NOTIFICATION;
 
 
 
-    void Notification_Class_Property_Lists(
-        const int **pRequired,
-        const int **pOptional,
-        const int **pProprietary);
+void Notification_Class_Property_Lists(
+    const int **pRequired,
+    const int **pOptional,
+    const int **pProprietary);
 
     void Notification_Class_Init(
         void);
@@ -125,9 +126,11 @@ BACnetRecipient ::= CHOICE {
         uint32_t * pPriorityArray);
 
     void Notification_Class_common_reporting_function(
+    PORT_SUPPORT  *portParams,
         BACNET_EVENT_NOTIFICATION_DATA * event_data);
 
     void Notification_Class_find_recipient(
+    PORT_SUPPORT  *portParams,
         void);
 #endif /* defined(INTRINSIC_REPORTING) */
 

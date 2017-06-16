@@ -56,13 +56,14 @@
  * @param object_name [in] The Name of the desired Object.
  */
 void Send_WhoHas_Name(
+    PORT_SUPPORT *portParams,
     int32_t low_limit,
     int32_t high_limit,
     const char *object_name)
 {
     int len = 0;
     int pdu_len = 0;
-    BACNET_ADDRESS dest;
+    BACNET_ROUTE dest;
     int bytes_sent = 0;
     BACNET_WHO_HAS_DATA data;
     BACNET_NPCI_DATA npci_data;
@@ -71,9 +72,12 @@ void Send_WhoHas_Name(
     /* if we are forbidden to send, don't send! */
     if (!dcc_communication_enabled())
         return;
+
+    dest.portParams = portParams;
+
     /* Who-Has is a global broadcast */
-    datalink_get_broadcast_address(&dest);
-    datalink_get_my_address(&my_address);
+    bacnet_path_set_broadcast_global(&dest.bacnetPath);
+    //datalink_get_my_address(&my_address);
 
     DLCB *dlcb = alloc_dlcb_response('t', &dest);
     if (dlcb == NULL) return;
@@ -93,6 +97,8 @@ void Send_WhoHas_Name(
     pdu_len += len;
 
     /* send the data */
+    dlcb->optr = pdu_len ;
+    
     bytes_sent =
         datalink_send_pdu(&dest, &npci_data, dlcb );
         
@@ -122,7 +128,7 @@ void Send_WhoHas_Object(
 {
     int len = 0;
     int pdu_len = 0;
-    BACNET_ADDRESS dest;
+    BACNET_ROUTE dest;
     int bytes_sent = 0;
     BACNET_WHO_HAS_DATA data;
     BACNET_NPCI_DATA npci_data;
@@ -135,14 +141,17 @@ void Send_WhoHas_Object(
     DLCB *dlcb = alloc_dlcb_response('t', &dest);
     if (dlcb == NULL) return;
 
+    dest.portParams = portParams;
+
     /* Who-Has is a global broadcast */
-    datalink_get_broadcast_address(&dest);
-    datalink_get_my_address(&my_address);
+    bacnet_path_set_broadcast_global(&dest.bacnetPath);
+
+    //datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
-        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &dest, &my_address,
-        &npci_data);
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &dest.bacnetPath.glAdr, NULL,
+        &npdu_data);
 
     /* encode the APDU portion of the packet */
     data.low_limit = low_limit;
@@ -150,8 +159,11 @@ void Send_WhoHas_Object(
     data.is_object_name = false;
     data.object.identifier.type = object_type;
     data.object.identifier.instance = object_instance;
-    len = whohas_encode_apdu(&Handler_Transmit_Buffer[pdu_len], &data);
+    len = whohas_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len], &data);
     pdu_len += len;
+        
+    dlcb->optr = pdu_len; // todo 1 check all other instances of this send!
+        
     bytes_sent =
         datalink_send_pdu(&dest, &npci_data, dlcb );
 

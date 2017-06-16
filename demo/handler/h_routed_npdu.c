@@ -70,7 +70,7 @@
  *  @param npdu_len [in] The length of the remaining NPDU message in npdu[].
  */
 static void network_control_handler(
-    BACNET_ADDRESS * src,
+    BACNET_PATH *src,
     int *DNET_list,
     BACNET_NPCI_DATA * npci_data,
     uint8_t * npdu,
@@ -81,33 +81,33 @@ static void network_control_handler(
     uint16_t len = 0;
 
     switch (npci_data->network_message_type) {
-        case NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK:
-            /* Send I-am-router-to-network with our one-network list if
-             * our specific network is requested, or no specific
-             * network is requested. Silently drop other DNET requests.
-             */
-            if (npdu_len >= 2) {
-                uint16_t network;
-                len += decode_unsigned16(&npdu[len], &network);
-                if (network == DNET_list[0]) {
+    case NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK:
+        /* Send I-am-router-to-network with our one-network list if
+         * our specific network is requested, or no specific
+         * network is requested. Silently drop other DNET requests.
+         */
+        if (npdu_len >= 2) {
+            uint16_t network;
+            len += decode_unsigned16(&npdu[len], &network);
+            if (network == DNET_list[0]) {
                     Send_I_Am_Router_To_Network(DNET_list);
                 }
             } else {
                 Send_I_Am_Router_To_Network(DNET_list);
             }
-            break;
-        case NETWORK_MESSAGE_I_AM_ROUTER_TO_NETWORK:
-            /* Per the standard, we are supposed to process this message and
-             * add its DNETs to our routing table.
-             * However, since we only have one upstream port that these
-             * messages can come from and replies go to, it doesn't seem
-             * to provide us any value to do this; when we need to send to
-             * some remote device, we will start by pushing it out the
-             * upstream port and let the attached router(s) take it from there.
-             * Consequently, we'll do nothing interesting here.
-             * -- Unless we act upon NETWORK_MESSAGE_ROUTER_BUSY_TO_NETWORK
-             * later for congestion control - then it could matter.
-             */
+        break;
+    case NETWORK_MESSAGE_I_AM_ROUTER_TO_NETWORK:
+        /* Per the standard, we are supposed to process this message and
+         * add its DNETs to our routing table.
+         * However, since we only have one upstream port that these
+         * messages can come from and replies go to, it doesn't seem
+         * to provide us any value to do this; when we need to send to
+         * some remote device, we will start by pushing it out the
+         * upstream port and let the attached router(s) take it from there.
+         * Consequently, we'll do nothing interesting here.
+         * -- Unless we act upon NETWORK_MESSAGE_ROUTER_BUSY_TO_NETWORK
+         * later for congestion control - then it could matter.
+         */
             debug_printf("%s for Networks: ",
                 bactext_network_layer_msg_name
                 (NETWORK_MESSAGE_I_AM_ROUTER_TO_NETWORK));
@@ -134,16 +134,16 @@ static void network_control_handler(
                 debug_printf("%hu,  Reason code: %d \n", dnet, npdu[0]);
             }
             break;
-        case NETWORK_MESSAGE_ROUTER_BUSY_TO_NETWORK:
-        case NETWORK_MESSAGE_ROUTER_AVAILABLE_TO_NETWORK:
-            /* Do nothing - don't support upstream traffic congestion control */
-            break;
-        case NETWORK_MESSAGE_INIT_RT_TABLE:
-            /* If sent with Number of Ports == 0, we respond with
-             * NETWORK_MESSAGE_INIT_RT_TABLE_ACK and a list of all our
-             * reachable networks.
-             */
-            if (npdu_len > 0) {
+    case NETWORK_MESSAGE_ROUTER_BUSY_TO_NETWORK:
+    case NETWORK_MESSAGE_ROUTER_AVAILABLE_TO_NETWORK:
+        /* Do nothing - don't support upstream traffic congestion control */
+        break;
+    case NETWORK_MESSAGE_INIT_RT_TABLE:
+        /* If sent with Number of Ports == 0, we respond with
+         * NETWORK_MESSAGE_INIT_RT_TABLE_ACK and a list of all our
+         * reachable networks.
+         */
+        if (npdu_len > 0) {
                 /* If Number of Ports is 0, broadcast our "full" table */
                 if (npdu[0] == 0)
                     Send_Initialize_Routing_Table_Ack(NULL, DNET_list);
@@ -157,13 +157,13 @@ static void network_control_handler(
                 }
                 break;
             }
-            /* Else, fall through to do nothing. */
-        case NETWORK_MESSAGE_INIT_RT_TABLE_ACK:
-            /* Do nothing with the routing table info, since don't support
-             * upstream traffic congestion control */
-            break;
-        case NETWORK_MESSAGE_ESTABLISH_CONNECTION_TO_NETWORK:
-        case NETWORK_MESSAGE_DISCONNECT_CONNECTION_TO_NETWORK:
+    /* Else, fall through to do nothing. */
+    case NETWORK_MESSAGE_INIT_RT_TABLE_ACK:
+        /* Do nothing with the routing table info, since don't support
+         * upstream traffic congestion control */
+        break;
+    case NETWORK_MESSAGE_ESTABLISH_CONNECTION_TO_NETWORK:
+    case NETWORK_MESSAGE_DISCONNECT_CONNECTION_TO_NETWORK:
             /* Do nothing - don't support PTP half-router control */
             break;
         default:

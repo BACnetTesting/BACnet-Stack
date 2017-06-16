@@ -104,7 +104,7 @@ void private_transfer_print_data(
 void handler_unconfirmed_private_transfer(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src)
+    BACNET_PATH * src)
 {
     BACNET_PRIVATE_TRANSFER_DATA private_data;
     int len = 0;

@@ -50,11 +50,12 @@
 
 
 uint8_t Send_Life_Safety_Operation_Data(
+    PORT_SUPPORT *portParams,
     uint32_t device_id,
     BACNET_LSO_DATA * data)
 {
-    BACNET_ADDRESS dest;
-    BACNET_ADDRESS my_address;
+    BACNET_PATH dest;
+    //BACNET_PATH my_address;
     unsigned max_apdu = 0;
     uint8_t invoke_id = 0;
     bool status = false;
@@ -76,7 +77,7 @@ uint8_t Send_Life_Safety_Operation_Data(
         datalink_get_my_address(&my_address);
         npdu_setup_npci_data(&npci_data, true, MESSAGE_PRIORITY_NORMAL);
         pdu_len =
-            npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest, &my_address,
+            npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest.adr, NULL,
             &npci_data);
         len =
             lso_encode_apdu(&Handler_Transmit_Buffer[pdu_len], invoke_id,
@@ -87,9 +88,11 @@ uint8_t Send_Life_Safety_Operation_Data(
            us and the destination, we won't know unless
            we have a way to check for that and update the
            max_apdu in the address binding table. */
+           
         if ((unsigned) pdu_len < max_apdu) {
+            dlcb->optr = pdu_len ;
             tsm_set_confirmed_unsegmented_transaction(invoke_id, &dest,
-                &npci_data, &Handler_Transmit_Buffer[0], (uint16_t) pdu_len);
+                &npci_data, dlcb );
             bytes_sent =
                 datalink_send_pdu(&dest, &npci_data,
                 dlcb );

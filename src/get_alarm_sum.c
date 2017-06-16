@@ -51,7 +51,7 @@ int get_alarm_summary_encode_apdu(
 
     if (apdu) {
         apdu[0] = PDU_TYPE_CONFIRMED_SERVICE_REQUEST;
-        apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU);
+        apdu[1] = encode_max_segs_max_apdu(0, MAX_LPDU_IP);
         apdu[2] = invoke_id;
         apdu[3] = SERVICE_CONFIRMED_GET_ALARM_SUMMARY;
         apdu_len = 4;
@@ -143,7 +143,7 @@ int get_alarm_summary_ack_decode_apdu_data(
         /* tag 0 - Object Identifier */
         apdu_len +=
             bacapp_decode_application_data(&apdu[apdu_len],
-            (unsigned int)(max_apdu - apdu_len), &value);
+                                           max_apdu - apdu_len, &value);
         if (value.tag == BACNET_APPLICATION_TAG_OBJECT_ID) {
             get_alarm_data->objectIdentifier = value.type.Object_Id;
         } else {
@@ -152,7 +152,7 @@ int get_alarm_summary_ack_decode_apdu_data(
         /* tag 1 - Alarm State */
         apdu_len +=
             bacapp_decode_application_data(&apdu[apdu_len],
-            (unsigned int)(max_apdu - apdu_len), &value);
+                                           max_apdu - apdu_len, &value);
         if (value.tag == BACNET_APPLICATION_TAG_ENUMERATED) {
             get_alarm_data->alarmState =
                 (BACNET_EVENT_STATE) value.type.Enumerated;
@@ -162,7 +162,7 @@ int get_alarm_summary_ack_decode_apdu_data(
         /* tag 2 - Acknowledged Transitions */
         apdu_len +=
             bacapp_decode_application_data(&apdu[apdu_len],
-            (unsigned int)(max_apdu - apdu_len), &value);
+                                           max_apdu - apdu_len, &value);
         if (value.tag == BACNET_APPLICATION_TAG_BIT_STRING) {
             get_alarm_data->acknowledgedTransitions = value.type.Bit_String;
         } else {

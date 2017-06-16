@@ -40,26 +40,28 @@
  * @param dest [in] The destination address information (may be a broadcast).
  * @return Size of the message sent (bytes), or a negative value on error.
  */
+
 int Send_UEvent_Notify(
-    uint8_t * buffer,
+    PORT_SUPPORT  *portParams,
     DLCB *dlcb, // todo3 - why is this created here?
     BACNET_EVENT_NOTIFICATION_DATA * data,
-    BACNET_ADDRESS * dest)
+    BACNET_PATH * dest)
 {
     int len = 0;
     int pdu_len = 0;
     int bytes_sent = 0;
     BACNET_NPCI_DATA npci_data;
-    BACNET_ADDRESS my_address;
+    //BACNET_GLOBAL_ADDRESS my_address;
 
-    datalink_get_my_address(&my_address);
+    //datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
-    pdu_len = npdu_encode_pdu(buffer, dest, &my_address, &npci_data);
+    pdu_len = npdu_encode_pdu(buffer, &dest->adr, NULL, &npci_data);
     /* encode the APDU portion of the packet */
     len = uevent_notify_encode_apdu(&buffer[pdu_len], data);
     pdu_len += len;
     /* send the data */
+        dlcb->optr = pdu_len;
     bytes_sent = datalink_send_pdu(dest, &npci_data, dlcb );
 
     return bytes_sent;

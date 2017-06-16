@@ -48,6 +48,7 @@
  *         or no tsm slot is available.
  */
 uint8_t Send_CEvent_Notify(
+	PORT_SUPPORT *portParams,
     uint32_t device_id,
     BACNET_EVENT_NOTIFICATION_DATA * data)
 {
@@ -55,8 +56,8 @@ uint8_t Send_CEvent_Notify(
     int pdu_len = 0;
     int bytes_sent = 0;
     BACNET_NPCI_DATA npci_data;
-    BACNET_ADDRESS dest;
-    BACNET_ADDRESS my_address;
+    BACNET_PATH dest;
+    //BACNET_GLOBAL_ADDRESS my_address;
     unsigned max_apdu = 0;
     bool status = false;
     uint8_t invoke_id = 0;
@@ -74,12 +75,12 @@ uint8_t Send_CEvent_Notify(
         datalink_get_my_address(&my_address);
         npdu_setup_npci_data(&npci_data, true, MESSAGE_PRIORITY_NORMAL);
         pdu_len =
-            npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &dest, &my_address,
-            &npci_data);
+            npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &dest->bacnetPath.glAdr, NULL, // &my_address,
+                            &npci_data);
         /* encode the APDU portion of the packet */
         len =
             cevent_notify_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
-            invoke_id, data);
+                                      invoke_id, data);
         pdu_len += len;
         /* will it fit in the sender?
            note: if there is a bottleneck router in between
@@ -87,6 +88,7 @@ uint8_t Send_CEvent_Notify(
            we have a way to check for that and update the
            max_apdu in the address binding table. */
         if ((unsigned) pdu_len < max_apdu) {
+            dlcb->optr = pdu_len;
             tsm_set_confirmed_unsegmented_transaction(invoke_id, &dest,
                 &npci_data, dlcb );
             bytes_sent =

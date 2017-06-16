@@ -50,7 +50,7 @@ int getevent_encode_apdu(
 
     if (apdu) {
         apdu[0] = PDU_TYPE_CONFIRMED_SERVICE_REQUEST;
-        apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU);
+        apdu[1] = encode_max_segs_max_apdu(0, MAX_LPDU_IP); // todo 1
         apdu[2] = invoke_id;
         apdu[3] = SERVICE_CONFIRMED_GET_EVENT_INFORMATION;
         apdu_len = 4;
@@ -118,15 +118,15 @@ int getevent_ack_encode_apdu_data(
     unsigned i = 0;     /* counter */
 
     /* unused parameter */
-    max_apdu = max_apdu;
+    // max_apdu = max_apdu;
     if (apdu) {
         event_data = get_event_data;
         while (event_data) {
             /* Tag 0: objectIdentifier */
             apdu_len +=
                 encode_context_object_id(&apdu[apdu_len], 0,
-                event_data->objectIdentifier.type,
-                event_data->objectIdentifier.instance);
+                                         event_data->objectIdentifier.type,
+                                         event_data->objectIdentifier.instance);
             /* Tag 1: eventState */
             apdu_len +=
                 encode_context_enumerated(&apdu[apdu_len], 1,
@@ -174,7 +174,7 @@ int getevent_ack_encode_apdu_end(
     int apdu_len = 0;   /* total length of the apdu, return value */
 
     /* unused parameter */
-    max_apdu = max_apdu;
+  //  max_apdu = max_apdu;
     if (apdu) {
         apdu_len += encode_closing_tag(&apdu[apdu_len], 0);
         apdu_len += encode_context_boolean(&apdu[apdu_len], 1, moreEvents);
@@ -344,7 +344,7 @@ int getevent_decode_apdu(
     /* optional checking - most likely was already done prior to this call */
     if (apdu[0] != PDU_TYPE_CONFIRMED_SERVICE_REQUEST)
         return -1;
-    /*  apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU); */
+    /*  apdu[1] = encode_max_segs_max_apdu(0, MAX_LPDU_IP); */
     *invoke_id = apdu[2];       /* invoke id - filled in by net layer */
     if (apdu[3] != SERVICE_CONFIRMED_GET_EVENT_INFORMATION)
         return -1;

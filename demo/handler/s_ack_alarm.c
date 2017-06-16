@@ -50,10 +50,11 @@
 
 
 uint8_t Send_Alarm_Acknowledgement(
+    BACNET_ROUTE *dest,
     uint32_t device_id,
     BACNET_ALARM_ACK_DATA * data)
 {
-    BACNET_ADDRESS dest;
+    BACNET_PATH dest;
     BACNET_ADDRESS my_address;
     unsigned max_apdu = 0;
     uint8_t invoke_id = 0;
@@ -73,10 +74,10 @@ uint8_t Send_Alarm_Acknowledgement(
         invoke_id = tsm_next_free_invokeID();
     if (invoke_id) {
         /* encode the NPDU portion of the packet */
-        datalink_get_my_address(&my_address);
+        //datalink_get_my_address(&my_address);
         npdu_setup_npci_data(&npci_data, true, MESSAGE_PRIORITY_NORMAL);
         pdu_len =
-            npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest, &my_address,
+            npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest, NULL,
             &npci_data);
         len =
             alarm_ack_encode_apdu(&Handler_Transmit_Buffer[pdu_len], invoke_id,

@@ -67,7 +67,7 @@ int Send_UnconfirmedPrivateTransfer(
 
     /* encode the APDU portion of the packet */
     len =
-        uptransfer_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
+        uptransfer_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
         private_data);
     pdu_len += len;
     bytes_sent =

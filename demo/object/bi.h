@@ -62,11 +62,12 @@
         uint32_t object_instance,
         BACNET_BINARY_PV value);
 
-    char *Binary_Input_Description(
-        uint32_t instance);
-    bool Binary_Input_Description_Set(
-        uint32_t instance,
-        char *new_name);
+char *Binary_Input_Description(
+    uint32_t instance);
+
+bool Binary_Input_Description_Set(
+    uint32_t instance,
+    char *new_name);
 
     BACNET_RELIABILITY Binary_Input_Reliability(
         uint32_t object_instance);

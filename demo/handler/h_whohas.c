@@ -43,6 +43,7 @@
  *  @param data [in] The decoded who-has payload from the request.
  */
 static void match_name_or_object(
+    BACNET_ROUTE *src,
     BACNET_WHO_HAS_DATA * data)
 {
     BACNET_OBJECT_TYPE object_type ;
@@ -89,13 +90,13 @@ static void match_name_or_object(
 void handler_who_has(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src)
+    BACNET_ROUTE * src)
 {
     int len = 0;
     BACNET_WHO_HAS_DATA data;
     bool directed_to_me = false;
 
-    (void) src;
+//     (void) src;
     len = whohas_decode_service_request(service_request, service_len, &data);
     if (len > 0) {
         if ((data.low_limit == -1) || (data.high_limit == -1))

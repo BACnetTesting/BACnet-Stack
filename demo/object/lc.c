@@ -845,7 +845,7 @@ int Load_Control_Read_Property(
                         encode_application_unsigned(&apdu[apdu_len],
                         Shed_Levels[object_index][i]);
                     /* add it if we have room */
-                    if ((apdu_len + len) < MAX_APDU)
+                    if ((apdu_len + len) < MAX_LPDU_IP)
                         apdu_len += len;
                     else {
                         rpdata->error_code =
@@ -883,7 +883,7 @@ int Load_Control_Read_Property(
                         encode_application_character_string(&apdu[apdu_len],
                         &char_string);
                     /* add it if we have room */
-                    if ((apdu_len + len) < MAX_APDU)
+                    if ((apdu_len + len) < MAX_LPDU_IP)
                         apdu_len += len;
                     else {
                         rpdata->error_code =
@@ -1459,7 +1459,7 @@ void testLoadControlStateMachine(
 void testLoadControl(
     Test * pTest)
 {
-    uint8_t apdu[MAX_APDU] = { 0 };
+    uint8_t apdu[MAX_LPDU_IP] = { 0 };
     int len = 0;
     uint32_t len_value = 0;
     uint8_t tag_number = 0;

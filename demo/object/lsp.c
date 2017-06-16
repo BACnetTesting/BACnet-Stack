@@ -426,7 +426,7 @@ bool WPValidateArgType(
 void testLifeSafetyPoint(
     Test * pTest)
 {
-    uint8_t apdu[MAX_APDU] = { 0 };
+    uint8_t apdu[MAX_LPDU_IP] = { 0 };
     int len = 0;
     uint32_t len_value = 0;
     uint8_t tag_number = 0;

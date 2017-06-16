@@ -50,7 +50,7 @@
 
 DATABLOCK MyData[MYMAXBLOCK];
 
-uint8_t IOBufferPT[MAX_APDU];   /* Buffer for building response in  */
+uint8_t IOBufferPT[MAX_LPDU_IP];   /* Buffer for building response in  */
 
 static void ProcessPT(
     BACNET_PRIVATE_TRANSFER_DATA * data)
@@ -198,8 +198,9 @@ static void ProcessPT(
  *
  */
 
-
+#if 0
 void handler_conf_private_trans(
+    BACNET_ROUTE *src,
     uint8_t * service_request,
     uint16_t service_len,
     BACNET_ADDRESS * src,
@@ -211,12 +212,12 @@ void handler_conf_private_trans(
     bool error;
     int bytes_sent;
     BACNET_NPCI_DATA npci_data;
-    BACNET_ADDRESS my_address;
+    //BACNET_PATH my_address;
     BACNET_ERROR_CLASS error_class;
     BACNET_ERROR_CODE error_code;
 
     len = 0;
-    pdu_len = 0;
+    pdu_len ;
     error = false;
     bytes_sent = 0;
     error_class = ERROR_CLASS_OBJECT;
@@ -228,10 +229,10 @@ void handler_conf_private_trans(
     /* encode the NPDU portion of the response packet as it will be needed */
     /* no matter what the outcome. */
 
-    datalink_get_my_address(&my_address);
+    //datalink_get_my_address(&my_address);
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
-        npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
+        npdu_encode_pdu(&Handler_Transmit_Buffer[0], &src->bacnetPath->adr, NULL,
         &npci_data);
 
     if (service_data->segmented_message) {
@@ -298,6 +299,7 @@ void handler_conf_private_trans(
     }
   CPT_ABORT:
     pdu_len += len;
+    dlcb->optr = pdu_len ;
     bytes_sent =
         datalink_send_pdu(src, &npci_data, dlcb );
 

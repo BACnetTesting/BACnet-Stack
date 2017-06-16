@@ -148,10 +148,10 @@ typedef struct BACnet_Event_Notification_Data {
 ** Creates a Confirmed Event Notification APDU
 **
 ****************************************************/
-    int cevent_notify_encode_apdu(
-        uint8_t * apdu,
-        uint8_t invoke_id,
-        BACNET_EVENT_NOTIFICATION_DATA * data);
+int cevent_notify_encode_apdu(
+    uint8_t * apdu,
+    uint8_t invoke_id,
+    BACNET_EVENT_NOTIFICATION_DATA * data);
 
 /***************************************************
 **

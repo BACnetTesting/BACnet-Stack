@@ -46,13 +46,14 @@
 /** @file s_awfs.c  Send part of an Atomic Write File Stream request. */
 
 uint8_t Send_Atomic_Write_File_Stream(
+    BACNET_ROUTE *dest,
     uint32_t device_id,
     uint32_t file_instance,
     int fileStartPosition,
     BACNET_OCTET_STRING * fileData)
 {
-    BACNET_ADDRESS dest;
-    BACNET_ADDRESS my_address;
+    BACNET_PATH dest;
+    //BACNET_PATH my_address;
     BACNET_NPCI_DATA npci_data;
     unsigned max_apdu = 0;
     uint8_t invoke_id = 0;
@@ -80,7 +81,7 @@ uint8_t Send_Atomic_Write_File_Stream(
         status = octetstring_copy(&data.fileData[0], fileData);
         if (status) {
             /* encode the NPDU portion of the packet */
-            datalink_get_my_address(&my_address);
+            //datalink_get_my_address(&my_address);
             npdu_setup_npci_data(&npci_data, true, MESSAGE_PRIORITY_NORMAL);
             pdu_len =
                 npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest,
@@ -101,7 +102,7 @@ uint8_t Send_Atomic_Write_File_Stream(
                     (uint16_t) pdu_len);
                 bytes_sent =
                     datalink_send_pdu(&dest, &npci_data,
-                    &Handler_Transmit_Buffer[0], pdu_len);
+                    dlcb );
 #if PRINT_ENABLED
                 if (bytes_sent <= 0)
                     fprintf(stderr,

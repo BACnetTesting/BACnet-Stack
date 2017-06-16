@@ -240,7 +240,7 @@ void testTimestampSequence(
 {
     BACNET_TIMESTAMP testTimestampIn;
     BACNET_TIMESTAMP testTimestampOut;
-    uint8_t buffer[MAX_APDU];
+    uint8_t buffer[MAX_LPDU_IP];
     int inLen;
     int outLen;
 
@@ -265,7 +265,7 @@ void testTimestampTime(
 {
     BACNET_TIMESTAMP testTimestampIn;
     BACNET_TIMESTAMP testTimestampOut;
-    uint8_t buffer[MAX_APDU];
+    uint8_t buffer[MAX_LPDU_IP];
     int inLen;
     int outLen;
 
@@ -299,7 +299,7 @@ void testTimestampTimeDate(
 {
     BACNET_TIMESTAMP testTimestampIn;
     BACNET_TIMESTAMP testTimestampOut;
-    uint8_t buffer[MAX_APDU];
+    uint8_t buffer[MAX_LPDU_IP];
     int inLen;
     int outLen;
 

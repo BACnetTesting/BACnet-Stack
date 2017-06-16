@@ -398,18 +398,21 @@ int encode_simple_ack(
 
 int encode_bacnet_address(
     uint8_t * apdu,
-    BACNET_ADDRESS * destination);
+    BACNET_PATH * destination);
+
 int decode_bacnet_address(
     uint8_t * apdu,
-    BACNET_ADDRESS * destination);
+    BACNET_PATH * destination);
+
 int encode_context_bacnet_address(
     uint8_t * apdu,
     uint8_t tag_number,
-    BACNET_ADDRESS * destination);
+    BACNET_PATH * destination);
+
 int decode_context_bacnet_address(
     uint8_t * apdu,
     uint8_t tag_number,
-    BACNET_ADDRESS * destination);
+    BACNET_PATH * destination);
 
 /* from clause 20.2.1.2 Tag Number */
 /* true if extended tag numbering is used */

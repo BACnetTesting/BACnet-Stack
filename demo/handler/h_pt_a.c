@@ -186,7 +186,7 @@ static void ProcessPTA(
 void handler_conf_private_trans_ack(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src,
+    BACNET_PATH * src,
     BACNET_CONFIRMED_SERVICE_ACK_DATA * service_data)
 {
     BACNET_PRIVATE_TRANSFER_DATA data;
@@ -199,10 +199,9 @@ void handler_conf_private_trans_ack(
  * we were expecting. But this is just to silence some compiler
  * warnings from Borland.
  */
-    src = src;
-    service_data = service_data;
+    (void) src;
+    (void) service_data;
 
-    len = 0;
 
 
 
@@ -219,12 +218,11 @@ void handler_conf_private_trans_ack(
 
     ProcessPTA(&data);  /* See what to do with the response */
 
-    return;
 }
 
 #if 0
 void PTErrorHandler(
-    BACNET_ADDRESS * src,
+    BACNET_PATH * src,
     uint8_t invoke_id,
     BACNET_ERROR_CLASS error_class,
     BACNET_ERROR_CODE error_code)

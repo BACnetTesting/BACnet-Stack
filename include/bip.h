@@ -32,8 +32,42 @@
 #include "net.h"
 
 /* specific defines for BACnet/IP over Ethernet */
-#define MAX_HEADER (1 + 1 + 2)
-#define MAX_MPDU (MAX_HEADER+MAX_PDU)
+
+/*
+12.11.18 Max_APDU_Length_Accepted
+
+This property, of type Unsigned, is the maximum number of octets that may be contained in a single, indivisible application
+layer protocol data unit. The value of this property shall be greater than or equal to 50. The value of this property is also
+constrained by the underlying data link technology and shall be less than or equal to the largest APDU_Length of the enabled
+Network Port objects used to represent the underlying data links. See Clauses 6 through 11, Annex J, Annex O, and Annex U.
+If the value of this property is not encodable in the 'Max APDU Length Accepted' parameter of a ConfirmedRequest-PDU,
+then the value encoded shall be the highest encodable value less than the value of this property. In such cases, a responding
+device may ignore the encoded value in favor of the value of this property, if it is known.
+*/
+
+/* 
+    The most common Ethernet packet frame can carry 1500 bytes of payload.. see https://en.wikipedia.org/wiki/Ethernet_frame#Ethernet_II
+    UDP packets have to be packed within this.. so 1500 less IP header (20 bytes), less UDP header (8 bytes) 
+            https://en.wikipedia.org/wiki/User_Datagram_Protocol#Packet_structure
+            https://notes.shichao.io/tcpv1/ch10/
+    leaves LPDU for BACnet/IP of 1472. A packet any longer than this will result in fragmented packets, so we would like to draw the line here
+    However. BACnet specifies a possible MAX_LPDU_IP of 1497, and many people use it (fragmented), so we need to accomodate these reassembled
+    packets. Lets just shame those users who go to the limit, allow it, and for ourselves just set a lower threshold...
+*/
+
+#define MAX_APDU_IP     1497                                    // Common practice
+#define MAX_NPCI        (22)                                    // (22) bytes, see http://www.bacnetwiki.com/wiki/index.php?title=NPCI
+#define MAX_HEADER_IP   (1 + 2 + 1 + 6)                         // (10) Max BVLL (forwarded) // BSA - look for users who make their packets overflow...
+#define MAX_LPDU_IP     MAX_APDU_IP+MAX_NPCI+MAX_HEADER_IP      // 1529, for those who are counting
+
+/*
+    Note that the result of 1492-10-22 is  1460. But BACnet was defined using BACnet/Ethernet, 1500-3=1497
+    So we are stuck with that. If packets are build using 1497 bytes, they WILL fragment over IPv4 UDP, and 
+    according to Maximum Transmission Unit (MTU) of the underlying layer, (looking at you IPv6 at 1280) 
+    possibly sooner.
+    https://en.wikipedia.org/wiki/Maximum_transmission_unit
+    https://blog.apnic.net/2016/05/19/fragmenting-ipv6/
+*/
 
 #define BVLL_TYPE_BACNET_IP (0x81)
 

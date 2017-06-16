@@ -194,10 +194,10 @@ typedef struct BACnet_IP6_Foreign_Device_Table_Entry {
         uint16_t *addr7);
 
     bool bvlc6_vmac_address_set(
-        BACNET_ADDRESS * addr,
+        BACNET_PATH * addr,
         uint32_t device_id);
     bool bvlc6_vmac_address_get(
-        BACNET_ADDRESS * addr,
+        BACNET_PATH * addr,
         uint32_t *device_id);
 
    int bvlc6_encode_header(
@@ -374,7 +374,7 @@ typedef struct BACnet_IP6_Foreign_Device_Table_Entry {
     /* user application function prototypes */
     int bvlc6_handler(
         BACNET_IP6_ADDRESS *addr,
-        BACNET_ADDRESS * src,
+        BACNET_PATH * src,
         uint8_t * npdu,
         uint16_t npdu_len);
     int bvlc6_register_with_bbmd(

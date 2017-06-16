@@ -131,9 +131,9 @@ ABORT.indication               Yes         Yes         Yes        No
  */
 int npdu_encode_pdu(
     uint8_t * npdu,
-    BACNET_ADDRESS * dest,
-    BACNET_ADDRESS * src,
-    BACNET_NPCI_DATA * npci_data)
+    const BACNET_GLOBAL_ADDRESS * dest,
+    const BACNET_GLOBAL_ADDRESS * src,
+    const BACNET_NPCI_DATA * npci_data)
 {
     int len = 0;        /* return value - number of octets loaded in this function */
     uint8_t i = 0;      /* counter  */
@@ -307,9 +307,9 @@ void npdu_setup_npci_data(
  *         If 0 or negative, there were problems with the data or arguments.
  */
 int npdu_decode(
-    uint8_t * npdu,
-    BACNET_ADDRESS * dest,
-    BACNET_ADDRESS * src,
+    const uint8_t * npdu,
+    BACNET_GLOBAL_ADDRESS * dest,
+    BACNET_GLOBAL_ADDRESS * src,
     BACNET_NPCI_DATA * npci_data)
 {
     int len = 0;        /* return value - number of octets loaded in this function */

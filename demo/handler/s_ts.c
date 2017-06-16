@@ -53,7 +53,7 @@
  * @param btime - #BACNET_TIME
  */
 void Send_TimeSync_Remote(
-    BACNET_ADDRESS * dest,
+    BACNET_ROUTE *dest,
     BACNET_DATE * bdate,
     BACNET_TIME * btime)
 {
@@ -66,17 +66,18 @@ void Send_TimeSync_Remote(
     if (!dcc_communication_enabled())
         return;
 
-    datalink_get_my_address(&my_address);
+    //datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
-        npdu_encode_pdu(&Handler_Transmit_Buffer[0], dest, &my_address,
+        npdu_encode_pdu(&Handler_Transmit_Buffer[0], dest, NULL,
         &npci_data);
     /* encode the APDU portion of the packet */
     len =
         timesync_encode_apdu(&Handler_Transmit_Buffer[pdu_len], bdate, btime);
     pdu_len += len;
     /* send it out the datalink */
+    dlcb->optr = pdu_len ;
     bytes_sent =
         datalink_send_pdu(dest, &npci_data, dlcb );
 
@@ -94,10 +95,11 @@ void Send_TimeSync_Remote(
  * @param btime - #BACNET_TIME
  */
 void Send_TimeSync(
+    PORT_SUPPORT *portParams,
     BACNET_DATE * bdate,
     BACNET_TIME * btime)
 {
-    BACNET_ADDRESS dest;
+    BACNET_PATH dest;
 
     datalink_get_broadcast_address(&dest);
     Send_TimeSync_Remote(&dest, bdate, btime);
@@ -111,12 +113,12 @@ void Send_TimeSync(
  * @param btime - #BACNET_TIME
  */
 void Send_TimeSyncUTC_Remote(
-    BACNET_ADDRESS * dest,
+    BACNET_ROUTE *dest,
     BACNET_DATE * bdate,
     BACNET_TIME * btime)
 {
-    int len = 0;
-    int pdu_len = 0;
+    int len ;
+    int pdu_len ;
     int bytes_sent = 0;
     BACNET_NPCI_DATA npci_data;
     BACNET_ADDRESS my_address;
@@ -124,17 +126,18 @@ void Send_TimeSyncUTC_Remote(
     if (!dcc_communication_enabled())
         return;
 
-    datalink_get_my_address(&my_address);
+    //datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
-        npdu_encode_pdu(&Handler_Transmit_Buffer[0], dest, &my_address,
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], dest, NULL,
         &npci_data);
     /* encode the APDU portion of the packet */
     len =
         timesync_utc_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
         bdate, btime);
     pdu_len += len;
+    dlcb->optr = pdu_len ;
     bytes_sent =
         datalink_send_pdu(dest, &npci_data, dlcb );
 

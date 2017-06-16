@@ -28,6 +28,7 @@
 #include <stdint.h>
 #include "bacdef.h"
 #include "bacenum.h"
+#include "datalink.h"
 
 typedef struct _confirmed_service_data {
     bool segmented_message;
@@ -58,7 +59,7 @@ typedef void(
     *unconfirmed_function) (
         uint8_t * service_request,
         uint16_t len,
-        BACNET_ADDRESS * src);
+        BACNET_ROUTE * src);
 
 /* generic confirmed function handler */
 /* Suitable to handle the following services: */
@@ -80,13 +81,13 @@ typedef void(
     *confirmed_function) (
         uint8_t * service_request,
         uint16_t service_len,
-        BACNET_ADDRESS * src,
+        BACNET_ROUTE * srcRoute,
         BACNET_CONFIRMED_SERVICE_DATA * service_data);
 
 /* generic confirmed simple ack function handler */
 typedef void(
     *confirmed_simple_ack_function) (
-        BACNET_ADDRESS * src,
+        BACNET_ROUTE * src,
         uint8_t invoke_id);
 
 /* generic confirmed ack function handler */
@@ -94,13 +95,13 @@ typedef void(
     *confirmed_ack_function) (
         uint8_t * service_request,
         uint16_t service_len,
-        BACNET_ADDRESS * src,
+        BACNET_ROUTE * src,
         BACNET_CONFIRMED_SERVICE_ACK_DATA * service_data);
 
 /* generic error reply function */
 typedef void(
     *error_function) (
-        BACNET_ADDRESS * src,
+        BACNET_ROUTE * src,
         uint8_t invoke_id,
         BACNET_ERROR_CLASS error_class,
         BACNET_ERROR_CODE error_code);
@@ -108,7 +109,7 @@ typedef void(
 /* generic abort reply function */
 typedef void(
     *abort_function) (
-        BACNET_ADDRESS * src,
+        BACNET_ROUTE * src,
         uint8_t invoke_id,
         BACNET_ABORT_REASON abort_reason,
         bool server);
@@ -116,7 +117,7 @@ typedef void(
 /* generic reject reply function */
 typedef void(
     *reject_function) (
-        BACNET_ADDRESS * src,
+        BACNET_ROUTE * src,
         uint8_t invoke_id,
         uint8_t reject_reason);
 
@@ -181,7 +182,7 @@ void apdu_retries_set(
     uint8_t value);
 
 void apdu_handler(
-    BACNET_ADDRESS * src,   /* source address */
+    BACNET_ROUTE * src,   /* source address */
     uint8_t * apdu, /* APDU data */
     uint16_t pdu_len);      /* for confirmed messages */
 

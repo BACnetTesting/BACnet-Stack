@@ -203,7 +203,7 @@ struct mstp_port_struct_t {
         uint16_t data_len);
 
     void MSTP_Fill_BACnet_Address(
-        BACNET_ADDRESS * src,
+        BACNET_PATH * src,
         uint8_t mstp_address);
 
     /* functions used by the MS/TP state machine to put or get data */

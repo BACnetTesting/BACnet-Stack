@@ -73,6 +73,7 @@ void handler_alarm_ack_set(
  *                          decoded from the APDU header of this message.
  */
 void handler_alarm_ack(
+    RX_DETAILS *rxDetails,
     uint8_t * service_request,
     uint16_t service_len,
     BACNET_ADDRESS * src,
@@ -91,10 +92,10 @@ void handler_alarm_ack(
     if (dlcb == NULL) return;
 
     /* encode the NPDU portion of the packet */
-    datalink_get_my_address(&my_address);
+    //datalink_get_my_address(&my_address);
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
-        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], src, &my_address,
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &rxDetails->bacnetPath.glAdr, NULL, // &my_address,
         &npci_data);
     if (service_data->segmented_message) {
         /* we don't support segmentation - send an abort */
@@ -152,50 +153,50 @@ void handler_alarm_ack(
         switch (ack_result) {
             case 1:
                 len =
-                    encode_simple_ack(&Handler_Transmit_Buffer[pdu_len],
+                    encode_simple_ack(&dlcb->Handler_Transmit_Buffer[pdu_len],
                     service_data->invoke_id,
                     SERVICE_CONFIRMED_ACKNOWLEDGE_ALARM);
 #if PRINT_ENABLED
-                fprintf(stderr, "Alarm Acknowledge: " "Sending Simple Ack!\n");
+            fprintf(stderr, "Alarm Acknowledge: " "Sending Simple Ack!\n");
 #endif
-                break;
+            break;
 
             case -1:
                 len =
-                    bacerror_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
+                    bacerror_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
                     service_data->invoke_id,
                     SERVICE_CONFIRMED_ACKNOWLEDGE_ALARM, ERROR_CLASS_OBJECT,
                     error_code);
 #if PRINT_ENABLED
-                fprintf(stderr, "Alarm Acknowledge: error %s!\n",
+            fprintf(stderr, "Alarm Acknowledge: error %s!\n",
                     bactext_error_code_name(error_code));
 #endif
-                break;
+            break;
 
             default:
                 len =
-                    abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
+                    abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
                     service_data->invoke_id, ABORT_REASON_OTHER, true);
 #if PRINT_ENABLED
-                fprintf(stderr, "Alarm Acknowledge: abort other!\n");
+            fprintf(stderr, "Alarm Acknowledge: abort other!\n");
 #endif
-                break;
+            break;
         }
     } else {
         len =
-            bacerror_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
+            bacerror_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, SERVICE_CONFIRMED_ACKNOWLEDGE_ALARM,
             ERROR_CLASS_OBJECT, ERROR_CODE_NO_ALARM_CONFIGURED);
 #if PRINT_ENABLED
         fprintf(stderr, "Alarm Acknowledge: error %s!\n",
-            bactext_error_code_name(ERROR_CODE_NO_ALARM_CONFIGURED));
+                bactext_error_code_name(ERROR_CODE_NO_ALARM_CONFIGURED));
 #endif
     }
 
 
-  AA_ABORT:
+AA_ABORT:
     pdu_len += len;
-        dlcb->optr = pdu_len;
+    dlcb->optr = pdu_len;
     bytes_sent =
         datalink_send_pdu(src, &npci_data, dlcb );
 #if PRINT_ENABLED

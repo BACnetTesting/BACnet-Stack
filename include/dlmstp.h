@@ -32,38 +32,57 @@
 
 /* defines specific to MS/TP */
 /* preamble+type+dest+src+len+crc8+crc16 */
-#define MAX_HEADER (2+1+1+1+2+1+2)
-#define MAX_MPDU (MAX_HEADER+MAX_PDU)
+#define MAX_MPDU_MSTP   512                             
+#define MAX_HEADER_MSTP (2+1+1+1+2+1+2)                             // 10 bytes
+#define MAX_LPDU_MSTP   (MAX_MPDU_MSTP-MAX_HEADER_MSTP)             // 502 bytes
+#define MAX_NPCI        (22)                                        // 22 bytes, see http://www.bacnetwiki.com/wiki/index.php?title=NPCI
+#define MAX_APDU_MSTP   (MAX_LPDU_MSTP-MAX_HEADER_MSTP-MAX_NPCI)    // giving our 480
+
+/*
+12.11.18 Max_APDU_Length_Accepted
+
+This property, of type Unsigned, is the maximum number of octets that may be contained in a single, indivisible application
+layer protocol data unit. The value of this property shall be greater than or equal to 50. The value of this property is also
+constrained by the underlying data link technology and shall be less than or equal to the largest APDU_Length of the enabled
+Network Port objects used to represent the underlying data links. See Clauses 6 through 11, Annex J, Annex O, and Annex U.
+If the value of this property is not encodable in the 'Max APDU Length Accepted' parameter of a ConfirmedRequest-PDU,
+then the value encoded shall be the highest encodable value less than the value of this property. In such cases, a responding
+device may ignore the encoded value in favor of the value of this property, if it is known.
+*/
 
 typedef struct dlmstp_packet {
     bool ready; /* true if ready to be sent or received */
-    BACNET_ADDRESS address;     /* source address */
+    // BACNET_PATH address;     /* source address */
+    uint8_t address;            // incoming-src outgoing-dst
     uint8_t frame_type; /* type of message */
     uint16_t pdu_len;   /* packet length */
-    uint8_t pdu[MAX_MPDU];      /* packet */
+    uint8_t pdu[MAX_LPDU_MSTP];      /* packet */
 } DLMSTP_PACKET;
 
+bool dlmstp_init(
+    PORT_SUPPORT *portParams,
+    char *ifname);
 
-    bool dlmstp_init(
-        char *ifname);
-    void dlmstp_reset(
+void dlmstp_reset(
+    void);
+void dlmstp_cleanup(
         void);
-    void dlmstp_cleanup(
-        void);
 
-    /* returns number of bytes sent on success, negative on failure */
-    int dlmstp_send_pdu(
-        BACNET_ADDRESS * dest,  /* destination address */
-        BACNET_NPCI_DATA * npci_data,   /* network information */
-        uint8_t * pdu,  /* any data to be sent - may be null */
-        unsigned pdu_len);      /* number of bytes of data */
+/* returns number of bytes sent on success, negative on failure */
+void dlmstp_send_pdu(
+    //const DLINK_SUPPORT          *portParams,
+    //const BACNET_MAC_ADDRESS    *bacnetMac,
+    //const BACNET_NPCI_DATA      *npdu_data,
+    const DLCB                  *dlcb);
 
-    /* returns the number of octets in the PDU, or zero on failure */
-    uint16_t dlmstp_receive(
-        BACNET_ADDRESS * src,   /* source address */
-        uint8_t * pdu,  /* PDU data */
-        uint16_t max_pdu,       /* amount of space available in the PDU  */
-        unsigned timeout);      /* milliseconds to wait for a packet */
+/* returns the number of octets in the PDU, or zero on failure */
+uint16_t dlmstp_receive_pdu(
+    PORT_SUPPORT *portParams,
+    BACNET_MAC_ADDRESS *src,
+    uint8_t * npdu,
+    uint16_t max_npdu);
+
+
 
     /* This parameter represents the value of the Max_Info_Frames property of */
     /* the node's Device object. The value of Max_Info_Frames specifies the */
@@ -90,13 +109,16 @@ typedef struct dlmstp_packet {
     /* MAC address 0-127 */
     void dlmstp_set_mac_address(
         uint8_t my_address);
-    uint8_t dlmstp_mac_address(
-        void);
 
-    void dlmstp_get_my_address(
-        BACNET_ADDRESS * my_address);
+    void dlmstp_get_MAC_address(
+        const PORT_SUPPORT *portParams,
+        BACNET_MAC_ADDRESS * my_address);
+
+    void dlmstp_get_my_MAC_address(
+        BACNET_MAC_ADDRESS * my_address);
+
     void dlmstp_get_broadcast_address(
-        BACNET_ADDRESS * dest); /* destination address */
+        BACNET_PATH * dest); /* destination address */
 
     /* RS485 Baud Rate 9600, 19200, 38400, 57600, 115200 */
     void dlmstp_set_baud_rate(
@@ -105,12 +127,12 @@ typedef struct dlmstp_packet {
         void);
 
     void dlmstp_fill_bacnet_address(
-        BACNET_ADDRESS * src,
+        BACNET_PATH * src,
         uint8_t mstp_address);
 
-    bool dlmstp_sole_master(
-        void);
-    bool dlmstp_send_pdu_queue_empty(void);
-    bool dlmstp_send_pdu_queue_full(void);
+bool dlmstp_sole_master(
+    void);
+    //bool dlmstp_send_pdu_queue_empty(void);
+    //bool dlmstp_send_pdu_queue_full(void);
 
 #endif

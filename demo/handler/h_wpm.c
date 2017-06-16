@@ -76,8 +76,11 @@ void handler_write_property_multiple(
     bool error = false;
     BACNET_WRITE_PROPERTY_DATA wp_data;
     BACNET_NPCI_DATA npci_data;
-    BACNET_ADDRESS my_address;
-    int bytes_sent = 0;
+    // BACNET_PATH my_address;
+    // int bytes_sent = 0;
+
+	DLCB *dlcb = alloc_dlcb_response('=', rxDetails->portParams);
+	if (dlcb == NULL) return;
 
     if (service_data->segmented_message) {
         wp_data.error_code = ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
@@ -156,13 +159,13 @@ void handler_write_property_multiple(
         }
     } while (decode_len < service_len);
 
-  WPM_ABORT:
+WPM_ABORT:
     /* encode the NPDU portion of the packet */
-    datalink_get_my_address(&my_address);
+    //datalink_get_my_address(&my_address);
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     npdu_len =
-        npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
-        &npci_data);
+        npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, NULL,
+                        &npci_data);
     apdu_len = 0;
     /* handle any errors */
     if (error) {

@@ -318,7 +318,7 @@ void testBACnetLightingCommand(
     bool status = false;
     BACNET_LIGHTING_COMMAND test_data;
     int len, apdu_len;
-    uint8_t apdu[MAX_APDU] = {0};
+    uint8_t apdu[MAX_LPDU_IP] = {0};
 
     status = lighting_command_copy(&test_data, NULL);
     ct_test(pTest, status == false);

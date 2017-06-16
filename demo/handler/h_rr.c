@@ -88,6 +88,7 @@ static int Encode_RR_payload(
 }
 
 void handler_read_range(
+    BACNET_ROUTE *rxDetails,
     uint8_t * service_request,
     uint16_t service_len,
     BACNET_ADDRESS * src,
@@ -101,20 +102,23 @@ void handler_read_range(
     int bytes_sent = 0;
     BACNET_ADDRESS my_address;
 
+	DLCB *dlcb = alloc_dlcb_response('m', rxDetails->portParams);
+	if (dlcb == NULL) return;
+
     data.error_class = ERROR_CLASS_OBJECT;
     data.error_code = ERROR_CODE_UNKNOWN_OBJECT;
     /* encode the NPDU portion of the packet */
-    datalink_get_my_address(&my_address);
+    //datalink_get_my_address(&my_address);
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
-        npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &rxDetails->bacnetPath.glAdr, NULL, // &my_address,
         &npci_data);
     if (service_data->segmented_message) {
         /* we don't support segmentation - send an abort */
         len =
-            abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-            service_data->invoke_id, ABORT_REASON_SEGMENTATION_NOT_SUPPORTED,
-            true);
+            abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
+                              service_data->invoke_id, ABORT_REASON_SEGMENTATION_NOT_SUPPORTED,
+                              true);
 #if PRINT_ENABLED
         fprintf(stderr, "RR: Segmented message.  Sending Abort!\n");
 #endif
@@ -173,7 +177,7 @@ void handler_read_range(
 #endif
         }
     }
-  RR_ABORT:
+RR_ABORT:
     pdu_len += len;
         dlcb->optr = pdu_len;
         

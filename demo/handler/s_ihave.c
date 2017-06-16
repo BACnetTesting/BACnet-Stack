@@ -54,6 +54,7 @@
  * @param object_name [in] The Name of the Object I Have.
  */
 void Send_I_Have(
+    const BACNET_ROUTE *dest2,
     uint32_t device_id,
     BACNET_OBJECT_TYPE object_type,
     uint32_t object_instance,
@@ -74,12 +75,22 @@ void Send_I_Have(
     /* if we are forbidden to send, don't send! */
     if (!dcc_communication_enabled())
         return;
+
+    /*The sending BACnet-user shall broadcast or unicast the I-Have unconfirmed request. If the I-Have is broadcast, this
+    broadcast may be on the local network only, a remote network only, or globally on all networks at the discretion of the
+    application. If the I-Have is being transmitted in response to a previously received Who-Has, then the I-Have shall be
+    transmitted in such a manner that the BACnet-user that sent the Who-Has will receive the resulting I-Have.*/
+
     /* Who-Has is a global broadcast */
-    datalink_get_broadcast_address(&dest);
+    // Make a local copy so we don't corrupt the original
+    BACNET_PATH localPath;
+    bacnet_path_copy(&localPath, &dest2->bacnetPath);
+    bacnet_path_set_broadcast_global(&localPath);
+
     /* encode the NPDU portion of the packet */
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
-        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &dest, &my_address,
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &localPath.glAdr, NULL,
         &npci_data);
 
     /* encode the APDU portion of the packet */
@@ -88,9 +99,11 @@ void Send_I_Have(
     data.object_id.type = object_type;
     data.object_id.instance = object_instance;
     characterstring_copy(&data.object_name, object_name);
-    len = ihave_encode_apdu(&Handler_Transmit_Buffer[pdu_len], &data);
+    len = ihave_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len], &data);
     pdu_len += len;
     /* send the data */
+        dlcb->optr = pdu_len;
+
     bytes_sent =
         datalink_send_pdu(&dest, &npci_data, dlcb );
     if (bytes_sent <= 0) {

@@ -86,20 +86,20 @@ static void MyErrorHandler(
     if (address_match(&Target_Address, src) &&
         (invoke_id == Request_Invoke_ID)) {
         printf("BACnet Error: %s: %s\n",
-            bactext_error_class_name((int) error_class),
-            bactext_error_code_name((int) error_code));
+            bactext_error_class_name((int)error_class),
+            bactext_error_code_name((int)error_code));
         Error_Detected = true;
     }
 }
 
 void MyAbortHandler(
-    BACNET_ADDRESS * src,
+    BACNET_ROUTE * src,
     uint8_t invoke_id,
     BACNET_ABORT_REASON abort_reason,
     bool server)
 {
-    (void) server;
-    if (address_match(&Target_Address, src) &&
+    (void)server;
+    if (bacnet_route_same(&Target_Address, src) &&
         (invoke_id == Request_Invoke_ID)) {
         printf("BACnet Abort: %s\n",
             bactext_abort_reason_name((int)abort_reason));
@@ -108,11 +108,12 @@ void MyAbortHandler(
 }
 
 void MyRejectHandler(
-    BACNET_ADDRESS * src,
+    BACNET_ROUTE * src,
     uint8_t invoke_id,
     uint8_t reject_reason)
 {
-    if (address_match(&Target_Address, src) &&
+    /* FIXME: verify src and invoke id */
+    if (bacnet_route_same(&Target_Address, src) &&
         (invoke_id == Request_Invoke_ID)) {
         printf("BACnet Reject: %s\n",
             bactext_reject_reason_name((int)reject_reason));
@@ -134,19 +135,21 @@ void MyRejectHandler(
 void My_Read_Property_Ack_Handler(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src,
+    BACNET_ROUTE * src,
     BACNET_CONFIRMED_SERVICE_ACK_DATA * service_data)
 {
     int len = 0;
     BACNET_READ_PROPERTY_DATA data;
 
-    if (address_match(&Target_Address, src) &&
+    if (bacnet_route_same(&Target_Address, src) &&
         (service_data->invoke_id == Request_Invoke_ID)) {
         len =
-            rp_ack_decode_service_request(service_request, service_len, &data);
+            rp_ack_decode_service_request(service_request, service_len,
+                &data);
         if (len < 0) {
             printf("<decode failed!>\n");
-        } else {
+        }
+        else {
             rp_ack_print_data(&data);
         }
     }
@@ -332,39 +335,52 @@ int main(
     address_init();
     if (specific_address) {
         if (adr.len && mac.len) {
-            memcpy(&dest.mac[0], &mac.adr[0], mac.len);
-            dest.mac_len = mac.len;
-            memcpy(&dest.adr[0], &adr.adr[0], adr.len);
-            dest.len = adr.len;
+            memcpy(&dest.localMac.bytes[0], &mac.bytes[0], mac.len);
+            dest.localMac.len = mac.len;
+            memcpy(&dest.glAdr.mac.bytes[0], &adr.bytes[0], adr.len);
+            dest.glAdr.mac.len = adr.len;
             if ((dnet >= 0) && (dnet <= BACNET_BROADCAST_NETWORK)) {
-                dest.net = dnet;
-            } else {
-                dest.net = BACNET_BROADCAST_NETWORK;
+                dest.glAdr.net = dnet;
             }
-        } else if (mac.len) {
-            memcpy(&dest.mac[0], &mac.adr[0], mac.len);
-            dest.mac_len = mac.len;
-            dest.len = 0;
-            if ((dnet >= 0) && (dnet <= BACNET_BROADCAST_NETWORK)) {
-                dest.net = dnet;
-            } else {
-                dest.net = 0;
+            else {
+                dest.glAdr.net = BACNET_BROADCAST_NETWORK;
             }
-        } else {
-            if ((dnet >= 0) && (dnet <= BACNET_BROADCAST_NETWORK)) {
-                dest.net = dnet;
-            } else {
-                dest.net = BACNET_BROADCAST_NETWORK;
-            }
-            dest.mac_len = 0;
-            dest.len = 0;
         }
-        address_add(Target_Device_Object_Instance, MAX_APDU, &dest);
+        else if (mac.len) {
+            memcpy(&dest.localMac.bytes[0], &mac.bytes[0], mac.len);
+            dest.localMac.len = mac.len;
+            dest.glAdr.mac.len = 0;
+            if ((dnet >= 0) && (dnet <= BACNET_BROADCAST_NETWORK)) {
+                dest.glAdr.net = dnet;
+            }
+            else {
+                dest.glAdr.net = 0;
+            }
+        }
+        else {
+            if ((dnet >= 0) && (dnet <= BACNET_BROADCAST_NETWORK)) {
+                dest.glAdr.net = dnet;
+            }
+            else {
+                dest.glAdr.net = BACNET_BROADCAST_NETWORK;
+            }
+            dest.localMac.len = 0;
+            dest.glAdr.mac.len = 0;
+        }
+        BACNET_ROUTE    dRoute;
+        bacnet_path_copy(&dRoute.bacnetPath, &dest );
+        dRoute.portParams = &ourDatalink;
+        address_add(Target_Device_Object_Instance, MAX_APDU_IP, &dRoute);
     }
+
     /* setup my info */
     Device_Set_Object_Instance_Number(BACNET_MAX_INSTANCE);
     Init_Service_Handlers();
     dlenv_init();
+
+    SetConfigDefaults(&config);
+
+    InitDatalink(&ourDatalink, PF_BBMD, config.localBACnetPort);
     atexit(datalink_cleanup);
     /* configure the timeout values */
     last_seconds = time(NULL);
@@ -372,11 +388,12 @@ int main(
     /* try to bind with the device */
     found =
         address_bind_request(Target_Device_Object_Instance, &max_apdu,
-        &Target_Address);
+            &Target_Address);
     if (!found) {
-        Send_WhoIs(Target_Device_Object_Instance,
+        Send_WhoIs_Global(&ourDatalink, &ourDevice, Target_Device_Object_Instance,
             Target_Device_Object_Instance);
     }
+
     /* loop forever */
     for (;;) {
         /* increment timer - exit if timed out */
@@ -384,7 +401,7 @@ int main(
 
         /* at least one second has passed */
         if (current_seconds != last_seconds)
-            tsm_timer_milliseconds((uint16_t) ((current_seconds -
+            tsm_timer_milliseconds( &ourDatalink, (uint16_t) ((current_seconds -
                         last_seconds) * 1000));
         if (Error_Detected)
             break;
@@ -397,9 +414,11 @@ int main(
         if (found) {
             if (Request_Invoke_ID == 0) {
                 Request_Invoke_ID =
-                    Send_Read_Property_Request(Target_Device_Object_Instance,
-                    Target_Object_Type, Target_Object_Instance,
-                    Target_Object_Property, Target_Object_Index);
+                    Send_Read_Property_Request(
+                        &ourDatalink, 
+                        Target_Device_Object_Instance,
+                        Target_Object_Type, Target_Object_Instance,
+                        Target_Object_Property, Target_Object_Index);
             } else if (tsm_invoke_id_free(Request_Invoke_ID))
                 break;
             else if (tsm_invoke_id_failed(Request_Invoke_ID)) {
@@ -409,7 +428,8 @@ int main(
                 /* try again or abort? */
                 break;
             }
-        } else {
+        }
+        else {
             /* increment timer - exit if timed out */
             elapsed_seconds += (current_seconds - last_seconds);
             if (elapsed_seconds > timeout_seconds) {
@@ -424,6 +444,9 @@ int main(
 
         /* process */
         if (pdu_len) {
+            src.npdu = Rx_Buf;
+            src.npdu_len = pdu_len;
+            src.portParams = &ourDatalink;
             npdu_handler(&src, &Rx_Buf[0], pdu_len);
         }
 
@@ -433,5 +456,6 @@ int main(
 
     if (Error_Detected)
         return 1;
+        
     return 0;
 }

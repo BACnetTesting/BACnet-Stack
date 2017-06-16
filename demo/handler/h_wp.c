@@ -64,7 +64,7 @@
 void handler_write_property(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src,
+    BACNET_ROUTE * src,
     BACNET_CONFIRMED_SERVICE_DATA * service_data)
 {
     BACNET_WRITE_PROPERTY_DATA wp_data;

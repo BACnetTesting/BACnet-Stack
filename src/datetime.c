@@ -1430,7 +1430,7 @@ static void testBACnetDayOfWeek(
 static void testDatetimeCodec(
     Test * pTest)
 {
-    uint8_t apdu[MAX_APDU];
+    uint8_t apdu[MAX_LPDU_IP];
     BACNET_DATE_TIME datetimeIn;
     BACNET_DATE_TIME datetimeOut;
     int inLen;

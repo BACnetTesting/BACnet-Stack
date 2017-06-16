@@ -27,12 +27,18 @@
 
 #include "datalink.h"
 
-    void dlenv_init(
-        void);
-    int dlenv_register_as_foreign_device(
-        void);
-    void dlenv_maintenance_timer(
-        uint16_t elapsed_seconds);
+void dlenv_init(
+    void
+//    PORT_SUPPORT  *portParams
+    );
+ 
+int dlenv_register_as_foreign_device(
+    PORT_SUPPORT  *portParams
+    );
+
+void dlenv_maintenance_timer(
+    PORT_SUPPORT  *portParams,
+    uint16_t elapsed_seconds);
 
 /* Simple setters and getter. */
 void dlenv_bbmd_address_set(

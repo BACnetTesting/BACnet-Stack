@@ -67,7 +67,7 @@
 void handler_read_property(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src,
+    BACNET_ROUTE * srcRoute,
     BACNET_CONFIRMED_SERVICE_DATA * service_data)
 {
     BACNET_READ_PROPERTY_DATA rpdata;
@@ -77,8 +77,8 @@ void handler_read_property(
     int npdu_len = -1;
     BACNET_NPCI_DATA npci_data;
     bool error = true;  /* assume that there is an error */
-    int bytes_sent = 0;
-    BACNET_ADDRESS my_address;
+    // int bytes_sent = 0;
+//    BACNET_PATH my_address;
 
     DLCB *dlcb = alloc_dlcb_response('f', srcRoute);
     if (dlcb == NULL) return;
@@ -86,10 +86,10 @@ void handler_read_property(
     /* configure default error code as an abort since it is common */
     rpdata.error_code = ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
     /* encode the NPDU portion of the packet */
-    datalink_get_my_address(&my_address);
+    // datalink_get_my_address(&my_address);
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     npdu_len =
-        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], src, &my_address,
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &srcRoute->bacnetPath.glAdr, NULL,
         &npci_data);
     if (service_data->segmented_message) {
         /* we don't support segmentation - send an abort */
@@ -176,11 +176,17 @@ RP_FAILURE:
         } else if (len == BACNET_STATUS_ERROR) {
             apdu_len =
                 bacerror_encode_apdu(&dlcb->Handler_Transmit_Buffer[npdu_len],
-                service_data->invoke_id, SERVICE_CONFIRMED_READ_PROPERTY,
-                rpdata.error_class, rpdata.error_code);
+                                     service_data->invoke_id, SERVICE_CONFIRMED_READ_PROPERTY,
+                                     rpdata.error_class, rpdata.error_code);
 #if PRINT_ENABLED
             fprintf(stderr, "RP: Sending Error!\n");
 #endif
+} else if (len == BACNET_STATUS_UNKNOWN_PROPERTY) {
+            apdu_len =
+                bacerror_encode_apdu(&dlcb->Handler_Transmit_Buffer[npdu_len],
+                                     service_data->invoke_id, SERVICE_CONFIRMED_READ_PROPERTY,
+                                     rpdata.error_class, rpdata.error_code);
+            // and no error message
         } else if (len == BACNET_STATUS_REJECT) {
             apdu_len =
                 reject_encode_apdu(&dlcb->Handler_Transmit_Buffer[npdu_len],
@@ -193,7 +199,7 @@ RP_FAILURE:
     }
 
     pdu_len = npdu_len + apdu_len;
-        dlcb->optr = (uint16_t) pdu_len;
+    dlcb->optr = (uint16_t) pdu_len;
     bytes_sent =
         datalink_send_pdu(src, &npci_data, dlcb);
     if (bytes_sent <= 0) {

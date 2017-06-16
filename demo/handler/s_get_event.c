@@ -55,7 +55,7 @@
 #include "getevent.h"
 
 uint8_t Send_Get_Event_Information_Address(
-    BACNET_ADDRESS *dest,
+    BACNET_PATH *dest,
     uint16_t max_apdu,
     BACNET_OBJECT_ID * lastReceivedObjectIdentifier)
 {
@@ -63,7 +63,7 @@ uint8_t Send_Get_Event_Information_Address(
     int pdu_len = 0;
     uint8_t invoke_id = 0;
     BACNET_NPCI_DATA npci_data;
-    BACNET_ADDRESS my_address;
+    BACNET_PATH my_address;
 #if PRINT_ENABLED
     int bytes_sent = 0;
 #endif
@@ -113,7 +113,7 @@ uint8_t Send_Get_Event_Information(
     uint32_t device_id,
     BACNET_OBJECT_ID * lastReceivedObjectIdentifier)
 {
-    BACNET_ADDRESS dest = {0};
+    BACNET_PATH dest = {0};
     unsigned max_apdu = 0;
     uint8_t invoke_id = 0;
     bool status = false;

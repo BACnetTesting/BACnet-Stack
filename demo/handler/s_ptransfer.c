@@ -49,6 +49,7 @@
 
 /* This function is exported. Hence this unnecessary prototype. */
 uint8_t Send_Private_Transfer_Request(
+    PORT_SUPPORT *portParams,
     uint32_t device_id,
     uint16_t vendor_id,
     uint32_t service_number,
@@ -56,14 +57,15 @@ uint8_t Send_Private_Transfer_Request(
     DATABLOCK * block);
 
 uint8_t Send_Private_Transfer_Request(
+    PORT_SUPPORT *portParams,
     uint32_t device_id,
     uint16_t vendor_id,
     uint32_t service_number,
     char block_number,
     DATABLOCK * block)
 {       /* NULL=optional */
-    BACNET_ADDRESS dest;
-    BACNET_ADDRESS my_address;
+    BACNET_PATH dest;
+    //BACNET_PATH my_address;
     unsigned max_apdu = 0;
     uint8_t invoke_id = 0;
     bool status = false;
@@ -89,7 +91,7 @@ uint8_t Send_Private_Transfer_Request(
         datalink_get_my_address(&my_address);
         npdu_setup_npci_data(&npci_data, true, MESSAGE_PRIORITY_NORMAL);
         pdu_len =
-            npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest, &my_address,
+            npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest.adr, NULL,
             &npci_data);
         /* encode the APDU portion of the packet */
 
@@ -125,7 +127,7 @@ uint8_t Send_Private_Transfer_Request(
            max_apdu in the address binding table. */
 
         if ((unsigned) pdu_len < max_apdu) {
-            tsm_set_confirmed_unsegmented_transaction(invoke_id, &dest,
+            tsm_set_confirmed_unsegmented_transaction(portParams, invoke_id, &dest.localMac,
                 &npci_data, &Handler_Transmit_Buffer[0], (uint16_t) pdu_len);
             bytes_sent =
                 datalink_send_pdu(&dest, &npci_data,

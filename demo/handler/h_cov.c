@@ -51,7 +51,7 @@
 
 typedef struct BACnet_COV_Address {
     bool valid:1;
-    BACNET_ADDRESS dest;
+    BACNET_ROUTE destRoute ;
 } BACNET_COV_ADDRESS;
 
 /* note: This COV service only monitors the properties
@@ -88,18 +88,15 @@ static BACNET_COV_ADDRESS COV_Addresses[MAX_COV_ADDRESSES];
 *
 * @return true if valid address, false if not valid or not found
 */
-static BACNET_ADDRESS *cov_address_get(
+static BACNET_ROUTE *cov_address_get(
     int index)
 {
-    BACNET_ADDRESS *cov_dest = NULL;
-
     if (index < MAX_COV_ADDRESSES) {
         if (COV_Addresses[index].valid) {
-            cov_dest = &COV_Addresses[index].dest;
+            return &COV_Addresses[index].destRoute;
         }
     }
-
-    return cov_dest;
+    return NULL;
 }
 
 /**
@@ -144,14 +141,13 @@ static int cov_address_add(
     unsigned i = 0;
     bool found = false;
     bool valid = false;
-    BACNET_ADDRESS *cov_dest = NULL;
+    BACNET_ROUTE *cov_dest = NULL;
 
-    if (dest) {
         for (i = 0; i < MAX_COV_ADDRESSES; i++) {
             valid = COV_Addresses[i].valid;
             if (valid) {
-                cov_dest = &COV_Addresses[i].dest;
-                found = bacnet_address_same(dest, cov_dest);
+                cov_dest = &COV_Addresses[i].destRoute;
+                found = bacnet_path_same( &rxDetails->bacnetPath, &cov_dest->bacnetPath);
                 if (found) {
                     index = i;
                     break;
@@ -164,15 +160,14 @@ static int cov_address_add(
                 valid = COV_Addresses[i].valid;
                 if (!valid) {
                     index = i;
-                    cov_dest = &COV_Addresses[i].dest;
-                    bacnet_address_copy(cov_dest, dest);
+                    cov_dest = &COV_Addresses[i].destRoute;
+                    cov_dest->portParams = rxDetails->portParams;
+                    cov_dest->bacnetPath = rxDetails->bacnetPath;
                     COV_Addresses[i].valid = true;
                     break;
                 }
             }
         }
-    }
-
     return index;
 }
 
@@ -211,11 +206,11 @@ static int cov_encode_subscription(
     int len = 0;
     int apdu_len = 0;
     BACNET_OCTET_STRING octet_string;
-    BACNET_ADDRESS *dest = NULL;
+    BACNET_ROUTE *dest = NULL;
 
 
     /* FIXME: unused parameter */
-    max_apdu = max_apdu;
+    (void) max_apdu;
     if (!cov_subscription) {
         return 0;
     }
@@ -234,14 +229,14 @@ static int cov_encode_subscription(
     apdu_len += len;
     /* network-number Unsigned16, */
     /* -- A value of 0 indicates the local network */
-    len = encode_application_unsigned(&apdu[apdu_len], dest->net);
+    len = encode_application_unsigned(&apdu[apdu_len], dest->bacnetPath.glAdr.net);
     apdu_len += len;
     /* mac-address OCTET STRING */
     /* -- A string of length 0 indicates a broadcast */
-    if (dest->net) {
-        octetstring_init(&octet_string, &dest->adr[0], dest->len);
+    if (dest->bacnetPath.glAdr.net) {
+        octetstring_init(&octet_string, &dest->bacnetPath.glAdr.mac.bytes[0], dest->bacnetPath.glAdr.mac.len);
     } else {
-        octetstring_init(&octet_string, &dest->mac[0], dest->mac_len);
+        octetstring_init(&octet_string, &dest->bacnetPath.localMac.bytes[0], dest->bacnetPath.localMac.len);
     }
     len = encode_application_octet_string(&apdu[apdu_len], &octet_string);
     apdu_len += len;
@@ -352,7 +347,7 @@ void handler_cov_init(
 }
 
 static bool cov_list_subscribe(
-    BACNET_ADDRESS * src,
+    BACNET_PATH * src,
     BACNET_SUBSCRIBE_COV_DATA * cov_data,
     BACNET_ERROR_CLASS * error_class,
     BACNET_ERROR_CODE * error_code)
@@ -362,7 +357,7 @@ static bool cov_list_subscribe(
     int first_invalid_index = -1;
     bool found = true;
     bool address_match = false;
-    BACNET_ADDRESS *dest = NULL;
+    BACNET_ROUTE *dest = NULL;
 
     /* unable to subscribe - resources? */
     /* unable to cancel subscription - other? */
@@ -444,22 +439,26 @@ static bool cov_list_subscribe(
 }
 
 static bool cov_send_request(
+    PORT_SUPPORT *portParams,
     BACNET_COV_SUBSCRIPTION * cov_subscription,
     BACNET_PROPERTY_VALUE * value_list)
 {
     int len = 0;
     int pdu_len = 0;
     BACNET_NPCI_DATA npci_data;
-    BACNET_ADDRESS my_address;
+    //BACNET_GLOBAL_ADDRESS my_address;
+
+    // todo2, remove suppressions 4189, 4100
     int bytes_sent = 0;
     uint8_t invoke_id = 0;
     bool status = false;        /* return value */
     BACNET_COV_DATA cov_data;
-    BACNET_ADDRESS *dest = NULL;
+    BACNET_ROUTE *dest = NULL;
 
     if (!dcc_communication_enabled()) {
         return status;
     }
+
 #if PRINT_ENABLED
     fprintf(stderr, "COVnotification: requested\n");
 #endif
@@ -480,10 +479,10 @@ static bool cov_send_request(
         return false;
     }
 
-    datalink_get_my_address(&my_address);
+    // datalink_get_my_address(&my_address);
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
-        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], dest, &my_address,
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &dest->bacnetPath.glAdr, NULL, // &my_address,
         &npci_data);
     /* load the COV data structure for outgoing message */
     cov_data.subscriberProcessIdentifier =
@@ -529,6 +528,7 @@ static bool cov_send_request(
 COV_FAILED:
     return status;
 }
+
 
 static void cov_lifetime_expiration_handler(
     unsigned index,
@@ -614,7 +614,9 @@ void handler_cov_timer_seconds(
     }
 }
 
+
 bool handler_cov_fsm(
+    PORT_SUPPORT  *portParams,
     void)
 {
     static int index = 0;
@@ -633,11 +635,11 @@ bool handler_cov_fsm(
     } cov_task_state = COV_STATE_IDLE;
 
     switch (cov_task_state) {
-        case COV_STATE_IDLE:
-            index = 0;
-            cov_task_state = COV_STATE_MARK;
-            break;
-        case COV_STATE_MARK:
+    case COV_STATE_IDLE:
+        index = 0;
+        cov_task_state = COV_STATE_MARK;
+        break;
+    case COV_STATE_MARK:
             /* mark any subscriptions where the value has changed */
             if (COV_Subscriptions[index].flag.valid) {
                 object_type = (BACNET_OBJECT_TYPE)
@@ -651,15 +653,15 @@ bool handler_cov_fsm(
 #if PRINT_ENABLED
                     fprintf(stderr, "COVtask: Marking...\n");
 #endif
-                }
             }
-            index++;
-            if (index >= MAX_COV_SUBCRIPTIONS) {
-                index = 0;
-                cov_task_state = COV_STATE_CLEAR;
-            }
-            break;
-        case COV_STATE_CLEAR:
+        }
+        index++;
+        if (index >= MAX_COV_SUBCRIPTIONS) {
+            index = 0;
+            cov_task_state = COV_STATE_CLEAR;
+        }
+        break;
+    case COV_STATE_CLEAR:
             /* clear the COV flag after checking all subscriptions */
             if ((COV_Subscriptions[index].flag.valid) &&
                 (COV_Subscriptions[index].flag.send_requested)) {
@@ -669,14 +671,14 @@ bool handler_cov_fsm(
                     COV_Subscriptions[index].
                     monitoredObjectIdentifier.instance;
                 Device_COV_Clear(object_type, object_instance);
-            }
-            index++;
-            if (index >= MAX_COV_SUBCRIPTIONS) {
-                index = 0;
-                cov_task_state = COV_STATE_FREE;
-            }
-            break;
-        case COV_STATE_FREE:
+        }
+        index++;
+        if (index >= MAX_COV_SUBCRIPTIONS) {
+            index = 0;
+            cov_task_state = COV_STATE_FREE;
+        }
+        break;
+    case COV_STATE_FREE:
             /* confirmed notification house keeping */
             if ((COV_Subscriptions[index].flag.valid) &&
                 (COV_Subscriptions[index].flag.issueConfirmedNotifications) &&
@@ -901,7 +903,7 @@ COV_ABORT:
         }
     }
     pdu_len = npdu_len + apdu_len;
-        dlcb->optr = pdu_len;
+    dlcb->optr = pdu_len;
     bytes_sent =
         datalink_send_pdu(src, &npci_data, dlcb );
         

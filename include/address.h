@@ -29,93 +29,104 @@
 #include <stdbool.h>
 #include "bacdef.h"
 #include "readrange.h"
+#include "datalink.h"
 
+void address_init(
+    void);
 
-    void address_init(
-        void);
+void address_init_partial(
+    void);
 
-    void address_init_partial(
-        void);
+void address_add(
+    uint32_t device_id,
+    uint16_t max_apdu,
+    BACNET_ROUTE * src);
 
-    void address_add(
-        uint32_t device_id,
-        unsigned max_apdu,
-        BACNET_ADDRESS * src);
+void address_remove_device(
+    uint32_t device_id);
 
-    void address_remove_device(
-        uint32_t device_id);
+bool address_get_by_device(
+    uint32_t device_id,
+    uint16_t *max_apdu,
+    BACNET_ROUTE * src);
 
-    bool address_get_by_device(
-        uint32_t device_id,
-        unsigned *max_apdu,
-        BACNET_ADDRESS * src);
+bool address_get_route_from_global_addr(
+    const BACNET_GLOBAL_ADDRESS *globAdr,
+    BACNET_ROUTE * src);
 
-    bool address_get_by_index(
-        unsigned index,
-        uint32_t * device_id,
-        unsigned *max_apdu,
-        BACNET_ADDRESS * src);
+bool address_get_route_from_device_id(
+    const uint32_t device_id,
+    BACNET_ROUTE * src);
 
-    bool address_device_get_by_index(
-        unsigned index,
-        uint32_t * device_id,
-        uint32_t * device_ttl,
-        unsigned *max_apdu,
-        BACNET_ADDRESS * src);
+bool address_bound(
+    uint32_t device_id);
 
-    bool address_get_device_id(
-        BACNET_ADDRESS * src,
-        uint32_t * device_id);
+bool address_get_by_index(
+    unsigned objectIndex,
+    uint32_t * device_id,
+    uint16_t *max_apdu,
+    BACNET_ROUTE * src);
 
-    unsigned address_count(
-        void);
+bool address_device_get_by_index(
+    unsigned index,
+    uint32_t * device_id,
+    uint32_t * device_ttl,
+    uint16_t *max_apdu,
+    BACNET_ROUTE * src);
 
-    bool address_match(
-        BACNET_ADDRESS * dest,
-        BACNET_ADDRESS * src);
+bool address_get_device_id(
+    BACNET_PATH * src,
+    uint32_t * device_id);
 
-    bool address_bind_request(
-        uint32_t device_id,
-        unsigned *max_apdu,
-        BACNET_ADDRESS * src);
+unsigned address_count(
+    void);
 
-    bool address_device_bind_request(
-        uint32_t device_id,
-        uint32_t * device_ttl,
-        unsigned *max_apdu,
-        BACNET_ADDRESS * src);
+//bool mac_address_match(
+//    BACNET_PATH * dest,
+//    BACNET_PATH * src);
 
-    void address_add_binding(
-        uint32_t device_id,
-        unsigned max_apdu,
-        BACNET_ADDRESS * src);
+bool address_bind_request(
+    uint32_t device_id,
+    uint16_t *max_apdu,
+    BACNET_ROUTE * src);
 
-    int address_list_encode(
-        uint8_t * apdu,
-        unsigned apdu_len);
+bool address_device_bind_request(
+    uint32_t device_id,
+    uint32_t * device_ttl,
+    uint16_t *max_apdu,
+    BACNET_ROUTE * src);
 
-    int rr_address_list_encode(
-        uint8_t * apdu,
-        BACNET_READ_RANGE_DATA * pRequest);
+void address_add_binding(
+    uint32_t device_id,
+    uint16_t max_apdu,
+    BACNET_ROUTE * src);
 
-    void address_set_device_TTL(
-        uint32_t device_id,
-        uint32_t TimeOut,
-        bool StaticFlag);
+int address_list_encode(
+    uint8_t * apdu,
+    uint16_t apdu_len);
 
-    void address_cache_timer(
-        uint16_t uSeconds);
+int rr_address_list_encode(
+    uint8_t * apdu,
+    BACNET_READ_RANGE_DATA * pRequest);
 
-    void address_mac_init(
-        BACNET_MAC_ADDRESS *mac,
-        uint8_t *adr,
-        uint8_t len);
+void address_set_device_TTL(
+    uint32_t device_id,
+    uint32_t TimeOut,
+    bool StaticFlag);
 
-    bool address_mac_from_ascii(
-        BACNET_MAC_ADDRESS *mac,
-        char *arg);
+void address_cache_timer(
+    uint16_t uSeconds);
 
-    void address_protected_entry_index_set(uint32_t top_protected_entry_index);
-    void address_own_device_id_set(uint32_t own_id);
+//void address_mac_init(
+//    BACNET_PATH *mac,
+//    uint8_t *adr,
+//    uint8_t len);
+
+bool address_mac_from_ascii(
+    BACNET_MAC_ADDRESS *mac,
+    char *arg);
+
+void address_protected_entry_index_set(uint32_t top_protected_entry_index);
+void address_own_device_id_set(uint32_t own_id);
 
 #endif

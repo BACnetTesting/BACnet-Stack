@@ -50,11 +50,11 @@
 void handler_who_is(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src)
+    BACNET_ROUTE * src)
 {
-    int len = 0;
-    int32_t low_limit = 0;
-    int32_t high_limit = 0;
+    int len ;
+    int32_t low_limit ;
+    int32_t high_limit ;
 
     (void) src;
     len =
@@ -83,11 +83,11 @@ void handler_who_is(
 void handler_who_is_unicast(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src)
+    BACNET_ROUTE * src)
 {
-    int len = 0;
-    int32_t low_limit = 0;
-    int32_t high_limit = 0;
+    int len ;
+    int32_t low_limit ;
+    int32_t high_limit ;
 
     len =
         whois_decode_service_request(service_request, service_len, &low_limit,
@@ -176,7 +176,7 @@ static void check_who_is_for_routing(
 void handler_who_is_bcast_for_routing(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src)
+    BACNET_ROUTE * src)
 {
     check_who_is_for_routing(service_request, service_len, src, false);
 }
@@ -194,9 +194,10 @@ void handler_who_is_bcast_for_routing(
  *                 response will be sent back to.
  */
 void handler_who_is_unicast_for_routing(
+    PORT_SUPPORT *portParams,
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src)
+    BACNET_GLOBAL_ADDRESS * src)
 {
     check_who_is_for_routing(service_request, service_len, src, true);
 }

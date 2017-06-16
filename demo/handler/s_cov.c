@@ -55,9 +55,9 @@
  * @return Size of the message sent (bytes), or a negative value on error.
  */
 int ucov_notify_encode_pdu(
-    uint8_t * buffer,
+	DLCB *dlcb, // todo3 why is this passed to us?
     unsigned buffer_len,
-    BACNET_ADDRESS * dest,
+    BACNET_PATH * dest,
     BACNET_NPCI_DATA * npci_data,
     BACNET_COV_DATA * cov_data)
 {
@@ -67,14 +67,16 @@ int ucov_notify_encode_pdu(
     datalink_get_my_address(&my_address);
 
     /* unconfirmed is a broadcast */
-    datalink_get_broadcast_address(dest);
+    // datalink_get_broadcast_address(dest);
+    bacnet_path_set_broadcast_global(dest);
+
     /* encode the NPDU portion of the packet */
     npdu_setup_npci_data(npci_data, false, MESSAGE_PRIORITY_NORMAL);
-    pdu_len = npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], dest, &my_address, npci_data);
+    pdu_len = npdu_encode_pdu(dlcb->Handler_Transmit_Buffer, &dest->glAdr, NULL, npci_data);
 
     /* encode the APDU portion of the packet */
     len = ucov_notify_encode_apdu(&buffer[pdu_len],
-        buffer_len - pdu_len, cov_data);
+        dlcb->used - pdu_len, cov_data);
     if (len) {
         pdu_len += len;
     } else {
@@ -93,13 +95,13 @@ int ucov_notify_encode_pdu(
  * @return Size of the message sent (bytes), or a negative value on error.
  */
 int Send_UCOV_Notify(
-    uint8_t * buffer,
+    PORT_SUPPORT *portParams,
     unsigned buffer_len,
     DLCB *dlcb,
     BACNET_COV_DATA * cov_data)
 {
     int pdu_len = 0;
-    BACNET_ADDRESS dest;
+    BACNET_PATH dest;
     int bytes_sent = 0;
     BACNET_NPCI_DATA npci_data;
 
@@ -119,6 +121,7 @@ int Send_UCOV_Notify(
  *         no slot is available from the tsm for sending.
  */
 uint8_t Send_COV_Subscribe(
+    PORT_SUPPORT *portParams,
     uint32_t device_id,
     BACNET_SUBSCRIBE_COV_DATA * cov_data)
 {
@@ -145,12 +148,11 @@ uint8_t Send_COV_Subscribe(
         datalink_get_my_address(&my_address);
         npdu_setup_npci_data(&npci_data, true, MESSAGE_PRIORITY_NORMAL);
         pdu_len =
-            npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest, &my_address,
-            &npci_data);
+            npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &dest, NULL,
+                            &npci_data);
         /* encode the APDU portion of the packet */
         len =
-            cov_subscribe_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-            sizeof(Handler_Transmit_Buffer)-pdu_len, invoke_id, cov_data);
+            cov_subscribe_encode_apdu(dlcb, invoke_id, cov_data);
         pdu_len += len;
         /* will it fit in the sender?
            note: if there is a bottleneck router in between
@@ -158,11 +160,13 @@ uint8_t Send_COV_Subscribe(
            we have a way to check for that and update the
            max_apdu in the address binding table. */
         if ((unsigned) pdu_len < max_apdu) {
+           dlcb->optr = pdu_len ;
+           // todo1, make sure other occurences set optr before submittal to tsm!
             tsm_set_confirmed_unsegmented_transaction(invoke_id, &dest,
-                &npci_data, &Handler_Transmit_Buffer[0], (uint16_t) pdu_len);
+                &npci_data, dlcb );
             bytes_sent =
                 datalink_send_pdu(&dest, &npci_data,
-                &Handler_Transmit_Buffer[0], pdu_len);
+                dlcb );
             if (bytes_sent <= 0) {
 #if PRINT_ENABLED
                 fprintf(stderr, "Failed to Send SubscribeCOV Request (%s)!\n",

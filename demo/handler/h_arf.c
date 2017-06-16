@@ -97,6 +97,7 @@ shall be TRUE, otherwise FALSE.
 
 #if defined(BACFILE)
 void handler_atomic_read_file(
+	BACNET_ROUTE *rxDetails, 
     uint8_t * service_request,
     uint16_t service_len,
     BACNET_ADDRESS * src,
@@ -108,7 +109,7 @@ void handler_atomic_read_file(
     bool error = false;
     int bytes_sent = 0;
     BACNET_NPCI_DATA npci_data;
-    BACNET_ADDRESS my_address;
+    // BACNET_PATH my_address;
     BACNET_ERROR_CLASS error_class = ERROR_CLASS_OBJECT;
     BACNET_ERROR_CODE error_code = ERROR_CODE_UNKNOWN_OBJECT;
 
@@ -119,10 +120,10 @@ void handler_atomic_read_file(
     fprintf(stderr, "Received Atomic-Read-File Request!\n");
 #endif
     /* encode the NPDU portion of the packet */
-    datalink_get_my_address(&my_address);
+    // datalink_get_my_address(&my_address);
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
-        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], src, &my_address,
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &rxDetails->bacnetPath.glAdr, NULL, // &my_address,
         &npci_data);
     if (service_data->segmented_message) {
         len =
@@ -212,7 +213,7 @@ void handler_atomic_read_file(
     }
   ARF_ABORT:
     pdu_len += len;
-        dlcb->optr = pdu_len;
+    dlcb->optr = pdu_len;
     bytes_sent =
         datalink_send_pdu(src, &npci_data, dlcb );
         
@@ -222,6 +223,5 @@ void handler_atomic_read_file(
     }
 #endif
 
-    return;
 }
 #endif

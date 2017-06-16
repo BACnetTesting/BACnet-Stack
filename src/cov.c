@@ -142,7 +142,7 @@ int ccov_notify_encode_apdu(
 
     if (apdu && data && memcopylen(0, max_apdu_len, 4)) {
         apdu[0] = PDU_TYPE_CONFIRMED_SERVICE_REQUEST;
-        apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU);
+        apdu[1] = encode_max_segs_max_apdu(0, MAX_LPDU_IP); // todo1 search for all other occurrences
         apdu[2] = invoke_id;
         apdu[3] = SERVICE_CONFIRMED_COV_NOTIFICATION;
         apdu_len = 4;
@@ -364,7 +364,7 @@ int cov_subscribe_encode_apdu(
 
     if (apdu && data) {
         apdu[0] = PDU_TYPE_CONFIRMED_SERVICE_REQUEST;
-        apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU);
+        apdu[1] = encode_max_segs_max_apdu(0, MAX_LPDU_IP);
         apdu[2] = invoke_id;
         apdu[3] = SERVICE_CONFIRMED_SUBSCRIBE_COV;
         apdu_len = 4;
@@ -499,7 +499,7 @@ int cov_subscribe_property_encode_apdu(
 
     if (apdu && data) {
         apdu[0] = PDU_TYPE_CONFIRMED_SERVICE_REQUEST;
-        apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU);
+        apdu[1] = encode_max_segs_max_apdu(0, MAX_LPDU_IP);
         apdu[2] = invoke_id;
         apdu[3] = SERVICE_CONFIRMED_SUBSCRIBE_COV_PROPERTY;
         apdu_len = 4;
@@ -715,7 +715,7 @@ int ccov_notify_decode_apdu(
     /* optional checking - most likely was already done prior to this call */
     if (apdu[0] != PDU_TYPE_CONFIRMED_SERVICE_REQUEST)
         return -2;
-    /*  apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU); */
+    /*  apdu[1] = encode_max_segs_max_apdu(0, MAX_LPDU_IP); */
     *invoke_id = apdu[2];       /* invoke id - filled in by net layer */
     if (apdu[3] != SERVICE_CONFIRMED_COV_NOTIFICATION)
         return -3;
@@ -771,7 +771,7 @@ int cov_subscribe_decode_apdu(
     /* optional checking - most likely was already done prior to this call */
     if (apdu[0] != PDU_TYPE_CONFIRMED_SERVICE_REQUEST)
         return -2;
-    /*  apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU); */
+    /*  apdu[1] = encode_max_segs_max_apdu(0, MAX_LPDU_IP); */
     *invoke_id = apdu[2];       /* invoke id - filled in by net layer */
     if (apdu[3] != SERVICE_CONFIRMED_SUBSCRIBE_COV)
         return -3;
@@ -801,7 +801,7 @@ int cov_subscribe_property_decode_apdu(
     /* optional checking - most likely was already done prior to this call */
     if (apdu[0] != PDU_TYPE_CONFIRMED_SERVICE_REQUEST)
         return -2;
-    /*  apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU); */
+    /*  apdu[1] = encode_max_segs_max_apdu(0, MAX_LPDU_IP); */
     *invoke_id = apdu[2];       /* invoke id - filled in by net layer */
     if (apdu[3] != SERVICE_CONFIRMED_SUBSCRIBE_COV_PROPERTY)
         return -3;
@@ -863,7 +863,7 @@ void testUCOVNotifyData(
     Test * pTest,
     BACNET_COV_DATA * data)
 {
-    uint8_t apdu[480] = { 0 };
+    uint8_t apdu[480] = { 0 }; // todo1 a problem here...?
     int len = 0;
     int apdu_len = 0;
     BACNET_COV_DATA test_data;

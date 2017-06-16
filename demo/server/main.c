@@ -75,6 +75,7 @@
 
 /** Buffer used for receiving */
 static uint8_t Rx_Buf[MAX_MPDU] = { 0 };
+static PORT_SUPPORT ourDatalink;
 
 /** Initialize the handlers we will utilize.
  * @see Device_Init, apdu_set_unconfirmed_handler, apdu_set_confirmed_handler
@@ -256,6 +257,7 @@ int main(
     address_init();
     Init_Service_Handlers();
     dlenv_init();
+    InitDatalink(&ourDatalink, PF_BBMD, config.localBACnetPort);
     atexit(datalink_cleanup);
     /* configure the timeout values */
     last_seconds = time(NULL);

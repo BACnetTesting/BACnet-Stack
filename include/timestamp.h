@@ -52,9 +52,9 @@ void bacapp_timestamp_time_set(
     BACNET_TIMESTAMP * dest,
     BACNET_TIME *btime);
 
-    void bacapp_timestamp_datetime_set(
-        BACNET_TIMESTAMP * dest,
-        BACNET_DATE_TIME * bdateTime);
+void bacapp_timestamp_datetime_set(
+    BACNET_TIMESTAMP * dest,
+    BACNET_DATE_TIME * bdateTime);
 
 void bacapp_timestamp_copy(
     BACNET_TIMESTAMP * dest,

@@ -71,13 +71,21 @@ typedef struct BACnet_TSM_Data {
     uint8_t InvokeID;
     /* state that the TSM is in */
     BACNET_TSM_STATE state;
+
+
     /* the address we sent it to */
-    BACNET_ADDRESS dest;
+//    BACNET_ROUTE destRoute;
     /* the network layer info */
-    BACNET_NPCI_DATA npci_data;
+//    BACNET_NPCI_DATA npdu_data;
     /* copy of the APDU, should we need to send it again */
-    uint8_t apdu[MAX_PDU];
-    unsigned apdu_len;
+    // uint8_t apdu[MAX_PDU];
+    // unsigned apdu_len;
+
+    // no, we are going to use allocated .. rolling up the above
+    DLCB *dlcb2;
+
+    uint8_t autoClear:1 ;
+
 } BACNET_TSM_DATA;
 
 typedef void (
@@ -94,6 +102,7 @@ typedef void (
     uint8_t tsm_transaction_idle_count(
         void);
     void tsm_timer_milliseconds(
+    PORT_SUPPORT  *portParams,
         uint16_t milliseconds);
 /* free the invoke ID when the reply comes back */
     void tsm_free_invoke_id(

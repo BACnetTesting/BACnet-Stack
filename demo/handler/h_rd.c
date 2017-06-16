@@ -59,31 +59,31 @@
  *
  * @param service_request [in] The contents of the service request.
  * @param service_len [in] The length of the service_request.
- * @param src [in] BACNET_ADDRESS of the source of the message
+ * @param src [in] BACNET_ROUTE of the source of the message
  * @param service_data [in] The BACNET_CONFIRMED_SERVICE_DATA information
  *                          decoded from the APDU header of this message.
  */
 void handler_reinitialize_device(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src,
+    BACNET_ROUTE * src,
     BACNET_CONFIRMED_SERVICE_DATA * service_data)
 {
     BACNET_REINITIALIZE_DEVICE_DATA rd_data;
     int len = 0;
     int pdu_len = 0;
     BACNET_NPCI_DATA npci_data;
-    BACNET_ADDRESS my_address;
+    // BACNET_PATH my_address;
 
     DLCB *dlcb = alloc_dlcb_response('e', src);
     if (dlcb == NULL) return;
 
     /* encode the NPDU portion of the packet */
-    datalink_get_my_address(&my_address);
+    // datalink_get_my_address(&my_address);
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
-        npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
-        &npci_data);
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &src->bacnetPath.glAdr, NULL, // &my_address,
+            &npci_data);
 #if PRINT_ENABLED
     fprintf(stderr, "ReinitializeDevice!\n");
 #endif
@@ -132,8 +132,9 @@ void handler_reinitialize_device(
         fprintf(stderr,
             "ReinitializeDevice: Sending Reject - undefined enumeration\n");
 #endif
-    } else {
-#if BAC_ROUTING
+    }
+    else {
+#if ( BAC_ROUTING == 1 )
         /* Check to see if the current Device supports this service. */
         len =
             Routed_Device_Service_Approval
@@ -145,13 +146,14 @@ void handler_reinitialize_device(
 
         if (Device_Reinitialize(&rd_data)) {
             len =
-                encode_simple_ack(&Handler_Transmit_Buffer[pdu_len],
-                service_data->invoke_id,
-                SERVICE_CONFIRMED_REINITIALIZE_DEVICE);
+                encode_simple_ack(&dlcb->Handler_Transmit_Buffer[pdu_len],
+                    service_data->invoke_id,
+                    SERVICE_CONFIRMED_REINITIALIZE_DEVICE);
 #if PRINT_ENABLED
             fprintf(stderr, "ReinitializeDevice: Sending Simple Ack!\n");
 #endif
-        } else {
+        }
+        else {
             len =
                 bacerror_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
                     service_data->invoke_id, SERVICE_CONFIRMED_REINITIALIZE_DEVICE,
@@ -164,7 +166,7 @@ void handler_reinitialize_device(
 
 RD_ABORT:
     pdu_len += len;
-        dlcb->optr = pdu_len;
+    dlcb->optr = pdu_len;
     len =
         datalink_send_pdu(src, &npci_data, dlcb);
 

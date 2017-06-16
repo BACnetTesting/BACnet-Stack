@@ -53,7 +53,7 @@ void handler_get_alarm_summary_set(
 void handler_get_alarm_summary(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src,
+    BACNET_ROUTE * src,
     BACNET_CONFIRMED_SERVICE_DATA * service_data)
 {
     int len = 0;
@@ -64,18 +64,18 @@ void handler_get_alarm_summary(
     unsigned i = 0;
     unsigned j = 0;
     bool error = false;
-    BACNET_ADDRESS my_address;
+    //BACNET_GLOBAL_ADDRESS my_address;
     BACNET_NPCI_DATA npci_data;
     BACNET_GET_ALARM_SUMMARY_DATA getalarm_data;
 
 
 
     /* encode the NPDU portion of the packet */
-    datalink_get_my_address(&my_address);
+    //datalink_get_my_address(&my_address);
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
-        npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
-        &npci_data);
+        npdu_encode_pdu(&Handler_Transmit_Buffer[0], &src->bacnetPath->adr, NULL,
+                        &npci_data);
     if (service_data->segmented_message) {
         /* we don't support segmentation - send an abort */
         apdu_len =

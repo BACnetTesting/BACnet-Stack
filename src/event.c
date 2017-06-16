@@ -970,7 +970,7 @@ void testBaseEventState(
 void testEventEventState(
     Test * pTest)
 {
-    uint8_t buffer[MAX_APDU];
+    uint8_t buffer[MAX_LPDU_IP];
     int inLen;
     int outLen;
     BACNET_CHARACTER_STRING messageText;
@@ -1050,7 +1050,7 @@ void testEventEventState(
     data.timeStamp.value.dateTime.date.wday = 1;
     data.timeStamp.value.dateTime.date.year = 1945;
 
-    memset(buffer, 0, MAX_APDU);
+    memset(buffer, 0, MAX_LPDU_IP);
     inLen = event_notify_encode_service_request(&buffer[0], &data);
 
     memset(&data2, 0, sizeof(data2));
@@ -1104,7 +1104,7 @@ void testEventEventState(
     bitstring_set_bit(&data.notificationParams.changeOfBitstring.statusFlags,
                       STATUS_FLAG_OUT_OF_SERVICE, false);
 
-    memset(buffer, 0, MAX_APDU);
+    memset(buffer, 0, MAX_LPDU_IP);
     inLen = event_notify_encode_service_request(&buffer[0], &data);
 
     memset(&data2, 0, sizeof(data2));
@@ -1115,21 +1115,21 @@ void testEventEventState(
     testBaseEventState(pTest);
 
     ct_test(pTest,
-        bitstring_same(&data.notificationParams.changeOfBitstring.
-            referencedBitString,
-            &data2.notificationParams.changeOfBitstring.referencedBitString));
+            bitstring_same(&data.notificationParams.changeOfBitstring.
+                           referencedBitString,
+                           &data2.notificationParams.changeOfBitstring.referencedBitString));
 
     ct_test(pTest,
-        bitstring_same(&data.notificationParams.changeOfBitstring.statusFlags,
-            &data2.notificationParams.changeOfBitstring.statusFlags));
+            bitstring_same(&data.notificationParams.changeOfBitstring.statusFlags,
+                           &data2.notificationParams.changeOfBitstring.statusFlags));
 
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
     /*
      ** Event Type = EVENT_CHANGE_OF_VALUE - float value
      */
@@ -1141,15 +1141,15 @@ void testEventEventState(
     bitstring_init(&data.notificationParams.changeOfValue.statusFlags);
 
     bitstring_set_bit(&data.notificationParams.changeOfValue.statusFlags,
-        STATUS_FLAG_IN_ALARM, true);
+                      STATUS_FLAG_IN_ALARM, true);
     bitstring_set_bit(&data.notificationParams.changeOfValue.statusFlags,
-        STATUS_FLAG_FAULT, false);
+                      STATUS_FLAG_FAULT, false);
     bitstring_set_bit(&data.notificationParams.changeOfValue.statusFlags,
-        STATUS_FLAG_OVERRIDDEN, false);
+                      STATUS_FLAG_OVERRIDDEN, false);
     bitstring_set_bit(&data.notificationParams.changeOfValue.statusFlags,
-        STATUS_FLAG_OUT_OF_SERVICE, false);
+                      STATUS_FLAG_OUT_OF_SERVICE, false);
 
-    memset(buffer, 0, MAX_APDU);
+    memset(buffer, 0, MAX_LPDU_IP);
     inLen = event_notify_encode_service_request(&buffer[0], &data);
 
     memset(&data2, 0, sizeof(data2));
@@ -1160,16 +1160,16 @@ void testEventEventState(
     testBaseEventState(pTest);
 
     ct_test(pTest,
-        bitstring_same(&data.notificationParams.changeOfValue.statusFlags,
-            &data2.notificationParams.changeOfValue.statusFlags));
+            bitstring_same(&data.notificationParams.changeOfValue.statusFlags,
+                           &data2.notificationParams.changeOfValue.statusFlags));
 
     ct_test(pTest,
-        data.notificationParams.changeOfValue.tag ==
-        data2.notificationParams.changeOfValue.tag);
+            data.notificationParams.changeOfValue.tag ==
+            data2.notificationParams.changeOfValue.tag);
 
     ct_test(pTest,
-        data.notificationParams.changeOfValue.newValue.changeValue ==
-        data2.notificationParams.changeOfValue.newValue.changeValue);
+            data.notificationParams.changeOfValue.newValue.changeValue ==
+            data2.notificationParams.changeOfValue.newValue.changeValue);
 
 
 
@@ -1180,17 +1180,17 @@ void testEventEventState(
     data.notificationParams.changeOfValue.tag = CHANGE_OF_VALUE_BITS;
 
     bitstring_init(&data.notificationParams.changeOfValue.
-        newValue.changedBits);
+                   newValue.changedBits);
     bitstring_set_bit(&data.notificationParams.changeOfValue.
-        newValue.changedBits, 0, true);
+                      newValue.changedBits, 0, true);
     bitstring_set_bit(&data.notificationParams.changeOfValue.
-        newValue.changedBits, 1, false);
+                      newValue.changedBits, 1, false);
     bitstring_set_bit(&data.notificationParams.changeOfValue.
-        newValue.changedBits, 2, false);
+                      newValue.changedBits, 2, false);
     bitstring_set_bit(&data.notificationParams.changeOfValue.
-        newValue.changedBits, 3, false);
+                      newValue.changedBits, 3, false);
 
-    memset(buffer, 0, MAX_APDU);
+    memset(buffer, 0, MAX_LPDU_IP);
     inLen = event_notify_encode_service_request(&buffer[0], &data);
 
     memset(&data2, 0, sizeof(data2));
@@ -1201,25 +1201,25 @@ void testEventEventState(
     testBaseEventState(pTest);
 
     ct_test(pTest,
-        bitstring_same(&data.notificationParams.changeOfValue.statusFlags,
-            &data2.notificationParams.changeOfValue.statusFlags));
+            bitstring_same(&data.notificationParams.changeOfValue.statusFlags,
+                           &data2.notificationParams.changeOfValue.statusFlags));
 
     ct_test(pTest,
-        data.notificationParams.changeOfValue.tag ==
-        data2.notificationParams.changeOfValue.tag);
+            data.notificationParams.changeOfValue.tag ==
+            data2.notificationParams.changeOfValue.tag);
 
     ct_test(pTest,
-        bitstring_same(&data.notificationParams.changeOfValue.newValue.
-            changedBits,
-            &data2.notificationParams.changeOfValue.newValue.changedBits));
+            bitstring_same(&data.notificationParams.changeOfValue.newValue.
+                           changedBits,
+                           &data2.notificationParams.changeOfValue.newValue.changedBits));
 
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
     /*
      ** Event Type = EVENT_FLOATING_LIMIT
      */
@@ -1231,15 +1231,15 @@ void testEventEventState(
     bitstring_init(&data.notificationParams.floatingLimit.statusFlags);
 
     bitstring_set_bit(&data.notificationParams.floatingLimit.statusFlags,
-        STATUS_FLAG_IN_ALARM, true);
+                      STATUS_FLAG_IN_ALARM, true);
     bitstring_set_bit(&data.notificationParams.floatingLimit.statusFlags,
-        STATUS_FLAG_FAULT, false);
+                      STATUS_FLAG_FAULT, false);
     bitstring_set_bit(&data.notificationParams.floatingLimit.statusFlags,
-        STATUS_FLAG_OVERRIDDEN, false);
+                      STATUS_FLAG_OVERRIDDEN, false);
     bitstring_set_bit(&data.notificationParams.floatingLimit.statusFlags,
-        STATUS_FLAG_OUT_OF_SERVICE, false);
+                      STATUS_FLAG_OUT_OF_SERVICE, false);
 
-    memset(buffer, 0, MAX_APDU);
+    memset(buffer, 0, MAX_LPDU_IP);
     inLen = event_notify_encode_service_request(&buffer[0], &data);
 
     memset(&data2, 0, sizeof(data2));
@@ -1250,28 +1250,28 @@ void testEventEventState(
     testBaseEventState(pTest);
 
     ct_test(pTest,
-        data.notificationParams.floatingLimit.referenceValue ==
-        data2.notificationParams.floatingLimit.referenceValue);
+            data.notificationParams.floatingLimit.referenceValue ==
+            data2.notificationParams.floatingLimit.referenceValue);
 
     ct_test(pTest,
-        data.notificationParams.floatingLimit.setPointValue ==
-        data2.notificationParams.floatingLimit.setPointValue);
+            data.notificationParams.floatingLimit.setPointValue ==
+            data2.notificationParams.floatingLimit.setPointValue);
 
     ct_test(pTest,
-        data.notificationParams.floatingLimit.errorLimit ==
-        data2.notificationParams.floatingLimit.errorLimit);
+            data.notificationParams.floatingLimit.errorLimit ==
+            data2.notificationParams.floatingLimit.errorLimit);
     ct_test(pTest,
-        bitstring_same(&data.notificationParams.floatingLimit.statusFlags,
-            &data2.notificationParams.floatingLimit.statusFlags));
+            bitstring_same(&data.notificationParams.floatingLimit.statusFlags,
+                           &data2.notificationParams.floatingLimit.statusFlags));
 
 
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
     /*
      ** Event Type = EVENT_OUT_OF_RANGE
      */
@@ -1283,15 +1283,15 @@ void testEventEventState(
     bitstring_init(&data.notificationParams.outOfRange.statusFlags);
 
     bitstring_set_bit(&data.notificationParams.outOfRange.statusFlags,
-        STATUS_FLAG_IN_ALARM, true);
+                      STATUS_FLAG_IN_ALARM, true);
     bitstring_set_bit(&data.notificationParams.outOfRange.statusFlags,
-        STATUS_FLAG_FAULT, false);
+                      STATUS_FLAG_FAULT, false);
     bitstring_set_bit(&data.notificationParams.outOfRange.statusFlags,
-        STATUS_FLAG_OVERRIDDEN, false);
+                      STATUS_FLAG_OVERRIDDEN, false);
     bitstring_set_bit(&data.notificationParams.outOfRange.statusFlags,
-        STATUS_FLAG_OUT_OF_SERVICE, false);
+                      STATUS_FLAG_OUT_OF_SERVICE, false);
 
-    memset(buffer, 0, MAX_APDU);
+    memset(buffer, 0, MAX_LPDU_IP);
     inLen = event_notify_encode_service_request(&buffer[0], &data);
 
     memset(&data2, 0, sizeof(data2));
@@ -1302,27 +1302,27 @@ void testEventEventState(
     testBaseEventState(pTest);
 
     ct_test(pTest,
-        data.notificationParams.outOfRange.deadband ==
-        data2.notificationParams.outOfRange.deadband);
+            data.notificationParams.outOfRange.deadband ==
+            data2.notificationParams.outOfRange.deadband);
 
     ct_test(pTest,
-        data.notificationParams.outOfRange.exceededLimit ==
-        data2.notificationParams.outOfRange.exceededLimit);
+            data.notificationParams.outOfRange.exceededLimit ==
+            data2.notificationParams.outOfRange.exceededLimit);
 
     ct_test(pTest,
-        data.notificationParams.outOfRange.exceedingValue ==
-        data2.notificationParams.outOfRange.exceedingValue);
+            data.notificationParams.outOfRange.exceedingValue ==
+            data2.notificationParams.outOfRange.exceedingValue);
     ct_test(pTest,
-        bitstring_same(&data.notificationParams.outOfRange.statusFlags,
-            &data2.notificationParams.outOfRange.statusFlags));
+            bitstring_same(&data.notificationParams.outOfRange.statusFlags,
+                           &data2.notificationParams.outOfRange.statusFlags));
 
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
     /*
      ** Event Type = EVENT_CHANGE_OF_LIFE_SAFETY
      */
@@ -1337,15 +1337,15 @@ void testEventEventState(
     bitstring_init(&data.notificationParams.changeOfLifeSafety.statusFlags);
 
     bitstring_set_bit(&data.notificationParams.changeOfLifeSafety.statusFlags,
-        STATUS_FLAG_IN_ALARM, true);
+                      STATUS_FLAG_IN_ALARM, true);
     bitstring_set_bit(&data.notificationParams.changeOfLifeSafety.statusFlags,
-        STATUS_FLAG_FAULT, false);
+                      STATUS_FLAG_FAULT, false);
     bitstring_set_bit(&data.notificationParams.changeOfLifeSafety.statusFlags,
-        STATUS_FLAG_OVERRIDDEN, false);
+                      STATUS_FLAG_OVERRIDDEN, false);
     bitstring_set_bit(&data.notificationParams.changeOfLifeSafety.statusFlags,
-        STATUS_FLAG_OUT_OF_SERVICE, false);
+                      STATUS_FLAG_OUT_OF_SERVICE, false);
 
-    memset(buffer, 0, MAX_APDU);
+    memset(buffer, 0, MAX_LPDU_IP);
     inLen = event_notify_encode_service_request(&buffer[0], &data);
 
     memset(&data2, 0, sizeof(data2));
@@ -1356,28 +1356,28 @@ void testEventEventState(
     testBaseEventState(pTest);
 
     ct_test(pTest,
-        data.notificationParams.changeOfLifeSafety.newMode ==
-        data2.notificationParams.changeOfLifeSafety.newMode);
+            data.notificationParams.changeOfLifeSafety.newMode ==
+            data2.notificationParams.changeOfLifeSafety.newMode);
 
     ct_test(pTest,
-        data.notificationParams.changeOfLifeSafety.newState ==
-        data2.notificationParams.changeOfLifeSafety.newState);
+            data.notificationParams.changeOfLifeSafety.newState ==
+            data2.notificationParams.changeOfLifeSafety.newState);
 
     ct_test(pTest,
-        data.notificationParams.changeOfLifeSafety.operationExpected ==
-        data2.notificationParams.changeOfLifeSafety.operationExpected);
+            data.notificationParams.changeOfLifeSafety.operationExpected ==
+            data2.notificationParams.changeOfLifeSafety.operationExpected);
 
     ct_test(pTest,
-        bitstring_same(&data.notificationParams.changeOfLifeSafety.statusFlags,
-            &data2.notificationParams.changeOfLifeSafety.statusFlags));
+            bitstring_same(&data.notificationParams.changeOfLifeSafety.statusFlags,
+                           &data2.notificationParams.changeOfLifeSafety.statusFlags));
 
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
     /*
      ** Event Type = EVENT_UNSIGNED_RANGE
      */
@@ -1388,15 +1388,15 @@ void testEventEventState(
     bitstring_init(&data.notificationParams.unsignedRange.statusFlags);
 
     bitstring_set_bit(&data.notificationParams.unsignedRange.statusFlags,
-        STATUS_FLAG_IN_ALARM, true);
+                      STATUS_FLAG_IN_ALARM, true);
     bitstring_set_bit(&data.notificationParams.unsignedRange.statusFlags,
-        STATUS_FLAG_FAULT, false);
+                      STATUS_FLAG_FAULT, false);
     bitstring_set_bit(&data.notificationParams.unsignedRange.statusFlags,
-        STATUS_FLAG_OVERRIDDEN, false);
+                      STATUS_FLAG_OVERRIDDEN, false);
     bitstring_set_bit(&data.notificationParams.unsignedRange.statusFlags,
-        STATUS_FLAG_OUT_OF_SERVICE, false);
+                      STATUS_FLAG_OUT_OF_SERVICE, false);
 
-    memset(buffer, 0, MAX_APDU);
+    memset(buffer, 0, MAX_LPDU_IP);
     inLen = event_notify_encode_service_request(&buffer[0], &data);
 
     memset(&data2, 0, sizeof(data2));
@@ -1407,24 +1407,24 @@ void testEventEventState(
     testBaseEventState(pTest);
 
     ct_test(pTest,
-        data.notificationParams.unsignedRange.exceedingValue ==
-        data2.notificationParams.unsignedRange.exceedingValue);
+            data.notificationParams.unsignedRange.exceedingValue ==
+            data2.notificationParams.unsignedRange.exceedingValue);
 
     ct_test(pTest,
-        data.notificationParams.unsignedRange.exceededLimit ==
-        data2.notificationParams.unsignedRange.exceededLimit);
+            data.notificationParams.unsignedRange.exceededLimit ==
+            data2.notificationParams.unsignedRange.exceededLimit);
 
     ct_test(pTest,
-        bitstring_same(&data.notificationParams.unsignedRange.statusFlags,
-            &data2.notificationParams.unsignedRange.statusFlags));
+            bitstring_same(&data.notificationParams.unsignedRange.statusFlags,
+                           &data2.notificationParams.unsignedRange.statusFlags));
 
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
-        /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
     /*
      ** Event Type = EVENT_BUFFER_READY
      */
@@ -1443,7 +1443,7 @@ void testEventEventState(
         PROP_PRESENT_VALUE;
     data.notificationParams.bufferReady.bufferProperty.arrayIndex = 0;
 
-    memset(buffer, 0, MAX_APDU);
+    memset(buffer, 0, MAX_LPDU_IP);
     inLen = event_notify_encode_service_request(&buffer[0], &data);
 
     memset(&data2, 0, sizeof(data2));

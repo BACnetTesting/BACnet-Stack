@@ -1069,7 +1069,7 @@ int TL_encode_by_position(
     uint32_t uiRemaining = 0;   /* Amount of unused space in packet */
 
     /* See how much space we have */
-    uiRemaining = MAX_APDU - pRequest->Overhead;
+    uiRemaining = MAX_LPDU_IP - pRequest->Overhead;
     log_index = Trend_Log_Instance_To_Index(pRequest->object_instance);
     CurrentLog = &LogInfo[log_index];
     if (pRequest->RequestType == RR_READ_ALL) {
@@ -1179,7 +1179,7 @@ int TL_encode_by_sequence(
     bool bWrapLog = false;      /* Has log sequence range spanned the max for uint32_t? */
 
     /* See how much space we have */
-    uiRemaining = MAX_APDU - pRequest->Overhead;
+    uiRemaining = MAX_LPDU_IP - pRequest->Overhead;
     log_index = Trend_Log_Instance_To_Index(pRequest->object_instance);
     CurrentLog = &LogInfo[log_index];
     /* Figure out the sequence number for the first record, last is ulTotalRecordCount */
@@ -1311,7 +1311,7 @@ int TL_encode_by_time(
     time_t tRefTime = 0;        /* The time from the request in local format */
 
     /* See how much space we have */
-    uiRemaining = MAX_APDU - pRequest->Overhead;
+    uiRemaining = MAX_LPDU_IP - pRequest->Overhead;
     log_index = Trend_Log_Instance_To_Index(pRequest->object_instance);
     CurrentLog = &LogInfo[log_index];
 
@@ -1561,7 +1561,7 @@ static int local_read_property(
     if (value != NULL) {
         /* configure our storage */
         rpdata.application_data = value;
-        rpdata.application_data_len = MAX_APDU;
+        rpdata.application_data_len = MAX_LPDU_IP;
         rpdata.object_type = Source->objectIdentifier.type;
         rpdata.object_instance = Source->objectIdentifier.instance;
         rpdata.object_property = Source->propertyIdentifier;
@@ -1577,7 +1577,7 @@ static int local_read_property(
     if ((len >= 0) && (status != NULL)) {
         /* Fetch the status flags if required */
         rpdata.application_data = status;
-        rpdata.application_data_len = MAX_APDU;
+        rpdata.application_data_len = MAX_LPDU_IP;
         rpdata.object_property = PROP_STATUS_FLAGS;
         rpdata.array_index = BACNET_ARRAY_ALL;
         len = Device_Read_Property(&rpdata);
@@ -1597,7 +1597,7 @@ static int local_read_property(
 static void TL_fetch_property(
     int iLog)
 {
-    uint8_t ValueBuf[MAX_APDU]; /* This is a big buffer in case someone selects the device object list for example */
+    uint8_t ValueBuf[MAX_LPDU_IP]; /* This is a big buffer in case someone selects the device object list for example */
     uint8_t StatusBuf[3];       /* Should be tag, bits unused in last octet and 1 byte of data */
     BACNET_ERROR_CLASS error_class = ERROR_CLASS_SERVICES;
     BACNET_ERROR_CODE error_code = ERROR_CODE_OTHER;

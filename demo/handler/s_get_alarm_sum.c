@@ -53,6 +53,7 @@
 #include "get_alarm_sum.h"
 
 uint8_t Send_Get_Alarm_Summary_Address(
+    PORT_SUPPORT *portParams,
     BACNET_ADDRESS *dest,
     uint16_t max_apdu)
 {

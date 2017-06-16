@@ -179,13 +179,14 @@ int wpm_decode_object_property(
 /* encode functions */
 int wpm_encode_apdu_init(
     uint8_t * apdu,
+    uint16_t max_apdu, 
     uint8_t invoke_id)
 {
     int apdu_len = 0;   /* total length of the apdu, return value */
 
     if (apdu) {
         apdu[0] = PDU_TYPE_CONFIRMED_SERVICE_REQUEST;
-        apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU);
+        apdu[1] = encode_max_segs_max_apdu(0, max_apdu);
         apdu[2] = invoke_id;
         apdu[3] = SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE;        /* service choice */
         apdu_len = 4;
@@ -264,12 +265,12 @@ int wpm_encode_apdu(
     int apdu_len = 0;
     int len = 0;
     BACNET_WRITE_ACCESS_DATA *wpm_object;       /* current object */
-    uint8_t apdu_temp[MAX_APDU];        /* temp for data before copy */
+    uint8_t apdu_temp[MAX_LPDU_IP];        /* temp for data before copy */
     BACNET_PROPERTY_VALUE *wpm_property;        /* current property */
     BACNET_WRITE_PROPERTY_DATA wpdata;  /* for compatibility with wpm_encode_apdu_object_property function */
 
     if (apdu) {
-        len = wpm_encode_apdu_init(&apdu[0], invoke_id);
+		len =  wpm_encode_apdu_init(&apdu[0], max_apdu, invoke_id);
         apdu_len += len;
 
         wpm_object = write_access_data;

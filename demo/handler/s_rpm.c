@@ -56,14 +56,14 @@
  * @return invoke id of outgoing message, or 0 if device is not bound or no tsm available
  */
 uint8_t Send_Read_Property_Multiple_Request(
-    uint8_t * pdu,
+    PORT_SUPPORT *portParams,
     size_t max_pdu,
     uint32_t device_id, /* destination device */
     BACNET_READ_ACCESS_DATA * read_access_data)
 {
-    BACNET_ADDRESS dest;
+    BACNET_ROUTE dest;
     BACNET_ADDRESS my_address;
-    unsigned max_apdu = 0;
+    uint16_t max_apdu;
     uint8_t invoke_id = 0;
     bool status = false;
     int len = 0;
@@ -76,6 +76,7 @@ uint8_t Send_Read_Property_Multiple_Request(
 
     /* is the device bound? */
     status = address_get_by_device(device_id, &max_apdu, &dest);
+
     /* is there a tsm available? */
     if (status)
         invoke_id = tsm_next_free_invokeID();
@@ -91,10 +92,10 @@ uint8_t Send_Read_Property_Multiple_Request(
         /* encode the NPDU portion of the packet */
         datalink_get_my_address(&my_address);
         npdu_setup_npci_data(&npci_data, true, MESSAGE_PRIORITY_NORMAL);
-        pdu_len = npdu_encode_pdu(&pdu[0], &dest, &my_address, &npci_data);
+        pdu_len = npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &dest, &my_address, &npci_data);
         /* encode the APDU portion of the packet */
         len =
-            rpm_encode_apdu(&pdu[pdu_len], max_pdu - pdu_len, invoke_id,
+            rpm_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len], max_pdu - pdu_len, invoke_id,
             read_access_data);
         if (len <= 0) {
             return 0;
@@ -107,7 +108,9 @@ uint8_t Send_Read_Property_Multiple_Request(
            max_apdu in the address binding table. */
         if ((unsigned) pdu_len < max_apdu) {
             tsm_set_confirmed_unsegmented_transaction(invoke_id, &dest,
-                &npci_data, &pdu[0], (uint16_t) pdu_len);
+                &npci_data, dlcb );
+                
+                dlcb->optr = pdu_len ;
             bytes_sent =
                 datalink_send_pdu(&dest, &npci_data, 
                 dlcb );

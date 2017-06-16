@@ -46,7 +46,7 @@
 
 /** @file h_rpm.c  Handles Read Property Multiple requests. */
 
-static uint8_t Temp_Buf[MAX_APDU] = { 0 };
+static uint8_t Temp_Buf[MAX_LPDU_IP] = { 0 };
 
 static BACNET_PROPERTY_ID RPM_Object_Property(
     struct special_property_list_t *pPropertyList,
@@ -62,18 +62,22 @@ static BACNET_PROPERTY_ID RPM_Object_Property(
     if (special_property == PROP_ALL) {
         if (index < required) {
             property = pPropertyList->Required.pList[index];
-        } else if (index < (required + optional)) {
+        }
+        else if (index < (required + optional)) {
             index -= required;
             property = pPropertyList->Optional.pList[index];
-        } else if (index < (required + optional + proprietary)) {
+        }
+        else if (index < (required + optional + proprietary)) {
             index -= (required + optional);
             property = pPropertyList->Proprietary.pList[index];
         }
-    } else if (special_property == PROP_REQUIRED) {
+    }
+    else if (special_property == PROP_REQUIRED) {
         if (index < required) {
             property = pPropertyList->Required.pList[index];
         }
-    } else if (special_property == PROP_OPTIONAL) {
+    }
+    else if (special_property == PROP_OPTIONAL) {
         if (index < optional) {
             property = pPropertyList->Optional.pList[index];
         }
@@ -92,9 +96,11 @@ static unsigned RPM_Object_Property_Count(
         count =
             pPropertyList->Required.count + pPropertyList->Optional.count +
             pPropertyList->Proprietary.count;
-    } else if (special_property == PROP_REQUIRED) {
+    }
+    else if (special_property == PROP_REQUIRED) {
         count = pPropertyList->Required.count;
-    } else if (special_property == PROP_OPTIONAL) {
+    }
+    else if (special_property == PROP_OPTIONAL) {
         count = pPropertyList->Optional.count;
     }
 
@@ -109,14 +115,14 @@ static int RPM_Encode_Property(
     uint16_t max_apdu,
     BACNET_RPM_DATA * rpmdata)
 {
-    int len = 0;
-    size_t copy_len = 0;
-    int apdu_len = 0;
+    int len;
+    size_t copy_len ;
+    int apdu_len ;
     BACNET_READ_PROPERTY_DATA rpdata;
 
     len =
         rpm_ack_encode_apdu_object_property(&Temp_Buf[0],
-        rpmdata->object_property, rpmdata->array_index);
+            rpmdata->object_property, rpmdata->array_index);
     copy_len = memcopy(&apdu[0], &Temp_Buf[0], offset, len, max_apdu);
     if (copy_len == 0) {
         rpmdata->error_code = ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
@@ -142,7 +148,7 @@ static int RPM_Encode_Property(
         /* error was returned - encode that for the response */
         len =
             rpm_ack_encode_apdu_object_property_error(&Temp_Buf[0],
-            rpdata.error_class, rpdata.error_code);
+                rpdata.error_class, rpdata.error_code);
         copy_len =
             memcopy(&apdu[0], &Temp_Buf[0], offset + apdu_len, len, max_apdu);
 
@@ -154,8 +160,9 @@ static int RPM_Encode_Property(
         /* enough room to fit the property value and tags */
         len =
             rpm_ack_encode_apdu_object_property_value(&apdu[offset + apdu_len],
-            &Temp_Buf[0], len);
-    } else {
+                &Temp_Buf[0], len);
+    }
+    else {
         /* not enough room - abort! */
         rpmdata->error_code = ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
         return BACNET_STATUS_ABORT;
@@ -187,7 +194,7 @@ static int RPM_Encode_Property(
 void handler_read_property_multiple(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src,
+    BACNET_ROUTE * srcRoute,
     BACNET_CONFIRMED_SERVICE_DATA * service_data)
 {
     int len = 0;
@@ -196,7 +203,7 @@ void handler_read_property_multiple(
     int pdu_len = 0;
     BACNET_NPCI_DATA npci_data;
     int bytes_sent;
-    BACNET_ADDRESS my_address;
+    // BACNET_PATH my_address;
     BACNET_RPM_DATA rpmdata;
     int apdu_len = 0;
     int npdu_len = 0;
@@ -211,7 +218,7 @@ void handler_read_property_multiple(
     datalink_get_my_address(&my_address);
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     npdu_len =
-        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], src, &my_address,
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &srcRoute->bacnetPath.glAdr, NULL,
         &npci_data);
     if (service_data->segmented_message) {
         rpmdata.error_code = ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
@@ -230,11 +237,13 @@ void handler_read_property_multiple(
         /* Start by looking for an object ID */
         len =
             rpm_decode_object_id(&service_request[decode_len],
-            service_len - decode_len, &rpmdata);
+                service_len - decode_len, &rpmdata);
+        // ekh 2015.03.13 I am sure the next line should be >, not >= !!
         if (len >= 0) {
             /* Got one so skip to next stage */
             decode_len += len;
-        } else {
+        }
+        else {
             /* bad encoding - skip to error/reject/abort handling */
 #if PRINT_ENABLED
             fprintf(stderr, "RPM: Bad Encoding.\n");
@@ -253,7 +262,7 @@ void handler_read_property_multiple(
         len = rpm_ack_encode_apdu_object_begin(&Temp_Buf[0], &rpmdata);
         copy_len =
             memcopy(&dlcb->Handler_Transmit_Buffer[npdu_len], &Temp_Buf[0], apdu_len,
-            len, MAX_APDU);
+                len, MAX_LPDU_IP); // todo 2 - not safe!
         if (copy_len == 0) {
 #if PRINT_ENABLED
             fprintf(stderr, "RPM: Response too big!\r\n");
@@ -296,7 +305,7 @@ void handler_read_property_multiple(
                             rpmdata.object_property, rpmdata.array_index);
                     copy_len =
                         memcopy(&dlcb->Handler_Transmit_Buffer[npdu_len],
-                        &Temp_Buf[0], apdu_len, len, MAX_APDU);
+                            &Temp_Buf[0], apdu_len, len, MAX_LPDU_IP);  // todo 2 - not safe!
                     if (copy_len == 0) {
 #if PRINT_ENABLED
                         fprintf(stderr,
@@ -426,7 +435,8 @@ RPM_FAILURE:
 #if PRINT_ENABLED
             fprintf(stderr, "RPM: Sending Abort!\n");
 #endif
-        } else if (error == BACNET_STATUS_ERROR) {
+        }
+        else if (error == BACNET_STATUS_ERROR) {
             apdu_len =
                 bacerror_encode_apdu(&dlcb->Handler_Transmit_Buffer[npdu_len],
                 service_data->invoke_id, SERVICE_CONFIRMED_READ_PROP_MULTIPLE,
@@ -434,7 +444,8 @@ RPM_FAILURE:
 #if PRINT_ENABLED
             fprintf(stderr, "RPM: Sending Error!\n");
 #endif
-        } else if (error == BACNET_STATUS_REJECT) {
+        }
+        else if (error == BACNET_STATUS_REJECT) {
             apdu_len =
                 reject_encode_apdu(&dlcb->Handler_Transmit_Buffer[npdu_len],
                 service_data->invoke_id,

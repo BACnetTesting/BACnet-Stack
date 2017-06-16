@@ -28,7 +28,6 @@
 #include <string.h>
 #include <errno.h>
 #include "config.h"
-#include "txbuf.h"
 #include "bacdef.h"
 #include "bacdcode.h"
 #include "bacerror.h"
@@ -98,7 +97,7 @@ char *handler_dcc_password(void)
 void handler_device_communication_control(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src,
+    BACNET_ROUTE * src,
     BACNET_CONFIRMED_SERVICE_DATA * service_data)
 {
     uint16_t timeDuration = 0;
@@ -107,25 +106,22 @@ void handler_device_communication_control(
     int len = 0;
     int pdu_len = 0;
     BACNET_NPCI_DATA npci_data;
-    BACNET_ADDRESS my_address;
+    // BACNET_GLOBAL_ADDRESS my_address;
     
     DLCB *dlcb = alloc_dlcb_response('a', src );
     if (dlcb == NULL) return;
 
     /* encode the NPDU portion of the reply packet */
-    datalink_get_my_address(&my_address);
+    // datalink_get_my_address(&my_address);
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
-        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], src, &my_address,
-        &npci_data);
-#if PRINT_ENABLED
-    fprintf(stderr, "DeviceCommunicationControl!\n");
-#endif
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &src->bacnetPath.glAdr, NULL, // &my_address,
+            &npci_data);
     if (service_data->segmented_message) {
         len =
             abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
-            service_data->invoke_id, ABORT_REASON_SEGMENTATION_NOT_SUPPORTED,
-            true);
+                service_data->invoke_id, ABORT_REASON_SEGMENTATION_NOT_SUPPORTED,
+                true);
 #if PRINT_ENABLED
         fprintf(stderr,
             "DeviceCommunicationControl: "
@@ -170,10 +166,11 @@ void handler_device_communication_control(
         /* Check to see if the current Device supports this service. */
         len =
             Routed_Device_Service_Approval
-            (SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL, (int) state,
-            &dlcb->Handler_Transmit_Buffer[pdu_len], service_data->invoke_id);
-        if (len > 0)
+            (SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL, (int)state,
+                &dlcb->Handler_Transmit_Buffer[pdu_len], service_data->invoke_id);
+        if (len > 0) {
             goto DCC_ABORT;
+        }
 #endif
 
         if (characterstring_ansi_same(&password, My_Password)) {
@@ -186,12 +183,13 @@ void handler_device_communication_control(
                 "DeviceCommunicationControl: " "Sending Simple Ack!\n");
 #endif
             dcc_set_status_duration(state, timeDuration);
-        } else {
+        }
+        else {
             len =
                 bacerror_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
-                service_data->invoke_id,
-                SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL,
-                ERROR_CLASS_SECURITY, ERROR_CODE_PASSWORD_FAILURE);
+                    service_data->invoke_id,
+                    SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL,
+                    ERROR_CLASS_SECURITY, ERROR_CODE_PASSWORD_FAILURE);
 #if PRINT_ENABLED
             fprintf(stderr,
                 "DeviceCommunicationControl: "

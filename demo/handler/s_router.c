@@ -108,7 +108,9 @@ int Send_Network_Layer_Message(
     int *pVal = iArgs;  /* Start with first value */
     bool data_expecting_reply = false;
     BACNET_NPCI_DATA npci_data;
-    BACNET_ADDRESS bcastDest;
+    // BACNET_GLOBAL_ADDRESS bcastDest;
+    BACNET_MAC_ADDRESS localBcastMac;
+    BACNET_MAC_ADDRESS *targetMac;
 
     if (iArgs == NULL)
         return 0;       /* Can't do anything here */
@@ -137,6 +139,7 @@ int Send_Network_Layer_Message(
      */
     pdu_len =
         npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], dst, NULL, &npci_data);
+    pdu_len += encode_unsigned8(&dlcb->Handler_Transmit_Buffer[pdu_len], (uint8_t)network_message_type);
 
     /* Now encode the optional payload bytes, per message type */
     switch (network_message_type) {
@@ -219,8 +222,8 @@ int Send_Network_Layer_Message(
 
     /* Now send the message */
     bytes_sent =
-        datalink_send_pdu(dst, &npci_data, &Handler_Transmit_Buffer[0],
-        pdu_len);
+        datalink_send_pdu(dst, &npci_data, dlcb);
+        
 #if PRINT_ENABLED
     if (bytes_sent <= 0) {
         int wasErrno = errno;   /* preserve the errno */
@@ -262,6 +265,7 @@ void Send_Who_Is_Router_To_Network(
  *                       terminated with -1
  */
 void Send_I_Am_Router_To_Network(
+    PORT_SUPPORT *portParams,
     const int DNET_list[])
 {
     /* Use a NULL dst here since we want a broadcast MAC address. */
@@ -280,7 +284,7 @@ void Send_I_Am_Router_To_Network(
  * @param dnet [in] Which BACnet network orginated the message.
  */
 void Send_Reject_Message_To_Network(
-    BACNET_ADDRESS * dst,
+    BACNET_ROUTE * dst,
     uint8_t reject_reason,
     int dnet)
 {

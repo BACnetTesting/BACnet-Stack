@@ -26,7 +26,6 @@
 /* for legacy demo applications */
 #define MAX_MPDU BIP6_MPDU_MAX
 
-
     /* 6 datalink functions used by demo handlers and applications:
        init, send, receive, cleanup, unicast/broadcast address.
        Note: the addresses used here are VMAC addresses. */
@@ -35,16 +34,16 @@
     void bip6_cleanup(
         void);
     void bip6_get_broadcast_address(
-        BACNET_ADDRESS * my_address);
+        BACNET_PATH * my_address);
     void bip6_get_my_address(
-        BACNET_ADDRESS * my_address);
+        BACNET_PATH * my_address);
     int bip6_send_pdu(
-        BACNET_ADDRESS * dest,
-        BACNET_NPCI_DATA * npci_data,
+        BACNET_PATH * dest,
+        BACNET_NPCI_DATA * npdu_data,
         uint8_t * pdu,
         unsigned pdu_len);
     uint16_t bip6_receive(
-        BACNET_ADDRESS * src,
+        BACNET_PATH * src,
         uint8_t * pdu,
         uint16_t max_pdu,
         unsigned timeout);

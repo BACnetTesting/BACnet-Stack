@@ -52,9 +52,9 @@
  * @param vendor_id [in] BACnet vendor ID 0-65535
  */
 void Send_I_Am_To_Network(
-    BACNET_ADDRESS * target_address,
+    BACNET_ROUTE * dest,
     uint32_t device_id,
-    unsigned int max_apdu,
+    uint16_t max_apdu,
     int segmentation,
     uint16_t vendor_id)
 {
@@ -74,7 +74,7 @@ void Send_I_Am_To_Network(
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
 
     pdu_len =
-        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], target_address,
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &dest->bacnetPath.glAdr,
         &my_address, &npci_data);
     /* encode the APDU portion of the packet */
     /* encode the APDU portion of the packet */
@@ -82,6 +82,7 @@ void Send_I_Am_To_Network(
         iam_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
         device_id, max_apdu, segmentation, vendor_id);
     pdu_len += len;
+        dlcb->optr = pdu_len;
     bytes_sent =
         datalink_send_pdu(target_address, &npci_data,
         dlcb );
@@ -103,23 +104,23 @@ void Send_I_Am_To_Network(
 int iam_encode_pdu(
     uint8_t * buffer,
     DLCB *dlcb,
-    BACNET_ADDRESS * dest,
+    BACNET_GLOBAL_ADDRESS * dest,
     BACNET_NPCI_DATA * npci_data)
 {
-    int len = 0;
-    int pdu_len = 0;
+    int len;
+    int pdu_len;
     BACNET_ADDRESS my_address;
     datalink_get_my_address(&my_address);
 
     datalink_get_broadcast_address(dest);
     /* encode the NPDU portion of the packet */
     npdu_setup_npci_data(npci_data, false, MESSAGE_PRIORITY_NORMAL);
-    pdu_len = npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], dest, &my_address, npci_data);
+    pdu_len = npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], dest, NULL, npci_data);
 
     /* encode the APDU portion of the packet */
     len =
         iam_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len], Device_Object_Instance_Number(),
-        MAX_APDU, SEGMENTATION_NONE, Device_Vendor_Identifier());
+        MAX_LPDU_IP, SEGMENTATION_NONE, Device_Vendor_Identifier());
     pdu_len += len;
 
     return pdu_len;
@@ -132,10 +133,11 @@ int iam_encode_pdu(
  * @param buffer [in] The buffer to use for building and sending the message.
  */
 void Send_I_Am(
-    uint8_t * buffer)
+    const PORT_SUPPORT *portParams
+    )
 {
     int pdu_len = 0;
-    BACNET_ADDRESS dest;
+    BACNET_ROUTE dest;
     int bytes_sent = 0;
     BACNET_NPCI_DATA npci_data;
 
@@ -151,15 +153,21 @@ void Send_I_Am(
         return 0;
 #endif
 
+    dest.portParams = portParams;
+    bacnet_path_set_broadcast_global(&dest.bacnetPath);
+
     DLCB *dlcb = alloc_dlcb_application('u', &dest);
     if (dlcb == NULL)
     {
         return;
     }
 
+    npdu_setup_npci_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+
     /* encode the data */
-    pdu_len = iam_encode_pdu(buffer, &dest, &npci_data);
+    pdu_len = iam_encode_pdu(dlcb, &dest.bacnetPath.glAdr, &npci_data);
     /* send data */
+    dlcb->optr = pdu_len ;
     bytes_sent = datalink_send_pdu(&dest, &npci_data, dlcb );
 
     if (bytes_sent <= 0) {
@@ -179,9 +187,9 @@ void Send_I_Am(
  * @return The length of the message in buffer[].
  */
 int iam_unicast_encode_pdu(
-    uint8_t * buffer,
     BACNET_ADDRESS * src,
-    BACNET_ADDRESS * dest,
+    DLCB * dlcb,
+    BACNET_GLOBAL_ADDRESS * dest,
     BACNET_NPCI_DATA * npci_data)
 {
     int npdu_len = 0;
@@ -218,9 +226,9 @@ int iam_unicast_encode_pdu(
  */
 void Send_I_Am_Unicast(
     uint8_t * buffer,
-    BACNET_ADDRESS * src)
+    BACNET_ROUTE *dest)
 {
-    int pdu_len = 0;
+    int pdu_len;
     BACNET_ADDRESS dest;
     int bytes_sent = 0;
     BACNET_NPCI_DATA npci_data;
@@ -241,8 +249,9 @@ void Send_I_Am_Unicast(
     if (dlcb == NULL) return;
     
     /* encode the data */
-    pdu_len = iam_unicast_encode_pdu(buffer, src, &dest, &npci_data);
+    pdu_len = iam_unicast_encode_pdu(dlcb, &dest->bacnetPath.glAdr, &npci_data);
     /* send data */
+        dlcb->optr = pdu_len;
     bytes_sent = datalink_send_pdu(&dest, &npci_data, dlcb );
 
     if (bytes_sent <= 0) {

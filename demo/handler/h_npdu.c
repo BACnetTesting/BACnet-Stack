@@ -107,6 +107,4 @@ void npdu_handler(
             (unsigned) pdu[0]);
 #endif
     }
-
-    return;
 }

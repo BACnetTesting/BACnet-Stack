@@ -67,7 +67,7 @@ bool(*datalink_init) (char *ifname);
  */
 int (
     *datalink_send_pdu) (
-    BACNET_ADDRESS * dest,
+        BACNET_PATH * dest,
     BACNET_NPCI_DATA * npci_data,
         DLCB *dlcb);
 

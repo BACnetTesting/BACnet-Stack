@@ -297,7 +297,7 @@ void rpm_ack_print_data(
 void handler_read_property_multiple_ack(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src,
+    BACNET_ROUTE * src,
     BACNET_CONFIRMED_SERVICE_ACK_DATA * service_data)
 {
     int len = 0;

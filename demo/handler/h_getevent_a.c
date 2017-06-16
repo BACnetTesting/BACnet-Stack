@@ -48,8 +48,8 @@
 #include "handlers.h"
 #include "getevent.h"
 
-/* 40 = min size of get event data in APDU */
-#define MAX_NUMBER_OF_EVENTS ((MAX_APDU / 40) + 1)
+ /* 40 = min size of get event data in APDU */
+#define MAX_NUMBER_OF_EVENTS ((MAX_LPDU_IP / 40) + 1)
 
 /** Example function to handle a GetEvent ACK.
  *
@@ -62,7 +62,7 @@
 void get_event_ack_handler(
     uint8_t *service_request,
     uint16_t service_len,
-    BACNET_ADDRESS *src,
+    BACNET_ROUTE *src,
     BACNET_CONFIRMED_SERVICE_ACK_DATA *service_data)
 {
     uint8_t i = 0;

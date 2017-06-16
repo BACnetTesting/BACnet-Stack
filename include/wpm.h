@@ -53,12 +53,13 @@ int wpm_decode_object_property(
     BACNET_WRITE_PROPERTY_DATA * wpm_data);
 
 
-    /* encode objects */
-    int wpm_encode_apdu_init(
-        uint8_t * apdu,
-        uint8_t invoke_id);
-    int wpm_encode_apdu_object_begin(
-        uint8_t * apdu,
+/* encode objects */
+int wpm_encode_apdu_init(
+    uint8_t * apdu,
+        uint16_t max_apdu,
+    uint8_t invoke_id);
+int wpm_encode_apdu_object_begin(
+    uint8_t * apdu,
     BACNET_OBJECT_TYPE object_type,
     uint32_t object_instance);
 int wpm_encode_apdu_object_end(

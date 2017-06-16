@@ -56,13 +56,14 @@
  */
 
 uint8_t Send_Device_Communication_Control_Request(
+    BACNET_ROUTE *dest,
     uint32_t device_id,
     uint16_t timeDuration,      /* 0=optional */
     BACNET_COMMUNICATION_ENABLE_DISABLE state,
     char *password)
 {       /* NULL=optional */
-    BACNET_ADDRESS dest;
-    BACNET_ADDRESS my_address;
+    BACNET_PATH dest;
+    //BACNET_PATH my_address;
     unsigned max_apdu = 0;
     uint8_t invoke_id = 0;
     bool status = false;
@@ -83,10 +84,10 @@ uint8_t Send_Device_Communication_Control_Request(
         invoke_id = tsm_next_free_invokeID();
     if (invoke_id) {
         /* encode the NPDU portion of the packet */
-        datalink_get_my_address(&my_address);
+        //datalink_get_my_address(&my_address);
         npdu_setup_npci_data(&npci_data, true, MESSAGE_PRIORITY_NORMAL);
         pdu_len =
-            npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest, &my_address,
+            npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest, NULL,
             &npci_data);
         /* encode the APDU portion of the packet */
         characterstring_init_ansi(&password_string, password);
@@ -101,7 +102,8 @@ uint8_t Send_Device_Communication_Control_Request(
            max_apdu in the address binding table. */
         if ((unsigned) pdu_len < max_apdu) {
             tsm_set_confirmed_unsegmented_transaction(invoke_id, &dest,
-                &npci_data, &Handler_Transmit_Buffer[0], (uint16_t) pdu_len);
+                &npci_data, dlcb );
+                dlcb->optr = pdu_len ;
             bytes_sent =
                 datalink_send_pdu(&dest, &npci_data,
                 dlcb );

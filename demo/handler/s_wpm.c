@@ -57,10 +57,11 @@
  * @return invoke id of outgoing message, or 0 if device is not bound or no tsm available
  */
 uint8_t Send_Write_Property_Multiple_Request_Data(
+    PORT_SUPPORT *portParams,
     uint32_t device_id,
     BACNET_WRITE_ACCESS_DATA * write_access_data)
 {
-    BACNET_ADDRESS dest;
+    BACNET_PATH dest;
     BACNET_ADDRESS my_address;
     unsigned max_apdu = 0;
     uint8_t invoke_id = 0;
@@ -99,8 +100,8 @@ uint8_t Send_Write_Property_Multiple_Request_Data(
            we have a way to check for that and update the
            max_apdu in the address binding table. */
         if ((unsigned) pdu_len < max_apdu) {
-            tsm_set_confirmed_unsegmented_transaction(invoke_id, &dest,
-                &npci_data, &Handler_Transmit_Buffer[0], (uint16_t) pdu_len);
+            tsm_set_confirmed_unsegmented_transaction(portParams, invoke_id, &dest,
+                &npci_data, dlcb );
             bytes_sent =
                 datalink_send_pdu(&dest, &npci_data, dlcb ) ;
 

@@ -42,7 +42,7 @@ struct BACnet_Application_Data_Value;
 typedef struct BACnet_Application_Data_Value {
     bool context_specific;      /* true if context specific data */
     uint8_t context_tag;        /* only used for context specific data */
-    uint8_t tag;        /* application tag data type */
+    uint8_t tag;                /* application tag data type */     // todo 2 - make this an enum
     union {
         /* NULL - not needed as it is encoded in the tag alone */
 #if defined (BACAPP_BOOLEAN)
@@ -206,10 +206,10 @@ int bacapp_decode_context_data_len(
 #endif
 
 #ifdef BACAPP_SNPRINTF_ENABLED
-    int bacapp_snprintf_value(
-        char *str,
-        size_t str_len,
-        BACNET_OBJECT_PROPERTY_VALUE * object_value);
+int bacapp_snprintf_value(
+    char *str,
+    size_t str_len,
+    BACNET_OBJECT_PROPERTY_VALUE * object_value);
 #endif
 
 #ifdef BACAPP_PRINT_ENABLED
@@ -229,14 +229,14 @@ int bacapp_decode_context_data_len(
 #ifdef TEST
 #include "ctest.h"
 #include "datetime.h"
-    bool bacapp_same_value(
-        BACNET_APPLICATION_DATA_VALUE * value,
-        BACNET_APPLICATION_DATA_VALUE * test_value);
+bool bacapp_same_value(
+    BACNET_APPLICATION_DATA_VALUE * value,
+    BACNET_APPLICATION_DATA_VALUE * test_value);
 
-    void testBACnetApplicationDataLength(
-        Test * pTest);
-    void testBACnetApplicationData(
-        Test * pTest);
+void testBACnetApplicationDataLength(
+    Test * pTest);
+void testBACnetApplicationData(
+    Test * pTest);
 #endif
 
 #endif

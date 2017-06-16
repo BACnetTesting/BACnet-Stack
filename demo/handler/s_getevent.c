@@ -51,7 +51,8 @@
  * @param target_address [in] BACnet address of target or broadcast
  */
 uint8_t Send_GetEvent(
-        BACNET_ADDRESS * target_address,
+    BACNET_ROUTE *dest,
+    BACNET_GLOBAL_ADDRESS * target_address,
         BACNET_OBJECT_ID * lastReceivedObjectIdentifier)
 {
     int len = 0;
@@ -59,7 +60,7 @@ uint8_t Send_GetEvent(
     int bytes_sent = 0;
     uint8_t invoke_id = 0;
     BACNET_NPCI_DATA npci_data;
-    BACNET_ADDRESS my_address;
+    //BACNET_PATH my_address;
 
     datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
@@ -77,7 +78,7 @@ uint8_t Send_GetEvent(
         pdu_len += len;
         bytes_sent =
             datalink_send_pdu(target_address, &npci_data,
-            &Handler_Transmit_Buffer[0], pdu_len);
+            dlcb );
     #if PRINT_ENABLED
         if (bytes_sent <= 0)
             fprintf(stderr, "Failed to Send GetEventInformation Request (%s)!\n",
@@ -97,7 +98,8 @@ uint8_t Send_GetEvent(
 
 /** Send a global GetEventInformation request.
  */
-uint8_t Send_GetEvent_Global( void )
+uint8_t Send_GetEvent_Global(
+    PORT_SUPPORT *portParams
 {
     BACNET_ADDRESS dest;
 

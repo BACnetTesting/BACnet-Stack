@@ -308,7 +308,7 @@ int Multistate_Output_Read_Property(
                             present_value);
                     }
                     /* add it if we have room */
-                    if ((apdu_len + len) < MAX_APDU)
+                    if ((apdu_len + len) < MAX_LPDU_IP)
                         apdu_len += len;
                     else {
                         rpdata->error_code =
@@ -513,7 +513,7 @@ bool WPValidateArgType(
 void testMultistateOutput(
     Test * pTest)
 {
-    uint8_t apdu[MAX_APDU] = { 0 };
+    uint8_t apdu[MAX_LPDU_IP] = { 0 };
     int len = 0;
     uint32_t len_value = 0;
     uint8_t tag_number = 0;

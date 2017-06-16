@@ -57,7 +57,7 @@
  * @param high_limit [in] Device Instance High Range, 0 - 4,194,303 or -1
  */
 void Send_WhoIs_To_Network(
-    BACNET_ADDRESS * target_address,
+    BACNET_ROUTE * dest,
     int32_t low_limit,
     int32_t high_limit)
 {
@@ -67,21 +67,23 @@ void Send_WhoIs_To_Network(
     BACNET_NPCI_DATA npci_data;
     BACNET_ADDRESS my_address;
 
+	DLCB *dlcb = alloc_dlcb_response('t', dest );
+	if (dlcb == NULL) return;
+
     datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
 
     pdu_len =
-        npdu_encode_pdu(&Handler_Transmit_Buffer[0], target_address,
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], target_address,
         &my_address, &npci_data);
     /* encode the APDU portion of the packet */
     len =
-        whois_encode_apdu(&Handler_Transmit_Buffer[pdu_len], low_limit,
-        high_limit);
+        whois_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len], low_limit,
+                          high_limit);
     pdu_len += len;
     bytes_sent =
-        datalink_send_pdu(target_address, &npci_data,
-        &Handler_Transmit_Buffer[0], pdu_len);
+        datalink_send_pdu(target_address, &npci_data, dlcb );
 #if PRINT_ENABLED
     if (bytes_sent <= 0)
         fprintf(stderr, "Failed to Send Who-Is Request (%s)!\n",
@@ -98,16 +100,20 @@ void Send_WhoIs_To_Network(
  * @param high_limit [in] Device Instance High Range, 0 - 4,194,303 or -1
  */
 void Send_WhoIs_Global(
+    PORT_SUPPORT  *portParams,
     int32_t low_limit,
     int32_t high_limit)
 {
-    BACNET_ADDRESS dest;
+    BACNET_ROUTE dest;
 
     if (!dcc_communication_enabled())
         return;
 
+    dest.portParams = portParams;
     /* Who-Is is a global broadcast */
-    datalink_get_broadcast_address(&dest);
+    // todo2 - why not return a pointer, less copying...
+    // portParams->get_broadcast_address(portParams, &dest);
+    bacnet_path_set_broadcast_global(&dest.bacnetPath );
 
     Send_WhoIs_To_Network(&dest, low_limit, high_limit);
 }
@@ -121,10 +127,11 @@ void Send_WhoIs_Global(
  * @param high_limit [in] Device Instance High Range, 0 - 4,194,303 or -1
  */
 void Send_WhoIs_Local(
+    PORT_SUPPORT  *portParams,
     int32_t low_limit,
     int32_t high_limit)
 {
-    BACNET_ADDRESS dest;
+    BACNET_ROUTE dest;
     char temp[6];
     int loop;
 
@@ -133,24 +140,9 @@ void Send_WhoIs_Local(
 
     /* Who-Is is a global broadcast */
     datalink_get_broadcast_address(&dest);
-    /* encode the NPDU portion of the packet */
+    dest.portParams = portParams;
+    bacnet_path_set_broadcast_local(&dest.bacnetPath );
 
-    /* I added this to make it a local broadcast */
-    dest.net = 0;
-
-    /* Not sure why this happens but values are backwards so they need to be reversed */
-
-    temp[0] = dest.mac[3];
-    temp[1] = dest.mac[2];
-    temp[2] = dest.mac[1];
-    temp[3] = dest.mac[0];
-    temp[4] = dest.mac[5];
-    temp[5] = dest.mac[4];
-
-
-    for (loop = 0; loop < 6; loop++) {
-        dest.mac[loop] = temp[loop];
-    }
 
     Send_WhoIs_To_Network(&dest, low_limit, high_limit);
 }
@@ -167,13 +159,17 @@ void Send_WhoIs_Local(
  * @param high_limit [in] Device Instance High Range, 0 - 4,194,303 or -1
  */
 void Send_WhoIs_Remote(
-    BACNET_ADDRESS * target_address,
+    PORT_SUPPORT  *portParams,
+    BACNET_PATH * target_address,
     int32_t low_limit,
     int32_t high_limit)
 {
+    BACNET_ROUTE dest;
     if (!dcc_communication_enabled())
         return;
 
+    dest.portParams = portParams;
+    bacnet_path_copy(&dest.bacnetPath, target_address);
     Send_WhoIs_To_Network(target_address, low_limit, high_limit);
 }
 

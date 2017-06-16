@@ -174,28 +174,29 @@ bool MSTP_Line_Active(
     return (mstp_port->EventCount > Nmin_octets);
 }
 
+
 void MSTP_Fill_BACnet_Address(
-    BACNET_ADDRESS * src,
+    BACNET_PATH * src,
     uint8_t mstp_address)
 {
     int i = 0;
 
     if (mstp_address == MSTP_BROADCAST_ADDRESS) {
-        /* mac_len = 0 if broadcast address */
-        src->mac_len = 0;
-        src->mac[0] = 0;
+        /* localMac.len = 0 if broadcast address */
+        src->localMac.len = 0;
+        src->localMac.bytes[0] = 0;
     } else {
-        src->mac_len = 1;
-        src->mac[0] = mstp_address;
+        src->localMac.len = 1;
+        src->localMac.bytes[0] = mstp_address;
     }
     /* fill with 0's starting with index 1; index 0 filled above */
     for (i = 1; i < MAX_MAC_LEN; i++) {
-        src->mac[i] = 0;
+        src->glAdr.mac.bytes[i] = 0;
     }
-    src->net = 0;
-    src->len = 0;
+    src->glAdr.net = 0;
+    src->glAdr.mac.len = 0;
     for (i = 0; i < MAX_MAC_LEN; i++) {
-        src->adr[i] = 0;
+        src->glAdr.mac.bytes[i] = 0;
     }
 }
 

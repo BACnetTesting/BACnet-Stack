@@ -51,7 +51,7 @@ int rp_encode_apdu(
 
     if (apdu) {
         apdu[0] = PDU_TYPE_CONFIRMED_SERVICE_REQUEST;
-        apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU);
+        apdu[1] = encode_max_segs_max_apdu(0, MAX_LPDU_IP); // todo 1
         apdu[2] = invoke_id;
         apdu[3] = SERVICE_CONFIRMED_READ_PROPERTY;      /* service choice */
         apdu_len = 4;
@@ -308,7 +308,7 @@ int rp_decode_apdu(
     /* optional checking - most likely was already done prior to this call */
     if (apdu[0] != PDU_TYPE_CONFIRMED_SERVICE_REQUEST)
         return -1;
-    /*  apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU); */
+    /*  apdu[1] = encode_max_segs_max_apdu(0, MAX_LPDU_IP); */
     *invoke_id = apdu[2];       /* invoke id - filled in by net layer */
     if (apdu[3] != SERVICE_CONFIRMED_READ_PROPERTY)
         return -1;
@@ -317,7 +317,7 @@ int rp_decode_apdu(
     if (apdu_len > offset) {
         len =
             rp_decode_service_request(&apdu[offset], apdu_len - offset,
-            rpdata);
+                                      rpdata);
     }
 
     return len;

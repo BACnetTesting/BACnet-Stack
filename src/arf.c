@@ -36,6 +36,7 @@
 #include "bacdcode.h"
 #include "bacdef.h"
 #include "arf.h"
+#include "bip.h"
 
 /** @file arf.c  Atomic Read File */
 
@@ -49,7 +50,7 @@ int arf_encode_apdu(
 
     if (apdu) {
         apdu[0] = PDU_TYPE_CONFIRMED_SERVICE_REQUEST;
-        apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU);
+        apdu[1] = encode_max_segs_max_apdu(0, MAX_LPDU_IP);
         apdu[2] = invoke_id;
         apdu[3] = SERVICE_CONFIRMED_ATOMIC_READ_FILE;   /* service choice */
         apdu_len = 4;
@@ -105,7 +106,7 @@ int arf_decode_service_request(
         if (tag_number != BACNET_APPLICATION_TAG_OBJECT_ID)
             return -1;
         len += decode_object_id(&apdu[len], &type, &data->object_instance);
-        data->object_type = (BACNET_OBJECT_TYPE) type;
+        data->object_type = type;
         if (decode_is_opening_tag_number(&apdu[len], 0)) {
             data->access = FILE_STREAM_ACCESS;
             /* a tag number is not extended so only one octet */
@@ -183,7 +184,7 @@ int arf_decode_apdu(
     /* optional checking - most likely was already done prior to this call */
     if (apdu[0] != PDU_TYPE_CONFIRMED_SERVICE_REQUEST)
         return -1;
-    /*  apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU); */
+    /*  apdu[1] = encode_max_segs_max_apdu(0, MAX_LPDU_IP); */
     *invoke_id = apdu[2];       /* invoke id - filled in by net layer */
     if (apdu[3] != SERVICE_CONFIRMED_ATOMIC_READ_FILE)
         return -1;

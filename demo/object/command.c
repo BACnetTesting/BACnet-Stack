@@ -708,7 +708,7 @@ int Command_Read_Property(
                 int i;
                 for (i = 0; i < MAX_COMMAND_ACTIONS; i++) {
                     BACNET_ACTION_LIST *Curr_CL_Member =
-                        &CurrentCommand->Action[0];
+                    &CurrentCommand->Action[i];
                     /* another loop, for aditional actions in the list */
                     for (; Curr_CL_Member != NULL;
                         Curr_CL_Member = Curr_CL_Member->next) {
@@ -882,7 +882,7 @@ bool WPValidateArgType(
 void testCommand(
     Test * pTest)
 {
-    uint8_t apdu[MAX_APDU] = { 0 };
+    uint8_t apdu[MAX_LPDU_IP] = { 0 };
     int len = 0;
     uint32_t len_value = 0;
     uint8_t tag_number = 0;

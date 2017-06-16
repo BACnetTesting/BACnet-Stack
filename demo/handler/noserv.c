@@ -52,14 +52,14 @@
 void handler_unrecognized_service(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src,
+    BACNET_ROUTE *src,
     BACNET_CONFIRMED_SERVICE_DATA * service_data)
 {
     int len = 0;
     int pdu_len = 0;
-    int bytes_sent = 0;
+    // int bytes_sent = 0;
     BACNET_NPCI_DATA npci_data;
-    BACNET_ADDRESS my_address;
+    // BACNET_GLOBAL_ADDRESS my_address;
 
     (void) service_request;
     (void) service_len;
@@ -71,10 +71,10 @@ void handler_unrecognized_service(
 	}
 
     /* encode the NPDU portion of the packet */
-    datalink_get_my_address(&my_address);
+    // portParams->get_my_address(portParams, NULL);
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
-        npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], src, &my_address,
         &npci_data);
     /* encode the APDU portion of the packet */
     len =
@@ -82,6 +82,7 @@ void handler_unrecognized_service(
                            service_data->invoke_id, REJECT_REASON_UNRECOGNIZED_SERVICE);
     pdu_len += len;
     /* send the data */
+        dlcb->optr = pdu_len;
     bytes_sent =
         datalink_send_pdu(src, &npci_data, dlcb );
     if (bytes_sent > 0) {

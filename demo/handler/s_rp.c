@@ -86,7 +86,7 @@ uint8_t Send_Read_Property_Request_Address(
     invoke_id = tsm_next_free_invokeID();
     if (invoke_id) {
         /* encode the NPDU portion of the packet */
-        datalink_get_my_address(&my_address);
+        //datalink_get_my_address(&my_address);
         npdu_setup_npci_data(&npci_data, true, MESSAGE_PRIORITY_NORMAL);
         pdu_len =
             npdu_encode_pdu(&Handler_Transmit_Buffer[0], dest, &my_address,
@@ -96,6 +96,8 @@ uint8_t Send_Read_Property_Request_Address(
         data.object_instance = object_instance;
         data.object_property = object_property;
         data.array_index = array_index;
+
+        // todo 2 - need to pass max_apdu downwards... 
         len =
             rp_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len], invoke_id,
                 &data);
@@ -108,10 +110,10 @@ uint8_t Send_Read_Property_Request_Address(
            max_apdu in the address binding table. */
         if ((uint16_t) pdu_len < max_apdu) {
             tsm_set_confirmed_unsegmented_transaction(invoke_id, dest,
-                &npci_data, &Handler_Transmit_Buffer[0], (uint16_t) pdu_len);
+                &npci_data, dlcb );
+                dlcb->optr = pdu_len ;
             bytes_sent =
-                datalink_send_pdu(dest, &npci_data,
-                &Handler_Transmit_Buffer[0], pdu_len);
+                datalink_send_pdu(dest, &npci_data,dlcb);
             if (bytes_sent <= 0) {
 #if PRINT_ENABLED
                 fprintf(stderr, "Failed to Send ReadProperty Request (%s)!\n",
@@ -150,16 +152,17 @@ uint8_t Send_Read_Property_Request_Address(
  * @return invoke id of outgoing message, or 0 if device is not bound or no tsm available
  */
 uint8_t Send_Read_Property_Request(
+    PORT_SUPPORT *portParams,
     uint32_t device_id, /* destination device */
     BACNET_OBJECT_TYPE object_type,
     uint32_t object_instance,
     BACNET_PROPERTY_ID object_property,
     uint32_t array_index)
 {
-    BACNET_ADDRESS dest = { 0 };
-    unsigned max_apdu = 0;
+    BACNET_ROUTE dest;
+    uint16_t max_apdu;
     uint8_t invoke_id = 0;
-    bool status = false;
+    bool status;
 
     /* is the device bound? */
     status = address_get_by_device(device_id, &max_apdu, &dest);

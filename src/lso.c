@@ -47,7 +47,7 @@ int lso_encode_apdu(
 
     if (apdu && data) {
         apdu[0] = PDU_TYPE_CONFIRMED_SERVICE_REQUEST;
-        apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU);
+        apdu[1] = encode_max_segs_max_apdu(0, MAX_LPDU_IP); // todo1
         apdu[2] = invoke_id;
         apdu[3] = SERVICE_CONFIRMED_LIFE_SAFETY_OPERATION;
         apdu_len = 4;

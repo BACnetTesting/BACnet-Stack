@@ -78,9 +78,9 @@ void handler_get_event_information_set(
 }
 
 void handler_get_event_information(
+    BACNET_ROUTE *rxDetails,
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src,
     BACNET_CONFIRMED_SERVICE_DATA * service_data)
 {
     int len = 0;
@@ -92,27 +92,30 @@ void handler_get_event_information(
     int bytes_sent = 0;
     BACNET_ERROR_CLASS error_class = ERROR_CLASS_OBJECT;
     BACNET_ERROR_CODE error_code = ERROR_CODE_UNKNOWN_OBJECT;
-    BACNET_ADDRESS my_address;
+    // BACNET_PATH my_address;
     BACNET_OBJECT_ID object_id;
     unsigned i = 0, j = 0;      /* counter */
     BACNET_GET_EVENT_INFORMATION_DATA getevent_data;
     int valid_event = 0;
 
+	DLCB *dlcb = alloc_dlcb_response('d', rxDetails->portParams);
+	if (dlcb == NULL) return;
+
     /* initialize type of 'Last Received Object Identifier' using max value */
     object_id.type = MAX_BACNET_OBJECT_TYPE;
 
     /* encode the NPDU portion of the packet */
-    datalink_get_my_address(&my_address);
+    // datalink_get_my_address(&my_address);
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
-        npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
-        &npci_data);
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &rxDetails->bacnetPath.glAdr, NULL, // &my_address,
+                        &npci_data);
     if (service_data->segmented_message) {
         /* we don't support segmentation - send an abort */
         len =
-            abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-            service_data->invoke_id, ABORT_REASON_SEGMENTATION_NOT_SUPPORTED,
-            true);
+            abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
+                              service_data->invoke_id, ABORT_REASON_SEGMENTATION_NOT_SUPPORTED,
+                              true);
 #if PRINT_ENABLED
         fprintf(stderr,
                 "GetEventInformation: " "Segmented message. Sending Abort!\n");
@@ -126,8 +129,8 @@ void handler_get_event_information(
     if (len < 0) {
         /* bad decoding - send an abort */
         len =
-            abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-            service_data->invoke_id, ABORT_REASON_OTHER, true);
+            abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
+                              service_data->invoke_id, ABORT_REASON_OTHER, true);
 #if PRINT_ENABLED
         fprintf(stderr,
                 "GetEventInformation: Bad Encoding.  Sending Abort!\n");
@@ -135,8 +138,8 @@ void handler_get_event_information(
         goto GET_EVENT_ABORT;
     }
     len =
-        getevent_ack_encode_apdu_init(&Handler_Transmit_Buffer[pdu_len],
-        sizeof(Handler_Transmit_Buffer) - pdu_len, service_data->invoke_id);
+        getevent_ack_encode_apdu_init(&dlcb->Handler_Transmit_Buffer[pdu_len],
+        dlcb->optr - pdu_len, service_data->invoke_id);
     if (len <= 0) {
         error = true;
         goto GET_EVENT_ERROR;
@@ -163,22 +166,21 @@ void handler_get_event_information(
 
                     getevent_data.next = NULL;
                     len =
-                        getevent_ack_encode_apdu_data(&Handler_Transmit_Buffer
-                        [pdu_len], sizeof(Handler_Transmit_Buffer) - pdu_len,
-                        &getevent_data);
+                        getevent_ack_encode_apdu_data(&dlcb->Handler_Transmit_Buffer[pdu_len], 
+                                 dlcb->optr - pdu_len, &getevent_data);
                     if (len <= 0) {
                         error = true;
                         goto GET_EVENT_ERROR;
                     }
                     apdu_len += len;
                     if ((apdu_len >= service_data->max_resp - 2)  ||
-                        (apdu_len >= MAX_APDU - 2)) {
+                        (apdu_len >= MAX_LPDU_IP - 2)) {
                         /* Device must be able to fit minimum
                            one event information.
                            Length of one event informations needs
                            more than 50 octets. */
                         if ((service_data->max_resp < 128) ||
-                            (MAX_APDU < 128)) {
+                            (MAX_LPDU_IP < 128)) {
                             len = BACNET_STATUS_ABORT;
                             error = true;
                             goto GET_EVENT_ERROR;
@@ -196,8 +198,8 @@ void handler_get_event_information(
         }
     }
     len =
-        getevent_ack_encode_apdu_end(&Handler_Transmit_Buffer[pdu_len],
-        sizeof(Handler_Transmit_Buffer) - pdu_len, more_events);
+        getevent_ack_encode_apdu_end(&dlcb->Handler_Transmit_Buffer[pdu_len],
+                                     dlcb->optr - pdu_len, more_events);
     if (len <= 0) {
         error = true;
         goto GET_EVENT_ERROR;
@@ -208,24 +210,24 @@ void handler_get_event_information(
 GET_EVENT_ERROR:
     if (error) {
         pdu_len =
-            npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
-            &npci_data);
+            npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &rxDetails->bacnetPath.glAdr, NULL, // &my_address,
+                            &npci_data);
 
         if (len == -2) {
             /* BACnet APDU too small to fit data, so proper response is Abort */
             len =
-                abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-                service_data->invoke_id,
-                ABORT_REASON_SEGMENTATION_NOT_SUPPORTED, true);
+                abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
+                                  service_data->invoke_id,
+                                  ABORT_REASON_SEGMENTATION_NOT_SUPPORTED, true);
 #if PRINT_ENABLED
             fprintf(stderr,
                 "GetEventInformation: " "Reply too big to fit into APDU!\n");
 #endif
         } else {
             len =
-                bacerror_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-                service_data->invoke_id, SERVICE_CONFIRMED_READ_PROPERTY,
-                error_class, error_code);
+                bacerror_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
+                                     service_data->invoke_id, SERVICE_CONFIRMED_READ_PROPERTY,
+                                     error_class, error_code);
 #if PRINT_ENABLED
             fprintf(stderr, "GetEventInformation: Sending Error!\n");
 #endif
@@ -233,6 +235,7 @@ GET_EVENT_ERROR:
     }
 GET_EVENT_ABORT:
     pdu_len += len;
+        dlcb->optr = pdu_len;
     bytes_sent =
         datalink_send_pdu(src, &npci_data, dlcb );
 #if PRINT_ENABLED

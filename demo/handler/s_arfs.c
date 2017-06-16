@@ -94,8 +94,9 @@ uint8_t Send_Atomic_Read_File_Stream(
            we have a way to check for that and update the
            max_apdu in the address binding table. */
         if ((unsigned) pdu_len < max_apdu) {
+            dlcb->optr = pdu_len ;
             tsm_set_confirmed_unsegmented_transaction(invoke_id, &dest,
-                &npci_data, &Handler_Transmit_Buffer[0], (uint16_t) pdu_len);
+                &npci_data, dlcb );
             bytes_sent =
                 datalink_send_pdu(&dest, &npci_data,
                 dlcb );

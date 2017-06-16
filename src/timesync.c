@@ -161,13 +161,12 @@ int timesync_encode_timesync_recipients(
                 return BACNET_STATUS_ABORT;
             }
         } else if (pRecipient->tag == 1) {
-            if (pRecipient->type.address.net) {
-                len = (int)(1 + 3 + 2 + pRecipient->type.address.len + 1);
+            if (pRecipient->type.address.glAdr.net) {
+                len = 1 + 3 + 2 + pRecipient->type.address.glAdr.mac.len + 1;
             } else {
-                len =
-                    (int)(1 + 3 + 2 + pRecipient->type.address.mac_len + 1);
+                len = 1 + 3 + 2 + pRecipient->type.address.localMac.len + 1;
             }
-            if (max_apdu >= (unsigned)len) {
+            if (max_apdu >= len) {
                 /* CHOICE - address [1] BACnetAddress - opening */
                 len = encode_opening_tag(&apdu[apdu_len], 1);
                 apdu_len += len;
@@ -175,20 +174,20 @@ int timesync_encode_timesync_recipients(
                 /* -- A value of 0 indicates the local network */
                 len =
                     encode_application_unsigned(&apdu[apdu_len],
-                    pRecipient->type.address.net);
+                    pRecipient->type.address.glAdr.net);
                 apdu_len += len;
                 /* mac-address OCTET STRING */
                 /* -- A string of length 0 indicates a broadcast */
-                if (pRecipient->type.address.net == BACNET_BROADCAST_NETWORK) {
+                if (pRecipient->type.address.glAdr.net == BACNET_BROADCAST_NETWORK) {
                     octetstring_init(&octet_string, NULL, 0);
-                } else if (pRecipient->type.address.net) {
+                } else if (pRecipient->type.address.glAdr.net) {
                     octetstring_init(&octet_string,
-                        &pRecipient->type.address.adr[0],
-                        pRecipient->type.address.len);
+                        &pRecipient->type.address.glAdr.mac.bytes[0],
+                        pRecipient->type.address.glAdr.mac.len);
                 } else {
                     octetstring_init(&octet_string,
-                        &pRecipient->type.address.mac[0],
-                        pRecipient->type.address.mac_len);
+                        &pRecipient->type.address.localMac.bytes[0],
+                        pRecipient->type.address.localMac.len);
                 }
                 len =
                     encode_application_octet_string(&apdu[apdu_len],
@@ -272,7 +271,7 @@ int timesync_decode_timesync_recipients(
             len =
                 decode_unsigned(&apdu[apdu_len], len_value_type,
                 &unsigned_value);
-            pRecipient->type.address.net = unsigned_value;
+            pRecipient->type.address.glAdr.net = unsigned_value;
             apdu_len += len;
             /* mac-address OCTET STRING */
             tag_len =
@@ -286,14 +285,14 @@ int timesync_decode_timesync_recipients(
             apdu_len += len;
             if (octetstring_length(&octet_string) == 0) {
                 /* -- A string of length 0 indicates a broadcast */
-            } else if (pRecipient->type.address.net) {
-                pRecipient->type.address.len =
-                    octetstring_copy_value(&pRecipient->type.address.adr[0],
-                    sizeof(pRecipient->type.address.adr), &octet_string);
+            } else if (pRecipient->type.address.glAdr.net) {
+                pRecipient->type.address.glAdr.mac.len =
+                    octetstring_copy_value(&pRecipient->type.address.glAdr.mac.bytes[0],
+                    sizeof(pRecipient->type.address.glAdr.mac.bytes), &octet_string);
             } else {
-                pRecipient->type.address.mac_len =
-                    octetstring_copy_value(&pRecipient->type.address.mac[0],
-                    sizeof(pRecipient->type.address.mac), &octet_string);
+                pRecipient->type.address.localMac.len =
+                    octetstring_copy_value(&pRecipient->type.address.localMac.bytes[0],
+                    sizeof(pRecipient->type.address.localMac.bytes), &octet_string);
             }
         } else {
             return BACNET_STATUS_ABORT;
@@ -330,8 +329,8 @@ void testTimeSyncRecipientData(
                 recipient1->type.address.net == recipient2->type.address.net);
             if (recipient1->type.address.net == BACNET_BROADCAST_NETWORK) {
                 ct_test(pTest,
-                    recipient1->type.address.mac_len ==
-                    recipient2->type.address.mac_len);
+                    recipient1->type.address.localMac.len ==
+                    recipient2->type.address.localMac.len);
             } else if (recipient1->type.address.net) {
                 ct_test(pTest,
                     recipient1->type.address.len ==
@@ -343,9 +342,9 @@ void testTimeSyncRecipientData(
                 }
             } else {
                 ct_test(pTest,
-                    recipient1->type.address.mac_len ==
-                    recipient2->type.address.mac_len);
-                for (i = 0; i < recipient1->type.address.mac_len; i++) {
+                    recipient1->type.address.localMac.len ==
+                    recipient2->type.address.localMac.len);
+                for (i = 0; i < recipient1->type.address.localMac.len; i++) {
                     ct_test(pTest,
                         recipient1->type.address.mac[i] ==
                         recipient2->type.address.mac[i]);
@@ -383,7 +382,7 @@ void testTimeSyncRecipient(
     /* network = broadcast */
     recipient[1].tag = 1;
     recipient[1].type.address.net = BACNET_BROADCAST_NETWORK;
-    recipient[2].type.address.mac_len = 0;
+    recipient[2].type.address.localMac.len = 0;
     /* network = non-zero */
     recipient[1].tag = 1;
     recipient[2].type.address.net = 4201;
@@ -397,7 +396,7 @@ void testTimeSyncRecipient(
     recipient[2].type.address.mac[3] = 86;
     recipient[2].type.address.mac[4] = 0xBA;
     recipient[2].type.address.mac[5] = 0xC1;
-    recipient[2].type.address.mac_len = 6;
+    recipient[2].type.address.localMac.len = 6;
     /* perform positive test */
     len =
         timesync_encode_timesync_recipients(&apdu[0], sizeof(apdu),
