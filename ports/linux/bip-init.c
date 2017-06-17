@@ -85,7 +85,7 @@ int get_local_address_ioctl(
     int request);
 
 int get_local_address_ioctl(
-    char *ifname,
+    const char *ifname,
     struct in_addr *addr,
     int request)
 {

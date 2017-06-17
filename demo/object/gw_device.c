@@ -207,6 +207,7 @@ void routed_get_my_address(
     }
 }
 
+#error
 
 /** See if the Gateway or Routed Device at the given idx matches
  * the given MAC address.

@@ -45,8 +45,10 @@ extern bool BIP_Debug;
        on Windows, ifname is the dotted ip address of the interface */
     bool bip_init(
         char *ifname);
+
     void bip_set_interface(
-        char *ifname);
+        const char *ifname);
+
     void bip_cleanup(
         void);
 
@@ -81,7 +83,9 @@ extern bool BIP_Debug;
     /* use network byte order for setting */
     void bip_set_port(
         uint16_t port);
+
     bool bip_port_changed(void);
+
     /* returns network byte order */
     uint16_t bip_get_port(
         void);
