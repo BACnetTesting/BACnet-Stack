@@ -65,18 +65,21 @@
 
 
 /* Define your processor architecture as
-   Big Endian (PowerPC,68K,Sparc) or Little Endian (Intel,AVR)
-   ARM and MIPS can be either - what is your setup? */
-#if !defined(BIG_ENDIAN)
-#define BIG_ENDIAN 0
+   Big Endian       (PowerPC,68K,Sparc) or 
+   Little Endian    (Intel,AVR)
+   ARM and MIPS can be either - what is the most common? */
+
+// renamed from BIG_ENDIAN to BACNET_STACK_BIG_ENDIAN due to ambiguous collisions with some compilers
+#if !defined(BACNET_STACK_BIG_ENDIAN)
+#define BACNET_STACK_BIG_ENDIAN 0
 #endif
 
 /* Define your Vendor Identifier assigned by ASHRAE */
 #if !defined(BACNET_VENDOR_ID)
-#define BACNET_VENDOR_ID 260
+#define BACNET_VENDOR_ID 343
 #endif
 #if !defined(BACNET_VENDOR_NAME)
-#define BACNET_VENDOR_NAME "BACnet Stack at SourceForge"
+#define BACNET_VENDOR_NAME "BITS BACnet Reference Stack"
 #endif
 
 /* Max number of bytes in an APDU. */

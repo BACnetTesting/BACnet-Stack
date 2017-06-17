@@ -175,11 +175,7 @@ void RS485_Print_Error(
 #if 0 // todo1
     MessageBox(NULL, lpMsgBuf, "GetLastError", MB_OK | MB_ICONINFORMATION);
     LocalFree(lpMsgBuf);
-<<<<<<< HEAD
 #endif
-=======
-
->>>>>>> remotes/origin/SyntaxFixups
 }
 
 static void RS485_Configure_Status(

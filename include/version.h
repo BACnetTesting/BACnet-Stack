@@ -36,7 +36,7 @@
 #define BACNET_VERSION_MAINTENANCE (BACNET_VERSION_CODE&0xFF)
 
 
-extern char *BACnet_Version;
+// extern char *BACnet_Version;
 
 
 #endif

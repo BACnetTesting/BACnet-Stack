@@ -66,10 +66,11 @@ static BACNET_CHARACTER_STRING My_Object_Name;
 static BACNET_DEVICE_STATUS System_Status = STATUS_OPERATIONAL;
 static char *Vendor_Name = BACNET_VENDOR_NAME;
 static uint16_t Vendor_Identifier = BACNET_VENDOR_ID;
-static char *Model_Name = "GNU";
+static char *Model_Name = "BITS Reference Stack";
 static char *Application_Software_Version = "1.0";
 static char *Location = "USA";
 static char *Description = "command line client";
+extern const char *BACnet_Version;
 /* static uint8_t Protocol_Version = 1; - constant, not settable */
 /* static uint8_t Protocol_Revision = 4; - constant, not settable */
 /* Protocol_Services_Supported - dynamically generated */

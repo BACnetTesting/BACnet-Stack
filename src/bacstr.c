@@ -756,6 +756,7 @@ bool octetstring_init_ascii_hex(
                     status = true;
                 } else {
                     // feedback to Steve Karg, this was in the wrong order!
+                    // break;
                     status = false;
 	                  break;
 					      }

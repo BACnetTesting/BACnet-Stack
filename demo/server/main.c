@@ -73,6 +73,8 @@
 /** @addtogroup ServerDemo */
 /*@{*/
 
+extern const char *BACnet_Version;
+
 /** Buffer used for receiving */
 static uint8_t Rx_Buf[MAX_MPDU] = { 0 };
 
@@ -251,6 +253,7 @@ int main(
     printf("BACnet Server Demo\n" "BACnet Stack Version %s\n"
         "BACnet Device ID: %u\n" "Max APDU: %d\n", BACnet_Version,
         Device_Object_Instance_Number(), MAX_APDU);
+
     /* load any static address bindings to show up
        in our device bindings list */
     address_init();
