@@ -42,7 +42,7 @@
 static const char *ASHRAE_Reserved_String = "Reserved for Use by ASHRAE";
 static const char *Vendor_Proprietary_String = "Vendor Proprietary Value";
 
-INDTEXT_DATA bacnet_confirmed_service_names[] = {
+static INDTEXT_DATA bacnet_confirmed_service_names[] = {
     {SERVICE_CONFIRMED_ACKNOWLEDGE_ALARM, "Acknowledge-Alarm"},
     {SERVICE_CONFIRMED_COV_NOTIFICATION, "COV-Notification"},
     {SERVICE_CONFIRMED_EVENT_NOTIFICATION, "Event-Notification"},
@@ -85,7 +85,7 @@ const char *bactext_confirmed_service_name(
         ASHRAE_Reserved_String);
 }
 
-INDTEXT_DATA bacnet_unconfirmed_service_names[] = {
+static INDTEXT_DATA bacnet_unconfirmed_service_names[] = {
     {SERVICE_UNCONFIRMED_I_AM, "I-Am"}
     ,
     {SERVICE_UNCONFIRMED_I_HAVE, "I-Have"}
@@ -120,7 +120,7 @@ const char *bactext_unconfirmed_service_name(
         ASHRAE_Reserved_String);
 }
 
-INDTEXT_DATA bacnet_application_tag_names[] = {
+static INDTEXT_DATA bacnet_application_tag_names[] = {
     {BACNET_APPLICATION_TAG_NULL, "Null"}
     ,
     {BACNET_APPLICATION_TAG_BOOLEAN, "Boolean"}
@@ -171,7 +171,7 @@ bool bactext_application_tag_index(
         found_index);
 }
 
-INDTEXT_DATA bacnet_object_type_names[] = {
+static INDTEXT_DATA bacnet_object_type_names[] = {
     {OBJECT_ANALOG_INPUT, "analog-input"}
     ,
     {OBJECT_ANALOG_OUTPUT, "analog-output"}
@@ -303,7 +303,7 @@ bool bactext_object_type_index(
         found_index);
 }
 
-INDTEXT_DATA bacnet_property_names[] = {
+static INDTEXT_DATA bacnet_property_names[] = {
 /* FIXME: use the enumerations from bacenum.h */
     {PROP_ACKED_TRANSITIONS, "acked-transitions"}
     ,
@@ -1068,7 +1068,7 @@ bool bactext_property_index(
     return indtext_by_istring(bacnet_property_names, search_name, found_index);
 }
 
-INDTEXT_DATA bacnet_engineering_unit_names[] = {
+static INDTEXT_DATA bacnet_engineering_unit_names[] = {
     {UNITS_SQUARE_METERS, "square-meters"}
     ,
     {UNITS_SQUARE_FEET, "square-feet"}
@@ -1477,7 +1477,7 @@ bool bactext_engineering_unit_index(
         found_index);
 }
 
-INDTEXT_DATA bacnet_reject_reason_names[] = {
+static INDTEXT_DATA bacnet_reject_reason_names[] = {
     {REJECT_REASON_OTHER, "Other"}
     ,
     {REJECT_REASON_BUFFER_OVERFLOW, "Buffer Overflow"}
@@ -1512,7 +1512,7 @@ const char *bactext_reject_reason_name(
         Vendor_Proprietary_String);
 }
 
-INDTEXT_DATA bacnet_abort_reason_names[] = {
+static INDTEXT_DATA bacnet_abort_reason_names[] = {
     {ABORT_REASON_OTHER, "Other"}
     ,
     {ABORT_REASON_BUFFER_OVERFLOW, "Buffer Overflow"}
@@ -1537,7 +1537,7 @@ const char *bactext_abort_reason_name(
         Vendor_Proprietary_String);
 }
 
-INDTEXT_DATA bacnet_error_class_names[] = {
+static INDTEXT_DATA bacnet_error_class_names[] = {
     {ERROR_CLASS_DEVICE, "device"}
     ,
     {ERROR_CLASS_OBJECT, "object"}
@@ -1563,7 +1563,7 @@ const char *bactext_error_class_name(
         Vendor_Proprietary_String);
 }
 
-INDTEXT_DATA bacnet_error_code_names[] = {
+static INDTEXT_DATA bacnet_error_code_names[] = {
     {ERROR_CODE_OTHER, "other"}
     ,
     {ERROR_CODE_AUTHENTICATION_FAILED, "authentication-failed"}
@@ -1872,7 +1872,7 @@ const char *bactext_error_code_name(
         Vendor_Proprietary_String);
 }
 
-INDTEXT_DATA bacnet_month_names[] = {
+static INDTEXT_DATA bacnet_month_names[] = {
     {1, "January"}
     ,
     {2, "February"}
@@ -1967,7 +1967,7 @@ const char *bactext_day_of_week_name(
 }
 
 /* note: different than DayOfWeek bit string where 1=monday */
-INDTEXT_DATA bacnet_days_of_week_names[] = {
+static INDTEXT_DATA bacnet_days_of_week_names[] = {
     {BACNET_DAYS_OF_WEEK_MONDAY, "Monday"}
     ,
     {BACNET_DAYS_OF_WEEK_TUESDAY, "Tuesday"}
@@ -2000,7 +2000,7 @@ bool bactext_days_of_week_index(
         found_index);
 }
 
-INDTEXT_DATA bacnet_event_transition_names[] = {
+static INDTEXT_DATA bacnet_event_transition_names[] = {
     {TRANSITION_TO_OFFNORMAL, "offnormal"}
     ,
     {TRANSITION_TO_NORMAL, "normal"}
@@ -2025,7 +2025,7 @@ bool bactext_event_transition_index(
         found_index);
 }
 
-INDTEXT_DATA bacnet_event_state_names[] = {
+static INDTEXT_DATA bacnet_event_state_names[] = {
     {EVENT_STATE_NORMAL, "normal"}
     ,
     {EVENT_STATE_FAULT, "fault"}
@@ -2046,7 +2046,7 @@ const char *bactext_event_state_name(
         ASHRAE_Reserved_String);
 }
 
-INDTEXT_DATA bacnet_binary_present_value_names[] = {
+static INDTEXT_DATA bacnet_binary_present_value_names[] = {
     {BINARY_INACTIVE, "inactive"}
     ,
     {BINARY_ACTIVE, "active"}
@@ -2085,7 +2085,7 @@ const char *bactext_binary_polarity_name(
 }
 
 
-INDTEXT_DATA bacnet_reliability_names[] = {
+static INDTEXT_DATA bacnet_reliability_names[] = {
     {RELIABILITY_NO_FAULT_DETECTED, "no-fault-detected"}
     ,
     {RELIABILITY_NO_SENSOR, "no-sensor"}
@@ -2124,7 +2124,7 @@ const char *bactext_reliability_name(
         ASHRAE_Reserved_String);
 }
 
-INDTEXT_DATA bacnet_device_status_names[] = {
+static INDTEXT_DATA bacnet_device_status_names[] = {
     {STATUS_OPERATIONAL, "operational"}
     ,
     {STATUS_OPERATIONAL_READ_ONLY, "operational-read-only"}
@@ -2147,7 +2147,7 @@ const char *bactext_device_status_name(
         ASHRAE_Reserved_String);
 }
 
-INDTEXT_DATA bacnet_segmentation_names[] = {
+static INDTEXT_DATA bacnet_segmentation_names[] = {
     {SEGMENTATION_BOTH, "segmented-both"}
     ,
     {SEGMENTATION_TRANSMIT, "segmented-transmit"}
@@ -2174,7 +2174,7 @@ bool bactext_segmentation_index(
         found_index);
 }
 
-INDTEXT_DATA bacnet_node_type_names[] = {
+static INDTEXT_DATA bacnet_node_type_names[] = {
     {BACNET_NODE_UNKNOWN, "unknown"}
     ,
     {BACNET_NODE_SYSTEM, "system"}
@@ -2246,7 +2246,7 @@ const char *bactext_network_layer_msg_name(
         return "Invalid Network Layer Message";
 }
 
-INDTEXT_DATA life_safety_state_names[] = {
+static INDTEXT_DATA life_safety_state_names[] = {
 	{LIFE_SAFETY_STATE_QUIET, "quiet"}
 	,
     {LIFE_SAFETY_STATE_PRE_ALARM, "pre-alarm"}
@@ -2308,7 +2308,7 @@ const char *bactext_life_safety_state_name(
         return "Invalid Safety State Message";
 }
 
-INDTEXT_DATA lighting_in_progress[] = {
+static INDTEXT_DATA lighting_in_progress[] = {
 		{BACNET_LIGHTING_IDLE, "idle" }
 		,
 		{ BACNET_LIGHTING_FADE_ACTIVE, "fade" }
@@ -2332,7 +2332,7 @@ const char *bactext_lighting_in_progress(
 		return "Invalid Lighting In Progress Message";
 }
 
-INDTEXT_DATA lighting_transition[] = {
+static INDTEXT_DATA lighting_transition[] = {
 		{ BACNET_LIGHTING_TRANSITION_IDLE, "idle" }
 		,
 		{ BACNET_LIGHTING_TRANSITION_FADE, "fade" }
@@ -2352,7 +2352,7 @@ const char *bactext_lighting_transition(
 		return "Invalid Lighting Transition Message";
 }
 
-INDTEXT_DATA bacnet_lighting_operation_names[] = {
+static INDTEXT_DATA bacnet_lighting_operation_names[] = {
     {BACNET_LIGHTS_NONE, "none"}
     ,
     {BACNET_LIGHTS_FADE_TO, "fade-to"}

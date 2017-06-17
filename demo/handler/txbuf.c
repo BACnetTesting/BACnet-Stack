@@ -29,8 +29,4 @@
 
 /** @file txbuf.c  Declare the global Transmit Buffer for handler functions. */
 
-
-    uint8_t Handler_Transmit_Buffer[MAX_PDU] = { 0 };
-
-
-
+uint8_t Handler_Transmit_Buffer[MAX_PDU] = { 0 };

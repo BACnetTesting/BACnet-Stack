@@ -34,9 +34,6 @@
 #define MAX_MILLISECOND_TIMERS 1
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
     uint32_t timeGetTime(
         void);
 
@@ -59,7 +56,4 @@ extern "C" {
     uint32_t timer_reset(
         unsigned index);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

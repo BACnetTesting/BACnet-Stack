@@ -67,6 +67,7 @@ static const int Binary_Input_Properties_Required[] = {
 
 static const int Binary_Input_Properties_Optional[] = {
     PROP_DESCRIPTION,
+	PROP_RELIABILITY,
     -1
 };
 
@@ -476,6 +477,7 @@ bool Binary_Input_Write_Property(
                 }
             }
             break;
+
         case PROP_OUT_OF_SERVICE:
             status =
                 WPValidateArgType(&value, BACNET_APPLICATION_TAG_BOOLEAN,
@@ -485,6 +487,7 @@ bool Binary_Input_Write_Property(
                     value.type.Boolean);
             }
             break;
+
         case PROP_POLARITY:
             status =
                 WPValidateArgType(&value, BACNET_APPLICATION_TAG_ENUMERATED,
@@ -500,6 +503,7 @@ bool Binary_Input_Write_Property(
                 }
             }
             break;
+
         case PROP_OBJECT_IDENTIFIER:
         case PROP_OBJECT_NAME:
         case PROP_DESCRIPTION:

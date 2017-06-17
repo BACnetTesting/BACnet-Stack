@@ -35,4 +35,4 @@
 
 /** @file version.c  Sets the BACnet Version.   */
 
-char *BACnet_Version = BACNET_VERSION_TEXT;
+const char *BACnet_Version = BACNET_VERSION_TEXT;

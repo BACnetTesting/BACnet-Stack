@@ -91,6 +91,7 @@ void handler_who_is_unicast(
     len =
         whois_decode_service_request(service_request, service_len, &low_limit,
         &high_limit);
+        
     /* If no limits, then always respond */
     if (len == 0) {
         Send_I_Am_Unicast(&Handler_Transmit_Buffer[0], src);
@@ -101,7 +102,6 @@ void handler_who_is_unicast(
             Send_I_Am_Unicast(&Handler_Transmit_Buffer[0], src);
         }
     }
-
 }
 
 
@@ -141,6 +141,7 @@ static void check_who_is_for_routing(
         /* Invalid; just leave */
         return;
     }
+
     /* Go through all devices, starting with the root gateway Device */
     memset(&bcast_net, 0, sizeof(BACNET_ADDRESS));
     bcast_net.net = BACNET_BROADCAST_NETWORK;   /* That's all we have to set */

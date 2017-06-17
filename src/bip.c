@@ -225,12 +225,12 @@ uint16_t bip_receive(
     int received_bytes = 0;
     uint16_t pdu_len = 0;       /* return value */
     fd_set read_fds;
-    int max = 0;
+    int max ;
     struct timeval select_timeout;
     struct sockaddr_in sin = { 0 };
     socklen_t sin_len = sizeof(sin);
     uint16_t i = 0;
-    int function = 0;
+    int function ;
 
     /* Make sure the socket is open */
     if (BIP_Socket < 0)

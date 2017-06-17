@@ -68,6 +68,7 @@ static const int Binary_Value_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_PRIORITY_ARRAY,
     PROP_RELINQUISH_DEFAULT,
+    PROP_RELIABILITY,
     -1
 };
 
@@ -271,6 +272,13 @@ int Binary_Value_Read_Property(
             apdu_len =
                 encode_application_enumerated(&apdu[0], EVENT_STATE_NORMAL);
             break;
+
+    case PROP_RELIABILITY:
+        apdu_len = encode_application_enumerated(&apdu[0], 
+            0
+			      );
+        break;
+
         case PROP_OUT_OF_SERVICE:
             state = Binary_Value_Out_Of_Service(rpdata->object_instance);
             apdu_len = encode_application_boolean(&apdu[0], state);

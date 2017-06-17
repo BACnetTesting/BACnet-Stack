@@ -98,7 +98,7 @@ int rp_decode_service_request(
     uint32_t array_value = 0;   /* for decoding */
 
     /* check for value pointers */
-    if (rpdata) {
+    if (rpdata != NULL) {
         /* Must have at least 2 tags, an object id and a property identifier
          * of at least 1 byte in length to have any chance of parsing */
         if (apdu_len < 7) {

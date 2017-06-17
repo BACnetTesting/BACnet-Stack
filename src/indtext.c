@@ -68,12 +68,13 @@ bool indtext_by_string(
     unsigned *found_index)
 {
     bool found = false;
-    unsigned index = 0;
+    // index conflicts with a GCC library name... renamed index to localIndex
+    unsigned localIndex = 0;
 
     if (data_list && search_name) {
         while (data_list->pString) {
             if (strcmp(data_list->pString, search_name) == 0) {
-                index = data_list->index;
+	            localIndex = data_list->index;
                 found = true;
                 break;
             }
@@ -82,7 +83,7 @@ bool indtext_by_string(
     }
 
     if (found && found_index)
-        *found_index = index;
+		*found_index = localIndex;
 
     return found;
 }

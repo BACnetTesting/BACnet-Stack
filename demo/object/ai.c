@@ -82,9 +82,6 @@ static const int Properties_Optional[] = {
 };
 
 static const int Properties_Proprietary[] = {
-    9997,
-    9998,
-    9999,
     -1
 };
 
@@ -99,7 +96,6 @@ void Analog_Input_Property_Lists(
         *pOptional = Properties_Optional;
     if (pProprietary)
         *pProprietary = Properties_Proprietary;
-
 }
 
 

@@ -755,9 +755,10 @@ bool octetstring_init_ascii_hex(
                     /* at least one pair was decoded */
                     status = true;
                 } else {
-                    break;
+                    // feedback to Steve Karg, this was in the wrong order!
                     status = false;
-                }
+	                  break;
+					      }
                 /* set up for next pair */
                 index += 2;
             }

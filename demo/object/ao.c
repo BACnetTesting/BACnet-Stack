@@ -59,22 +59,8 @@ static bool Out_Of_Service[MAX_ANALOG_OUTPUTS];
 /* we need to have our arrays initialized before answering any calls */
 static bool Analog_Output_Initialized = false;
 
-/* These three arrays are used by the ReadPropertyMultiple handler */
-static const int Properties_Required[] = {
-    PROP_OBJECT_IDENTIFIER,
-    PROP_OBJECT_NAME,
-    PROP_OBJECT_TYPE,
-    PROP_PRESENT_VALUE,
-    PROP_STATUS_FLAGS,
-    PROP_EVENT_STATE,
-    PROP_OUT_OF_SERVICE,
-    PROP_UNITS,
-    PROP_PRIORITY_ARRAY,
-    PROP_RELINQUISH_DEFAULT,
-    -1
-};
-
 static const int Properties_Optional[] = {
+    PROP_DESCRIPTION,
     -1
 };
 
@@ -88,7 +74,7 @@ void Analog_Output_Property_Lists(
     const int **pProprietary)
 {
     if (pRequired)
-        *pRequired = Properties_Required;
+        *pRequired = property_list_required(OBJECT_ANALOG_OUTPUT);
     if (pOptional)
         *pOptional = Properties_Optional;
     if (pProprietary)

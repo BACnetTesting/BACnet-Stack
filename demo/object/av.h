@@ -144,7 +144,7 @@
 
 #if defined(INTRINSIC_REPORTING)
     int Analog_Value_Event_Information(
-        unsigned index,
+        unsigned objectIndex,
         BACNET_GET_EVENT_INFORMATION_DATA * getevent_data);
 
     int Analog_Value_Alarm_Ack(
@@ -152,7 +152,7 @@
         BACNET_ERROR_CODE * error_code);
 
     int Analog_Value_Alarm_Summary(
-        unsigned index,
+        unsigned objectIndex,
         BACNET_GET_ALARM_SUMMARY_DATA * getalarm_data);
 #endif
 

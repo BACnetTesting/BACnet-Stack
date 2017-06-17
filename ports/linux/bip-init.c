@@ -59,7 +59,7 @@ long bip_getaddrbyname(
 }
 
 static int get_local_ifr_ioctl(
-    char *ifname,
+    const char *ifname,
     struct ifreq *ifr,
     int request)
 {
@@ -80,7 +80,7 @@ static int get_local_ifr_ioctl(
 
 /* forward prototype required for compilers */
 int get_local_address_ioctl(
-    char *ifname,
+    const char *ifname,
     struct in_addr *addr,
     int request);
 
@@ -109,7 +109,7 @@ int get_local_address_ioctl(
  *        Eg, for Linux, ifname is eth0, ath0, arc0, and others.
  */
 void bip_set_interface(
-    char *ifname)
+    const char *ifname)
 {
     struct in_addr local_address;
     struct in_addr broadcast_address;

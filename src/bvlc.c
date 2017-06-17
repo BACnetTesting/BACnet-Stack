@@ -677,7 +677,7 @@ static bool bvlc_create_bdt(
     uint16_t npdu_length)
 {
     bool status = false;
-    unsigned i = 0;
+    unsigned i ;
     uint16_t pdu_offset = 0;
 
     for (i = 0; i < MAX_BBMD_ENTRIES; i++) {
@@ -714,9 +714,9 @@ static bool bvlc_create_bdt(
  */
 static bool bvlc_register_foreign_device(
     struct sockaddr_in *sin,
-    uint16_t time_to_live)
+    uint16_t time_to_live)   /* time in seconds */
 {
-    unsigned i = 0;
+    unsigned i ;
     bool status = false;
 
     /* am I here already?  If so, update my time to live... */
@@ -1108,7 +1108,7 @@ uint16_t bvlc_receive(
 {
     uint16_t npdu_len = 0;      /* return value */
     fd_set read_fds;
-    int max = 0;
+    int max ;
     struct timeval select_timeout;
     struct sockaddr_in sin = { 0 };
     struct sockaddr_in original_sin = { 0 };

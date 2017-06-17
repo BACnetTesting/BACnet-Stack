@@ -72,8 +72,8 @@ void handler_timesync(
     BACNET_ADDRESS * src)
 {
     int len = 0;
-    BACNET_DATE bdate = {0};
-    BACNET_TIME btime = {0};
+    BACNET_DATE bdate;
+    BACNET_TIME btime;
 
     (void) src;
     (void) service_len;

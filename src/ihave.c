@@ -124,7 +124,7 @@ int ihave_decode_apdu(
     unsigned apdu_len,
     BACNET_I_HAVE_DATA * data)
 {
-    int len = 0;
+    int len ;
 
     if (!apdu)
         return -1;

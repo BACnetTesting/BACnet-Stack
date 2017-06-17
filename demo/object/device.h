@@ -62,7 +62,7 @@ typedef unsigned(
 typedef uint32_t(
     *object_index_to_instance_function)
     (
-        unsigned index);
+    unsigned objectIndex);
 
 /** Provides the BACnet Object_Name for a given object instance of this type.
  * @ingroup ObjHelpers
@@ -283,7 +283,7 @@ bool Device_Object_List_Identifier(
 unsigned Device_Count(
     void);
 uint32_t Device_Index_To_Instance(
-    unsigned index);
+        unsigned objectIndex);
 
 bool Device_Object_Name(
     uint32_t object_instance,
