@@ -71,6 +71,7 @@
 
 /** Buffer used for receiving */
 static uint8_t Rx_Buf[MAX_MPDU] = { 0 };
+extern const char *BACnet_Version;
 
 /** The list of DNETs that our router can reach.
  *  Only one entry since we don't support downstream routers.

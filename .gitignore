@@ -34,3 +34,7 @@ bacwir
 bacwp
 mstpcap
 mstpcrc
+bacgateway
+bacroute
+libbacnet.a
+.settings

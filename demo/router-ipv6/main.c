@@ -100,6 +100,8 @@ static uint8_t Tx_Buffer[MAX_MPDU];
 /* main loop exit control */
 static bool Exit_Requested;
 
+extern const char *BACnet_Version;
+
 /**
  * Search the router table to find a matching DNET entry
  *

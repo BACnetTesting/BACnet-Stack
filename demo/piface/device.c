@@ -57,6 +57,8 @@ extern int Routed_Device_Read_Property_Local(
 extern bool Routed_Device_Write_Property_Local(
     BACNET_WRITE_PROPERTY_DATA * wp_data);
 
+extern const char *BACnet_Version;
+
 /* may be overridden by outside table */
 static object_functions_t *Object_Table;
 
