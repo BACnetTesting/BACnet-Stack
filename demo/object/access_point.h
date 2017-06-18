@@ -43,10 +43,6 @@
 #define MAX_ACCESS_DOORS_COUNT 4
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
     typedef struct {
         BACNET_EVENT_STATE event_state;
         BACNET_RELIABILITY reliability;
@@ -65,9 +61,10 @@ extern "C" {
     } ACCESS_POINT_DESCR;
 
     void Access_Point_Property_Lists(
-        const int **pRequired,
-        const int **pOptional,
-        const int **pProprietary);
+        const BACNET_PROPERTY_ID **pRequired,
+        const BACNET_PROPERTY_ID **pOptional,
+        const BACNET_PROPERTY_ID **pProprietary);
+
     bool Access_Point_Valid_Instance(
         uint32_t object_instance);
     unsigned Access_Point_Count(
@@ -114,7 +111,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

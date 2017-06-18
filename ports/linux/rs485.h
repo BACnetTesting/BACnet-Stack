@@ -39,10 +39,6 @@
 #include <stdint.h>
 #include "mstp.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
     void RS485_Set_Interface(
         char *ifname);
     const char *RS485_Interface(
@@ -70,7 +66,4 @@ extern "C" {
     void RS485_Print_Ports(
         void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

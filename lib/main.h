@@ -13,14 +13,9 @@
 #define DLL_EXPORT __declspec(dllimport)
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+#ifdef _MSC_VER
     void DLL_EXPORT SomeFunction(
         const LPCSTR sometext);
+#endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

@@ -2,7 +2,7 @@
 
 # tools - only if you need them.
 # Most platforms have this already defined
-CC = g++
+#CC = g++
 # AR = ar
 # MAKE = make
 # SIZE = size

@@ -43,6 +43,7 @@
 #include "device.h"
 #include "net.h"
 #include <ifaddrs.h>
+#include <netinet/in.h>
 
 static void debug_print_ipv6(const char *str, const struct in6_addr * addr) {
    debug_printf( "BIP6: %s %02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x\n",
@@ -440,7 +441,7 @@ bool bip6_init(
     server.sin6_family = AF_INET6;
     server.sin6_addr = in6addr_any;
     server.sin6_port = htons(BIP6_Addr.port);
-    status = bind(BIP6_Socket, (const void*)&server, sizeof(server));
+    status = bind(BIP6_Socket, (const sockaddr *)&server, sizeof(server));
     if (status < 0) {
         perror("BIP: bind");
         close(BIP6_Socket);

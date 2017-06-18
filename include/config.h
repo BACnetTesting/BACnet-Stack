@@ -1,35 +1,35 @@
 /**************************************************************************
-*
-* Copyright (C) 2004 Steve Karg <skarg@users.sourceforge.net>
-*
-* Permission is hereby granted, free of charge, to any person obtaining
-* a copy of this software and associated documentation files (the
-* "Software"), to deal in the Software without restriction, including
-* without limitation the rights to use, copy, modify, merge, publish,
-* distribute, sublicense, and/or sell copies of the Software, and to
-* permit persons to whom the Software is furnished to do so, subject to
-* the following conditions:
-*
-* The above copyright notice and this permission notice shall be included
-* in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*
-*********************************************************************/
+ *
+ * Copyright (C) 2004 Steve Karg <skarg@users.sourceforge.net>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ *********************************************************************/
 #ifndef CONFIG_H
 #define CONFIG_H
 
 /* Note: these defines can be defined in your makefile or project
-   or here or not defined and defaults will be used */
+ or here or not defined and defaults will be used */
 
 /* declare a single physical layer using your compiler define.
-   see datalink.h for possible defines. */
+ see datalink.h for possible defines. */
 #if !(defined(BACDL_ETHERNET) || defined(BACDL_ARCNET) || \
     defined(BACDL_MSTP) || defined(BACDL_BIP) || defined(BACDL_BIP6) || \
     defined(BACDL_TEST) || defined(BACDL_ALL))
@@ -39,9 +39,9 @@
 /* optional configuration for BACnet/IP datalink layer */
 #if (defined(BACDL_BIP) || defined(BACDL_ALL))
 /* other BIP defines (define as 1 to enable):
-    USE_INADDR - uses INADDR_BROADCAST for broadcast and binds using INADDR_ANY
-    USE_CLASSADDR = uses IN_CLASSx_HOST where x=A,B,C or D for broadcast
-*/
+ USE_INADDR - uses INADDR_BROADCAST for broadcast and binds using INADDR_ANY
+ USE_CLASSADDR = uses IN_CLASSx_HOST where x=A,B,C or D for broadcast
+ */
 #if !defined(BBMD_ENABLED)
 #define BBMD_ENABLED 1
 #endif
@@ -54,6 +54,8 @@
 #endif
 #endif
 
+// #define BAC_ROUTING	1
+
 /* Enable the Gateway (Routing) functionality here, if desired. */
 #if !defined(MAX_NUM_DEVICES)
 #ifdef BAC_ROUTING
@@ -63,11 +65,10 @@
 #endif
 #endif
 
-
 /* Define your processor architecture as
-   Big Endian       (PowerPC,68K,Sparc) or 
-   Little Endian    (Intel,AVR)
-   ARM and MIPS can be either - what is the most common? */
+ Big Endian       (PowerPC,68K,Sparc) or
+ Little Endian    (Intel,AVR)
+ ARM and MIPS can be either - what is the most common? */
 
 // renamed from BIG_ENDIAN to BACNET_STACK_BIG_ENDIAN due to ambiguous collisions with some compilers
 #if !defined(BACNET_STACK_BIG_ENDIAN)
@@ -88,12 +89,12 @@
 /* 50 is the minimum; adjust to your memory and physical layer constraints */
 /* Lon=206, MS/TP=480, ARCNET=480, Ethernet=1476, BACnet/IP=1476 */
 #if !defined(MAX_APDU)
-    /* #define MAX_APDU 50 */
-    /* #define MAX_APDU 1476 */
+/* #define MAX_APDU 50 */
+/* #define MAX_APDU 1476 */
 #if defined(BACDL_BIP)
 #define MAX_APDU 1476
 /* #define MAX_APDU 128 enable this IP for testing
-   readrange so you get the More Follows flag set */
+ readrange so you get the More Follows flag set */
 #elif defined(BACDL_BIP6)
 #define MAX_APDU 1476
 #elif defined (BACDL_ETHERNET)
@@ -134,7 +135,7 @@
 #endif
 
 /* BACAPP decodes WriteProperty service requests
-   Choose the datatypes that your application supports */
+ Choose the datatypes that your application supports */
 #if !(defined(BACAPP_ALL) || \
     defined(BACAPP_MINIMAL) || \
     defined(BACAPP_NULL) || \
@@ -185,8 +186,8 @@
 #endif
 
 /*
-** Set the maximum vector type sizes
-*/
+ ** Set the maximum vector type sizes
+ */
 #ifndef MAX_BITSTRING_BYTES
 #define MAX_BITSTRING_BYTES (15)
 #endif
@@ -200,22 +201,22 @@
 #endif
 
 /*
-** Control the selection of services etc to enable code size reduction for those
-** compiler suites which do not handle removing of unused functions in modules
-** so well.
-**
-** We will start with the A type services code first as these are least likely
-** to be required in embedded systems using the stack.
-*/
+ ** Control the selection of services etc to enable code size reduction for those
+ ** compiler suites which do not handle removing of unused functions in modules
+ ** so well.
+ **
+ ** We will start with the A type services code first as these are least likely
+ ** to be required in embedded systems using the stack.
+ */
 
 /*
-** First we see if this is a test build and enable all the services as they
-** may be required.
-**
-** Note: I've left everything enabled here in the main config.h. You should
-** use a local copy of config.h with settings configured for your needs to
-** make use of the code space reductions.
-**/
+ ** First we see if this is a test build and enable all the services as they
+ ** may be required.
+ **
+ ** Note: I've left everything enabled here in the main config.h. You should
+ ** use a local copy of config.h with settings configured for your needs to
+ ** make use of the code space reductions.
+ **/
 
 #ifdef TEST
 #define BACNET_SVC_I_HAVE_A    1

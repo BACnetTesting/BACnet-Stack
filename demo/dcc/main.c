@@ -175,7 +175,7 @@ int main(
     uint16_t pdu_len ;
     unsigned timeout = 100;     /* milliseconds */
     unsigned max_apdu ;
-    time_t elapsed_seconds ;
+    time_t elapsed_seconds = 0 ;
     time_t last_seconds ;
     time_t current_seconds ;
     time_t timeout_seconds ;

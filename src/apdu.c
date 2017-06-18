@@ -42,14 +42,15 @@
 #include "tsm.h"
 #include "dcc.h"
 #include "iam.h"
+#include "device.h"
 
 /** @file apdu.c  Handles APDU services */
 
-extern int Routed_Device_Service_Approval(
-    BACNET_CONFIRMED_SERVICE service,
-    int service_argument,
-    uint8_t * apdu_buff,
-    uint8_t invoke_id);
+//extern int Routed_Device_Service_Approval(
+//    BACNET_CONFIRMED_SERVICE service,
+//    int service_argument,
+//    uint8_t * apdu_buff,
+//    uint8_t invoke_id);
 
 
 /* APDU Timeout in Milliseconds */
