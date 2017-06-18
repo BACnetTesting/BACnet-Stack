@@ -45,7 +45,6 @@ BACNET_PORT ?= linux
 
 # Default compiler settings
 OPTIMIZATION = -Os
-OPTIMIZATION += -Os
 DEBUGGING =
 WARNINGS = -Wall -Wmissing-prototypes
 ifeq (${BUILD},debug)
