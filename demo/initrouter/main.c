@@ -69,7 +69,7 @@ static bool Error_Detected = false;
 static void MyAbortHandler(
     BACNET_ADDRESS * src,
     uint8_t invoke_id,
-    uint8_t abort_reason,
+    BACNET_ABORT_REASON abort_reason,
     bool server)
 {
     /* FIXME: verify src and invoke id */
@@ -238,13 +238,13 @@ static void Init_Service_Handlers(
     apdu_set_reject_handler(MyRejectHandler);
 }
 
-static void print_usage(char *filename)
+static void print_usage(const char *filename)
 {
     printf("Usage: %s address [DNET ID Len Info]\n", filename);
     printf("       [--version][--help]\n");
 }
 
-static void print_help(char *filename)
+static void print_help(const char *filename)
 {
     printf("Send BACnet Initialize-Routing-Table message to a network\n"
         "and wait for responses.  Displays their network information.\n"
@@ -315,7 +315,7 @@ int main(
     time_t current_seconds = 0;
     time_t timeout_seconds = 0;
     int argi = 0;
-    char *filename = NULL;
+    const char *filename ;
 
     filename = filename_remove_path(argv[0]);
     for (argi = 1; argi < argc; argi++) {

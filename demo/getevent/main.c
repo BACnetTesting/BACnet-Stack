@@ -91,7 +91,7 @@ static void MyErrorHandler(
 void MyAbortHandler(
     BACNET_ADDRESS * src,
     uint8_t invoke_id,
-    uint8_t abort_reason,
+    BACNET_ABORT_REASON abort_reason,
     bool server)
 {
     (void) server;
@@ -181,7 +181,7 @@ static void Init_Service_Handlers(void)
     apdu_set_reject_handler(MyRejectHandler);
 }
 
-static int print_help(char *exe_name){
+static int print_help(const char *exe_name){
     printf("Usage:\n" "\n" "%s device-instance [--help]\n" "\n"
         "  Send BACnet GetEventInformation service retruequest to given device, and wait\n"
         "  for responses.\n\n", exe_name);
@@ -190,16 +190,16 @@ static int print_help(char *exe_name){
 
 int main(int argc, char *argv[])
 {
-    BACNET_ADDRESS src = {0};  /* address where message came from */
-    uint16_t pdu_len = 0;
+    BACNET_ADDRESS src ;  /* address where message came from */
+    uint16_t pdu_len ;
     unsigned timeout = 100;     /* milliseconds */
-    unsigned max_apdu = 0;
-    time_t elapsed_seconds = 0;
-    time_t last_seconds = 0;
-    time_t current_seconds = 0;
-    time_t timeout_seconds = 0;
-    LastReceivedObjectIdentifier.instance = 0;
-    LastReceivedObjectIdentifier.type = 0;
+    unsigned max_apdu ;
+    time_t elapsed_seconds ;
+    time_t last_seconds ;
+    time_t current_seconds ;
+    time_t timeout_seconds ;
+    LastReceivedObjectIdentifier.instance ;
+    LastReceivedObjectIdentifier.type ;
 
     bool found = false;
     if (argc <= 1) {

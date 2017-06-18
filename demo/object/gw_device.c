@@ -380,7 +380,7 @@ bool Routed_Device_Is_Valid_Network(
 uint32_t Routed_Device_Index_To_Instance(
     unsigned index)
 {
-    index = index;
+    (void) index ;
     return Devices[iCurrent_Device_Idx].bacObj.Object_Instance_Number;
 }
 

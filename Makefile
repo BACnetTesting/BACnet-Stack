@@ -2,7 +2,7 @@
 
 # tools - only if you need them.
 # Most platforms have this already defined
-# CC = gcc
+CC = g++
 # AR = ar
 # MAKE = make
 # SIZE = size
@@ -45,6 +45,7 @@ BACNET_PORT ?= linux
 
 # Default compiler settings
 OPTIMIZATION = -Os
+OPTIMIZATION += -Os
 DEBUGGING =
 WARNINGS = -Wall -Wmissing-prototypes
 ifeq (${BUILD},debug)

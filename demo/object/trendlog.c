@@ -53,7 +53,7 @@ TL_DATA_REC Logs[MAX_TREND_LOGS][TL_MAX_ENTRIES];
 static TL_LOG_INFO LogInfo[MAX_TREND_LOGS];
 
 /* These three arrays are used by the ReadPropertyMultiple handler */
-static const int Trend_Log_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Trend_Log_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -69,7 +69,7 @@ static const int Trend_Log_Properties_Required[] = {
     -1
 };
 
-static const int Trend_Log_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Trend_Log_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_START_TIME,
     PROP_STOP_TIME,
@@ -101,9 +101,9 @@ static const int Trend_Log_Properties_Proprietary[] = {
 };
 
 void Trend_Log_Property_Lists(
-    const int **pRequired,
-    const int **pOptional,
-    const int **pProprietary)
+    const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary)
 {
     if (pRequired)
         *pRequired = Trend_Log_Properties_Required;

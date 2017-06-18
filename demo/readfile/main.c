@@ -83,7 +83,7 @@ static void Atomic_Read_File_Error_Handler(
 void MyAbortHandler(
     BACNET_ADDRESS * src,
     uint8_t invoke_id,
-    uint8_t abort_reason,
+	BACNET_ABORT_REASON abort_reason,
     bool server)
 {
     (void) server;
@@ -221,14 +221,14 @@ static void Init_Service_Handlers(
     apdu_set_reject_handler(MyRejectHandler);
 }
 
-static void print_usage(char *filename)
+static void print_usage(const char *filename)
 {
     printf("Usage: %s device-instance file-instance local-name\n",
         filename);
     printf("       [--version][--help]\n");
 }
 
-static void print_help(char *filename)
+static void print_help(const char *filename)
 {
     printf("Read a file from a BACnet device and save it locally.\n"
         "device-instance:\n"
@@ -270,7 +270,7 @@ int main(
     bool found = false;
     uint16_t my_max_apdu = 0;
     int argi = 0;
-    char *filename = NULL;
+    const char *filename ;
 
     /* print help if requested */
     filename = filename_remove_path(argv[0]);

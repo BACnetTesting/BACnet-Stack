@@ -29,7 +29,7 @@
 #include <string.h>
 
 /* index and text pairs */
-typedef const struct {
+typedef const struct _INDTEXT_DATA {
     const unsigned index;     /* index number that matches the text */
     const char *pString;        /* text pair - use NULL to end the list */
 } INDTEXT_DATA;

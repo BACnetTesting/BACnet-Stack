@@ -548,7 +548,7 @@ size_t data_write(
     ssize_t bytes = 0;
     if (FD_Pipe != -1) {
         bytes = write(FD_Pipe, ptr, size * nitems);
-        bytes = bytes;
+        (void) bytes ;
     }
     return fwrite(ptr, size, nitems, pFile);
 }
@@ -562,7 +562,7 @@ size_t data_write_header(
     ssize_t bytes = 0;
     if (pipe_enable && (FD_Pipe != -1)) {
         bytes = write(FD_Pipe, ptr, size * nitems);
-        bytes = bytes;
+        (void) bytes ;
     }
     return fwrite(ptr, size, nitems, pFile);
 }
@@ -955,7 +955,7 @@ void filename_create_new(
 }
 
 static void print_usage(
-    char *filename)
+    const char *filename)
 {
     printf("Usage: %s", filename);
     printf(" [--scan <filename>]\n");
@@ -965,7 +965,7 @@ static void print_usage(
     printf(" [--version][--help]\n");
 }
 
-static void print_help(char *filename) {
+static void print_help(const char *filename) {
     printf("%s --scan <filename>\n"
         "perform statistic analysis on MS/TP capture file.\n",
         filename);
@@ -1028,7 +1028,7 @@ int main(
     uint32_t packet_count = 0;
     uint32_t header_len = 0;
     int argi = 0;
-    char *filename = NULL;
+    const char *filename ;
 
     MSTP_Port.InputBuffer = &RxBuffer[0];
     MSTP_Port.InputBufferSize = sizeof(RxBuffer);

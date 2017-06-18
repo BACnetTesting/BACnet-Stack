@@ -263,7 +263,7 @@ bool Device_Write_Property(
 }
 
 static unsigned property_list_count(
-    const int *pList)
+    const BACNET_PROPERTY_ID *pList)
 {
     unsigned property_count = 0;
 

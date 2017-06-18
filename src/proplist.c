@@ -48,14 +48,14 @@
 /** @file proplist.c  List of Required and Optional object properties */
 /* note: the PROP_PROPERTY_LIST is NOT included in these lists, on purpose */
 
-static const int Default_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Default_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
     -1
 };
 
-static const int Device_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Device_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -79,7 +79,7 @@ static const int Device_Properties_Required[] = {
     -1
 };
 
-static const int Device_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Device_Properties_Optional[] = {
     PROP_LOCATION,
     PROP_DESCRIPTION,
     PROP_STRUCTURED_OBJECT_LIST,
@@ -844,7 +844,7 @@ static const int Integer_Value_Properties_Optional[] = {
  * type 'int' that contain BACnet object properties for the given object
  * type.
  */
-const int * property_list_optional(
+const BACNET_PROPERTY_ID * property_list_optional(
     BACNET_OBJECT_TYPE object_type)
 {
     const int * pList = NULL;
@@ -941,10 +941,10 @@ const int * property_list_optional(
  * type 'int' that contain BACnet object properties for the given object
  * type.
  */
-const int * property_list_required(
+const BACNET_PROPERTY_ID* property_list_required(
     BACNET_OBJECT_TYPE object_type)
 {
-    const int * pList = NULL;
+    const BACNET_PROPERTY_ID * pList = NULL;
 
     switch (object_type) {
         case OBJECT_DEVICE:
@@ -1132,8 +1132,9 @@ unsigned property_list_special_count(
  * @param pList - array of type 'int' that is a list of BACnet object
  * properties, terminated by a '-1' value.
  */
+// todo 2 - this function appears in 3 places....
 unsigned property_list_count(
-    const int *pList)
+    const BACNET_PROPERTY_ID *pList)
 {
     unsigned property_count = 0;
 
@@ -1159,9 +1160,9 @@ unsigned property_list_count(
  */
 int property_list_encode(
     BACNET_READ_PROPERTY_DATA * rpdata,
-    const int *pListRequired,
-    const int *pListOptional,
-    const int *pListProprietary)
+    const BACNET_PROPERTY_ID *pListRequired,
+    const BACNET_PROPERTY_ID *pListOptional,
+    const BACNET_PROPERTY_ID *pListProprietary)
 {
     int apdu_len = 0;   /* return value */
     uint8_t *apdu = NULL;

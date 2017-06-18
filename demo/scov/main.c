@@ -91,7 +91,7 @@ static void MyErrorHandler(
 void MyAbortHandler(
     BACNET_ADDRESS * src,
     uint8_t invoke_id,
-    uint8_t abort_reason,
+    BACNET_ABORT_REASON abort_reason,
     bool server)
 {
     (void) server;
@@ -204,7 +204,7 @@ int main(
     time_t timeout_seconds = 0;
     time_t delta_seconds = 0;
     bool found = false;
-    char *filename = NULL;
+    const char *filename ;
     bool print_usage_terse = false;
     bool print_usage_verbose = false;
     BACNET_SUBSCRIBE_COV_DATA *cov_data = NULL;
@@ -266,11 +266,11 @@ int main(
         return 1;
     }
     atexit(cleanup);
-    COV_Subscribe_Data = calloc(1, sizeof(BACNET_SUBSCRIBE_COV_DATA));
+    COV_Subscribe_Data = (BACNET_SUBSCRIBE_COV_DATA *) calloc(1, sizeof(BACNET_SUBSCRIBE_COV_DATA));
     cov_data = COV_Subscribe_Data;
     argi = 2;
     while (cov_data) {
-        cov_data->monitoredObjectIdentifier.type = strtol(argv[argi], NULL, 0);
+        cov_data->monitoredObjectIdentifier.type = (BACNET_OBJECT_TYPE) strtol(argv[argi], NULL, 0);
         if (cov_data->monitoredObjectIdentifier.type >= MAX_BACNET_OBJECT_TYPE) {
             fprintf(stderr, "object-type=%u - it must be less than %u\r\n",
                 cov_data->monitoredObjectIdentifier.type,
@@ -315,7 +315,7 @@ int main(
         if (arg_remaining < 5) {
             break;
         } else {
-            cov_data->next = calloc(1, sizeof(BACNET_SUBSCRIBE_COV_DATA));
+            cov_data->next = (struct BACnet_Subscribe_COV_Data *) calloc(1, sizeof(BACNET_SUBSCRIBE_COV_DATA));
             cov_data = cov_data->next;
         }
     }

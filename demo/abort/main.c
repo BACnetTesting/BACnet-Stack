@@ -49,7 +49,7 @@
 
 /* parsed command line parameters */
 static uint8_t Target_Invoke_ID = 1;
-static uint16_t Target_Abort_Reason;
+static BACNET_ABORT_REASON Target_Abort_Reason;
 static bool Target_Server = true;
 /* flag for signalling errors */
 static bool Error_Detected = false;
@@ -57,7 +57,7 @@ static bool Error_Detected = false;
 void MyAbortHandler(
     BACNET_ADDRESS * src,
     uint8_t invoke_id,
-    uint8_t abort_reason,
+    BACNET_ABORT_REASON abort_reason,
     bool server)
 {
     (void) src;
@@ -99,7 +99,7 @@ static void Init_Service_Handlers(
     apdu_set_reject_handler(MyRejectHandler);
 }
 
-static void print_usage(char *filename)
+static void print_usage(const char *filename)
 {
     printf("Usage: %s [abort-reason [invoke-id [server]]]\n",
         filename);
@@ -107,7 +107,7 @@ static void print_usage(char *filename)
     printf("       [--version][--help]\n");
 }
 
-static void print_help(char *filename)
+static void print_help(const char *filename)
 {
     printf("Send BACnet Abort message to the network.\n");
     printf("--mac A\n"
@@ -149,7 +149,7 @@ int main(
     bool specific_address = false;
     int argi = 0;
     unsigned int target_args = 0;
-    char *filename = NULL;
+    const char *filename ;
 
     filename = filename_remove_path(argv[0]);
     for (argi = 1; argi < argc; argi++) {
@@ -187,7 +187,7 @@ int main(
             }
         } else {
             if (target_args == 0) {
-                Target_Abort_Reason = strtol(argv[argi], NULL, 0);
+                Target_Abort_Reason = (BACNET_ABORT_REASON) strtol(argv[argi], NULL, 0);
                 target_args++;
             } else if (target_args == 1) {
                 Target_Invoke_ID = strtol(argv[argi], NULL, 0);

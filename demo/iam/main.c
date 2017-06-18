@@ -58,7 +58,7 @@ static bool Error_Detected = false;
 void MyAbortHandler(
     BACNET_ADDRESS * src,
     uint8_t invoke_id,
-    uint8_t abort_reason,
+    BACNET_ABORT_REASON abort_reason,
     bool server)
 {
     (void) src;
@@ -100,7 +100,7 @@ static void Init_Service_Handlers(
     apdu_set_reject_handler(MyRejectHandler);
 }
 
-static void print_usage(char *filename)
+static void print_usage(const char *filename)
 {
     printf("Usage: %s [device-instance vendor-id max-apdu segmentation]\n",
         filename);
@@ -108,7 +108,7 @@ static void print_usage(char *filename)
     printf("       [--version][--help]\n");
 }
 
-static void print_help(char *filename)
+static void print_help(const char *filename)
 {
     printf("Send BACnet I-Am message for a device.\n");
     printf("--mac A\n"
@@ -152,7 +152,7 @@ int main(
     bool specific_address = false;
     int argi = 0;
     unsigned int target_args = 0;
-    char *filename = NULL;
+    const char *filename ;
 
     filename = filename_remove_path(argv[0]);
     for (argi = 1; argi < argc; argi++) {

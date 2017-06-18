@@ -57,7 +57,7 @@ static bool Error_Detected = false;
 void MyAbortHandler(
     BACNET_ADDRESS * src,
     uint8_t invoke_id,
-    uint8_t abort_reason,
+    BACNET_ABORT_REASON abort_reason,
     bool server)
 {
     /* FIXME: verify src and invoke id */
@@ -104,13 +104,13 @@ static void Init_Service_Handlers(
     apdu_set_reject_handler(MyRejectHandler);
 }
 
-static void print_usage(char *filename)
+static void print_usage(const char *filename)
 {
     printf("Usage: %s [--dnet][--dadr][--mac]\n", filename);
     printf("       [--version][--help]\n");
 }
 
-static void print_help(char *filename)
+static void print_help(const char *filename)
 {
     printf("Send BACnet TimeSynchronization request.\n"
         "\n"
@@ -174,7 +174,7 @@ int main(
     BACNET_ADDRESS dest = { 0 };
     bool global_broadcast = true;
     int argi = 0;
-    char *filename = NULL;
+    const char *filename ;
 
     /* decode any command line parameters */
     filename = filename_remove_path(argv[0]);
@@ -261,7 +261,7 @@ int main(
     bdate.year = my_time->tm_year + 1900;
     bdate.month = my_time->tm_mon + 1;
     bdate.day = my_time->tm_mday;
-    bdate.wday = my_time->tm_wday ? my_time->tm_wday : 7;
+    bdate.wday = (BACNET_WEEKDAY) ( my_time->tm_wday ? my_time->tm_wday : 7 ) ;
     btime.hour = my_time->tm_hour;
     btime.min = my_time->tm_min;
     btime.sec = my_time->tm_sec;
