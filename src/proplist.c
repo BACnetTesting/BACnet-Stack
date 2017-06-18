@@ -16,7 +16,7 @@
  along with this program; if not, write to:
  The Free Software Foundation, Inc.
  59 Temple Place - Suite 330
- Boston, MA  02111-1307, USA.
+ Boston, MA  02111MAX_BACNET_PROPERTY_ID307, USA.
 
  As a special exception, if other files instantiate templates or
  use macros or inline functions from this file, or you compile
@@ -52,7 +52,7 @@ static const BACNET_PROPERTY_ID Default_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Device_Properties_Required[] = {
@@ -76,7 +76,7 @@ static const BACNET_PROPERTY_ID Device_Properties_Required[] = {
     PROP_NUMBER_OF_APDU_RETRIES,
     PROP_DEVICE_ADDRESS_BINDING,
     PROP_DATABASE_REVISION,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Device_Properties_Optional[] = {
@@ -114,7 +114,7 @@ static const BACNET_PROPERTY_ID Device_Properties_Optional[] = {
     PROP_ALIGN_INTERVALS,
     PROP_INTERVAL_OFFSET,
     PROP_PROFILE_NAME,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Accumulator_Properties_Required[] = {
@@ -128,7 +128,7 @@ static const BACNET_PROPERTY_ID Accumulator_Properties_Required[] = {
     PROP_SCALE,
     PROP_UNITS,
     PROP_MAX_PRES_VALUE,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Accumulator_Properties_Optional[] = {
@@ -155,7 +155,7 @@ static const BACNET_PROPERTY_ID Accumulator_Properties_Optional[] = {
     PROP_EVENT_MESSAGE_TEXTS,
     PROP_RELIABILITY_EVALUATION_INHIBIT,
     PROP_PROFILE_NAME,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Analog_Input_Properties_Required[] = {
@@ -167,7 +167,7 @@ static const BACNET_PROPERTY_ID Analog_Input_Properties_Required[] = {
     PROP_EVENT_STATE,
     PROP_OUT_OF_SERVICE,
     PROP_UNITS,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Analog_Input_Properties_Optional[] = {
@@ -192,7 +192,7 @@ static const BACNET_PROPERTY_ID Analog_Input_Properties_Optional[] = {
     PROP_EVENT_MESSAGE_TEXTS,
     PROP_RELIABILITY_EVALUATION_INHIBIT,
     PROP_PROFILE_NAME,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Analog_Output_Properties_Required[] = {
@@ -206,7 +206,7 @@ static const BACNET_PROPERTY_ID Analog_Output_Properties_Required[] = {
     PROP_UNITS,
     PROP_PRIORITY_ARRAY,
     PROP_RELINQUISH_DEFAULT,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Analog_Output_Properties_Optional[] = {
@@ -230,7 +230,7 @@ static const BACNET_PROPERTY_ID Analog_Output_Properties_Optional[] = {
     PROP_EVENT_MESSAGE_TEXTS,
     PROP_RELIABILITY_EVALUATION_INHIBIT,
     PROP_PROFILE_NAME,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Analog_Value_Properties_Required[] = {
@@ -242,7 +242,7 @@ static const BACNET_PROPERTY_ID Analog_Value_Properties_Required[] = {
     PROP_EVENT_STATE,
     PROP_OUT_OF_SERVICE,
     PROP_UNITS,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Analog_Value_Properties_Optional[] = {
@@ -264,7 +264,7 @@ static const BACNET_PROPERTY_ID Analog_Value_Properties_Optional[] = {
     PROP_EVENT_MESSAGE_TEXTS,
     PROP_RELIABILITY_EVALUATION_INHIBIT,
     PROP_PROFILE_NAME,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Averaging_Properties_Required[] = {
@@ -278,7 +278,7 @@ static const BACNET_PROPERTY_ID Averaging_Properties_Required[] = {
     PROP_EVENT_STATE,
     PROP_OUT_OF_SERVICE,
     PROP_UNITS,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Averaging_Properties_Optional[] = {
@@ -292,7 +292,7 @@ static const BACNET_PROPERTY_ID Averaging_Properties_Optional[] = {
     PROP_OBJECT_PROPERTY_REFERENCE,
     PROP_WINDOW_INTERVAL,
     PROP_WINDOW_SAMPLES,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Binary_Input_Properties_Required[] = {
@@ -304,7 +304,7 @@ static const BACNET_PROPERTY_ID Binary_Input_Properties_Required[] = {
     PROP_EVENT_STATE,
     PROP_OUT_OF_SERVICE,
     PROP_POLARITY,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Binary_Input_Properties_Optional[] = {
@@ -328,7 +328,7 @@ static const BACNET_PROPERTY_ID Binary_Input_Properties_Optional[] = {
     PROP_EVENT_MESSAGE_TEXTS,
     PROP_RELIABILITY_EVALUATION_INHIBIT,
     PROP_PROFILE_NAME,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Binary_Output_Properties_Required[] = {
@@ -342,7 +342,7 @@ static const BACNET_PROPERTY_ID Binary_Output_Properties_Required[] = {
     PROP_POLARITY,
     PROP_PRIORITY_ARRAY,
     PROP_RELINQUISH_DEFAULT,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Binary_Output_Properties_Optional[] = {
@@ -368,7 +368,7 @@ static const BACNET_PROPERTY_ID Binary_Output_Properties_Optional[] = {
     PROP_EVENT_MESSAGE_TEXTS,
     PROP_RELIABILITY_EVALUATION_INHIBIT,
     PROP_PROFILE_NAME,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Binary_Value_Properties_Required[] = {
@@ -379,7 +379,7 @@ static const BACNET_PROPERTY_ID Binary_Value_Properties_Required[] = {
     PROP_STATUS_FLAGS,
     PROP_EVENT_STATE,
     PROP_OUT_OF_SERVICE,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Binary_Value_Properties_Optional[] = {
@@ -406,7 +406,7 @@ static const BACNET_PROPERTY_ID Binary_Value_Properties_Optional[] = {
     PROP_EVENT_MESSAGE_TEXTS,
     PROP_RELIABILITY_EVALUATION_INHIBIT,
     PROP_PROFILE_NAME,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Calendar_Properties_Required[] = {
@@ -415,13 +415,13 @@ static const BACNET_PROPERTY_ID Calendar_Properties_Required[] = {
     PROP_OBJECT_TYPE,
     PROP_PRESENT_VALUE,
     PROP_DATE_LIST,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Calendar_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_PROFILE_NAME,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Channel_Properties_Required[] = {
@@ -436,7 +436,7 @@ static const BACNET_PROPERTY_ID Channel_Properties_Required[] = {
     PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES,
     PROP_CHANNEL_NUMBER,
     PROP_CONTROL_GROUPS,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Channel_Properties_Optional[] = {
@@ -455,7 +455,7 @@ static const BACNET_PROPERTY_ID Channel_Properties_Optional[] = {
     PROP_EVENT_MESSAGE_TEXTS_CONFIG,
     PROP_RELIABILITY_EVALUATION_INHIBIT,
     PROP_PROFILE_NAME,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Command_Properties_Required[] = {
@@ -466,14 +466,14 @@ static const BACNET_PROPERTY_ID Command_Properties_Required[] = {
     PROP_IN_PROCESS,
     PROP_ALL_WRITES_SUCCESSFUL,
     PROP_ACTION,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Command_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_ACTION_TEXT,
     PROP_PROFILE_NAME,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID CharacterString_Value_Properties_Required[] = {
@@ -482,7 +482,7 @@ static const BACNET_PROPERTY_ID CharacterString_Value_Properties_Required[] = {
     PROP_OBJECT_TYPE,
     PROP_PRESENT_VALUE,
     PROP_STATUS_FLAGS,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID CharacterString_Value_Properties_Optional[] = {
@@ -503,7 +503,7 @@ static const BACNET_PROPERTY_ID CharacterString_Value_Properties_Optional[] = {
     PROP_EVENT_MESSAGE_TEXTS,
     PROP_RELIABILITY_EVALUATION_INHIBIT,
     PROP_PROFILE_NAME,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Lighting_Output_Properties_Required[] = {
@@ -525,7 +525,7 @@ static const BACNET_PROPERTY_ID Lighting_Output_Properties_Required[] = {
     PROP_PRIORITY_ARRAY,
     PROP_RELINQUISH_DEFAULT,
     PROP_LIGHTING_COMMAND_DEFAULT_PRIORITY,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Lighting_Output_Properties_Optional[] = {
@@ -540,7 +540,7 @@ static const BACNET_PROPERTY_ID Lighting_Output_Properties_Optional[] = {
     PROP_COV_INCREMENT,
     PROP_RELIABILITY_EVALUATION_INHIBIT,
     PROP_PROFILE_NAME,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Load_Control_Properties_Required[] = {
@@ -559,7 +559,7 @@ static const BACNET_PROPERTY_ID Load_Control_Properties_Required[] = {
     PROP_ACTUAL_SHED_LEVEL,
     PROP_SHED_LEVELS,
     PROP_SHED_LEVEL_DESCRIPTIONS,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Load_Control_Properties_Optional[] = {
@@ -576,7 +576,7 @@ static const BACNET_PROPERTY_ID Load_Control_Properties_Optional[] = {
     PROP_EVENT_MESSAGE_TEXTS,
     PROP_RELIABILITY_EVALUATION_INHIBIT,
     PROP_PROFILE_NAME,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Life_Safety_Point_Properties_Required[] = {
@@ -593,7 +593,7 @@ static const BACNET_PROPERTY_ID Life_Safety_Point_Properties_Required[] = {
     PROP_ACCEPTED_MODES,
     PROP_SILENCED,
     PROP_OPERATION_EXPECTED,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Life_Safety_Point_Properties_Optional[] = {
@@ -615,7 +615,7 @@ static const BACNET_PROPERTY_ID Life_Safety_Point_Properties_Optional[] = {
     PROP_MEMBER_OF,
     PROP_RELIABILITY_EVALUATION_INHIBIT,
     PROP_PROFILE_NAME,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Multistate_Input_Properties_Required[] = {
@@ -627,7 +627,7 @@ static const BACNET_PROPERTY_ID Multistate_Input_Properties_Required[] = {
     PROP_EVENT_STATE,
     PROP_OUT_OF_SERVICE,
     PROP_NUMBER_OF_STATES,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Multistate_Input_Properties_Optional[] = {
@@ -646,7 +646,7 @@ static const BACNET_PROPERTY_ID Multistate_Input_Properties_Optional[] = {
     PROP_EVENT_MESSAGE_TEXTS,
     PROP_RELIABILITY_EVALUATION_INHIBIT,
     PROP_PROFILE_NAME,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Multistate_Output_Properties_Required[] = {
@@ -660,7 +660,7 @@ static const BACNET_PROPERTY_ID Multistate_Output_Properties_Required[] = {
     PROP_NUMBER_OF_STATES,
     PROP_PRIORITY_ARRAY,
     PROP_RELINQUISH_DEFAULT,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Multistate_Output_Properties_Optional[] = {
@@ -678,7 +678,7 @@ static const BACNET_PROPERTY_ID Multistate_Output_Properties_Optional[] = {
     PROP_EVENT_MESSAGE_TEXTS,
     PROP_RELIABILITY_EVALUATION_INHIBIT,
     PROP_PROFILE_NAME,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Multistate_Value_Properties_Required[] = {
@@ -690,7 +690,7 @@ static const BACNET_PROPERTY_ID Multistate_Value_Properties_Required[] = {
     PROP_EVENT_STATE,
     PROP_OUT_OF_SERVICE,
     PROP_NUMBER_OF_STATES,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Multistate_Value_Properties_Optional[] = {
@@ -710,7 +710,7 @@ static const BACNET_PROPERTY_ID Multistate_Value_Properties_Optional[] = {
     PROP_EVENT_MESSAGE_TEXTS,
     PROP_RELIABILITY_EVALUATION_INHIBIT,
     PROP_PROFILE_NAME,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Notification_Class_Properties_Required[] = {
@@ -721,13 +721,13 @@ static const BACNET_PROPERTY_ID Notification_Class_Properties_Required[] = {
     PROP_PRIORITY,
     PROP_ACK_REQUIRED,
     PROP_RECIPIENT_LIST,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Notification_Class_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_PROFILE_NAME,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Trend_Log_Properties_Required[] = {
@@ -743,7 +743,7 @@ static const BACNET_PROPERTY_ID Trend_Log_Properties_Required[] = {
     PROP_EVENT_STATE,
     PROP_LOGGING_TYPE,
     PROP_STATUS_FLAGS,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Trend_Log_Properties_Optional[] = {
@@ -769,7 +769,7 @@ static const BACNET_PROPERTY_ID Trend_Log_Properties_Optional[] = {
     PROP_RELIABILITY,
     PROP_RELIABILITY_EVALUATION_INHIBIT,
     PROP_PROFILE_NAME,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID File_Properties_Required[] = {
@@ -782,14 +782,14 @@ static const BACNET_PROPERTY_ID File_Properties_Required[] = {
     PROP_ARCHIVE,
     PROP_READ_ONLY,
     PROP_FILE_ACCESS_METHOD,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID File_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_RECORD_COUNT,
     PROP_PROFILE_NAME,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 /* These three arrays are used by the ReadPropertyMultiple handler */
@@ -800,7 +800,7 @@ static const BACNET_PROPERTY_ID Integer_Value_Properties_Required[] = {
     PROP_PRESENT_VALUE,
     PROP_STATUS_FLAGS,
     PROP_UNITS,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Integer_Value_Properties_Optional[] = {
@@ -832,7 +832,7 @@ static const BACNET_PROPERTY_ID Integer_Value_Properties_Optional[] = {
     PROP_MAX_PRES_VALUE,
     PROP_RESOLUTION,
     PROP_PROFILE_NAME,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 /**
@@ -840,7 +840,7 @@ static const BACNET_PROPERTY_ID Integer_Value_Properties_Optional[] = {
  * of known standard objects.
  *
  * @param object_type - enumerated BACNET_OBJECT_TYPE
- * @return returns a pointer to a '-1' terminated array of
+ * @return returns a pointer to a 'MAX_BACNET_PROPERTY_ID' terminated array of
  * type 'int' that contain BACnet object properties for the given object
  * type.
  */
@@ -937,7 +937,7 @@ const BACNET_PROPERTY_ID * property_list_optional(
  * of known standard objects.
  *
  * @param object_type - enumerated BACNET_OBJECT_TYPE
- * @return returns a pointer to a '-1' terminated array of
+ * @return returns a pointer to a 'MAX_BACNET_PROPERTY_ID' terminated array of
  * type 'int' that contain BACnet object properties for the given object
  * type.
  */
@@ -1035,7 +1035,7 @@ const BACNET_PROPERTY_ID* property_list_required(
  * of known standard objects.
  *
  * @param object_type - enumerated BACNET_OBJECT_TYPE
- * @param pPropertyList - returns a pointer to two '-1' terminated arrays of
+ * @param pPropertyList - returns a pointer to two 'MAX_BACNET_PROPERTY_ID' terminated arrays of
  * type 'int' that contain BACnet object properties for the given object
  * type.
  */
@@ -1063,7 +1063,7 @@ BACNET_PROPERTY_ID property_list_special_property(
     BACNET_PROPERTY_ID special_property,
     unsigned index)
 {
-    int property = -1;  /* return value */
+    int property = MAX_BACNET_PROPERTY_ID;  /* return value */
     unsigned required, optional, proprietary;
     struct special_property_list_t PropertyList = { {0} };
 
@@ -1130,7 +1130,7 @@ unsigned property_list_special_count(
  * Function that returns the number of BACnet object properties in a list
  *
  * @param pList - array of type 'int' that is a list of BACnet object
- * properties, terminated by a '-1' value.
+ * properties, terminated by a 'MAX_BACNET_PROPERTY_ID' value.
  */
 // todo 2 - this function appears in 3 places....
 unsigned property_list_count(
@@ -1139,7 +1139,7 @@ unsigned property_list_count(
     unsigned property_count = 0;
 
     if (pList) {
-        while (*pList != -1) {
+        while (*pList != MAX_BACNET_PROPERTY_ID) {
             property_count++;
             pList++;
         }
