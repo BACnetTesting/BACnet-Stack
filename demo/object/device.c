@@ -735,7 +735,7 @@ unsigned Device_Count(
 uint32_t Device_Index_To_Instance(
     unsigned index)
 {
-    index = index;
+    (void) index ;
     return Object_Instance_Number;
 }
 
@@ -2208,6 +2208,7 @@ bool DeviceGetRRInfo(
 
 
 #ifdef BAC_ROUTING
+
 /****************************************************************************
  ************* BACnet Routing Functionality (Optional) **********************
  ****************************************************************************

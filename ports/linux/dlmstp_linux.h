@@ -124,10 +124,6 @@ typedef struct shared_mstp_data {
 
 } SHARED_MSTP_DATA;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
     bool dlmstp_init(
         void *poShared,
         char *ifname);
@@ -202,7 +198,4 @@ extern "C" {
     bool dlmstp_sole_master(
         void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif /*DLMSTP_LINUX_H */

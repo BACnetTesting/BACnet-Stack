@@ -11,9 +11,6 @@
 
 #include "binary.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #define HIGH 0x1
 #define LOW  0x0
@@ -195,9 +192,6 @@ extern "C" {
 #define TIMER5B 16
 #define TIMER5C 17
 
-#ifdef __cplusplus
-}       // extern "C"
-#endif
 #ifdef __cplusplus
 #include "WCharacter.h"
 #include "WString.h"

@@ -26,6 +26,7 @@
 #include <stdint.h>
 #include <string.h>     /* for memmove */
 #include <time.h>       /* for timezone, localtime */
+#include "config.h"
 #include "bacdef.h"
 #include "bacdcode.h"
 #include "bacenum.h"
@@ -52,10 +53,10 @@ int Device_Read_Property_Local(
     BACNET_READ_PROPERTY_DATA * rpdata);
 bool Device_Write_Property_Local(
     BACNET_WRITE_PROPERTY_DATA * wp_data);
-extern int Routed_Device_Read_Property_Local(
-    BACNET_READ_PROPERTY_DATA * rpdata);
-extern bool Routed_Device_Write_Property_Local(
-    BACNET_WRITE_PROPERTY_DATA * wp_data);
+//extern int Routed_Device_Read_Property_Local(
+//    BACNET_READ_PROPERTY_DATA * rpdata);
+//extern bool Routed_Device_Write_Property_Local(
+//    BACNET_WRITE_PROPERTY_DATA * wp_data);
 
 extern const char *BACnet_Version;
 

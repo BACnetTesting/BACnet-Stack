@@ -46,7 +46,8 @@ BACNET_PORT ?= linux
 # Default compiler settings
 OPTIMIZATION = -Os
 DEBUGGING =
-WARNINGS = -Wall -Wmissing-prototypes
+# C++ does not require missing prototypes WARNINGS = -Wall -Wmissing-prototypes
+WARNINGS = -Wall
 ifeq (${BUILD},debug)
 OPTIMIZATION = -O0
 DEBUGGING = -g -DDEBUG_ENABLED=1
@@ -60,8 +61,12 @@ CFLAGS  = $(WARNINGS) $(DEBUGGING) $(OPTIMIZATION) $(STANDARDS) $(INCLUDES) $(DE
 # (see http://www.gnu.org/software/automake/manual/make/Special-Targets.html)
 .EXPORT_ALL_VARIABLES:
 
+# compiling router-ipv6 a) fails on a prototype conflict b) leaves library corrupted with router build so next make fails
+# removing from this build script until we are ready to tackle IPv6
+# (this only happens (a) does, when compiling C++, so not noticed with steve's 'standard' C only build process
+
 all: library demos gateway router-ipv6 ${DEMO_LINUX}
-.PHONY : all library demos router gateway router-ipv6 clean
+.PHONY : all library demos router gateway clean
 
 library:
 	$(MAKE) -s -C lib all

@@ -54,10 +54,6 @@
 #define MAX_ASSIGNED_ACCESS_RIGHTS 4
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
     typedef struct {
         uint32_t global_identifier;
         BACNET_RELIABILITY reliability;
@@ -76,9 +72,10 @@ extern "C" {
     } ACCESS_CREDENTIAL_DESCR;
 
     void Access_Credential_Property_Lists(
-        const int **pRequired,
-        const int **pOptional,
-        const int **pProprietary);
+        const BACNET_PROPERTY_ID **pRequired,
+        const BACNET_PROPERTY_ID **pOptional,
+        const BACNET_PROPERTY_ID **pProprietary);
+
     bool Access_Credential_Valid_Instance(
         uint32_t object_instance);
     unsigned Access_Credential_Count(
@@ -118,7 +115,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

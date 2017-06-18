@@ -440,7 +440,7 @@ bool bip6_init(
     server.sin6_family = AF_INET6;
     server.sin6_addr = in6addr_any;
     server.sin6_port = htons(BIP6_Addr.port);
-    status = bind(BIP6_Socket, (const void*)&server, sizeof(server));
+    status = bind(BIP6_Socket, (const sockaddr *) &server, sizeof(server));
     if (status < 0) {
         perror("BIP: bind");
         close(BIP6_Socket);

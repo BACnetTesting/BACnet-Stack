@@ -29,10 +29,6 @@ struct _Test {
     long nFail;
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
     Test *ct_create(
         const char *name,
         void (*init) (Test *));
@@ -78,7 +74,4 @@ extern "C" {
         const char *file,
         long line);
 
-#ifdef __cplusplus
-}
-#endif
 #endif

@@ -393,6 +393,7 @@ uint16_t Add_Routed_Device(
     uint32_t Object_Instance,
     BACNET_CHARACTER_STRING * Object_Name,
     const char *Description);
+
 DEVICE_OBJECT_DATA *Get_Routed_Device_Object(
     int idx);
 BACNET_ADDRESS *Get_Routed_Device_Address(
@@ -420,8 +421,10 @@ bool Routed_Device_Valid_Object_Instance_Number(
 bool Routed_Device_Name(
     uint32_t object_instance,
     BACNET_CHARACTER_STRING * object_name);
+
 uint32_t Routed_Device_Object_Instance_Number(
     void);
+
 bool Routed_Device_Set_Object_Instance_Number(
     uint32_t object_id);
 bool Routed_Device_Set_Object_Name(
@@ -433,6 +436,7 @@ bool Routed_Device_Set_Description(
     size_t length);
 void Routed_Device_Inc_Database_Revision(
     void);
+
 int Routed_Device_Service_Approval(
     BACNET_CONFIRMED_SERVICE service,
     int service_argument,
