@@ -50,7 +50,7 @@
 ANALOG_INPUT_DESCR AI_Descr[MAX_ANALOG_INPUTS];
 
 /* These three arrays are used by the ReadPropertyMultiple handler */
-static const int Properties_Required[] = {
+static const BACNET_PROPERTY_ID Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -62,7 +62,7 @@ static const int Properties_Required[] = {
     -1
 };
 
-static const int Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_RELIABILITY,
     PROP_COV_INCREMENT,
@@ -81,14 +81,14 @@ static const int Properties_Optional[] = {
     -1
 };
 
-static const int Properties_Proprietary[] = {
+static const BACNET_PROPERTY_ID Properties_Proprietary[] = {
     -1
 };
 
 void Analog_Input_Property_Lists(
-    const int **pRequired,
-    const int **pOptional,
-    const int **pProprietary)
+    const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary)
 {
     if (pRequired)
         *pRequired = Properties_Required;

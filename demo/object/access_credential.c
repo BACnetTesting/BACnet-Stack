@@ -43,7 +43,7 @@ static bool Access_Credential_Initialized = false;
 static ACCESS_CREDENTIAL_DESCR ac_descr[MAX_ACCESS_CREDENTIALS];
 
 /* These three arrays are used by the ReadPropertyMultiple handler */
-static const int Properties_Required[] = {
+static const BACNET_PROPERTY_ID Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -69,9 +69,9 @@ static const int Properties_Proprietary[] = {
 };
 
 void Access_Credential_Property_Lists(
-    const int **pRequired,
-    const int **pOptional,
-    const int **pProprietary)
+    const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary)
 {
     if (pRequired)
         *pRequired = Properties_Required;

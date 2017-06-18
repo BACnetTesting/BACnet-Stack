@@ -117,7 +117,7 @@ static const BACNET_PROPERTY_ID Device_Properties_Optional[] = {
     -1
 };
 
-static const int Accumulator_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Accumulator_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -131,7 +131,7 @@ static const int Accumulator_Properties_Required[] = {
     -1
 };
 
-static const int Accumulator_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Accumulator_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_DEVICE_TYPE,
     PROP_RELIABILITY,
@@ -158,7 +158,7 @@ static const int Accumulator_Properties_Optional[] = {
     -1
 };
 
-static const int Analog_Input_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Analog_Input_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -170,7 +170,7 @@ static const int Analog_Input_Properties_Required[] = {
     -1
 };
 
-static const int Analog_Input_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Analog_Input_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_DEVICE_TYPE,
     PROP_RELIABILITY,
@@ -195,7 +195,7 @@ static const int Analog_Input_Properties_Optional[] = {
     -1
 };
 
-static const int Analog_Output_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Analog_Output_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -209,7 +209,7 @@ static const int Analog_Output_Properties_Required[] = {
     -1
 };
 
-static const int Analog_Output_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Analog_Output_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_DEVICE_TYPE,
     PROP_RELIABILITY,
@@ -233,7 +233,7 @@ static const int Analog_Output_Properties_Optional[] = {
     -1
 };
 
-static const int Analog_Value_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Analog_Value_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -245,7 +245,7 @@ static const int Analog_Value_Properties_Required[] = {
     -1
 };
 
-static const int Analog_Value_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Analog_Value_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_RELIABILITY,
     PROP_PRIORITY_ARRAY,
@@ -267,7 +267,7 @@ static const int Analog_Value_Properties_Optional[] = {
     -1
 };
 
-static const int Averaging_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Averaging_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -281,7 +281,7 @@ static const int Averaging_Properties_Required[] = {
     -1
 };
 
-static const int Averaging_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Averaging_Properties_Optional[] = {
     PROP_PROFILE_NAME,
     PROP_MINIMUM_VALUE_TIMESTAMP,
     PROP_VARIANCE_VALUE,
@@ -295,7 +295,7 @@ static const int Averaging_Properties_Optional[] = {
     -1
 };
 
-static const int Binary_Input_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Binary_Input_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -307,7 +307,7 @@ static const int Binary_Input_Properties_Required[] = {
     -1
 };
 
-static const int Binary_Input_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Binary_Input_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_DEVICE_TYPE,
     PROP_RELIABILITY,
@@ -331,7 +331,7 @@ static const int Binary_Input_Properties_Optional[] = {
     -1
 };
 
-static const int Binary_Output_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Binary_Output_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -345,7 +345,7 @@ static const int Binary_Output_Properties_Required[] = {
     -1
 };
 
-static const int Binary_Output_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Binary_Output_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_DEVICE_TYPE,
     PROP_RELIABILITY,
@@ -371,7 +371,7 @@ static const int Binary_Output_Properties_Optional[] = {
     -1
 };
 
-static const int Binary_Value_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Binary_Value_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -382,7 +382,7 @@ static const int Binary_Value_Properties_Required[] = {
     -1
 };
 
-static const int Binary_Value_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Binary_Value_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_RELIABILITY,
     PROP_INACTIVE_TEXT,
@@ -409,7 +409,7 @@ static const int Binary_Value_Properties_Optional[] = {
     -1
 };
 
-static const int Calendar_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Calendar_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -418,13 +418,13 @@ static const int Calendar_Properties_Required[] = {
     -1
 };
 
-static const int Calendar_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Calendar_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_PROFILE_NAME,
     -1
 };
 
-static const int Channel_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Channel_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -439,7 +439,7 @@ static const int Channel_Properties_Required[] = {
     -1
 };
 
-static const int Channel_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Channel_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_RELIABILITY,
     PROP_EXECUTION_DELAY,
@@ -458,7 +458,7 @@ static const int Channel_Properties_Optional[] = {
     -1
 };
 
-static const int Command_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Command_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -469,14 +469,14 @@ static const int Command_Properties_Required[] = {
     -1
 };
 
-static const int Command_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Command_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_ACTION_TEXT,
     PROP_PROFILE_NAME,
     -1
 };
 
-static const int CharacterString_Value_Properties_Required[] = {
+static const BACNET_PROPERTY_ID CharacterString_Value_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -485,7 +485,7 @@ static const int CharacterString_Value_Properties_Required[] = {
     -1
 };
 
-static const int CharacterString_Value_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID CharacterString_Value_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_EVENT_STATE,
     PROP_RELIABILITY,
@@ -506,7 +506,7 @@ static const int CharacterString_Value_Properties_Optional[] = {
     -1
 };
 
-static const int Lighting_Output_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Lighting_Output_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -528,7 +528,7 @@ static const int Lighting_Output_Properties_Required[] = {
     -1
 };
 
-static const int Lighting_Output_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Lighting_Output_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_RELIABILITY,
     PROP_TRANSITION,
@@ -543,7 +543,7 @@ static const int Lighting_Output_Properties_Optional[] = {
     -1
 };
 
-static const int Load_Control_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Load_Control_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -562,7 +562,7 @@ static const int Load_Control_Properties_Required[] = {
     -1
 };
 
-static const int Load_Control_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Load_Control_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_STATE_DESCRIPTION,
     PROP_RELIABILITY,
@@ -579,7 +579,7 @@ static const int Load_Control_Properties_Optional[] = {
     -1
 };
 
-static const int Life_Safety_Point_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Life_Safety_Point_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -596,7 +596,7 @@ static const int Life_Safety_Point_Properties_Required[] = {
     -1
 };
 
-static const int Life_Safety_Point_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Life_Safety_Point_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_DEVICE_TYPE,
     PROP_NOTIFICATION_CLASS,
@@ -618,7 +618,7 @@ static const int Life_Safety_Point_Properties_Optional[] = {
     -1
 };
 
-static const int Multistate_Input_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Multistate_Input_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -630,7 +630,7 @@ static const int Multistate_Input_Properties_Required[] = {
     -1
 };
 
-static const int Multistate_Input_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Multistate_Input_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_DEVICE_TYPE,
     PROP_RELIABILITY,
@@ -649,7 +649,7 @@ static const int Multistate_Input_Properties_Optional[] = {
     -1
 };
 
-static const int Multistate_Output_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Multistate_Output_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -663,7 +663,7 @@ static const int Multistate_Output_Properties_Required[] = {
     -1
 };
 
-static const int Multistate_Output_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Multistate_Output_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_DEVICE_TYPE,
     PROP_RELIABILITY,
@@ -681,7 +681,7 @@ static const int Multistate_Output_Properties_Optional[] = {
     -1
 };
 
-static const int Multistate_Value_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Multistate_Value_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -693,7 +693,7 @@ static const int Multistate_Value_Properties_Required[] = {
     -1
 };
 
-static const int Multistate_Value_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Multistate_Value_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_RELIABILITY,
     PROP_STATE_TEXT,
@@ -713,7 +713,7 @@ static const int Multistate_Value_Properties_Optional[] = {
     -1
 };
 
-static const int Notification_Class_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Notification_Class_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -724,13 +724,13 @@ static const int Notification_Class_Properties_Required[] = {
     -1
 };
 
-static const int Notification_Class_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Notification_Class_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_PROFILE_NAME,
     -1
 };
 
-static const int Trend_Log_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Trend_Log_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -746,7 +746,7 @@ static const int Trend_Log_Properties_Required[] = {
     -1
 };
 
-static const int Trend_Log_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Trend_Log_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_START_TIME,
     PROP_STOP_TIME,
@@ -772,7 +772,7 @@ static const int Trend_Log_Properties_Optional[] = {
     -1
 };
 
-static const int File_Properties_Required[] = {
+static const BACNET_PROPERTY_ID File_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -785,7 +785,7 @@ static const int File_Properties_Required[] = {
     -1
 };
 
-static const int File_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID File_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_RECORD_COUNT,
     PROP_PROFILE_NAME,
@@ -793,7 +793,7 @@ static const int File_Properties_Optional[] = {
 };
 
 /* These three arrays are used by the ReadPropertyMultiple handler */
-static const int Integer_Value_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Integer_Value_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -803,7 +803,7 @@ static const int Integer_Value_Properties_Required[] = {
     -1
 };
 
-static const int Integer_Value_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Integer_Value_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_EVENT_STATE,
     PROP_RELIABILITY,
@@ -847,7 +847,7 @@ static const int Integer_Value_Properties_Optional[] = {
 const BACNET_PROPERTY_ID * property_list_optional(
     BACNET_OBJECT_TYPE object_type)
 {
-    const int * pList = NULL;
+    const BACNET_PROPERTY_ID * pList = NULL;
 
     switch (object_type) {
         case OBJECT_DEVICE:
