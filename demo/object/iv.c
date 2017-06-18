@@ -59,23 +59,23 @@ struct integer_object {
 struct integer_object Integer_Value[MAX_INTEGER_VALUES];
 
 /* These three arrays are used by the ReadPropertyMultiple handler */
-static const int Integer_Value_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Integer_Value_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
     PROP_PRESENT_VALUE,
     PROP_STATUS_FLAGS,
     PROP_UNITS,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Integer_Value_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Integer_Value_Properties_Optional[] = {
     PROP_OUT_OF_SERVICE,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Integer_Value_Properties_Proprietary[] = {
-    -1
+static const BACNET_PROPERTY_ID Integer_Value_Properties_Proprietary[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
 /**
@@ -90,9 +90,9 @@ static const int Integer_Value_Properties_Proprietary[] = {
  * BACnet proprietary properties for this object.
  */
 void Integer_Value_Property_Lists(
-    const int **pRequired,
-    const int **pOptional,
-    const int **pProprietary)
+    const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary)
 {
     if (pRequired)
         *pRequired = Integer_Value_Properties_Required;

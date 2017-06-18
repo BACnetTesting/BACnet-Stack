@@ -53,7 +53,7 @@ static bool Change_Of_Value[MAX_BINARY_INPUTS];
 static BACNET_POLARITY Polarity[MAX_BINARY_INPUTS];
 
 /* These three arrays are used by the ReadPropertyMultiple handler */
-static const int Binary_Input_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Binary_Input_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -62,23 +62,23 @@ static const int Binary_Input_Properties_Required[] = {
     PROP_EVENT_STATE,
     PROP_OUT_OF_SERVICE,
     PROP_POLARITY,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Binary_Input_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Binary_Input_Properties_Optional[] = {
     PROP_DESCRIPTION,
 	PROP_RELIABILITY,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Binary_Input_Properties_Proprietary[] = {
-    -1
+static const BACNET_PROPERTY_ID Binary_Input_Properties_Proprietary[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
 void Binary_Input_Property_Lists(
-    const int **pRequired,
-    const int **pOptional,
-    const int **pProprietary)
+    const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary)
 {
     if (pRequired) {
         *pRequired = Binary_Input_Properties_Required;

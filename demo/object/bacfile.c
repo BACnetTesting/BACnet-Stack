@@ -61,7 +61,7 @@ static BACNET_FILE_LISTING BACnet_File_Listing[] = {
 };
 
 /* These three arrays are used by the ReadPropertyMultiple handler */
-static const int bacfile_Properties_Required[] = {
+static const BACNET_PROPERTY_ID bacfile_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -71,22 +71,22 @@ static const int bacfile_Properties_Required[] = {
     PROP_ARCHIVE,
     PROP_READ_ONLY,
     PROP_FILE_ACCESS_METHOD,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int bacfile_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID bacfile_Properties_Optional[] = {
     PROP_DESCRIPTION,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int bacfile_Properties_Proprietary[] = {
-    -1
+static const BACNET_PROPERTY_ID bacfile_Properties_Proprietary[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
 void BACfile_Property_Lists(
-    const int **pRequired,
-    const int **pOptional,
-    const int **pProprietary)
+    const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary)
 {
     if (pRequired)
         *pRequired = bacfile_Properties_Required;

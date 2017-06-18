@@ -66,7 +66,7 @@ static const BACNET_PROPERTY_ID Trend_Log_Properties_Required[] = {
     PROP_EVENT_STATE,
     PROP_LOGGING_TYPE,
     PROP_STATUS_FLAGS,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Trend_Log_Properties_Optional[] = {
@@ -93,11 +93,11 @@ static const BACNET_PROPERTY_ID Trend_Log_Properties_Optional[] = {
     PROP_ALIGN_INTERVALS,
     PROP_INTERVAL_OFFSET,
     PROP_TRIGGER,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Trend_Log_Properties_Proprietary[] = {
-    -1
+static const BACNET_PROPERTY_ID Trend_Log_Properties_Proprietary[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
 void Trend_Log_Property_Lists(

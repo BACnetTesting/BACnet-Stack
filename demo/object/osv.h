@@ -40,9 +40,9 @@
     } OCTETSTRING_VALUE_DESCR;
 
 
-    void OctetString_Value_Property_Lists(const int **pRequired,
-        const int **pOptional,
-        const int **pProprietary);
+    void OctetString_Value_Property_Lists(const BACNET_PROPERTY_ID **pRequired,
+        const BACNET_PROPERTY_ID **pOptional,
+        const BACNET_PROPERTY_ID **pProprietary);
     bool OctetString_Value_Valid_Instance(uint32_t object_instance);
     unsigned OctetString_Value_Count(void);
     uint32_t OctetString_Value_Index_To_Instance(unsigned index);

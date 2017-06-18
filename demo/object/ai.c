@@ -59,7 +59,7 @@ static const BACNET_PROPERTY_ID Properties_Required[] = {
     PROP_EVENT_STATE,
     PROP_OUT_OF_SERVICE,
     PROP_UNITS,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Properties_Optional[] = {
@@ -78,11 +78,11 @@ static const BACNET_PROPERTY_ID Properties_Optional[] = {
     PROP_NOTIFY_TYPE,
     PROP_EVENT_TIME_STAMPS,
 #endif
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Properties_Proprietary[] = {
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 void Analog_Input_Property_Lists(

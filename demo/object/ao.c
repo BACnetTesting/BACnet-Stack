@@ -71,16 +71,16 @@ static const BACNET_PROPERTY_ID Properties_Required[] = {
     PROP_UNITS,
     PROP_PRIORITY_ARRAY,
     PROP_RELINQUISH_DEFAULT,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Properties_Optional[] = {
     PROP_DESCRIPTION,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Properties_Proprietary[] = {
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 void Analog_Output_Property_Lists(

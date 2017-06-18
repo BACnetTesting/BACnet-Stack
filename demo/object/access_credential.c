@@ -57,15 +57,15 @@ static const BACNET_PROPERTY_ID Properties_Required[] = {
     PROP_EXPIRATION_TIME,
     PROP_CREDENTIAL_DISABLE,
     PROP_ASSIGNED_ACCESS_RIGHTS,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Properties_Optional[] = {
-    -1
+static const BACNET_PROPERTY_ID Properties_Optional[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Properties_Proprietary[] = {
-    -1
+static const BACNET_PROPERTY_ID Properties_Proprietary[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
 void Access_Credential_Property_Lists(

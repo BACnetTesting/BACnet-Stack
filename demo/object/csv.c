@@ -57,17 +57,17 @@ static const BACNET_PROPERTY_ID Properties_Required[] = {
     PROP_OBJECT_TYPE,
     PROP_PRESENT_VALUE,
     PROP_STATUS_FLAGS,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Properties_Optional[] = {
     PROP_EVENT_STATE,
     PROP_OUT_OF_SERVICE,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Properties_Proprietary[] = {
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 void CharacterString_Value_Property_Lists(

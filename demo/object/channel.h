@@ -120,9 +120,9 @@
         struct BACnet_Channel_Value_t *next;
     } BACNET_CHANNEL_VALUE;
 
-    void Channel_Property_Lists(const int **pRequired,
-        const int **pOptional,
-        const int **pProprietary);
+    void Channel_Property_Lists(const BACNET_PROPERTY_ID **pRequired,
+        const BACNET_PROPERTY_ID **pOptional,
+        const BACNET_PROPERTY_ID **pProprietary);
     bool Channel_Valid_Instance(uint32_t object_instance);
     unsigned Channel_Count(void);
     uint32_t Channel_Index_To_Instance(unsigned index);

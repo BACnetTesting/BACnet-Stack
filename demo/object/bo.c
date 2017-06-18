@@ -53,7 +53,7 @@ static BACNET_BINARY_PV
 static bool Out_Of_Service[MAX_BINARY_OUTPUTS];
 
 /* These three arrays are used by the ReadPropertyMultiple handler */
-static const int Binary_Output_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Binary_Output_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -64,24 +64,24 @@ static const int Binary_Output_Properties_Required[] = {
     PROP_POLARITY,
     PROP_PRIORITY_ARRAY,
     PROP_RELINQUISH_DEFAULT,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Binary_Output_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Binary_Output_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_ACTIVE_TEXT,
     PROP_INACTIVE_TEXT,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Binary_Output_Properties_Proprietary[] = {
-    -1
+static const BACNET_PROPERTY_ID Binary_Output_Properties_Proprietary[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
 void Binary_Output_Property_Lists(
-    const int **pRequired,
-    const int **pOptional,
-    const int **pProprietary)
+    const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary)
 {
     if (pRequired)
         *pRequired = Binary_Output_Properties_Required;

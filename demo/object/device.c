@@ -611,7 +611,7 @@ bool Device_Reinitialize(
 }
 
 /* These three arrays are used by the ReadPropertyMultiple handler */
-static const int Device_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Device_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -632,10 +632,10 @@ static const int Device_Properties_Required[] = {
     PROP_NUMBER_OF_APDU_RETRIES,
     PROP_DEVICE_ADDRESS_BINDING,
     PROP_DATABASE_REVISION,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Device_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Device_Properties_Optional[] = {
 #if defined(BACDL_MSTP)
     PROP_MAX_MASTER,
     PROP_MAX_INFO_FRAMES,
@@ -653,17 +653,17 @@ static const int Device_Properties_Optional[] = {
     PROP_ALIGN_INTERVALS,
     PROP_INTERVAL_OFFSET,
 #endif
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Device_Properties_Proprietary[] = {
-    -1
+static const BACNET_PROPERTY_ID Device_Properties_Proprietary[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
 void Device_Property_Lists(
-    const int **pRequired,
-    const int **pOptional,
-    const int **pProprietary)
+    const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary)
 {
     if (pRequired)
         *pRequired = Device_Properties_Required;

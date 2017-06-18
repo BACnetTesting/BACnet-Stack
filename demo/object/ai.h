@@ -39,130 +39,131 @@
 #endif
 
 
-    typedef struct analog_input_descr {
-        BACNET_EVENT_STATE Event_State;
-        float Present_Value;
-        BACNET_RELIABILITY Reliability;
-        bool Out_Of_Service;
-        uint8_t Units;
-        float Prior_Value;
-        float COV_Increment;
-        bool Changed;
+typedef struct analog_input_descr {
+    BACNET_EVENT_STATE Event_State;
+    float Present_Value;
+    BACNET_RELIABILITY Reliability;
+    bool Out_Of_Service;
+    uint8_t Units;
+    float Prior_Value;
+    float COV_Increment;
+    bool Changed;
 #if defined(INTRINSIC_REPORTING)
-        uint32_t Time_Delay;
-        uint32_t Notification_Class;
-        float High_Limit;
-        float Low_Limit;
-        float Deadband;
-        unsigned Limit_Enable:2;
-        unsigned Event_Enable:3;
-        BACNET_NOTIFY_TYPE Notify_Type ;
-        ACKED_INFO Acked_Transitions[MAX_BACNET_EVENT_TRANSITION];
-        BACNET_DATE_TIME Event_Time_Stamps[MAX_BACNET_EVENT_TRANSITION];
-        /* time to generate event notification */
-        uint32_t Remaining_Time_Delay;
-        /* AckNotification informations */
-        ACK_NOTIFICATION Ack_notify_data;
+    uint32_t Time_Delay;
+    uint32_t Notification_Class;
+    float High_Limit;
+    float Low_Limit;
+    float Deadband;
+    unsigned Limit_Enable : 2;
+    unsigned Event_Enable : 3;
+    BACNET_NOTIFY_TYPE Notify_Type;
+    ACKED_INFO Acked_Transitions[MAX_BACNET_EVENT_TRANSITION];
+    BACNET_DATE_TIME Event_Time_Stamps[MAX_BACNET_EVENT_TRANSITION];
+    /* time to generate event notification */
+    uint32_t Remaining_Time_Delay;
+    /* AckNotification informations */
+    ACK_NOTIFICATION Ack_notify_data;
 #endif
-    } ANALOG_INPUT_DESCR;
+} ANALOG_INPUT_DESCR;
 
-    void Analog_Input_Property_Lists(
-        const int **pRequired,
-        const int **pOptional,
-        const int **pProprietary);
+void Analog_Input_Property_Lists(
+    const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary);
 
-    bool Analog_Input_Valid_Instance(
-        uint32_t object_instance);
-    unsigned Analog_Input_Count(
-        void);
-    uint32_t Analog_Input_Index_To_Instance(
-        unsigned index);
-    unsigned Analog_Input_Instance_To_Index(
-        uint32_t instance);
-    bool Analog_Input_Object_Instance_Add(
-        uint32_t instance);
+bool Analog_Input_Valid_Instance(
+    uint32_t object_instance);
 
-    bool Analog_Input_Object_Name(
-        uint32_t object_instance,
-        BACNET_CHARACTER_STRING * object_name);
-    bool Analog_Input_Name_Set(
-        uint32_t object_instance,
-        char *new_name);
+unsigned Analog_Input_Count(
+    void);
+uint32_t Analog_Input_Index_To_Instance(
+    unsigned index);
+unsigned Analog_Input_Instance_To_Index(
+    uint32_t instance);
+bool Analog_Input_Object_Instance_Add(
+    uint32_t instance);
 
-    char *Analog_Input_Description(
-        uint32_t instance);
-    bool Analog_Input_Description_Set(
-        uint32_t instance,
-        char *new_name);
+bool Analog_Input_Object_Name(
+    uint32_t object_instance,
+    BACNET_CHARACTER_STRING * object_name);
+bool Analog_Input_Name_Set(
+    uint32_t object_instance,
+    char *new_name);
 
-    bool Analog_Input_Units_Set(
-        uint32_t instance,
-        uint16_t units);
-    uint16_t Analog_Input_Units(
-        uint32_t instance);
+char *Analog_Input_Description(
+    uint32_t instance);
+bool Analog_Input_Description_Set(
+    uint32_t instance,
+    char *new_name);
 
-    int Analog_Input_Read_Property(
-        BACNET_READ_PROPERTY_DATA * rpdata);
-    bool Analog_Input_Write_Property(
-        BACNET_WRITE_PROPERTY_DATA * wp_data);
+bool Analog_Input_Units_Set(
+    uint32_t instance,
+    uint16_t units);
+uint16_t Analog_Input_Units(
+    uint32_t instance);
 
-    float Analog_Input_Present_Value(
-        uint32_t object_instance);
-    void Analog_Input_Present_Value_Set(
-        uint32_t object_instance,
-        float value);
+int Analog_Input_Read_Property(
+    BACNET_READ_PROPERTY_DATA * rpdata);
+bool Analog_Input_Write_Property(
+    BACNET_WRITE_PROPERTY_DATA * wp_data);
 
-    bool Analog_Input_Out_Of_Service(
-        uint32_t object_instance);
-    void Analog_Input_Out_Of_Service_Set(
-        uint32_t object_instance,
-        bool oos_flag);
+float Analog_Input_Present_Value(
+    uint32_t object_instance);
+void Analog_Input_Present_Value_Set(
+    uint32_t object_instance,
+    float value);
 
-    bool Analog_Input_Change_Of_Value(
-        uint32_t instance);
-    void Analog_Input_Change_Of_Value_Clear(
-        uint32_t instance);
-    bool Analog_Input_Encode_Value_List(
-        uint32_t object_instance,
-        BACNET_PROPERTY_VALUE * value_list);
-    float Analog_Input_COV_Increment(
-        uint32_t instance);
-    void Analog_Input_COV_Increment_Set(
-        uint32_t instance,
-        float value);
+bool Analog_Input_Out_Of_Service(
+    uint32_t object_instance);
+void Analog_Input_Out_Of_Service_Set(
+    uint32_t object_instance,
+    bool oos_flag);
 
-    /* note: header of Intrinsic_Reporting function is required
-       even when INTRINSIC_REPORTING is not defined */
-    void Analog_Input_Intrinsic_Reporting(
-        uint32_t object_instance);
+bool Analog_Input_Change_Of_Value(
+    uint32_t instance);
+void Analog_Input_Change_Of_Value_Clear(
+    uint32_t instance);
+bool Analog_Input_Encode_Value_List(
+    uint32_t object_instance,
+    BACNET_PROPERTY_VALUE * value_list);
+float Analog_Input_COV_Increment(
+    uint32_t instance);
+void Analog_Input_COV_Increment_Set(
+    uint32_t instance,
+    float value);
+
+/* note: header of Intrinsic_Reporting function is required
+   even when INTRINSIC_REPORTING is not defined */
+void Analog_Input_Intrinsic_Reporting(
+    uint32_t object_instance);
 
 #if defined(INTRINSIC_REPORTING)
-    int Analog_Input_Event_Information(
-        unsigned index,
-        BACNET_GET_EVENT_INFORMATION_DATA * getevent_data);
+int Analog_Input_Event_Information(
+    unsigned index,
+    BACNET_GET_EVENT_INFORMATION_DATA * getevent_data);
 
-    int Analog_Input_Alarm_Ack(
-        BACNET_ALARM_ACK_DATA * alarmack_data,
-        BACNET_ERROR_CODE * error_code);
+int Analog_Input_Alarm_Ack(
+    BACNET_ALARM_ACK_DATA * alarmack_data,
+    BACNET_ERROR_CODE * error_code);
 
-    int Analog_Input_Alarm_Summary(
-        unsigned index,
-        BACNET_GET_ALARM_SUMMARY_DATA * getalarm_data);
+int Analog_Input_Alarm_Summary(
+    unsigned index,
+    BACNET_GET_ALARM_SUMMARY_DATA * getalarm_data);
 #endif
 
-    bool Analog_Input_Create(
-        uint32_t object_instance);
-    bool Analog_Input_Delete(
-        uint32_t object_instance);
-    void Analog_Input_Cleanup(
-        void);
-    void Analog_Input_Init(
-        void);
+bool Analog_Input_Create(
+    uint32_t object_instance);
+bool Analog_Input_Delete(
+    uint32_t object_instance);
+void Analog_Input_Cleanup(
+    void);
+void Analog_Input_Init(
+    void);
 
 #ifdef TEST
 #include "ctest.h"
-    void testAnalogInput(
-        Test * pTest);
+void testAnalogInput(
+    Test * pTest);
 #endif
 
 #endif

@@ -53,15 +53,15 @@ static const BACNET_PROPERTY_ID Properties_Required[] = {
     PROP_OUT_OF_SERVICE,
     PROP_SUPPORTED_FORMATS,
     PROP_UPDATE_TIME,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Properties_Optional[] = {
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Properties_Proprietary[] = {
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 void Credential_Data_Input_Property_Lists(

@@ -52,15 +52,15 @@ static const BACNET_PROPERTY_ID Properties_Required[] = {
     PROP_ENABLE,
     PROP_NEGATIVE_ACCESS_RULES,
     PROP_POSITIVE_ACCESS_RULES,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Properties_Optional[] = {
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Properties_Proprietary[] = {
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 void Access_Rights_Property_Lists(

@@ -46,9 +46,9 @@
 
 
     void BACfile_Property_Lists(
-        const int **pRequired,
-        const int **pOptional,
-        const int **pProprietary);
+        const BACNET_PROPERTY_ID **pRequired,
+        const BACNET_PROPERTY_ID **pOptional,
+        const BACNET_PROPERTY_ID **pProprietary);
     bool bacfile_object_name(
         uint32_t object_instance,
         BACNET_CHARACTER_STRING * object_name);

@@ -95,9 +95,9 @@ BACnetRecipient ::= CHOICE {
 
 
     void Notification_Class_Property_Lists(
-        const int **pRequired,
-        const int **pOptional,
-        const int **pProprietary);
+        const BACNET_PROPERTY_ID **pRequired,
+        const BACNET_PROPERTY_ID **pOptional,
+        const BACNET_PROPERTY_ID **pProprietary);
 
     void Notification_Class_Init(
         void);

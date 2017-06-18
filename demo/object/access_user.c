@@ -51,15 +51,15 @@ static const BACNET_PROPERTY_ID Properties_Required[] = {
     PROP_RELIABILITY,
     PROP_USER_TYPE,
     PROP_CREDENTIALS,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Properties_Optional[] = {
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Properties_Proprietary[] = {
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 void Access_User_Property_Lists(

@@ -341,7 +341,7 @@ int cl_decode_apdu(
 COMMAND_DESCR Command_Descr[MAX_COMMANDS];
 
 /* These arrays are used by the ReadPropertyMultiple handler */
-static const int Command_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Command_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -349,16 +349,16 @@ static const int Command_Properties_Required[] = {
     PROP_IN_PROCESS,
     PROP_ALL_WRITES_SUCCESSFUL,
     PROP_ACTION,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Command_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Command_Properties_Optional[] = {
     PROP_DESCRIPTION,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Command_Properties_Proprietary[] = {
-    -1
+static const BACNET_PROPERTY_ID Command_Properties_Proprietary[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
 /**
@@ -373,9 +373,9 @@ static const int Command_Properties_Proprietary[] = {
  * BACnet proprietary properties for this object.
  */
 void Command_Property_Lists(
-    const int **pRequired,
-    const int **pOptional,
-    const int **pProprietary)
+    const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary)
 {
     if (pRequired)
         *pRequired = Command_Properties_Required;

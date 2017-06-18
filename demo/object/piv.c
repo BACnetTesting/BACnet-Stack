@@ -48,28 +48,28 @@
 POSITIVEINTEGER_VALUE_DESCR PIV_Descr[MAX_POSITIVEINTEGER_VALUES];
 
 /* These three arrays are used by the ReadPropertyMultiple handler */
-static const int PositiveInteger_Value_Properties_Required[] = {
+static const BACNET_PROPERTY_ID PositiveInteger_Value_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
     PROP_PRESENT_VALUE,
     PROP_STATUS_FLAGS,
     PROP_UNITS,
-    - 1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int PositiveInteger_Value_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID PositiveInteger_Value_Properties_Optional[] = {
     PROP_OUT_OF_SERVICE,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int PositiveInteger_Value_Properties_Proprietary[] = {
-    -1
+static const BACNET_PROPERTY_ID PositiveInteger_Value_Properties_Proprietary[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
-void PositiveInteger_Value_Property_Lists(const int **pRequired,
-    const int **pOptional,
-    const int **pProprietary)
+void PositiveInteger_Value_Property_Lists(const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary)
 {
     if (pRequired)
         *pRequired = PositiveInteger_Value_Properties_Required;

@@ -34,9 +34,9 @@
 
 
     void Multistate_Value_Property_Lists(
-        const int **pRequired,
-        const int **pOptional,
-        const int **pProprietary);
+        const BACNET_PROPERTY_ID **pRequired,
+        const BACNET_PROPERTY_ID **pOptional,
+        const BACNET_PROPERTY_ID **pProprietary);
 
     bool Multistate_Value_Valid_Instance(
         uint32_t object_instance);

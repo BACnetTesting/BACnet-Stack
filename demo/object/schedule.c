@@ -43,7 +43,7 @@
 
 SCHEDULE_DESCR Schedule_Descr[MAX_SCHEDULES];
 
-static const int Schedule_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Schedule_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -55,21 +55,21 @@ static const int Schedule_Properties_Required[] = {
     PROP_STATUS_FLAGS,
     PROP_RELIABILITY,
     PROP_OUT_OF_SERVICE,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Schedule_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Schedule_Properties_Optional[] = {
     PROP_WEEKLY_SCHEDULE,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Schedule_Properties_Proprietary[] = {
-    -1
+static const BACNET_PROPERTY_ID Schedule_Properties_Proprietary[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
-void Schedule_Property_Lists(const int **pRequired,
-    const int **pOptional,
-    const int **pProprietary)
+void Schedule_Property_Lists(const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary)
 {
     if (pRequired)
         *pRequired = Schedule_Properties_Required;

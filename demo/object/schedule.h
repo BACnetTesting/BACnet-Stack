@@ -68,9 +68,9 @@
         bool Out_Of_Service;
     } SCHEDULE_DESCR;
 
-    void Schedule_Property_Lists(const int **pRequired,
-        const int **pOptional,
-        const int **pProprietary);
+    void Schedule_Property_Lists(const BACNET_PROPERTY_ID **pRequired,
+        const BACNET_PROPERTY_ID **pOptional,
+        const BACNET_PROPERTY_ID **pProprietary);
 
     bool Schedule_Valid_Instance(uint32_t object_instance);
     unsigned Schedule_Count(void);

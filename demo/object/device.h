@@ -245,9 +245,9 @@ uint32_t Device_Interval_Offset(void);
 bool Device_Interval_Offset_Set(uint32_t value);
 
 void Device_Property_Lists(
-    const int **pRequired,
-    const int **pOptional,
-    const int **pProprietary);
+    const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary);
 void Device_Objects_Property_List(
     BACNET_OBJECT_TYPE object_type,
     uint32_t object_instance,

@@ -54,15 +54,15 @@ static const BACNET_PROPERTY_ID Properties_Required[] = {
     PROP_OUT_OF_SERVICE,
     PROP_ENTRY_POINTS,
     PROP_EXIT_POINTS,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Properties_Optional[] = {
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Properties_Proprietary[] = {
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 void Access_Zone_Property_Lists(

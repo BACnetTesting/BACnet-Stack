@@ -77,7 +77,7 @@ struct bacnet_channel_object Channel[BACNET_CHANNELS_MAX];
 
 /* These arrays are used by the ReadPropertyMultiple handler
    property-list property (as of protocol-revision 14) */
-static const int Channel_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Channel_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -89,15 +89,15 @@ static const int Channel_Properties_Required[] = {
     PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES,
     PROP_CHANNEL_NUMBER,
     PROP_CONTROL_GROUPS,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Channel_Properties_Optional[] = {
-    -1
+static const BACNET_PROPERTY_ID Channel_Properties_Optional[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Channel_Properties_Proprietary[] = {
-    -1
+static const BACNET_PROPERTY_ID Channel_Properties_Proprietary[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
 /**
@@ -111,9 +111,9 @@ static const int Channel_Properties_Proprietary[] = {
  * @param pProprietary - pointer to list of int terminated by -1, of
  * BACnet proprietary properties for this object.
  */
-void Channel_Property_Lists(const int **pRequired,
-    const int **pOptional,
-    const int **pProprietary)
+void Channel_Property_Lists(const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary)
 {
     if (pRequired)
         *pRequired = Channel_Properties_Required;

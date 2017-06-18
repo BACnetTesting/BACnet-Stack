@@ -60,15 +60,15 @@ static const BACNET_PROPERTY_ID Properties_Required[] = {
     PROP_ACCESS_EVENT_CREDENTIAL,
     PROP_ACCESS_DOORS,
     PROP_PRIORITY_FOR_WRITING,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Properties_Optional[] = {
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Properties_Proprietary[] = {
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 void Access_Point_Property_Lists(

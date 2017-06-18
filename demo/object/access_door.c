@@ -56,7 +56,7 @@ static const BACNET_PROPERTY_ID Properties_Required[] = {
     PROP_DOOR_PULSE_TIME,
     PROP_DOOR_EXTENDED_PULSE_TIME,
     PROP_DOOR_OPEN_TOO_LONG_TIME,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Properties_Optional[] = {
@@ -65,11 +65,11 @@ static const BACNET_PROPERTY_ID Properties_Optional[] = {
     PROP_SECURED_STATUS,
     PROP_DOOR_UNLOCK_DELAY_TIME,
     PROP_DOOR_ALARM_STATE,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Properties_Proprietary[] = {
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
 void Access_Door_Property_Lists(

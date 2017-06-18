@@ -49,7 +49,7 @@
 ANALOG_VALUE_DESCR AV_Descr[MAX_ANALOG_VALUES];
 
 /* These three arrays are used by the ReadPropertyMultiple handler */
-static const int Analog_Value_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Analog_Value_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -58,10 +58,10 @@ static const int Analog_Value_Properties_Required[] = {
     PROP_EVENT_STATE,
     PROP_OUT_OF_SERVICE,
     PROP_UNITS,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Analog_Value_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Analog_Value_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_COV_INCREMENT,
 #if defined(INTRINSIC_REPORTING)
@@ -76,17 +76,17 @@ static const int Analog_Value_Properties_Optional[] = {
     PROP_NOTIFY_TYPE,
     PROP_EVENT_TIME_STAMPS,
 #endif
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Analog_Value_Properties_Proprietary[] = {
-    -1
+static const BACNET_PROPERTY_ID Analog_Value_Properties_Proprietary[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
 void Analog_Value_Property_Lists(
-    const int **pRequired,
-    const int **pOptional,
-    const int **pProprietary)
+    const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary)
 {
     if (pRequired)
         *pRequired = Analog_Value_Properties_Required;
