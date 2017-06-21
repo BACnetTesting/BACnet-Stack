@@ -34,3 +34,7 @@ mstpcap
 mstpcrc
 .settings
 libbacnet.a
+*.vpj
+/*.vpw
+/*.vpwhist
+/*.vtg
