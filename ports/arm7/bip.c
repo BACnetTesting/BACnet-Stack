@@ -123,7 +123,7 @@ uint16_t bip_get_port(
 /* returns number of bytes sent on success, negative number on failure */
 int bip_send_pdu(
     BACNET_ADDRESS * dest,      /* destination address */
-    BACNET_NPDU_DATA * npdu_data,       /* network information */
+    BACNET_NPCI_DATA * npci_data,       /* network information */
     uint8_t * pdu,      /* any data to be sent - may be null */
     unsigned pdu_len)
 {       /* number of bytes of data */
@@ -136,7 +136,7 @@ int bip_send_pdu(
     IP_HDR iphdr;
     uint8_t mac[6];
 
-    (void) npdu_data;
+    (void) npci_data;
 
     /* assumes that the driver has already been initialized */
 /*  if (BIP_Socket < 0) */

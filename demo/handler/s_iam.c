@@ -61,16 +61,16 @@ void Send_I_Am_To_Network(
     int len = 0;
     int pdu_len = 0;
     int bytes_sent = 0;
-    BACNET_NPDU_DATA npdu_data;
+    BACNET_NPCI_DATA npci_data;
     BACNET_ADDRESS my_address;
 
     datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
 
     pdu_len =
         npdu_encode_pdu(&Handler_Transmit_Buffer[0], target_address,
-        &my_address, &npdu_data);
+        &my_address, &npci_data);
     /* encode the APDU portion of the packet */
     /* encode the APDU portion of the packet */
     len =
@@ -78,7 +78,7 @@ void Send_I_Am_To_Network(
         device_id, max_apdu, segmentation, vendor_id);
     pdu_len += len;
     bytes_sent =
-        datalink_send_pdu(target_address, &npdu_data,
+        datalink_send_pdu(target_address, &npci_data,
         &Handler_Transmit_Buffer[0], pdu_len);
     if (bytes_sent <= 0) {
 #if PRINT_ENABLED
@@ -92,13 +92,13 @@ void Send_I_Am_To_Network(
 /** Encode an I Am message to be broadcast.
  * @param buffer [in,out] The buffer to use for building the message.
  * @param dest [out] The destination address information.
- * @param npdu_data [out] The NPDU structure describing the message.
+ * @param npci_data [out] The NPDU structure describing the message.
  * @return The length of the message in buffer[].
  */
 int iam_encode_pdu(
     uint8_t * buffer,
     BACNET_ADDRESS * dest,
-    BACNET_NPDU_DATA * npdu_data)
+    BACNET_NPCI_DATA * npci_data)
 {
     int len = 0;
     int pdu_len = 0;
@@ -107,8 +107,8 @@ int iam_encode_pdu(
 
     datalink_get_broadcast_address(dest);
     /* encode the NPDU portion of the packet */
-    npdu_encode_npdu_data(npdu_data, false, MESSAGE_PRIORITY_NORMAL);
-    pdu_len = npdu_encode_pdu(&buffer[0], dest, &my_address, npdu_data);
+    npdu_setup_npci_data(npci_data, false, MESSAGE_PRIORITY_NORMAL);
+    pdu_len = npdu_encode_pdu(&buffer[0], dest, &my_address, npci_data);
 
     /* encode the APDU portion of the packet */
     len =
@@ -130,7 +130,7 @@ void Send_I_Am(
     int pdu_len = 0;
     BACNET_ADDRESS dest;
     int bytes_sent = 0;
-    BACNET_NPDU_DATA npdu_data;
+    BACNET_NPCI_DATA npci_data;
 
 #if 0
     /* note: there is discussion in the BACnet committee
@@ -145,9 +145,9 @@ void Send_I_Am(
 #endif
 
     /* encode the data */
-    pdu_len = iam_encode_pdu(buffer, &dest, &npdu_data);
+    pdu_len = iam_encode_pdu(buffer, &dest, &npci_data);
     /* send data */
-    bytes_sent = datalink_send_pdu(&dest, &npdu_data, &buffer[0], pdu_len);
+    bytes_sent = datalink_send_pdu(&dest, &npci_data, &buffer[0], pdu_len);
 
     if (bytes_sent <= 0) {
 #if PRINT_ENABLED
@@ -162,14 +162,14 @@ void Send_I_Am(
  * @param src [in] The source address information. If the src address is not
  *                 given, the dest address will be a broadcast address.
  * @param dest [out] The destination address information.
- * @param npdu_data [out] The NPDU structure describing the message.
+ * @param npci_data [out] The NPDU structure describing the message.
  * @return The length of the message in buffer[].
  */
 int iam_unicast_encode_pdu(
     uint8_t * buffer,
     BACNET_ADDRESS * src,
     BACNET_ADDRESS * dest,
-    BACNET_NPDU_DATA * npdu_data)
+    BACNET_NPCI_DATA * npci_data)
 {
     int npdu_len = 0;
     int apdu_len = 0;
@@ -181,8 +181,8 @@ int iam_unicast_encode_pdu(
 
     datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
-    npdu_encode_npdu_data(npdu_data, false, MESSAGE_PRIORITY_NORMAL);
-    npdu_len = npdu_encode_pdu(&buffer[0], dest, &my_address, npdu_data);
+    npdu_setup_npci_data(npci_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_len = npdu_encode_pdu(&buffer[0], dest, &my_address, npci_data);
     /* encode the APDU portion of the packet */
     apdu_len =
         iam_encode_apdu(&buffer[npdu_len], Device_Object_Instance_Number(),
@@ -210,7 +210,7 @@ void Send_I_Am_Unicast(
     int pdu_len = 0;
     BACNET_ADDRESS dest;
     int bytes_sent = 0;
-    BACNET_NPDU_DATA npdu_data;
+    BACNET_NPCI_DATA npci_data;
 
 #if 0
     /* note: there is discussion in the BACnet committee
@@ -225,9 +225,9 @@ void Send_I_Am_Unicast(
 #endif
 
     /* encode the data */
-    pdu_len = iam_unicast_encode_pdu(buffer, src, &dest, &npdu_data);
+    pdu_len = iam_unicast_encode_pdu(buffer, src, &dest, &npci_data);
     /* send data */
-    bytes_sent = datalink_send_pdu(&dest, &npdu_data, &buffer[0], pdu_len);
+    bytes_sent = datalink_send_pdu(&dest, &npci_data, &buffer[0], pdu_len);
 
     if (bytes_sent <= 0) {
 #if PRINT_ENABLED

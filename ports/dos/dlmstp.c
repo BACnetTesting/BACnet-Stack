@@ -291,7 +291,7 @@ static bool dlmstp_compare_data_expecting_reply(
        src, dest, along with the APDU type, invoke id.
        Seems a bit overkill */
     struct DER_compare_t {
-        BACNET_NPDU_DATA npdu_data;
+        BACNET_NPCI_DATA npci_data;
         BACNET_ADDRESS address;
         uint8_t pdu_type;
         uint8_t invoke_id;
@@ -305,8 +305,8 @@ static bool dlmstp_compare_data_expecting_reply(
     request.address.mac_len = 1;
     offset =
         npdu_decode(&request_pdu[0], NULL, &request.address,
-        &request.npdu_data);
-    if (request.npdu_data.network_layer_message) {
+        &request.npci_data);
+    if (request.npci_data.network_layer_message) {
         return false;
     }
     request.pdu_type = request_pdu[offset] & 0xF0;
@@ -323,8 +323,8 @@ static bool dlmstp_compare_data_expecting_reply(
     reply.address.mac[0] = dest_address;
     reply.address.mac_len = 1;
     offset =
-        npdu_decode(&reply_pdu[0], &reply.address, NULL, &reply.npdu_data);
-    if (reply.npdu_data.network_layer_message) {
+        npdu_decode(&reply_pdu[0], &reply.address, NULL, &reply.npci_data);
+    if (reply.npci_data.network_layer_message) {
         return false;
     }
     /* reply could be a lot of things:
@@ -372,10 +372,10 @@ static bool dlmstp_compare_data_expecting_reply(
             return false;
         }
     }
-    if (request.npdu_data.protocol_version != reply.npdu_data.protocol_version) {
+    if (request.npci_data.protocol_version != reply.npci_data.protocol_version) {
         return false;
     }
-    if (request.npdu_data.priority != reply.npdu_data.priority) {
+    if (request.npci_data.priority != reply.npci_data.priority) {
         return false;
     }
     if (!bacnet_address_same(&request.address, &reply.address)) {
@@ -1155,14 +1155,14 @@ static bool MSTP_Master_Node_FSM(
 /* returns number of bytes sent on success, zero on failure */
 int dlmstp_send_pdu(
     BACNET_ADDRESS * dest,      /* destination address */
-    BACNET_NPDU_DATA * npdu_data,       /* network information */
+    BACNET_NPCI_DATA * npci_data,       /* network information */
     uint8_t * pdu,      /* any data to be sent - may be null */
     unsigned pdu_len)
 {       /* number of bytes of data */
     int bytes_sent = 0;
 
     if (MSTP_Flag.TransmitPacketPending == false) {
-        MSTP_Flag.TransmitPacketDER = npdu_data->data_expecting_reply;
+        MSTP_Flag.TransmitPacketDER = npci_data->data_expecting_reply;
         TransmitPacket = pdu;
         TransmitPacketLen = pdu_len;
         bytes_sent = pdu_len;

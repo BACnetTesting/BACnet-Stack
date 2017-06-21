@@ -576,7 +576,7 @@ bool Device_Reinitialize(
 {
     bool status = false;
 
-    if (characterstring_ansi_same(&rd_data->password, "Jesus")) {
+    if (characterstring_ansi_same(&rd_data->password, "BACnet Testing")) {
         switch (rd_data->state) {
             case BACNET_REINIT_COLDSTART:
             case BACNET_REINIT_WARMSTART:
