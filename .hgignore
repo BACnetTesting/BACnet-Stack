@@ -38,3 +38,8 @@ syntax: glob
 *.lib
 *.ilk
 *.opendb
+*.vpwhist
+*.vtg
+*.enc
+*.db
+bin/router
