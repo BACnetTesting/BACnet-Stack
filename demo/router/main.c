@@ -39,6 +39,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <fcntl.h>
+#ifndef _MSC_VER
 #include <libconfig.h>  /* read config files */
 #include <unistd.h>     /* for getopt */
 #include <termios.h>    /* used in kbhit() */
@@ -47,6 +48,7 @@
 #include <net/if.h>
 #include <pthread.h>
 #include <termios.h>
+#endif
 #include "msgqueue.h"
 #include "portthread.h"
 #include "network_layer.h"
