@@ -94,7 +94,7 @@ static void MyRejectHandler(
 
 static void My_Router_Handler(
     BACNET_ADDRESS * src,
-    BACNET_NPDU_DATA * npdu_data,
+    BACNET_NPCI_DATA * npci_data,
     uint8_t * npdu,     /* PDU data */
     uint16_t npdu_len)
 {
@@ -106,7 +106,7 @@ static void My_Router_Handler(
     unsigned port_id = 0;
     unsigned port_info_len = 0;
 
-    switch (npdu_data->network_message_type) {
+    switch (npci_data->network_message_type) {
         case NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK:
             break;
         case NETWORK_MESSAGE_I_AM_ROUTER_TO_NETWORK:
@@ -188,16 +188,16 @@ static void My_NPDU_Handler(
 {       /* length PDU  */
     int apdu_offset = 0;
     BACNET_ADDRESS dest = { 0 };
-    BACNET_NPDU_DATA npdu_data = { 0 };
+    BACNET_NPCI_DATA npci_data = { 0 };
 
-    apdu_offset = npdu_decode(&pdu[0], &dest, src, &npdu_data);
-    if (npdu_data.network_layer_message) {
+    apdu_offset = npdu_decode(&pdu[0], &dest, src, &npci_data);
+    if (npci_data.network_layer_message) {
         if (apdu_offset <= pdu_len) {
-            My_Router_Handler(src, &npdu_data, &pdu[apdu_offset],
+            My_Router_Handler(src, &npci_data, &pdu[apdu_offset],
                 (uint16_t) (pdu_len - apdu_offset));
         }
     } else if ((apdu_offset > 0) && (apdu_offset <= pdu_len)) {
-        if ((npdu_data.protocol_version == BACNET_PROTOCOL_VERSION) &&
+        if ((npci_data.protocol_version == BACNET_PROTOCOL_VERSION) &&
             ((dest.net == 0) || (dest.net == BACNET_BROADCAST_NETWORK))) {
             /* only handle the version that we know how to handle */
             /* and we are not a router, so ignore messages with
@@ -209,7 +209,7 @@ static void My_NPDU_Handler(
                 debug_printf("NPDU: DNET=%d.  Discarded!\n", dest.net);
             } else {
                 debug_printf("NPDU: BACnet Protocol Version=%d.  Discarded!\n",
-                    npdu_data.protocol_version);
+                    npci_data.protocol_version);
             }
         }
     }

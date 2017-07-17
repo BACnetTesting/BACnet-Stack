@@ -20,6 +20,12 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. If published, these changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   Where appropriate, the changes are Copyright (C) 2014-2017 BACnet
+*   Interoperability Testing Services, Inc.
 *********************************************************************/
 #ifndef DATALINK_H
 #define DATALINK_H
@@ -102,7 +108,7 @@ extern "C" {
 
     int datalink_send_pdu(
         BACNET_ADDRESS * dest,
-        BACNET_NPDU_DATA * npdu_data,
+        BACNET_NPCI_DATA * npci_data,
         uint8_t * pdu,
         unsigned pdu_len);
     extern uint16_t datalink_receive(

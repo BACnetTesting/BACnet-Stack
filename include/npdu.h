@@ -35,7 +35,7 @@
 #endif
 
 /* an NPDU structure keeps the parameter stack to a minimum */
-typedef struct bacnet_npdu_data_t {
+typedef struct BACNET_NPCI_DATA_t {
     uint8_t protocol_version;
     /* parts of the control octet: */
     bool data_expecting_reply;
@@ -45,7 +45,7 @@ typedef struct bacnet_npdu_data_t {
     BACNET_NETWORK_MESSAGE_TYPE network_message_type;   /* optional */
     uint16_t vendor_id; /* optional, if net message type is > 0x80 */
     uint8_t hop_count;
-} BACNET_NPDU_DATA;
+} BACNET_NPCI_DATA;
 
 struct router_port_t;
 /** The info[] string has no agreed-upon purpose, hence it is useless.
@@ -72,22 +72,22 @@ extern "C" {
         uint8_t * npdu,
         BACNET_ADDRESS * dest,
         BACNET_ADDRESS * src,
-        BACNET_NPDU_DATA * npdu_data);
+        BACNET_NPCI_DATA * npci_data);
 
-    void npdu_encode_npdu_data(
-        BACNET_NPDU_DATA * npdu,
+    void npdu_setup_npci_data(
+        BACNET_NPCI_DATA * npdu,
         bool data_expecting_reply,
         BACNET_MESSAGE_PRIORITY priority);
 
     void npdu_copy_data(
-        BACNET_NPDU_DATA * dest,
-        BACNET_NPDU_DATA * src);
+        BACNET_NPCI_DATA * dest,
+        BACNET_NPCI_DATA * src);
 
     int npdu_decode(
         uint8_t * npdu,
         BACNET_ADDRESS * dest,
         BACNET_ADDRESS * src,
-        BACNET_NPDU_DATA * npdu_data);
+        BACNET_NPCI_DATA * npci_data);
 
 #ifdef __cplusplus
 }

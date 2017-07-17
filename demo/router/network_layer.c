@@ -25,7 +25,14 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. If published, these changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   Where appropriate, the changes are Copyright (C) 2014-2017 BACnet
+*   Interoperability Testing Services, Inc.
 */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,7 +45,7 @@ uint16_t process_network_message(
     uint8_t ** buff)
 {
 
-    BACNET_NPDU_DATA npdu_data;
+    BACNET_NPCI_DATA npci_data;
     ROUTER_PORT *srcport;
     ROUTER_PORT *destport;
     uint16_t net;
@@ -49,13 +56,13 @@ uint16_t process_network_message(
 
     memmove(data, msg->data, sizeof(MSG_DATA));
 
-    apdu_offset = npdu_decode(data->pdu, &data->dest, NULL, &npdu_data);
+    apdu_offset = npdu_decode(data->pdu, &data->dest, NULL, &npci_data);
     apdu_len = data->pdu_len - apdu_offset;
 
     srcport = find_snet(msg->origin);
     data->src.net = srcport->route_info.net;
 
-    switch (npdu_data.network_message_type) {
+    switch (npci_data.network_message_type) {
 
         case NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK:
             PRINT(INFO, "Recieved Who-Is-Router-To-Network message\n");
@@ -205,17 +212,17 @@ uint16_t create_network_message(
 
     int16_t buff_len;
     bool data_expecting_reply = false;
-    BACNET_NPDU_DATA npdu_data;
+    BACNET_NPCI_DATA npci_data;
 
     if (network_message_type == NETWORK_MESSAGE_INIT_RT_TABLE)
         data_expecting_reply = true;
-    init_npdu(&npdu_data, network_message_type, data_expecting_reply);
+    init_npdu(&npci_data, network_message_type, data_expecting_reply);
 
     *buff = (uint8_t *) malloc(128);    /* resolve different length */
 
     /* manual destination setup for Init-RT-Table-Ack message */
     data->dest.net = BACNET_BROADCAST_NETWORK;
-    buff_len = npdu_encode_pdu(*buff, &data->dest, NULL, &npdu_data);
+    buff_len = npdu_encode_pdu(*buff, &data->dest, NULL, &npci_data);
 
     switch (network_message_type) {
 
@@ -355,18 +362,18 @@ void send_network_message(
 }
 
 void init_npdu(
-    BACNET_NPDU_DATA * npdu_data,
+    BACNET_NPCI_DATA * npci_data,
     BACNET_NETWORK_MESSAGE_TYPE network_message_type,
     bool data_expecting_reply)
 {
 
-    if (npdu_data) {
-        npdu_data->data_expecting_reply = data_expecting_reply;
-        npdu_data->protocol_version = BACNET_PROTOCOL_VERSION;
-        npdu_data->network_layer_message = true;
-        npdu_data->network_message_type = network_message_type;
-        npdu_data->vendor_id = 0;
-        npdu_data->priority = MESSAGE_PRIORITY_NORMAL;
-        npdu_data->hop_count = HOP_COUNT_DEFAULT;
+    if (npci_data) {
+        npci_data->data_expecting_reply = data_expecting_reply;
+        npci_data->protocol_version = BACNET_PROTOCOL_VERSION;
+        npci_data->network_layer_message = true;
+        npci_data->network_message_type = network_message_type;
+        npci_data->vendor_id = 0;
+        npci_data->priority = MESSAGE_PRIORITY_NORMAL;
+        npci_data->hop_count = HOP_COUNT_DEFAULT;
     }
 }

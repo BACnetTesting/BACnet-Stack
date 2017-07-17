@@ -899,7 +899,7 @@ int BacnetTimeSync(
     int len = 0;
     int pdu_len = 0;
     int bytes_sent = 0;
-    BACNET_NPDU_DATA npdu_data;
+    BACNET_NPCI_DATA npci_data;
     BACNET_ADDRESS my_address;
     uint8_t Handler_Transmit_Buffer[MAX_PDU] = { 0 };
 
@@ -911,11 +911,11 @@ int BacnetTimeSync(
         }
 
         /* encode the NPDU portion of the packet */
-        npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+        npdu_encode_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
         datalink_get_my_address(&my_address);
         pdu_len =
             npdu_encode_pdu(&Handler_Transmit_Buffer[0], &Target_Address,
-            &my_address, &npdu_data);
+            &my_address, &npci_data);
 
         /* encode the APDU portion of the packet */
         len =
@@ -925,7 +925,7 @@ int BacnetTimeSync(
 
         /* send it out the datalink */
         bytes_sent =
-            datalink_send_pdu(&Target_Address, &npdu_data,
+            datalink_send_pdu(&Target_Address, &npci_data,
             &Handler_Transmit_Buffer[0], pdu_len);
         if (bytes_sent <= 0) {
             char errorMsg[64];

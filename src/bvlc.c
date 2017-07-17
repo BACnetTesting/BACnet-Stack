@@ -1427,7 +1427,7 @@ uint16_t bvlc_receive(
 /** Send a packet out the BACnet/IP socket (Annex J)
  *
  * @param dest - destination address
- * @param npdu_data - network information
+ * @param npci_data - network information
  * @param pdu - any data to be sent - may be null
  * @param pdu_len - number of bytes of data
  *
@@ -1435,7 +1435,7 @@ uint16_t bvlc_receive(
  */
 int bvlc_send_pdu(
     BACNET_ADDRESS * dest,
-    BACNET_NPDU_DATA * npdu_data,
+    BACNET_NPCI_DATA * npci_data,
     uint8_t * pdu,
     unsigned pdu_len)
 {
@@ -1448,7 +1448,7 @@ int bvlc_send_pdu(
     uint16_t BVLC_length = 0;
 
     /* bip datalink doesn't need to know the npdu data */
-    (void) npdu_data;
+    (void) npci_data;
     mtu[0] = BVLL_TYPE_BACNET_IP;
     /* handle various broadcasts: */
     /* mac_len = 0 is a broadcast address */

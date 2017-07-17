@@ -45,13 +45,13 @@
 
 /** @file s_router.c  Methods to send various BACnet Router Network Layer Messages. */
 
-/** Initialize an npdu_data structure with given parameters and good defaults,
+/** Initialize an npci_data structure with given parameters and good defaults,
  * and add the Network Layer Message fields.
  * The name is a misnomer, as it doesn't do any actual encoding here.
- * @see npdu_encode_npdu_data for a simpler version to use when sending an
+ * @see npdu_setup_npci_data for a simpler version to use when sending an
  *           APDU instead of a Network Layer Message.
  *
- * @param npdu_data [out] Returns a filled-out structure with information
+ * @param npci_data [out] Returns a filled-out structure with information
  * 					 provided by the other arguments and good defaults.
  * @param network_message_type [in] The type of Network Layer Message.
  * @param data_expecting_reply [in] True if message should have a reply.
@@ -59,19 +59,19 @@
  *                      like B'11' = Life Safety message
  */
 static void npdu_encode_npdu_network(
-    BACNET_NPDU_DATA * npdu_data,
+    BACNET_NPCI_DATA * npci_data,
     BACNET_NETWORK_MESSAGE_TYPE network_message_type,
     bool data_expecting_reply,
     BACNET_MESSAGE_PRIORITY priority)
 {
-    if (npdu_data) {
-        npdu_data->data_expecting_reply = data_expecting_reply;
-        npdu_data->protocol_version = BACNET_PROTOCOL_VERSION;
-        npdu_data->network_layer_message = true;        /* false if APDU */
-        npdu_data->network_message_type = network_message_type; /* optional */
-        npdu_data->vendor_id = 0;       /* optional, if net message type is > 0x80 */
-        npdu_data->priority = priority;
-        npdu_data->hop_count = HOP_COUNT_DEFAULT;
+    if (npci_data) {
+        npci_data->data_expecting_reply = data_expecting_reply;
+        npci_data->protocol_version = BACNET_PROTOCOL_VERSION;
+        npci_data->network_layer_message = true;        /* false if APDU */
+        npci_data->network_message_type = network_message_type; /* optional */
+        npci_data->vendor_id = 0;       /* optional, if net message type is > 0x80 */
+        npci_data->priority = priority;
+        npci_data->hop_count = HOP_COUNT_DEFAULT;
     }
 }
 
@@ -107,7 +107,7 @@ int Send_Network_Layer_Message(
     int bytes_sent = 0;
     int *pVal = iArgs;  /* Start with first value */
     bool data_expecting_reply = false;
-    BACNET_NPDU_DATA npdu_data;
+    BACNET_NPCI_DATA npci_data;
     BACNET_ADDRESS bcastDest;
 
     if (iArgs == NULL)
@@ -121,14 +121,14 @@ int Send_Network_Layer_Message(
 
     if (network_message_type == NETWORK_MESSAGE_INIT_RT_TABLE)
         data_expecting_reply = true;    /* DER in this one case */
-    npdu_encode_npdu_network(&npdu_data, network_message_type,
+    npdu_encode_npdu_network(&npci_data, network_message_type,
         data_expecting_reply, MESSAGE_PRIORITY_NORMAL);
 
     /* We don't need src information, since a message can't originate from
      * our downstream BACnet network.
      */
     pdu_len =
-        npdu_encode_pdu(&Handler_Transmit_Buffer[0], dst, NULL, &npdu_data);
+        npdu_encode_pdu(&Handler_Transmit_Buffer[0], dst, NULL, &npci_data);
 
     /* Now encode the optional payload bytes, per message type */
     switch (network_message_type) {
@@ -211,7 +211,7 @@ int Send_Network_Layer_Message(
 
     /* Now send the message */
     bytes_sent =
-        datalink_send_pdu(dst, &npdu_data, &Handler_Transmit_Buffer[0],
+        datalink_send_pdu(dst, &npci_data, &Handler_Transmit_Buffer[0],
         pdu_len);
 #if PRINT_ENABLED
     if (bytes_sent <= 0) {

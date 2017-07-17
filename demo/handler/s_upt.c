@@ -52,7 +52,7 @@ int Send_UnconfirmedPrivateTransfer(
     int len = 0;
     int pdu_len = 0;
     int bytes_sent = 0;
-    BACNET_NPDU_DATA npdu_data;
+    BACNET_NPCI_DATA npci_data;
     BACNET_ADDRESS my_address;
 
     if (!dcc_communication_enabled())
@@ -60,10 +60,10 @@ int Send_UnconfirmedPrivateTransfer(
 
     datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
         npdu_encode_pdu(&Handler_Transmit_Buffer[0], dest, &my_address,
-        &npdu_data);
+        &npci_data);
 
     /* encode the APDU portion of the packet */
     len =
@@ -71,7 +71,7 @@ int Send_UnconfirmedPrivateTransfer(
         private_data);
     pdu_len += len;
     bytes_sent =
-        datalink_send_pdu(dest, &npdu_data, &Handler_Transmit_Buffer[0],
+        datalink_send_pdu(dest, &npci_data, &Handler_Transmit_Buffer[0],
         pdu_len);
     if (bytes_sent <= 0) {
 #if PRINT_ENABLED

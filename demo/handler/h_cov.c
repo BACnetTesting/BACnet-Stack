@@ -449,7 +449,7 @@ static bool cov_send_request(
 {
     int len = 0;
     int pdu_len = 0;
-    BACNET_NPDU_DATA npdu_data;
+    BACNET_NPCI_DATA npci_data;
     BACNET_ADDRESS my_address;
     int bytes_sent = 0;
     uint8_t invoke_id = 0;
@@ -474,10 +474,10 @@ static bool cov_send_request(
         return status;
     }
     datalink_get_my_address(&my_address);
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
         npdu_encode_pdu(&Handler_Transmit_Buffer[0], dest, &my_address,
-        &npdu_data);
+        &npci_data);
     /* load the COV data structure for outgoing message */
     cov_data.subscriberProcessIdentifier =
         cov_subscription->subscriberProcessIdentifier;
@@ -489,7 +489,7 @@ static bool cov_send_request(
     cov_data.timeRemaining = cov_subscription->lifetime;
     cov_data.listOfValues = value_list;
     if (cov_subscription->flag.issueConfirmedNotifications) {
-        npdu_data.data_expecting_reply = true;
+        npci_data.data_expecting_reply = true;
         invoke_id = tsm_next_free_invokeID();
         if (invoke_id) {
             cov_subscription->invokeID = invoke_id;
@@ -506,11 +506,11 @@ static bool cov_send_request(
     }
     pdu_len += len;
     if (cov_subscription->flag.issueConfirmedNotifications) {
-        tsm_set_confirmed_unsegmented_transaction(invoke_id, dest, &npdu_data,
+        tsm_set_confirmed_unsegmented_transaction(invoke_id, dest, &npci_data,
             &Handler_Transmit_Buffer[0], (uint16_t) pdu_len);
     }
     bytes_sent =
-        datalink_send_pdu(dest, &npdu_data, &Handler_Transmit_Buffer[0],
+        datalink_send_pdu(dest, &npci_data, &Handler_Transmit_Buffer[0],
         pdu_len);
     if (bytes_sent > 0) {
         status = true;
@@ -809,7 +809,7 @@ void handler_cov_subscribe(
     int pdu_len = 0;
     int npdu_len = 0;
     int apdu_len = 0;
-    BACNET_NPDU_DATA npdu_data;
+    BACNET_NPCI_DATA npci_data;
     bool success = false;
     int bytes_sent = 0;
     BACNET_ADDRESS my_address;
@@ -819,10 +819,10 @@ void handler_cov_subscribe(
     cov_data.error_code = ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
     /* encode the NPDU portion of the packet */
     datalink_get_my_address(&my_address);
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     npdu_len =
         npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
-        &npdu_data);
+        &npci_data);
     if (service_data->segmented_message) {
         /* we don't support segmentation - send an abort */
         len = BACNET_STATUS_ABORT;
@@ -892,7 +892,7 @@ void handler_cov_subscribe(
     }
     pdu_len = npdu_len + apdu_len;
     bytes_sent =
-        datalink_send_pdu(src, &npdu_data, &Handler_Transmit_Buffer[0],
+        datalink_send_pdu(src, &npci_data, &Handler_Transmit_Buffer[0],
         pdu_len);
     if (bytes_sent <= 0) {
 #if PRINT_ENABLED

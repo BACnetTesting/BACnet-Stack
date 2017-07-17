@@ -65,7 +65,7 @@ void handler_ccov_notification(
     BACNET_ADDRESS * src,
     BACNET_CONFIRMED_SERVICE_DATA * service_data)
 {
-    BACNET_NPDU_DATA npdu_data;
+    BACNET_NPCI_DATA npci_data;
     BACNET_COV_DATA cov_data;
     BACNET_PROPERTY_VALUE property_value[MAX_COV_PROPERTIES];
     BACNET_PROPERTY_VALUE *pProperty_value = NULL;
@@ -90,10 +90,10 @@ void handler_ccov_notification(
     cov_data.listOfValues = &property_value[0];
     /* encode the NPDU portion of the packet */
     datalink_get_my_address(&my_address);
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
         npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
-        &npdu_data);
+        &npci_data);
 #if PRINT_ENABLED
     fprintf(stderr, "CCOV: Received Notification!\n");
 #endif
@@ -159,7 +159,7 @@ void handler_ccov_notification(
   CCOV_ABORT:
     pdu_len += len;
     bytes_sent =
-        datalink_send_pdu(src, &npdu_data, &Handler_Transmit_Buffer[0],
+        datalink_send_pdu(src, &npci_data, &Handler_Transmit_Buffer[0],
         pdu_len);
 #if PRINT_ENABLED
     if (bytes_sent <= 0) {

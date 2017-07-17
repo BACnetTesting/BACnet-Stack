@@ -68,7 +68,7 @@ uint8_t Send_Write_Property_Multiple_Request_Data(
     int len = 0;
     int pdu_len = 0;
     int bytes_sent = 0;
-    BACNET_NPDU_DATA npdu_data;
+    BACNET_NPCI_DATA npci_data;
     
     /* if we are forbidden to send, don't send! */
     if (!dcc_communication_enabled())
@@ -82,10 +82,10 @@ uint8_t Send_Write_Property_Multiple_Request_Data(
     if (invoke_id) {
         /* encode the NPDU portion of the packet */
         datalink_get_my_address(&my_address);
-        npdu_encode_npdu_data(&npdu_data, true, MESSAGE_PRIORITY_NORMAL);
+        npdu_setup_npci_data(&npci_data, true, MESSAGE_PRIORITY_NORMAL);
         pdu_len =
             npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest, &my_address,
-            &npdu_data);
+            &npci_data);
 
         len =
             wpm_encode_apdu(&Handler_Transmit_Buffer[pdu_len], max_apdu,
@@ -100,9 +100,9 @@ uint8_t Send_Write_Property_Multiple_Request_Data(
            max_apdu in the address binding table. */
         if ((unsigned) pdu_len < max_apdu) {
             tsm_set_confirmed_unsegmented_transaction(invoke_id, &dest,
-                &npdu_data, &Handler_Transmit_Buffer[0], (uint16_t) pdu_len);
+                &npci_data, &Handler_Transmit_Buffer[0], (uint16_t) pdu_len);
             bytes_sent =
-                datalink_send_pdu(&dest, &npdu_data,
+                datalink_send_pdu(&dest, &npci_data,
                 &Handler_Transmit_Buffer[0], pdu_len);
 #if PRINT_ENABLED
             if (bytes_sent <= 0)

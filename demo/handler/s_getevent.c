@@ -58,16 +58,16 @@ uint8_t Send_GetEvent(
     int pdu_len = 0;
     int bytes_sent = 0;
     uint8_t invoke_id = 0;
-    BACNET_NPDU_DATA npdu_data;
+    BACNET_NPCI_DATA npci_data;
     BACNET_ADDRESS my_address;
 
     datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
 
     pdu_len =
         npdu_encode_pdu(&Handler_Transmit_Buffer[0], target_address,
-        &my_address, &npdu_data);
+        &my_address, &npci_data);
     
     invoke_id = tsm_next_free_invokeID();
     if (invoke_id) {
@@ -76,7 +76,7 @@ uint8_t Send_GetEvent(
             getevent_encode_apdu(&Handler_Transmit_Buffer[pdu_len], invoke_id, lastReceivedObjectIdentifier);
         pdu_len += len;
         bytes_sent =
-            datalink_send_pdu(target_address, &npdu_data,
+            datalink_send_pdu(target_address, &npci_data,
             &Handler_Transmit_Buffer[0], pdu_len);
     #if PRINT_ENABLED
         if (bytes_sent <= 0)
