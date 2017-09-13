@@ -40,7 +40,9 @@
 #include "device.h"
 #include "datalink.h"
 /* some demo stuff needed */
+#ifndef DEBUG_ENABLED
 #define DEBUG_ENABLED 0
+#endif
 #include "debug.h"
 #include "filename.h"
 #include "handlers.h"
@@ -88,7 +90,7 @@ static void MyRejectHandler(
 
 static void My_Router_Handler(
     BACNET_ADDRESS * src,
-    BACNET_NPCI_DATA * npci_data,
+    BACNET_NPDU_DATA * npdu_data,
     uint8_t * npdu,     /* PDU data */
     uint16_t npdu_len)
 {
@@ -97,7 +99,7 @@ static void My_Router_Handler(
     uint16_t len = 0;
     uint16_t j = 0;
 
-    switch (npci_data->network_message_type) {
+    switch (npdu_data->network_message_type) {
         case NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK:
             break;
         case NETWORK_MESSAGE_I_AM_ROUTER_TO_NETWORK:
@@ -142,14 +144,14 @@ void My_NPDU_Handler(
 {       /* length PDU  */
     int apdu_offset = 0;
     BACNET_ADDRESS dest = { 0 };
-    BACNET_NPCI_DATA npci_data = { 0 };
+    BACNET_NPDU_DATA npdu_data = { 0 };
 
-    apdu_offset = npdu_decode(&pdu[0], &dest, src, &npci_data);
-    if (npci_data.network_layer_message) {
-        My_Router_Handler(src, &npci_data, &pdu[apdu_offset],
+    apdu_offset = npdu_decode(&pdu[0], &dest, src, &npdu_data);
+    if (npdu_data.network_layer_message) {
+        My_Router_Handler(src, &npdu_data, &pdu[apdu_offset],
             (uint16_t) (pdu_len - apdu_offset));
     } else if ((apdu_offset > 0) && (apdu_offset <= pdu_len)) {
-        if ((npci_data.protocol_version == BACNET_PROTOCOL_VERSION) &&
+        if ((npdu_data.protocol_version == BACNET_PROTOCOL_VERSION) &&
             ((dest.net == 0) || (dest.net == BACNET_BROADCAST_NETWORK))) {
             /* only handle the version that we know how to handle */
             /* and we are not a router, so ignore messages with
@@ -161,7 +163,7 @@ void My_NPDU_Handler(
                 debug_printf("NPDU: DNET=%d.  Discarded!\n", dest.net);
             } else {
                 debug_printf("NPDU: BACnet Protocol Version=%d.  Discarded!\n",
-                    npci_data.protocol_version);
+                    npdu_data.protocol_version);
             }
         }
     }

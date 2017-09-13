@@ -48,18 +48,18 @@ int Send_UEvent_Notify(
     int len = 0;
     int pdu_len = 0;
     int bytes_sent = 0;
-    BACNET_NPCI_DATA npci_data;
+    BACNET_NPDU_DATA npdu_data;
     BACNET_ADDRESS my_address;
 
     datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
-    npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
-    pdu_len = npdu_encode_pdu(buffer, dest, &my_address, &npci_data);
+    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+    pdu_len = npdu_encode_pdu(buffer, dest, &my_address, &npdu_data);
     /* encode the APDU portion of the packet */
     len = uevent_notify_encode_apdu(&buffer[pdu_len], data);
     pdu_len += len;
     /* send the data */
-    bytes_sent = datalink_send_pdu(dest, &npci_data, &buffer[0], pdu_len);
+    bytes_sent = datalink_send_pdu(dest, &npdu_data, &buffer[0], pdu_len);
 
     return bytes_sent;
 }

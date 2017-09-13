@@ -74,7 +74,7 @@ typedef struct BACnet_TSM_Data {
     /* the address we sent it to */
     BACNET_ADDRESS dest;
     /* the network layer info */
-    BACNET_NPCI_DATA npci_data;
+    BACNET_NPDU_DATA npdu_data;
     /* copy of the APDU, should we need to send it again */
     uint8_t apdu[MAX_PDU];
     unsigned apdu_len;
@@ -110,14 +110,14 @@ extern "C" {
     void tsm_set_confirmed_unsegmented_transaction(
         uint8_t invokeID,
         BACNET_ADDRESS * dest,
-        BACNET_NPCI_DATA * ndpu_data,
+        BACNET_NPDU_DATA * ndpu_data,
         uint8_t * apdu,
         uint16_t apdu_len);
 /* returns true if transaction is found */
     bool tsm_get_transaction_pdu(
         uint8_t invokeID,
         BACNET_ADDRESS * dest,
-        BACNET_NPCI_DATA * ndpu_data,
+        BACNET_NPDU_DATA * ndpu_data,
         uint8_t * apdu,
         uint16_t * apdu_len);
 

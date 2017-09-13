@@ -69,7 +69,7 @@ uint8_t Send_Read_Property_Multiple_Request(
     int len = 0;
     int pdu_len = 0;
     int bytes_sent = 0;
-    BACNET_NPCI_DATA npci_data;
+    BACNET_NPDU_DATA npdu_data;
 
     if (!dcc_communication_enabled())
         return 0;
@@ -82,8 +82,8 @@ uint8_t Send_Read_Property_Multiple_Request(
     if (invoke_id) {
         /* encode the NPDU portion of the packet */
         datalink_get_my_address(&my_address);
-        npdu_setup_npci_data(&npci_data, true, MESSAGE_PRIORITY_NORMAL);
-        pdu_len = npdu_encode_pdu(&pdu[0], &dest, &my_address, &npci_data);
+        npdu_encode_npdu_data(&npdu_data, true, MESSAGE_PRIORITY_NORMAL);
+        pdu_len = npdu_encode_pdu(&pdu[0], &dest, &my_address, &npdu_data);
         /* encode the APDU portion of the packet */
         len =
             rpm_encode_apdu(&pdu[pdu_len], max_pdu - pdu_len, invoke_id,
@@ -99,9 +99,9 @@ uint8_t Send_Read_Property_Multiple_Request(
            max_apdu in the address binding table. */
         if ((unsigned) pdu_len < max_apdu) {
             tsm_set_confirmed_unsegmented_transaction(invoke_id, &dest,
-                &npci_data, &pdu[0], (uint16_t) pdu_len);
+                &npdu_data, &pdu[0], (uint16_t) pdu_len);
             bytes_sent =
-                datalink_send_pdu(&dest, &npci_data, &pdu[0], pdu_len);
+                datalink_send_pdu(&dest, &npdu_data, &pdu[0], pdu_len);
 #if PRINT_ENABLED
             if (bytes_sent <= 0)
                 fprintf(stderr,

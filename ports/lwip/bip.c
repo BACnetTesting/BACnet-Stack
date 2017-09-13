@@ -193,7 +193,7 @@ static bool bip_send_mpdu(
 /** Send the Original Broadcast or Unicast messages
  *
  * @param dest [in] Destination address (may encode an IP address and port #).
- * @param npci_data [in] The NPDU header (Network) information (not used).
+ * @param npdu_data [in] The NPDU header (Network) information (not used).
  * @param pdu [in] Buffer of data to be sent - may be null (why?).
  * @param pdu_len [in] Number of bytes in the pdu buffer.
  *
@@ -201,7 +201,7 @@ static bool bip_send_mpdu(
  */
 int bip_send_pdu(
     BACNET_ADDRESS * dest,      /* destination address */
-    BACNET_NPCI_DATA * npci_data,       /* network information */
+    BACNET_NPDU_DATA * npdu_data,       /* network information */
     uint8_t * pdu,      /* any data to be sent - may be null */
     unsigned pdu_len)
 {

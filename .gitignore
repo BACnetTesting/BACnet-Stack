@@ -33,7 +33,7 @@ bacwp
 bin/mstpcap
 bin/mstpcrc
 demo/mstpcap/mstpcap
-demo/metpcrc/mstpcrc
+demo/mstpcrc/mstpcrc
 .settings
 libbacnet.a
 *.vpj

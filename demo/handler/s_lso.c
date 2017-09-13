@@ -61,7 +61,7 @@ uint8_t Send_Life_Safety_Operation_Data(
     int len = 0;
     int pdu_len = 0;
     int bytes_sent = 0;
-    BACNET_NPCI_DATA npci_data;
+    BACNET_NPDU_DATA npdu_data;
 
     if (!dcc_communication_enabled())
         return 0;
@@ -74,10 +74,10 @@ uint8_t Send_Life_Safety_Operation_Data(
     if (invoke_id) {
         /* encode the NPDU portion of the packet */
         datalink_get_my_address(&my_address);
-        npdu_setup_npci_data(&npci_data, true, MESSAGE_PRIORITY_NORMAL);
+        npdu_encode_npdu_data(&npdu_data, true, MESSAGE_PRIORITY_NORMAL);
         pdu_len =
             npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest, &my_address,
-            &npci_data);
+            &npdu_data);
         len =
             lso_encode_apdu(&Handler_Transmit_Buffer[pdu_len], invoke_id,
             data);
@@ -89,9 +89,9 @@ uint8_t Send_Life_Safety_Operation_Data(
            max_apdu in the address binding table. */
         if ((unsigned) pdu_len < max_apdu) {
             tsm_set_confirmed_unsegmented_transaction(invoke_id, &dest,
-                &npci_data, &Handler_Transmit_Buffer[0], (uint16_t) pdu_len);
+                &npdu_data, &Handler_Transmit_Buffer[0], (uint16_t) pdu_len);
             bytes_sent =
-                datalink_send_pdu(&dest, &npci_data,
+                datalink_send_pdu(&dest, &npdu_data,
                 &Handler_Transmit_Buffer[0], pdu_len);
 #if PRINT_ENABLED
             if (bytes_sent <= 0)

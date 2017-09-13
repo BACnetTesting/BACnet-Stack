@@ -60,7 +60,7 @@ void Send_TimeSync_Remote(
     int len = 0;
     int pdu_len = 0;
     int bytes_sent = 0;
-    BACNET_NPCI_DATA npci_data;
+    BACNET_NPDU_DATA npdu_data;
     BACNET_ADDRESS my_address;
 
     if (!dcc_communication_enabled())
@@ -68,17 +68,17 @@ void Send_TimeSync_Remote(
 
     datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
-    npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
         npdu_encode_pdu(&Handler_Transmit_Buffer[0], dest, &my_address,
-        &npci_data);
+        &npdu_data);
     /* encode the APDU portion of the packet */
     len =
         timesync_encode_apdu(&Handler_Transmit_Buffer[pdu_len], bdate, btime);
     pdu_len += len;
     /* send it out the datalink */
     bytes_sent =
-        datalink_send_pdu(dest, &npci_data, &Handler_Transmit_Buffer[0],
+        datalink_send_pdu(dest, &npdu_data, &Handler_Transmit_Buffer[0],
         pdu_len);
 #if PRINT_ENABLED
     if (bytes_sent <= 0)
@@ -118,7 +118,7 @@ void Send_TimeSyncUTC_Remote(
     int len = 0;
     int pdu_len = 0;
     int bytes_sent = 0;
-    BACNET_NPCI_DATA npci_data;
+    BACNET_NPDU_DATA npdu_data;
     BACNET_ADDRESS my_address;
 
     if (!dcc_communication_enabled())
@@ -126,17 +126,17 @@ void Send_TimeSyncUTC_Remote(
 
     datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
-    npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
         npdu_encode_pdu(&Handler_Transmit_Buffer[0], dest, &my_address,
-        &npci_data);
+        &npdu_data);
     /* encode the APDU portion of the packet */
     len =
         timesync_utc_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
         bdate, btime);
     pdu_len += len;
     bytes_sent =
-        datalink_send_pdu(dest, &npci_data, &Handler_Transmit_Buffer[0],
+        datalink_send_pdu(dest, &npdu_data, &Handler_Transmit_Buffer[0],
         pdu_len);
 #if PRINT_ENABLED
     if (bytes_sent <= 0)

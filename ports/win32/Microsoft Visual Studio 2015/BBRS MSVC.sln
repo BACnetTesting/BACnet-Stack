@@ -15,8 +15,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "whohas", "..\..\..\demo\who
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gateway", "..\..\..\demo\gateway\MSVC\gateway.vcxproj", "{35C4C0F8-15C8-4B03-B109-586244F55B45}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "router", "..\..\..\demo\router\MSVC\router.vcxproj", "{BA98FF54-F1B4-408D-95A5-F7929241CFCF}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "_lib", "..\..\..\lib\MSVC\_lib.vcxproj", "{64ADFC62-DE51-4BC8-8D3E-B45E919003DB}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "readpropm", "..\..\..\demo\readpropm\MSVC\readpropm.vcxproj", "{4FB54A2C-917A-4E54-8FED-D7393BFE2866}"
@@ -79,14 +77,6 @@ Global
 		{35C4C0F8-15C8-4B03-B109-586244F55B45}.Release|x64.Build.0 = Release|x64
 		{35C4C0F8-15C8-4B03-B109-586244F55B45}.Release|x86.ActiveCfg = Release|Win32
 		{35C4C0F8-15C8-4B03-B109-586244F55B45}.Release|x86.Build.0 = Release|Win32
-		{BA98FF54-F1B4-408D-95A5-F7929241CFCF}.Debug|x64.ActiveCfg = Debug|x64
-		{BA98FF54-F1B4-408D-95A5-F7929241CFCF}.Debug|x64.Build.0 = Debug|x64
-		{BA98FF54-F1B4-408D-95A5-F7929241CFCF}.Debug|x86.ActiveCfg = Debug|Win32
-		{BA98FF54-F1B4-408D-95A5-F7929241CFCF}.Debug|x86.Build.0 = Debug|Win32
-		{BA98FF54-F1B4-408D-95A5-F7929241CFCF}.Release|x64.ActiveCfg = Release|x64
-		{BA98FF54-F1B4-408D-95A5-F7929241CFCF}.Release|x64.Build.0 = Release|x64
-		{BA98FF54-F1B4-408D-95A5-F7929241CFCF}.Release|x86.ActiveCfg = Release|Win32
-		{BA98FF54-F1B4-408D-95A5-F7929241CFCF}.Release|x86.Build.0 = Release|Win32
 		{64ADFC62-DE51-4BC8-8D3E-B45E919003DB}.Debug|x64.ActiveCfg = Debug|x64
 		{64ADFC62-DE51-4BC8-8D3E-B45E919003DB}.Debug|x64.Build.0 = Debug|x64
 		{64ADFC62-DE51-4BC8-8D3E-B45E919003DB}.Debug|x86.ActiveCfg = Debug|Win32

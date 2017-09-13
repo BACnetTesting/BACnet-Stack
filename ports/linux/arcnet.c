@@ -195,7 +195,7 @@ bool arcnet_init(
 /* returns number of bytes sent on success, negative on failure */
 int arcnet_send_pdu(
     BACNET_ADDRESS * dest,      /* destination address */
-    BACNET_NPCI_DATA * npci_data,       /* network information */
+    BACNET_NPDU_DATA * npdu_data,       /* network information */
     uint8_t * pdu,      /* any data to be sent - may be null */
     unsigned pdu_len)
 {       /* number of bytes of data */
@@ -205,7 +205,7 @@ int arcnet_send_pdu(
     int mtu_len = 0;
     struct archdr *pkt = (struct archdr *) mtu;
 
-    (void) npci_data;
+    (void) npdu_data;
     src.mac[0] = ARCNET_MAC_Address;
     src.mac_len = 1;
 

@@ -153,7 +153,7 @@ static void mstp_monitor_i_am(
 {
     BACNET_ADDRESS src = { 0 };
     BACNET_ADDRESS dest = { 0 };
-    BACNET_NPCI_DATA npci_data = { 0 };
+    BACNET_NPDU_DATA npdu_data = { 0 };
     int apdu_offset = 0;
     uint16_t apdu_len = 0;
     uint8_t *apdu = NULL;
@@ -165,8 +165,8 @@ static void mstp_monitor_i_am(
 
     if (pdu[0] == BACNET_PROTOCOL_VERSION) {
         MSTP_Fill_BACnet_Address(&src, mac);
-        apdu_offset = npdu_decode(&pdu[0], &dest, &src, &npci_data);
-        if ((!npci_data.network_layer_message) && (apdu_offset > 0) &&
+        apdu_offset = npdu_decode(&pdu[0], &dest, &src, &npdu_data);
+        if ((!npdu_data.network_layer_message) && (apdu_offset > 0) &&
             (apdu_offset < pdu_len) && (src.net == 0)) {
             apdu_len = pdu_len - apdu_offset;
             apdu = &pdu[apdu_offset];

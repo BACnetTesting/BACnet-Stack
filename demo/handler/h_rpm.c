@@ -194,7 +194,7 @@ void handler_read_property_multiple(
     uint16_t copy_len = 0;
     uint16_t decode_len = 0;
     int pdu_len = 0;
-    BACNET_NPCI_DATA npci_data;
+    BACNET_NPDU_DATA npdu_data;
     int bytes_sent;
     BACNET_ADDRESS my_address;
     BACNET_RPM_DATA rpmdata;
@@ -206,10 +206,10 @@ void handler_read_property_multiple(
     /* memset(&Handler_Transmit_Buffer[0], 0xff, sizeof(Handler_Transmit_Buffer)); */
     /* encode the NPDU portion of the packet */
     datalink_get_my_address(&my_address);
-    npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
     npdu_len =
         npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
-        &npci_data);
+        &npdu_data);
     if (service_data->segmented_message) {
         rpmdata.error_code = ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
         error = BACNET_STATUS_ABORT;
@@ -442,7 +442,7 @@ void handler_read_property_multiple(
 
     pdu_len = apdu_len + npdu_len;
     bytes_sent =
-        datalink_send_pdu(src, &npci_data, &Handler_Transmit_Buffer[0],
+        datalink_send_pdu(src, &npdu_data, &Handler_Transmit_Buffer[0],
         pdu_len);
     if (bytes_sent <= 0) {
 #if PRINT_ENABLED

@@ -55,7 +55,7 @@
 /** Handler to manage the Network Layer Control Messages received in a packet.
  *  This handler is called if the NCPI bit 7 indicates that this packet is a
  *  network layer message and there is no further DNET to pass it to.
- *  The NCPI has already been decoded into the npci_data structure.
+ *  The NCPI has already been decoded into the npdu_data structure.
  * @ingroup MISCHNDLR
  *
  * @param src  [in] The routing source information, if any.
@@ -63,7 +63,7 @@
  *                   routing source information.
  * @param DNET_list [in] List of our reachable downstream BACnet Network numbers.
  * 					 Normally just one valid entry; terminated with a -1 value.
- * @param npci_data [in] Contains a filled-out structure with information
+ * @param npdu_data [in] Contains a filled-out structure with information
  * 					 decoded from the NCPI and other NPDU bytes.
  *  @param npdu [in]  Buffer containing the rest of the NPDU, following the
  *  				 bytes that have already been decoded.
@@ -72,7 +72,7 @@
 static void network_control_handler(
     BACNET_ADDRESS * src,
     int *DNET_list,
-    BACNET_NPCI_DATA * npci_data,
+    BACNET_NPDU_DATA * npdu_data,
     uint8_t * npdu,
     uint16_t npdu_len)
 {
@@ -80,7 +80,7 @@ static void network_control_handler(
     uint16_t dnet = 0;
     uint16_t len = 0;
 
-    switch (npci_data->network_message_type) {
+    switch (npdu_data->network_message_type) {
         case NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK:
             /* Send I-am-router-to-network with our one-network list if
              * our specific network is requested, or no specific
@@ -246,7 +246,7 @@ static void routed_apdu_handler(
  *    - With Routing (a further destination was indicated) by the decoded
  *      destination.
  *  - Errors in decoding.
- * @note The npci_data->data_expecting_reply status is discarded.
+ * @note The npdu_data->data_expecting_reply status is discarded.
  * @see npdu_handler
  * @ingroup NMRC
  *
@@ -273,16 +273,16 @@ void routing_npdu_handler(
 {
     int apdu_offset = 0;
     BACNET_ADDRESS dest = { 0 };
-    BACNET_NPCI_DATA npci_data = { 0 };
+    BACNET_NPDU_DATA npdu_data = { 0 };
 
     /* only handle the version that we know how to handle */
     if (pdu[0] == BACNET_PROTOCOL_VERSION) {
-        apdu_offset = npdu_decode(&pdu[0], &dest, src, &npci_data);
+        apdu_offset = npdu_decode(&pdu[0], &dest, src, &npdu_data);
         if (apdu_offset <= 0) {
             debug_printf("NPDU: Decoding failed; Discarded!\n");
-        } else if (npci_data.network_layer_message) {
+        } else if (npdu_data.network_layer_message) {
             if ((dest.net == 0) || (dest.net == BACNET_BROADCAST_NETWORK)) {
-                network_control_handler(src, DNET_list, &npci_data,
+                network_control_handler(src, DNET_list, &npdu_data,
                     &pdu[apdu_offset], (uint16_t) (pdu_len - apdu_offset));
             } else {
                 /* The DNET is set, but we don't support downstream routers,
@@ -290,7 +290,7 @@ void routing_npdu_handler(
                  * since only routers can handle it (even if for our DNET) */
             }
         } else if (apdu_offset <= pdu_len) {
-            if ((dest.net == 0) || (npci_data.hop_count > 1))
+            if ((dest.net == 0) || (npdu_data.hop_count > 1))
                 routed_apdu_handler(src, &dest, DNET_list, &pdu[apdu_offset],
                     (uint16_t) (pdu_len - apdu_offset));
             /* Else, hop_count bottomed out and we discard this one. */

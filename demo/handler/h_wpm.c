@@ -75,7 +75,7 @@ void handler_write_property_multiple(
     int decode_len = 0;
     bool error = false;
     BACNET_WRITE_PROPERTY_DATA wp_data;
-    BACNET_NPCI_DATA npci_data;
+    BACNET_NPDU_DATA npdu_data;
     BACNET_ADDRESS my_address;
     int bytes_sent = 0;
 
@@ -159,10 +159,10 @@ void handler_write_property_multiple(
   WPM_ABORT:
     /* encode the NPDU portion of the packet */
     datalink_get_my_address(&my_address);
-    npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
     npdu_len =
         npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
-        &npci_data);
+        &npdu_data);
     apdu_len = 0;
     /* handle any errors */
     if (error) {
@@ -201,7 +201,7 @@ void handler_write_property_multiple(
 
     pdu_len = npdu_len + apdu_len;
     bytes_sent =
-        datalink_send_pdu(src, &npci_data, &Handler_Transmit_Buffer[0],
+        datalink_send_pdu(src, &npdu_data, &Handler_Transmit_Buffer[0],
         pdu_len);
 #if PRINT_ENABLED
     if (bytes_sent <= 0) {

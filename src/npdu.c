@@ -43,13 +43,13 @@
 
 /** @file npdu.c  Encode/Decode NPDUs - Network Protocol Data Units */
 
-/** Copy the npci_data structure information from src to dest.
+/** Copy the npdu_data structure information from src to dest.
  * @param dest [out] The 'to' structure
  * @param src   [in] The 'from' structure
  */
 void npdu_copy_data(
-    BACNET_NPCI_DATA * dest,
-    BACNET_NPCI_DATA * src)
+    BACNET_NPDU_DATA * dest,
+    BACNET_NPDU_DATA * src)
 {
     if (dest && src) {
         dest->protocol_version = src->protocol_version;
@@ -103,7 +103,7 @@ ABORT.indication               Yes         Yes         Yes        No
 */
 
 
-/** Encode the NPDU portion of a message to be sent, based on the npci_data
+/** Encode the NPDU portion of a message to be sent, based on the npdu_data
  *  and associated data.
  *  If this is to be a Network Layer Control Message, there are probably
  *  more bytes which will need to be encoded following the ones encoded here.
@@ -123,7 +123,7 @@ ABORT.indication               Yes         Yes         Yes        No
  *                   routing source information.
  *                   This src describes the original source of the message when
  *                   it had to be routed to reach this BACnet Device.
- * @param npci_data [in] The structure which describes how the NCPI and other
+ * @param npdu_data [in] The structure which describes how the NCPI and other
  *                   NPDU bytes should be encoded.
  * @return On success, returns the number of bytes which were encoded into the
  * 		   NPDU section.
@@ -133,22 +133,22 @@ int npdu_encode_pdu(
     uint8_t * npdu,
     BACNET_ADDRESS * dest,
     BACNET_ADDRESS * src,
-    BACNET_NPCI_DATA * npci_data)
+    BACNET_NPDU_DATA * npdu_data)
 {
     int len = 0;        /* return value - number of octets loaded in this function */
     uint8_t i = 0;      /* counter  */
 
 
-    if (npdu && npci_data) {
+    if (npdu && npdu_data) {
         /* protocol version */
-        npdu[0] = npci_data->protocol_version;
+        npdu[0] = npdu_data->protocol_version;
         /* initialize the control octet */
         npdu[1] = 0;
         /* Bit 7: 1 indicates that the NSDU conveys a network layer message. */
         /*          Message Type field is present. */
         /*        0 indicates that the NSDU contains a BACnet APDU. */
         /*          Message Type field is absent. */
-        if (npci_data->network_layer_message)
+        if (npdu_data->network_layer_message)
             npdu[1] |= BIT7;
         /*Bit 6: Reserved. Shall be zero. */
         /*Bit 5: Destination specifier where: */
@@ -174,14 +174,14 @@ int npdu_encode_pdu(
         /* 0 indicates that other than a BACnet-Confirmed-Request-PDU, */
         /* a segment of a BACnet-ComplexACK-PDU, */
         /* or a network layer message expecting a reply is present. */
-        if (npci_data->data_expecting_reply)
+        if (npdu_data->data_expecting_reply)
             npdu[1] |= BIT2;
         /* Bits 1,0: Network priority where: */
         /* B'11' = Life Safety message */
         /* B'10' = Critical Equipment message */
         /* B'01' = Urgent message */
         /* B'00' = Normal message */
-        npdu[1] |= (npci_data->priority & 0x03);
+        npdu[1] |= (npdu_data->priority & 0x03);
         len = 2;
         if (dest && dest->net) {
             len += encode_unsigned16(&npdu[len], dest->net);
@@ -209,16 +209,16 @@ int npdu_encode_pdu(
         /* destined for a remote network, i.e., if DNET is present. */
         /* This is a one-octet field that is initialized to a value of 0xff. */
         if (dest && dest->net) {
-            npdu[len] = npci_data->hop_count;
+            npdu[len] = npdu_data->hop_count;
             len++;
         }
-        if (npci_data->network_layer_message) {
-            npdu[len] = npci_data->network_message_type;
+        if (npdu_data->network_layer_message) {
+            npdu[len] = npdu_data->network_message_type;
             len++;
             /* Message Type field contains a value in the range 0x80 - 0xFF, */
             /* then a Vendor ID field shall be present */
-            if (npci_data->network_message_type >= 0x80)
-                len += encode_unsigned16(&npdu[len], npci_data->vendor_id);
+            if (npdu_data->network_message_type >= 0x80)
+                len += encode_unsigned16(&npdu[len], npdu_data->vendor_id);
         }
     }
 
@@ -259,29 +259,29 @@ whether (TRUE) or not (FALSE) a reply service primitive
 is expected for the service being issued.
 */
 
-/** Initialize an npci_data structure to good defaults.
+/** Initialize an npdu_data structure to good defaults.
  * The name is a misnomer, as it doesn't do any actual encoding here.
  * @see npdu_encode_npdu_network if you need to set a network layer msg.
  *
- * @param npci_data [out] Returns a filled-out structure with information
+ * @param npdu_data [out] Returns a filled-out structure with information
  * 					 provided by the other arguments and good defaults.
  * @param data_expecting_reply [in] True if message should have a reply.
  * @param priority [in] One of the 4 priorities defined in section 6.2.2,
  *                      like B'11' = Life Safety message
  */
-void npdu_setup_npci_data(
-    BACNET_NPCI_DATA * npci_data,
+void npdu_encode_npdu_data(
+    BACNET_NPDU_DATA * npdu_data,
     bool data_expecting_reply,
     BACNET_MESSAGE_PRIORITY priority)
 {
-    if (npci_data) {
-        npci_data->data_expecting_reply = data_expecting_reply;
-        npci_data->protocol_version = BACNET_PROTOCOL_VERSION;
-        npci_data->network_layer_message = false;       /* false if APDU */
-        npci_data->network_message_type = NETWORK_MESSAGE_INVALID;      /* optional */
-        npci_data->vendor_id = 0;       /* optional, if net message type is > 0x80 */
-        npci_data->priority = priority;
-        npci_data->hop_count = HOP_COUNT_DEFAULT;
+    if (npdu_data) {
+        npdu_data->data_expecting_reply = data_expecting_reply;
+        npdu_data->protocol_version = BACNET_PROTOCOL_VERSION;
+        npdu_data->network_layer_message = false;       /* false if APDU */
+        npdu_data->network_message_type = NETWORK_MESSAGE_INVALID;      /* optional */
+        npdu_data->vendor_id = 0;       /* optional, if net message type is > 0x80 */
+        npdu_data->priority = priority;
+        npdu_data->hop_count = HOP_COUNT_DEFAULT;
     }
 }
 
@@ -299,7 +299,7 @@ void npdu_setup_npci_data(
  *                   routing source information.
  *                   This src describes the original source of the message when
  *                   it had to be routed to reach this BACnet Device.
- * @param npci_data [out] Returns a filled-out structure with information
+ * @param npdu_data [out] Returns a filled-out structure with information
  * 					 decoded from the NCPI and other NPDU bytes.
  * @return On success, returns the number of bytes which were decoded from the
  * 		   NPDU section; if this is a  network layer message, there may be more
@@ -310,7 +310,7 @@ int npdu_decode(
     uint8_t * npdu,
     BACNET_ADDRESS * dest,
     BACNET_ADDRESS * src,
-    BACNET_NPCI_DATA * npci_data)
+    BACNET_NPDU_DATA * npdu_data)
 {
     int len = 0;        /* return value - number of octets loaded in this function */
     uint8_t i = 0;      /* counter */
@@ -319,15 +319,15 @@ int npdu_decode(
     uint8_t address_len = 0;
     uint8_t mac_octet = 0;
 
-    if (npdu && npci_data) {
+    if (npdu && npdu_data) {
         /* Protocol Version */
-        npci_data->protocol_version = npdu[0];
+        npdu_data->protocol_version = npdu[0];
         /* control octet */
         /* Bit 7: 1 indicates that the NSDU conveys a network layer message. */
         /*          Message Type field is present. */
         /*        0 indicates that the NSDU contains a BACnet APDU. */
         /*          Message Type field is absent. */
-        npci_data->network_layer_message = (npdu[1] & BIT7) ? true : false;
+        npdu_data->network_layer_message = (npdu[1] & BIT7) ? true : false;
         /*Bit 6: Reserved. Shall be zero. */
         /* Bit 4: Reserved. Shall be zero. */
         /* Bit 2: The value of this bit corresponds to data expecting reply */
@@ -338,13 +338,13 @@ int npdu_decode(
         /* 0 indicates that other than a BACnet-Confirmed-Request-PDU, */
         /* a segment of a BACnet-ComplexACK-PDU, */
         /* or a network layer message expecting a reply is present. */
-        npci_data->data_expecting_reply = (npdu[1] & BIT2) ? true : false;
+        npdu_data->data_expecting_reply = (npdu[1] & BIT2) ? true : false;
         /* Bits 1,0: Network priority where: */
         /* B'11' = Life Safety message */
         /* B'10' = Critical Equipment message */
         /* B'01' = Urgent message */
         /* B'00' = Normal message */
-        npci_data->priority = (BACNET_MESSAGE_PRIORITY) (npdu[1] & 0x03);
+        npdu_data->priority = (BACNET_MESSAGE_PRIORITY) (npdu[1] & 0x03);
         /* set the offset to where the optional stuff starts */
         len = 2;
         /*Bit 5: Destination specifier where: */
@@ -424,23 +424,23 @@ int npdu_decode(
         /* destined for a remote network, i.e., if DNET is present. */
         /* This is a one-octet field that is initialized to a value of 0xff. */
         if (dest_net) {
-            npci_data->hop_count = npdu[len++];
+            npdu_data->hop_count = npdu[len++];
         } else {
-            npci_data->hop_count = 0;
+            npdu_data->hop_count = 0;
         }
         /* Indicates that the NSDU conveys a network layer message. */
         /* Message Type field is present. */
-        if (npci_data->network_layer_message) {
-            npci_data->network_message_type =
+        if (npdu_data->network_layer_message) {
+            npdu_data->network_message_type =
                 (BACNET_NETWORK_MESSAGE_TYPE) npdu[len++];
             /* Message Type field contains a value in the range 0x80 - 0xFF, */
             /* then a Vendor ID field shall be present */
-            if (npci_data->network_message_type >= 0x80)
-                len += decode_unsigned16(&npdu[len], &npci_data->vendor_id);
+            if (npdu_data->network_message_type >= 0x80)
+                len += decode_unsigned16(&npdu[len], &npdu_data->vendor_id);
         } else {
-            /* Since npci_data->network_layer_message is false,
+            /* Since npdu_data->network_layer_message is false,
              * it doesn't much matter what we set here; this is safe: */
-            npci_data->network_message_type = NETWORK_MESSAGE_INVALID;
+            npdu_data->network_message_type = NETWORK_MESSAGE_INVALID;
         }
     }
 
@@ -463,7 +463,7 @@ void testNPDU2(
     int len = 0;
     bool data_expecting_reply = true;
     BACNET_MESSAGE_PRIORITY priority = MESSAGE_PRIORITY_NORMAL;
-    BACNET_NPCI_DATA npci_data = { 0 };
+    BACNET_NPDU_DATA npdu_data = { 0 };
     int i = 0;  /* counter */
     int npdu_len = 0;
     bool network_layer_message = false; /* false if APDU */
@@ -490,19 +490,19 @@ void testNPDU2(
     for (i = 0; i < src.len; i++) {
         src.adr[i] = 0x40;
     }
-    npdu_setup_npci_data(&npci_data, true, priority);
-    len = npdu_encode_pdu(&pdu[0], &dest, &src, &npci_data);
+    npdu_encode_npdu_data(&npdu_data, true, priority);
+    len = npdu_encode_pdu(&pdu[0], &dest, &src, &npdu_data);
     ct_test(pTest, len != 0);
     /* can we get the info back? */
-    npdu_len = npdu_decode(&pdu[0], &npdu_dest, &npdu_src, &npci_data);
+    npdu_len = npdu_decode(&pdu[0], &npdu_dest, &npdu_src, &npdu_data);
     ct_test(pTest, npdu_len != 0);
-    ct_test(pTest, npci_data.data_expecting_reply == data_expecting_reply);
-    ct_test(pTest, npci_data.network_layer_message == network_layer_message);
-    if (npci_data.network_layer_message) {
-        ct_test(pTest, npci_data.network_message_type == network_message_type);
+    ct_test(pTest, npdu_data.data_expecting_reply == data_expecting_reply);
+    ct_test(pTest, npdu_data.network_layer_message == network_layer_message);
+    if (npdu_data.network_layer_message) {
+        ct_test(pTest, npdu_data.network_message_type == network_message_type);
     }
-    ct_test(pTest, npci_data.vendor_id == vendor_id);
-    ct_test(pTest, npci_data.priority == priority);
+    ct_test(pTest, npdu_data.vendor_id == vendor_id);
+    ct_test(pTest, npdu_data.priority == priority);
     /* DNET,DLEN,DADR */
     ct_test(pTest, npdu_dest.net == dest.net);
     ct_test(pTest, npdu_dest.len == dest.len);
@@ -528,7 +528,7 @@ void testNPDU1(
     int len = 0;
     bool data_expecting_reply = false;
     BACNET_MESSAGE_PRIORITY priority = MESSAGE_PRIORITY_NORMAL;
-    BACNET_NPCI_DATA npci_data = { 0 };
+    BACNET_NPDU_DATA npdu_data = { 0 };
     int i = 0;  /* counter */
     int npdu_len = 0;
     bool network_layer_message = false; /* false if APDU */
@@ -556,19 +556,19 @@ void testNPDU1(
     for (i = 0; i < MAX_MAC_LEN; i++) {
         src.adr[i] = 0;
     }
-    npdu_setup_npci_data(&npci_data, false, priority);
-    len = npdu_encode_pdu(&pdu[0], &dest, &src, &npci_data);
+    npdu_encode_npdu_data(&npdu_data, false, priority);
+    len = npdu_encode_pdu(&pdu[0], &dest, &src, &npdu_data);
     ct_test(pTest, len != 0);
     /* can we get the info back? */
-    npdu_len = npdu_decode(&pdu[0], &npdu_dest, &npdu_src, &npci_data);
+    npdu_len = npdu_decode(&pdu[0], &npdu_dest, &npdu_src, &npdu_data);
     ct_test(pTest, npdu_len != 0);
-    ct_test(pTest, npci_data.data_expecting_reply == data_expecting_reply);
-    ct_test(pTest, npci_data.network_layer_message == network_layer_message);
-    if (npci_data.network_layer_message) {
-        ct_test(pTest, npci_data.network_message_type == network_message_type);
+    ct_test(pTest, npdu_data.data_expecting_reply == data_expecting_reply);
+    ct_test(pTest, npdu_data.network_layer_message == network_layer_message);
+    if (npdu_data.network_layer_message) {
+        ct_test(pTest, npdu_data.network_message_type == network_message_type);
     }
-    ct_test(pTest, npci_data.vendor_id == vendor_id);
-    ct_test(pTest, npci_data.priority == priority);
+    ct_test(pTest, npdu_data.vendor_id == vendor_id);
+    ct_test(pTest, npdu_data.priority == priority);
     ct_test(pTest, npdu_dest.mac_len == src.mac_len);
     ct_test(pTest, npdu_src.mac_len == dest.mac_len);
 }

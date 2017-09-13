@@ -58,7 +58,7 @@ void send_network_message(
     void *val);
 
 void init_npdu(
-    BACNET_NPCI_DATA * npci_data,
+    BACNET_NPDU_DATA * npdu_data,
     BACNET_NETWORK_MESSAGE_TYPE network_message_type,
     bool data_expecting_reply);
 

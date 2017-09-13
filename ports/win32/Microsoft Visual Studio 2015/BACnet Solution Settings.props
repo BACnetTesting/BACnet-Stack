@@ -4,12 +4,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_PropertySheetDisplayName>BACnet Solution Settings</_PropertySheetDisplayName>
-    <IncludePath>$(SolutionDir)..\..\..\ports\win32;$(SolutionDir)..\..\..\demo\object;$(SolutionDir)..\..\..\demo\handler;$(SolutionDir)..\..\..\include;$(SolutionDir)..\..\..\demo\router;$(IncludePath)</IncludePath>
+    <IncludePath>$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;PRINT_ENABLED=1;BIP_DEBUG;INTRINSIC_REPORTING=1;BBMD_ENABLED=1;DEBUG_ENABLED=1;BACFILE;WIN32;BAC_ROUTING=1;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;PRINT_ENABLED=1;BIP_DEBUG;INTRINSIC_REPORTING=1;BBMD_ENABLED=1;DEBUG_ENABLED=1;BACFILE;WIN32;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <WarningLevel>Level4</WarningLevel>
       <SDLCheck>true</SDLCheck>

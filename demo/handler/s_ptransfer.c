@@ -70,7 +70,7 @@ uint8_t Send_Private_Transfer_Request(
     int len = 0;
     int pdu_len = 0;
     int bytes_sent = 0;
-    BACNET_NPCI_DATA npci_data;
+    BACNET_NPDU_DATA npdu_data;
     static uint8_t pt_req_buffer[300];  /* Somewhere to build the request packet */
     BACNET_PRIVATE_TRANSFER_DATA pt_block;
     BACNET_CHARACTER_STRING bsTemp;
@@ -87,10 +87,10 @@ uint8_t Send_Private_Transfer_Request(
     if (invoke_id) {
         /* encode the NPDU portion of the packet */
         datalink_get_my_address(&my_address);
-        npdu_setup_npci_data(&npci_data, true, MESSAGE_PRIORITY_NORMAL);
+        npdu_encode_npdu_data(&npdu_data, true, MESSAGE_PRIORITY_NORMAL);
         pdu_len =
             npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest, &my_address,
-            &npci_data);
+            &npdu_data);
         /* encode the APDU portion of the packet */
 
         pt_block.vendorID = vendor_id;
@@ -126,9 +126,9 @@ uint8_t Send_Private_Transfer_Request(
 
         if ((unsigned) pdu_len < max_apdu) {
             tsm_set_confirmed_unsegmented_transaction(invoke_id, &dest,
-                &npci_data, &Handler_Transmit_Buffer[0], (uint16_t) pdu_len);
+                &npdu_data, &Handler_Transmit_Buffer[0], (uint16_t) pdu_len);
             bytes_sent =
-                datalink_send_pdu(&dest, &npci_data,
+                datalink_send_pdu(&dest, &npdu_data,
                 &Handler_Transmit_Buffer[0], pdu_len);
 #if PRINT_ENABLED
             if (bytes_sent <= 0)

@@ -1,6 +1,31 @@
 # BACnet-Stack
 
-Open Source BACnet stack based Steve Karg's SourceForge project
+This "BACnet Reference Stack" is based on Steve Karg's original work on SourceForge.
+
+It has been pummelled, fixed and upgraded to support various more advanced applications, as well as 
+matching the coding style and testing requirements of BACnet Interoperability Testing Services, Inc.
+
+In the spirit, and legal requirements, of the original open source licensing terms, the code changes
+have been commented and placed back in the public domain and can be found on GitHub at:
+    
+    https://github.com/BACnetTesting/BACnet-Stack
+    
+    
+Any modifications to the original Steve Karg stack are made in a precedence from top to bottom below.
+Relevant changes are made as early as possible, but not so soon that they 'break' the flow of changes
+that are migrated through the rest of the repository via automatic branch merges.
+
+                        ----------------------------------------------------------------
+                        
+## Branch name
+###	Description
+
+Shadow of Steve Kargs stack
+	Straight copy of Steve's latest
+
+Compile MSVC
+	Add MSVC projects, solution, NO FURTHER CHANGES apart from getting MSVC to compile.
+
 
 # Compiling and sanity test under Ubuntu
 

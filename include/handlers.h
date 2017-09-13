@@ -70,7 +70,7 @@ extern "C" {
     int npdu_router_send_pdu(
         uint16_t dnet,
         BACNET_ADDRESS * dest,
-        BACNET_NPCI_DATA * npci_data,
+        BACNET_NPDU_DATA * npdu_data,
         uint8_t * pdu,
         unsigned int pdu_len);
     void npdu_router_get_my_address(
