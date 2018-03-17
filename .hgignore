@@ -3,6 +3,7 @@ syntax: glob
 
 *.bak
 *.bin
+*.cache
 *.cap
 *.config
 *.d
@@ -94,3 +95,10 @@ demo/gateway/bacgateway
 demo/mstpcap/mstpcap
 demo/mstpcrc/mstpcrc
 demo/router-ipv6/bacroute
+x64
+*.vpw
+*.vpj
+*.suo
+*.user
+*.old
+.vs
