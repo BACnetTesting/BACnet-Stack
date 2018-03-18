@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Phases of BITS BACnet Reference Stack
 
 This "BACnet Reference Stack" is based on Steve Karg's original work on SourceForge.
@@ -8,6 +9,15 @@ matching the coding style and testing requirements of BACnet Interoperability Te
 We only support a subset of the demonstrations and ports that the original stack provided, and where
 we do not support a function, we have removed the code in order to avoid ambiguity.
 
+=======
+# BACnet-Stack
+
+This "BACnet Reference Stack" is based on Steve Karg's original work on SourceForge.
+
+It has been pummelled, fixed and upgraded to support various more advanced applications, as well as
+matching the coding style and testing requirements of BACnet Interoperability Testing Services, Inc.
+
+>>>>>>> 12b6295eba67459ca60dbdacab640be4a70b9277
 In the spirit, and legal requirements, of the original open source licensing terms, the code changes
 have been commented and placed back in the public domain and can be found on GitHub at:
 
@@ -19,16 +29,23 @@ that are migrated through the rest of the repository via automatic branch merges
 
                         ----------------------------------------------------------------
 
+<<<<<<< HEAD
 The project is arranged in branches, each branch with additional functionality. Pick the branch that
 suits your application the best and start there.
 
+=======
+>>>>>>> 12b6295eba67459ca60dbdacab640be4a70b9277
 ## Branch name
 ### Description
 
 Shadow of Steve Kargs stack
     Straight copy of Steve's latest release from https://sourceforge.net/projects/bacnet/
 
+<<<<<<< HEAD
 ###Compile MSVC
+=======
+Compile MSVC
+>>>>>>> 12b6295eba67459ca60dbdacab640be4a70b9277
     * Add MSVC projects, solution, NO FURTHER CHANGES apart from getting MSVC to compile.
     * A note on the Microsoft solution layout (applies to this, and the rest of the branches)
         * In ports\win32\Microsoft Visual Studio\ there is a Microsoft Visual Studio Solution file (*.sln)that contains multiple projects
@@ -37,6 +54,7 @@ Shadow of Steve Kargs stack
         * A common Visual Studion "properties" file ("BACnet Solution Settings.props") containing common settings, such as include paths, key #defines to be shared across all projects.
         * Individual MVS project files contain more specific project settings
 
+<<<<<<< HEAD
 ###Global Renames
 	(This is not really a useful branch, use "Compile MSVC C++ branch as your starting point for BITS codebase")
 	BITS copyright message
@@ -89,6 +107,8 @@ Virtual Devices
 ###Full Routing
     And _this_ is where the action happens. Virtual devices, multiple datalinks, routing.
 
+=======
+>>>>>>> 12b6295eba67459ca60dbdacab640be4a70b9277
 
 # Compiling and sanity test under Ubuntu
 
@@ -112,3 +132,9 @@ Virtual Devices
 
 for more information, email info@bac-test.com
 
+<<<<<<< HEAD
+=======
+
+
+
+>>>>>>> 12b6295eba67459ca60dbdacab640be4a70b9277
