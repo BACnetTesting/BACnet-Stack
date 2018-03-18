@@ -688,6 +688,19 @@ bool Analog_Value_Write_Property(
                     /* Command priority 6 is reserved for use by Minimum On/Off
                        algorithm and may not be used for other purposes in any
                        object. */
+
+                    /* 2017.06.19 EKH. This logic is (very slightly) wrong. (for non-commandable)
+
+                    15.9.1.1.5 Priority
+                    This parameter shall be an integer in the range 1-16, which indicates the priority assigned to this write operation. If an
+                    attempt is made to write to a commandable property without specifying the priority, a default priority of 16 (the lowest
+                    priority) shall be assumed. If an attempt is made to write to a property that is not commandable with a specified priority, the
+                    priority shall be ignored. See Clause 19.
+
+                    so for non commandable, if the write fails, should not be write access denied, but value out of range.
+                    
+                    */
+
                     wp_data->error_class = ERROR_CLASS_PROPERTY;
                     wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
                 } else {

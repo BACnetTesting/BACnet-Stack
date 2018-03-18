@@ -66,9 +66,11 @@ bool timer_elapsed_seconds(
 bool timer_elapsed_minutes(
     unsigned index,
     uint32_t seconds);
+
 uint32_t timer_milliseconds_set(
     unsigned index,
     uint32_t value);
+
 uint32_t timer_reset(
     unsigned index);
 

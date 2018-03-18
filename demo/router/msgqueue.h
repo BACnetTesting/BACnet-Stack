@@ -36,6 +36,7 @@
 #include <sys/ipc.h>
 #include <sys/msg.h>
 #endif
+
 #include "bacdef.h"
 #include "npdu.h"
 

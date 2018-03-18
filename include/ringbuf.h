@@ -5,6 +5,22 @@
 *
 * Generic ring buffer library for deeply embedded system.
 * See the unit tests for usage examples.
+
+
+
+Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+
+July 1, 2017    BITS    Modifications to this file have been made in compliance
+to original licensing.
+
+This file contains changes made by BACnet Interoperability Testing
+Services, Inc. These changes are subject to the permissions,
+warranty terms and limitations above.
+For more information: info@bac-test.com
+For access to source code:  info@bac-test.com
+or      www.github.com/bacnettesting/bacnet-stack
+
+####COPYRIGHTEND####
 */
 #ifndef RINGBUF_H
 #define RINGBUF_H
@@ -60,6 +76,9 @@ typedef struct ring_buffer_t RING_BUFFER;
     volatile uint8_t *Ringbuf_Peek(RING_BUFFER const *b);
     bool Ringbuf_Pop(RING_BUFFER * b,
         uint8_t * data_element);
+    bool Ringbuf_Pop_Element(RING_BUFFER * b,
+        uint8_t * this_element,
+        uint8_t * data_element);
     bool Ringbuf_Put_Front(RING_BUFFER * b,
         uint8_t * data_element);
     /* head */
@@ -67,6 +86,8 @@ typedef struct ring_buffer_t RING_BUFFER;
         uint8_t * data_element);
     /* pair of functions to use head memory directly */
     volatile uint8_t *Ringbuf_Data_Peek(RING_BUFFER * b);
+    volatile uint8_t *Ringbuf_Peek_Next(RING_BUFFER const *b,
+        uint8_t * data_element);
     bool Ringbuf_Data_Put(RING_BUFFER * b, volatile uint8_t *data_element);
     /* Note: element_count must be a power of two */
     bool Ringbuf_Init(RING_BUFFER * b,

@@ -1,27 +1,27 @@
 /**************************************************************************
-*
-* Copyright (C) 2006 Steve Karg <skarg@users.sourceforge.net>
-*
-* Permission is hereby granted, free of charge, to any person obtaining
-* a copy of this software and associated documentation files (the
-* "Software"), to deal in the Software without restriction, including
-* without limitation the rights to use, copy, modify, merge, publish,
-* distribute, sublicense, and/or sell copies of the Software, and to
-* permit persons to whom the Software is furnished to do so, subject to
-* the following conditions:
-*
-* The above copyright notice and this permission notice shall be included
-* in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*
-*********************************************************************/
+ *
+ * Copyright (C) 2005 Steve Karg <skarg@users.sourceforge.net>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ *********************************************************************/
 
 /* Binary Input Objects customize for your use */
 
@@ -42,6 +42,8 @@
 #ifndef MAX_BINARY_INPUTS
 #define MAX_BINARY_INPUTS 5
 #endif
+
+#define POLARITY_READ_ONLY		0
 
 /* stores the current value */
 static BACNET_BINARY_PV Present_Value[MAX_BINARY_INPUTS];
@@ -342,6 +344,7 @@ BACNET_POLARITY Binary_Input_Polarity(
     return polarity;
 }
 
+#if ( POLARITY_READ_ONLY == 0 )
 bool Binary_Input_Polarity_Set(
     uint32_t object_instance,
     BACNET_POLARITY polarity)
@@ -356,6 +359,8 @@ bool Binary_Input_Polarity_Set(
 
     return status;
 }
+#endif
+
 
 /* return apdu length, or BACNET_STATUS_ERROR on error */
 /* assumption - object already exists, and has been bounds checked */
@@ -489,6 +494,11 @@ bool Binary_Input_Write_Property(
             break;
 
         case PROP_POLARITY:
+	    
+#if ( POLARITY_READ_ONLY == 1 )
+			wp_data->error_class = ERROR_CLASS_PROPERTY;
+			wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
+#else
             status =
                 WPValidateArgType(&value, BACNET_APPLICATION_TAG_ENUMERATED,
                 &wp_data->error_class, &wp_data->error_code);
@@ -502,14 +512,17 @@ bool Binary_Input_Write_Property(
                     wp_data->error_code = ERROR_CODE_VALUE_OUT_OF_RANGE;
                 }
             }
+#endif
             break;
 
+        case PROP_DESCRIPTION:
+        case PROP_EVENT_STATE:
         case PROP_OBJECT_IDENTIFIER:
         case PROP_OBJECT_NAME:
-        case PROP_DESCRIPTION:
         case PROP_OBJECT_TYPE:
+		    case PROP_PROPERTY_LIST:
+        case PROP_RELIABILITY:
         case PROP_STATUS_FLAGS:
-        case PROP_EVENT_STATE:
             wp_data->error_class = ERROR_CLASS_PROPERTY;
             wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
             break;

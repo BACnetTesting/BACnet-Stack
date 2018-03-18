@@ -24,6 +24,20 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+
+    July 1, 2017    BITS    Modifications to this file have been made in compliance
+                            to original licensing.
+
+    This file contains changes made by BACnet Interoperability Testing
+    Services, Inc. These changes are subject to the permissions,
+    warranty terms and limitations above.
+    For more information: info@bac-test.com
+    For access to source code:  info@bac-test.com
+            or      www.github.com/bacnettesting/bacnet-stack
+
+####COPYRIGHTEND####
 *
 */
 #include <stdio.h>
@@ -151,6 +165,7 @@ bool dl_ip_init(
     /* setup port for later use */
     ip_data->port = htons(port->params.bip_params.port);
 
+#ifndef _MSC_VER
     /* get local address */
     status =
         get_local_address_ioctl(port->iface, &ip_data->local_addr,
@@ -165,6 +180,7 @@ bool dl_ip_init(
     if (status < 0) {
         return false;
     }
+#endif
 
     ip_data->socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (ip_data->socket < 0)

@@ -71,7 +71,6 @@ typedef enum {
     PARITY_EVEN,
     PARITY_ODD
 } PARITY;
-
 /* port specific parameters */
 typedef union _port_params {
     struct {
@@ -86,7 +85,6 @@ typedef union _port_params {
         uint8_t max_frames;
     } mstp_params;
 } PORT_PARAMS;
-
 /* list node for reacheble networks */
 typedef struct _dnet {
     uint8_t mac[MAX_MAC_LEN];

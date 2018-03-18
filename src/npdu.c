@@ -30,7 +30,21 @@
  based on this file might be covered by the GNU General Public
  License.
  -------------------------------------------
-####COPYRIGHTEND####*/
+
+    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+
+    July 1, 2017    BITS    Modifications to this file have been made in compliance
+                            to original licensing.
+
+    This file contains changes made by BACnet Interoperability Testing
+    Services, Inc. These changes are subject to the permissions,
+    warranty terms and limitations above.
+    For more information: info@bac-test.com
+    For access to source code:  info@bac-test.com
+            or      www.github.com/bacnettesting/bacnet-stack
+
+####COPYRIGHTEND####
+  */
 #include <stdbool.h>
 #include <stdint.h>
 #include "bacdef.h"
@@ -60,7 +74,6 @@ void npdu_copy_data(
         dest->vendor_id = src->vendor_id;
         dest->hop_count = src->hop_count;
     }
-
 }
 
 /*
@@ -137,7 +150,6 @@ int npdu_encode_pdu(
     int len = 0;        /* return value - number of octets loaded in this function */
     uint8_t i = 0;      /* counter  */
 
-
     if (npdu && npci_data) {
         /* protocol version */
         npdu[0] = npci_data->protocol_version;
@@ -193,6 +205,7 @@ int npdu_encode_pdu(
                 }
             }
         }
+
         if (src && src->net && src->len) {      /* Only insert if valid */
             len += encode_unsigned16(&npdu[len], src->net);
             npdu[len++] = src->len;
@@ -204,6 +217,7 @@ int npdu_encode_pdu(
                 }
             }
         }
+
         /* The Hop Count field shall be present only if the message is */
         /* destined for a remote network, i.e., if DNET is present. */
         /* This is a one-octet field that is initialized to a value of 0xff. */

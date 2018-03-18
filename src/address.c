@@ -29,8 +29,24 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
+
  -------------------------------------------
-####COPYRIGHTEND####*/
+
+    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+
+    July 1, 2017    BITS    Modifications to this file have been made in compliance
+                            to original licensing.
+
+    This file contains changes made by BACnet Interoperability Testing
+    Services, Inc. These changes are subject to the permissions,
+    warranty terms and limitations above.
+    For more information: info@bac-test.com
+    For access to source code:  info@bac-test.com
+            or      www.github.com/bacnettesting/bacnet-stack
+
+*/
+
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -42,6 +58,8 @@
 #include "bacdef.h"
 #include "bacdcode.h"
 #include "readrange.h"
+#include "debug.h"
+#include "bactext.h"
 
 /** @file address.c  Handle address binding */
 
@@ -65,7 +83,7 @@ static struct Address_Cache_Entry {
 #define BAC_ADDR_IN_USE    1    /* Address cache entry in use */
 #define BAC_ADDR_BIND_REQ  2    /* Bind request outstanding for entry */
 #define BAC_ADDR_STATIC    4    /* Static address mapping - does not expire */
-#define BAC_ADDR_SHORT_TTL 8    /* Oppertunistaclly added address with short TTL */
+#define BAC_ADDR_SHORT_TTL 8    /* Opportunistically added address with short TTL */
 #define BAC_ADDR_RESERVED  128  /* Freed up but held for caller to fill */
 
 #define BAC_ADDR_SECS_1HOUR 3600        /* 60x60 */
@@ -350,7 +368,6 @@ static void address_file_init(
 
 }
 
-
 /****************************************************************************
  * Clear down the cache and make sure the full complement of entries are    *
  * available. Assume no persistance of memory.                              *
@@ -368,9 +385,11 @@ void address_init(
         pMatch->Flags = 0;
         pMatch++;
     }
+#ifdef BACNET_ADDRESS_CACHE_FILE
     address_file_init(Address_Cache_Filename);
-
+#endif
 }
+
 
 /****************************************************************************
  * Clear down the cache of any non bound, expired  or reserved entries.     *
@@ -399,7 +418,9 @@ void address_init_partial(
 
         pMatch++;
     }
+#if ( USE_FILE_CACHE == 1 )
     address_file_init(Address_Cache_Filename);
+#endif
 
 }
 

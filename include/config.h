@@ -1,27 +1,41 @@
 /**************************************************************************
- *
- * Copyright (C) 2004 Steve Karg <skarg@users.sourceforge.net>
- *
- * Permission is hereby granted, free of charge, to any person obtaining
- * a copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to
- * the following conditions:
- *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
- * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- *********************************************************************/
+*
+* Copyright (C) 2004 Steve Karg <skarg@users.sourceforge.net>
+*
+* Permission is hereby granted, free of charge, to any person obtaining
+* a copy of this software and associated documentation files (the
+* "Software"), to deal in the Software without restriction, including
+* without limitation the rights to use, copy, modify, merge, publish,
+* distribute, sublicense, and/or sell copies of the Software, and to
+* permit persons to whom the Software is furnished to do so, subject to
+* the following conditions:
+*
+* The above copyright notice and this permission notice shall be included
+* in all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+
+    July 1, 2017    BITS    Modifications to this file have been made in compliance
+                            to original licensing.
+
+    This file contains changes made by BACnet Interoperability Testing
+    Services, Inc. These changes are subject to the permissions,
+    warranty terms and limitations above.
+    For more information: info@bac-test.com
+    For access to source code:  info@bac-test.com
+            or      www.github.com/bacnettesting/bacnet-stack
+
+####COPYRIGHTEND####
+*
+*********************************************************************/
 #ifndef CONFIG_H
 #define CONFIG_H
 
@@ -269,9 +283,50 @@
 #define BACNET_SVC_RD_A 0
 #endif
 
-#ifndef BACNET_SVC_SERVER       /* Are we a pure server type device? */
-#define BACNET_SVC_SERVER 1
+
+
+/* B-side or Server services */
+
+// Per PICS email trail, support Intrinsic Alarming on AI, COV on BI.
+
+#ifndef INTRINSIC_REPORTING_AI_B
+#define INTRINSIC_REPORTING_AI_B 0
 #endif
+
+#ifndef INTRINSIC_REPORTING_AV_B
+#define INTRINSIC_REPORTING_AV_B 1
+#endif
+
+#ifndef BACNET_SVC_COV_BI_B        /* EKH, I am only defining B for now, make A vs B more fine grained when next dealing with COVs */
+#define BACNET_SVC_COV_BI_B 0
+#endif
+
+#ifndef BACNET_SVC_COV_AI_B        /* EKH, I am only defining B for now, make A vs B more fine grained when next dealing with COVs */
+#define BACNET_SVC_COV_AI_B 0
+#endif
+
+#ifndef BACNET_SVC_COV_AV_B        /* EKH, I am only defining B for now, make A vs B more fine grained when next dealing with COVs */
+#define BACNET_SVC_COV_AV_B 0
+#endif
+
+#ifndef BACNET_SVC_RR_B         /* Do we respond to Read Range requests? */
+#define BACNET_SVC_RR_B     0
+#endif
+
+#ifndef BACNET_SVC_PRIVATE_TRANSFER
+#define BACNET_SVC_PRIVATE_TRANSFER 0
+#endif
+
+#ifndef BACNET_SVC_RD_A                 /* Do we send ReinitialiseDevice requests? */
+#define BACNET_SVC_RD_A         0
+#endif
+
+#ifndef BACNET_SVC_SERVER               /* Are we a pure server type device? */
+#define BACNET_SVC_SERVER       1
+#endif
+
+
+/* Other */
 
 #ifndef BACNET_USE_OCTETSTRING  /* Do we need any octet strings? */
 #define BACNET_USE_OCTETSTRING 0

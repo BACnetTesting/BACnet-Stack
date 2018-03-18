@@ -13,9 +13,9 @@
  GNU General Public License for more details.
 
  You should have received a copy of the GNU General Public License
- along with this program; if not, write to
+ along with this program; if not, write to 
  The Free Software Foundation, Inc.
- 59 Temple Place - Suite 330
+ 59 Temple Place - Suite 330 
  Boston, MA  02111-1307, USA.
 
  As a special exception, if other files instantiate templates or
@@ -30,7 +30,21 @@
  based on this file might be covered by the GNU General Public
  License.
  -------------------------------------------
-####COPYRIGHTEND####*/
+
+    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+
+    July 1, 2017    BITS    Modifications to this file have been made in compliance
+                            to original licensing.
+
+    This file contains changes made by BACnet Interoperability Testing
+    Services, Inc. These changes are subject to the permissions,
+    warranty terms and limitations above.
+    For more information: info@bac-test.com
+    For access to source code:  info@bac-test.com
+            or      www.github.com/bacnettesting/bacnet-stack
+
+####COPYRIGHTEND####
+  */
 #include <stdbool.h>
 #include <string.h>
 #if PRINT_ENABLED
@@ -106,15 +120,15 @@ signed bacprop_property_tag(
     signed prop)
 {
     switch (type) {
-    case OBJECT_DEVICE:
-        return
-            bacprop_tag_by_index_default
-            (bacnet_object_device_property_tag_map, prop, -1);
-    default:
+        case OBJECT_DEVICE:
+            return
+                bacprop_tag_by_index_default
+                (bacnet_object_device_property_tag_map, prop, -1);
+        default:
 #if PRINT_ENABLED
-        fprintf(stderr, "Unsupported object type");
+            fprintf(stderr, "Unsupported object type");
 #endif
-        break;
+            break;
     }
 
     return -1;

@@ -1468,11 +1468,13 @@ int main(
     current_seconds = time(NULL);
     timeout_seconds = (apdu_timeout() / 1000) * apdu_retries();
 
-#if defined(BACDL_BIP)
-    if (My_BIP_Port > 0) {
-        bip_set_port(htons(0xBAC0));    /* Set back to std BACnet/IP port */
-    }
-#endif
+// 2017.07.04 Why set this back to 0xBAC0 when above we used the -p switch to explicitly set it so some other?
+//#if defined(BACDL_BIP)
+//    if (My_BIP_Port > 0) {
+//        bip_set_port(htons(0xBAC0));    /* Set back to std BACnet/IP port */
+//    }
+//#endif
+
     /* try to bind with the target device */
     found =
         address_bind_request(Target_Device_Object_Instance, &max_apdu,

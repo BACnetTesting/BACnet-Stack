@@ -2,6 +2,22 @@
 * @file
 * @author Steve Karg
 * @date 2004
+
+
+Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+
+July 1, 2017    BITS    Modifications to this file have been made in compliance
+to original licensing.
+
+This file contains changes made by BACnet Interoperability Testing
+Services, Inc. These changes are subject to the permissions,
+warranty terms and limitations above.
+For more information: info@bac-test.com
+For access to source code:  info@bac-test.com
+or      www.github.com/bacnettesting/bacnet-stack
+
+####COPYRIGHTEND####
+
 */
 #ifndef FIFO_H
 #define FIFO_H

@@ -31,7 +31,21 @@
  based on this file might be covered by the GNU General Public
  License.
  -------------------------------------------
-####COPYRIGHTEND####*/
+
+    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+
+    July 1, 2017    BITS    Modifications to this file have been made in compliance
+                            to original licensing.
+
+    This file contains changes made by BACnet Interoperability Testing
+    Services, Inc. These changes are subject to the permissions,
+    warranty terms and limitations above.
+    For more information: info@bac-test.com
+    For access to source code:  info@bac-test.com
+            or      www.github.com/bacnettesting/bacnet-stack
+
+####COPYRIGHTEND####
+  */
 
 /** @file win32/rs485.c  Provides Windows-specific functions for RS-485 */
 
@@ -273,13 +287,12 @@ static void RS485_Cleanup(
 void RS485_Initialize(
     void)
 {
-#ifdef todo1
     RS485_Handle =
-        CreateFile(RS485_Port_Name, GENERIC_READ | GENERIC_WRITE, 0, 0,
+        CreateFile(RS485_Port_Name, GENERIC_READ | GENERIC_WRITE, 0, NULL,
         OPEN_EXISTING,
         /*FILE_FLAG_OVERLAPPED */ 0,
-        0);
-#endif
+        NULL);
+
     if (RS485_Handle == INVALID_HANDLE_VALUE) {
         fprintf(stderr, "Unable to open %s\n", RS485_Port_Name);
         RS485_Print_Error();

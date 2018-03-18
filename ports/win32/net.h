@@ -29,12 +29,12 @@
 #define WIN32_LEAN_AND_MEAN
 #define STRICT 1
 /* Windows XP minimum */
-//#if (_WIN32_WINNT < 0x501)
+#if (_WIN32_WINNT < 0x501)
 //  #undef _WIN32_WINNT
 //  #define _WIN32_WINNT 0x501
 //  #undef NTDDI_VERSION
 //  #define NTDDI_VERSION _NTDDI_VERSION_FROM_WIN32_WINNT(_WIN32_WINNT)
-//#endif
+#endif
 
 
 #include <windows.h>
