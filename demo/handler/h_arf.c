@@ -55,6 +55,7 @@
 #include "bacfile.h"
 #endif
 #include "handlers.h"
+#include "debug.h"
 
 /** @file h_arf.c  Handles Atomic Read File request. */
 
@@ -126,9 +127,8 @@ void handler_atomic_read_file(
     BACNET_ERROR_CLASS error_class = ERROR_CLASS_OBJECT;
     BACNET_ERROR_CODE error_code = ERROR_CODE_UNKNOWN_OBJECT;
 
-#if PRINT_ENABLED
-    fprintf(stderr, "Received Atomic-Read-File Request!\n");
-#endif
+
+    dbTraffic(DB_UNEXPECTED_ERROR, "Received Atomic-Read-File Request!\n");
     /* encode the NPDU portion of the packet */
     datalink_get_my_address(&my_address);
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
@@ -140,9 +140,7 @@ void handler_atomic_read_file(
             abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, ABORT_REASON_SEGMENTATION_NOT_SUPPORTED,
             true);
-#if PRINT_ENABLED
-        fprintf(stderr, "ARF: Segmented Message. Sending Abort!\n");
-#endif
+        dbTraffic(DB_UNEXPECTED_ERROR, "ARF: Segmented Message. Sending Abort!\n");
         goto ARF_ABORT;
     }
     len = arf_decode_service_request(service_request, service_len, &data);
@@ -151,9 +149,7 @@ void handler_atomic_read_file(
         len =
             abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, ABORT_REASON_OTHER, true);
-#if PRINT_ENABLED
-        fprintf(stderr, "Bad Encoding. Sending Abort!\n");
-#endif
+        dbTraffic(DB_UNEXPECTED_ERROR, "Bad Encoding. Sending Abort!\n");
         goto ARF_ABORT;
     }
     if (data.object_type == OBJECT_FILE) {
@@ -176,11 +172,9 @@ void handler_atomic_read_file(
                     abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
                     service_data->invoke_id,
                     ABORT_REASON_SEGMENTATION_NOT_SUPPORTED, true);
-#if PRINT_ENABLED
-                fprintf(stderr, "Too Big To Send (%d >= %d). Sending Abort!\n",
+                dbTraffic(DB_UNEXPECTED_ERROR, "Too Big To Send (%d >= %d). Sending Abort!\n",
                     data.type.stream.requestedOctetCount,
                     (int)octetstring_capacity(&data.fileData[0]));
-#endif
             }
         } else if (data.access == FILE_RECORD_ACCESS) {
             if (data.type.record.fileStartRecord >=
@@ -189,11 +183,9 @@ void handler_atomic_read_file(
                 error_code = ERROR_CODE_INVALID_FILE_START_POSITION;
                 error = true;
             } else if (bacfile_read_stream_data(&data)) {
-#if PRINT_ENABLED
-                fprintf(stderr, "ARF: fileStartRecord %d, %u RecordCount.\n",
+                dbTraffic(DB_UNEXPECTED_ERROR, "ARF: fileStartRecord %d, %u RecordCount.\n",
                     data.type.record.fileStartRecord,
                     data.type.record.RecordCount);
-#endif
                 len =
                     arf_ack_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
                     service_data->invoke_id, &data);
@@ -206,9 +198,7 @@ void handler_atomic_read_file(
             error = true;
             error_class = ERROR_CLASS_SERVICES;
             error_code = ERROR_CODE_INVALID_FILE_ACCESS_METHOD;
-#if PRINT_ENABLED
-            fprintf(stderr, "Record Access Requested. Sending Error!\n");
-#endif
+            dbTraffic(DB_UNEXPECTED_ERROR, "Record Access Requested. Sending Error!\n");
         }
     } else {
         error = true;

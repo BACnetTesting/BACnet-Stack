@@ -105,14 +105,13 @@ int rp_decode_service_request(
     BACNET_READ_PROPERTY_DATA * rpdata)
 {
     unsigned len = 0;
-    uint8_t tag_number = 0;
-    uint32_t len_value_type = 0;
+    uint8_t tag_number ;
+    uint32_t len_value_type ;
     BACNET_OBJECT_TYPE type ;  /* for decoding */
-    uint32_t property = 0;      /* for decoding */
-    uint32_t array_value = 0;   /* for decoding */
+    uint32_t property ;      /* for decoding */
+    uint32_t array_value ;   /* for decoding */
 
     /* check for value pointers */
-    if (rpdata != NULL) {
         /* Must have at least 2 tags, an object id and a property identifier
          * of at least 1 byte in length to have any chance of parsing */
         if (apdu_len < 7) {
@@ -150,15 +149,13 @@ int rp_decode_service_request(
                 rpdata->error_code = ERROR_CODE_REJECT_INVALID_TAG;
                 return BACNET_STATUS_REJECT;
             }
-        } else
+        } else {
             rpdata->array_index = BACNET_ARRAY_ALL;
-    }
+        }
 
     if (len < apdu_len) {
         /* If something left over now, we have an invalid request */
-        if (rpdata) {
-            rpdata->error_code = ERROR_CODE_REJECT_TOO_MANY_ARGUMENTS;
-        }
+        rpdata->error_code = ERROR_CODE_REJECT_TOO_MANY_ARGUMENTS;
         return BACNET_STATUS_REJECT;
     }
 
@@ -255,18 +252,19 @@ int rp_ack_decode_service_request(
     int apdu_len,       /* total length of the apdu */
     BACNET_READ_PROPERTY_DATA * rpdata)
 {
-    uint8_t tag_number = 0;
-    uint32_t len_value_type = 0;
-    int tag_len = 0;    /* length of tag decode */
+    uint8_t tag_number ;
+    uint32_t len_value_type ;
+    int tag_len ;    /* length of tag decode */
     int len = 0;        /* total length of decodes */
     BACNET_OBJECT_TYPE object ;        /* object type */
-    uint32_t property = 0;      /* for decoding */
-    uint32_t array_value = 0;   /* for decoding */
+    uint32_t property ;      /* for decoding */
+    uint32_t array_value ;   /* for decoding */
 
     /* FIXME: check apdu_len against the len during decode   */
     /* Tag 0: Object ID */
-    if (!decode_is_context_tag(&apdu[0], 0))
+    if (!decode_is_context_tag(&apdu[0], 0)) {
         return -1;
+    }
     len = 1;
     len += decode_object_id(&apdu[len], &object, &rpdata->object_instance);
     rpdata->object_type = (BACNET_OBJECT_TYPE) object;

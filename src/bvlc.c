@@ -1374,7 +1374,7 @@ uint16_t bvlc_receive(
             npdu_len = 0;
             break;
         case BVLC_ORIGINAL_UNICAST_NPDU:
-            debug_printf("BVLC: Received Original-Unicast-NPDU.\n");
+            //debug_printf("BVLC: Received Original-Unicast-NPDU.\n");
             if ((sin.sin_addr.s_addr == bip_get_addr()) &&
                 (sin.sin_port == bip_get_port())) {
                 /* ignore messages from me */
@@ -1400,7 +1400,7 @@ uint16_t bvlc_receive(
             }
             break;
         case BVLC_ORIGINAL_BROADCAST_NPDU:
-            debug_printf("BVLC: Received Original-Broadcast-NPDU.\n");
+            //debug_printf("BVLC: Received Original-Broadcast-NPDU.\n");
             /* Upon receipt of a BVLL Original-Broadcast-NPDU message,
                a BBMD shall construct a BVLL Forwarded-NPDU message and
                send it to each IP subnet in its BDT with the exception
@@ -1475,7 +1475,7 @@ int bvlc_send_pdu(
             address.s_addr = bip_get_broadcast_addr();
             port = bip_get_port();
             mtu[1] = BVLC_ORIGINAL_BROADCAST_NPDU;
-            debug_printf("BVLC: Sent Original-Broadcast-NPDU.\n");
+            //debug_printf("BVLC: Sent Original-Broadcast-NPDU.\n");
         }
     } else if ((dest->net > 0) && (dest->len == 0)) {
         /* net > 0 and net < 65535 are network specific broadcast if len = 0 */
@@ -1487,12 +1487,12 @@ int bvlc_send_pdu(
             port = bip_get_port();
         }
         mtu[1] = BVLC_ORIGINAL_BROADCAST_NPDU;
-        debug_printf("BVLC: Sent Original-Broadcast-NPDU.\n");
+        //debug_printf("BVLC: Sent Original-Broadcast-NPDU.\n");
     } else if (dest->mac_len == 6) {
         /* valid unicast */
         bvlc_decode_bip_address(&dest->mac[0], &address, &port);
         mtu[1] = BVLC_ORIGINAL_UNICAST_NPDU;
-        debug_printf("BVLC: Sent Original-Unicast-NPDU.\n");
+        //debug_printf("BVLC: Sent Original-Unicast-NPDU.\n");
     } else {
         /* invalid address */
         return -1;

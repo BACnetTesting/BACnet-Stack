@@ -184,57 +184,61 @@ struct mstp_port_struct_t {
 };
 
 
-    void MSTP_Init(
-        volatile struct mstp_port_struct_t *mstp_port);
-    void MSTP_Receive_Frame_FSM(
-        volatile struct mstp_port_struct_t
-        *mstp_port);
-    bool MSTP_Master_Node_FSM(
-        volatile struct mstp_port_struct_t
-        *mstp_port);
-    void MSTP_Slave_Node_FSM(
-        volatile struct mstp_port_struct_t *mstp_port);
+void MSTP_Init(
+    volatile struct mstp_port_struct_t *mstp_port);
 
-    /* returns true if line is active */
-    bool MSTP_Line_Active(
-        volatile struct mstp_port_struct_t *mstp_port);
+void MSTP_Receive_Frame_FSM(
+    volatile struct mstp_port_struct_t
+    *mstp_port);
 
-    uint16_t MSTP_Create_Frame(
-        uint8_t * buffer,       /* where frame is loaded */
-        uint16_t buffer_len,    /* amount of space available */
-        uint8_t frame_type,     /* type of frame to send - see defines */
-        uint8_t destination,    /* destination address */
-        uint8_t source, /* source address */
-        uint8_t * data, /* any data to be sent - may be null */
-        uint16_t data_len);     /* number of bytes of data (up to 501) */
+bool MSTP_Master_Node_FSM(
+    volatile struct mstp_port_struct_t
+    *mstp_port);
 
-    void MSTP_Create_And_Send_Frame(
-        volatile struct mstp_port_struct_t *mstp_port,  /* port to send from */
-        uint8_t frame_type,     /* type of frame to send - see defines */
-        uint8_t destination,    /* destination address */
-        uint8_t source, /* source address */
-        uint8_t * data, /* any data to be sent - may be null */
-        uint16_t data_len);
+void MSTP_Slave_Node_FSM(
+    volatile struct mstp_port_struct_t *mstp_port);
 
-    void MSTP_Fill_BACnet_Address(
-        BACNET_ADDRESS * src,
-        uint8_t mstp_address);
+/* returns true if line is active */
+bool MSTP_Line_Active(
+    volatile struct mstp_port_struct_t *mstp_port);
 
-    /* functions used by the MS/TP state machine to put or get data */
-    /* FIXME: developer must implement these in their DLMSTP module */
-    uint16_t MSTP_Put_Receive(
-        volatile struct mstp_port_struct_t *mstp_port);
+uint16_t MSTP_Create_Frame(
+    uint8_t * buffer,       /* where frame is loaded */
+    uint16_t buffer_len,    /* amount of space available */
+    uint8_t frame_type,     /* type of frame to send - see defines */
+    uint8_t destination,    /* destination address */
+    uint8_t source, /* source address */
+    uint8_t * data, /* any data to be sent - may be null */
+    uint16_t data_len);     /* number of bytes of data (up to 501) */
 
-    /* for the MS/TP state machine to use for getting data to send */
-    /* Return: amount of PDU data */
-    uint16_t MSTP_Get_Send(
-        volatile struct mstp_port_struct_t *mstp_port,
-        unsigned timeout);      /* milliseconds to wait for a packet */
-    /* for the MS/TP state machine to use for getting the reply for
-       Data-Expecting-Reply Frame */
-    /* Return: amount of PDU data */
-    uint16_t MSTP_Get_Reply(
-        volatile struct mstp_port_struct_t *mstp_port,
-        unsigned timeout);      /* milliseconds to wait for a packet */
+void MSTP_Create_And_Send_Frame(
+    volatile struct mstp_port_struct_t *mstp_port,  /* port to send from */
+    uint8_t frame_type,     /* type of frame to send - see defines */
+    uint8_t destination,    /* destination address */
+    uint8_t source, /* source address */
+    uint8_t * data, /* any data to be sent - may be null */
+    uint16_t data_len);
+
+void MSTP_Fill_BACnet_Address(
+    BACNET_ADDRESS * src,
+    uint8_t mstp_address);
+
+/* functions used by the MS/TP state machine to put or get data */
+/* FIXME: developer must implement these in their DLMSTP module */
+uint16_t MSTP_Put_Receive(
+    volatile struct mstp_port_struct_t *mstp_port);
+
+/* for the MS/TP state machine to use for getting data to send */
+/* Return: amount of PDU data */
+uint16_t MSTP_Get_Send(
+    volatile struct mstp_port_struct_t *mstp_port,
+	unsigned timeout); /* milliseconds to wait for a packet */
+
+/* for the MS/TP state machine to use for getting the reply for
+   Data-Expecting-Reply Frame */
+/* Return: amount of PDU data */
+uint16_t MSTP_Get_Reply(
+    volatile struct mstp_port_struct_t *mstp_port,
+	unsigned timeout); /* milliseconds to wait for a packet */
 
 #endif

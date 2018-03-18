@@ -72,4 +72,6 @@
 
 typedef int socklen_t;
 
+const char *winsock_error_code_text(const int code);
+
 #endif

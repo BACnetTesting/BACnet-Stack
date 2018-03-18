@@ -51,11 +51,17 @@
 #include <stdio.h>      /* Standard I/O */
 #include <stdlib.h>     /* Standard Library */
 #include <stdarg.h>
+
+#if defined ( _MSC_VER  )
+#include <wtypes.h>     // for Mutex Handle
+#endif
+
 #include "debug.h"
+#include "btaDebug.h"
 
 /** @file debug.c  Debug print function */
 
-#if DEBUG_ENABLED
+#if DEBUG_ENABLED == 1
 void debug_printf(
     const char *format,
     ...)

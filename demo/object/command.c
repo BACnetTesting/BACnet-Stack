@@ -50,7 +50,7 @@
 #include "config.h"     /* the custom stuff */
 #include "device.h"
 #include "handlers.h"
-#include "proplist.h"
+// #include "proplist.h"
 #include "timestamp.h"
 #include "command.h"
 

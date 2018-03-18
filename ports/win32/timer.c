@@ -51,8 +51,11 @@
 #include "net.h"
 #include <MMSystem.h>
 #include "timer.h"
+#include "debug.h"
+#include "bitsDebug.h"
 
 #pragma comment(lib, "Winmm.lib")           // for timeGetTime()
+
 
 /* Offset between Windows epoch 1/1/1601 and
    Unix epoch 1/1/1970 in 100 nanosec units */
@@ -123,9 +126,15 @@ int gettimeofday(
             _tzset();
             tzflag++;
         }
+
         tz = (struct timezone *) tzp;
-        tz->tz_minuteswest = _timezone / 60;
-        tz->tz_dsttime = _daylight;
+        long ltimezone;
+        if (_get_timezone(&ltimezone)) panic();
+        tz->tz_minuteswest = ltimezone / 60; 
+
+        int ldaylight;
+        if (_get_daylight(&ldaylight)) panic();
+        tz->tz_dsttime = ldaylight;
     }
 
     return 0;

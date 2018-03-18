@@ -39,7 +39,7 @@
 #include "wp.h"
 #include "lighting.h"
 #include "handlers.h"
-#include "proplist.h"
+// #include "proplist.h"
 /* me! */
 #include "lo.h"
 

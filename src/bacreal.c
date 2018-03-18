@@ -60,6 +60,7 @@
 
 /* NOTE: byte order plays a role in decoding multibyte values */
 /* http://www.unixpapa.com/incnote/byteorder.html */
+// 2016.08.20 EKH: Found a conflict with BIG_ENDIAN in another library. Renaming for BACnet.
 #ifndef BACNET_STACK_BIG_ENDIAN
 #error Define BACNET_STACK_BIG_ENDIAN=0 or BACNET_STACK_BIG_ENDIAN=1 for BACnet Stack in compiler settings
 #endif

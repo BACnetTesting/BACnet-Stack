@@ -57,6 +57,7 @@
 #include "handlers.h"
 /* device object has custom handler for all objects */
 #include "device.h"
+#include "proplist.h"
 
 /** @file h_rpm.c  Handles Read Property Multiple requests. */
 

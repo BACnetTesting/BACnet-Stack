@@ -43,14 +43,61 @@
 #include <stdio.h>
 #include "bacdef.h"
 
+// finer grained debugging
+// Set the following to 0 to disable. Any value > 0 adds more and more detail...
+
+#define DB_TRAFFIC	1
+
 #ifndef DEBUG_ENABLED
 #define DEBUG_ENABLED 0
 #endif
 
+// for variable dbTrafficLevel
 
-    void debug_printf(
-        const char *format,
-        ...);
+typedef enum {
+    DB_ALWAYS,
+    DB_DEBUG,
+    DB_INFO,
+    DB_NORMAL_TRAFFIC,
+    DB_EXPECTED_ERROR_TRAFFIC,
+    DB_UNUSUAL_TRAFFIC,
+    DB_NOTE,
+	DB_NOTE_SUPPRESSED,
+    DB_ERROR,
+    DB_BTC_ERROR,                   // Errors that are expected during BTC testing.
+    DB_UNEXPECTED_ERROR,
+    DB_NONE			// so we can turn off a single statement easily
+} DB_LEVEL;
+
+#if DB_TRAFFIC
+
+void sys_dbTraffic(DB_LEVEL lev, const char *format, ...) ;
+
+#define	dbTrafficSetLevel(lev)					sys_dbTrafficSetLevel(lev)
+#define	dbTraffic(lev, ...)						sys_dbTraffic(lev,__VA_ARGS__)
+#define	dbTrafficAssert(lev, assertion, msg)	sys_dbTrafficAssert(lev, assertion, msg)
+
+void sys_dbTraffic( DB_LEVEL lev, const char *format, ...);
+void sys_dbTrafficAssert(
+    DB_LEVEL lev, 
+    bool assertion, 
+    const char *message);
+// Sets level filter to only display debug messages of priority of lev or above
+void sys_dbTrafficSetLevel(DB_LEVEL lev);
+
+#else
+
+#define	dbTrafficSetLevel(lev)
+#define	dbTraffic()
+#define	dbTrafficAssert(lev, assertion, msg)
+
+#endif
+
+
+void debug_printf(
+    const char *format,
+    ...);
+
 #if DEBUG_ENABLED
     /* Nothing more here */
 #else
@@ -62,4 +109,13 @@
        }
      */
 #endif
+
+
+#if defined ( _MSC_VER  )
+// Compiling with /Wall, but have to suppress the following, and then re-enable some after Microsoft includes.
+// Warnings disabled in property manager file "bacnet solutions settings.prop"
+// 4820; 4214; 4244; 4996; 4668; 4100; 4242; 4255; 4710; 4267; 4206; 4389; 4548;
+#pragma warning( error : 4255)    // function prototype not declared
 #endif
+
+#endif // DEBUG_H

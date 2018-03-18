@@ -212,14 +212,14 @@ void MSTP_Fill_BACnet_Address(
 }
 
 uint16_t MSTP_Create_Frame(
-    uint8_t * buffer,   /* where frame is loaded */
-    uint16_t buffer_len,        /* amount of space available */
-    uint8_t frame_type, /* type of frame to send - see defines */
-    uint8_t destination,        /* destination address */
-    uint8_t source,     /* source address */
-    uint8_t * data,     /* any data to be sent - may be null */
-    uint16_t data_len)
-{       /* number of bytes of data (up to 501) */
+    uint8_t * buffer,       /* where frame is loaded */
+    uint16_t buffer_len,    /* amount of space available */
+    uint8_t frame_type,     /* type of frame to send - see defines */
+    uint8_t destination,    /* destination address */
+    uint8_t source,         /* source address */
+    uint8_t * data,         /* any data to be sent - may be null */
+    uint16_t data_len)      /* number of bytes of data (up to 501) */
+{       
     uint8_t crc8 = 0xFF;        /* used to calculate the crc value */
     uint16_t crc16 = 0xFFFF;    /* used to calculate the crc value */
     uint16_t index = 0; /* used to load the data portion of the frame */
@@ -265,19 +265,24 @@ uint16_t MSTP_Create_Frame(
     return index;       /* returns the frame length */
 }
 
+
 void MSTP_Create_And_Send_Frame(
     volatile struct mstp_port_struct_t *mstp_port,      /* port to send from */
-    uint8_t frame_type, /* type of frame to send - see defines */
-    uint8_t destination,        /* destination address */
-    uint8_t source,     /* source address */
-    uint8_t * data,     /* any data to be sent - may be null */
-    uint16_t data_len)
-{       /* number of bytes of data (up to 501) */
-    uint16_t len = 0;   /* number of bytes to send */
+    uint8_t frame_type,                                 /* type of frame to send - see defines */
+    uint8_t destination,                                /* destination address */
+    uint8_t source,                                     /* source address */
+    uint8_t * data,                                     /* any data to be sent - may be null */
+    uint16_t data_len)                                  /* number of bytes of data (up to 501) */
+{       
+    uint16_t len ;      /* number of bytes to send */
 
     len =
         MSTP_Create_Frame((uint8_t *) & mstp_port->OutputBuffer[0],
-        mstp_port->OutputBufferSize, frame_type, destination, source, data,
+        mstp_port->OutputBufferSize, 
+        frame_type, 
+        destination, 
+        source, 
+        data,
         data_len);
 
     RS485_Send_Frame(mstp_port, (uint8_t *) & mstp_port->OutputBuffer[0], len);
@@ -367,6 +372,7 @@ void MSTP_Receive_Frame_FSM(
                 /* wait for the start of a frame. */
                 mstp_port->receive_state = MSTP_RECEIVE_STATE_IDLE;
                 printf_receive_error("MSTP: Rx Header: SilenceTimer %u > %d\n",
+                // ekh todo 2 - This is a place where a frame can go into error and EventCount < 4 oi00116
                     (unsigned) mstp_port->SilenceTimer((void *) mstp_port),
                     Tframe_abort);
             }
@@ -376,6 +382,7 @@ void MSTP_Receive_Frame_FSM(
                 mstp_port->SilenceTimerReset((void *) mstp_port);
                 INCREMENT_AND_LIMIT_UINT8(mstp_port->EventCount);
                 /* indicate that an error has occurred during the reception of a frame */
+                // ekh todo 2 - This is a place where a frame can go into error and EventCount < 4 oi00116
                 mstp_port->ReceivedInvalidFrame = true;
                 printf_receive_error("MSTP: Rx Header: ReceiveError\n");
                 /* wait for the start of a frame. */

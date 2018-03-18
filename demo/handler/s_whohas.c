@@ -105,11 +105,6 @@ void Send_WhoHas_Name(
     bytes_sent =
         datalink_send_pdu(&dest, &npci_data, &Handler_Transmit_Buffer[0],
         pdu_len);
-#if PRINT_ENABLED
-    if (bytes_sent <= 0)
-        fprintf(stderr, "Failed to Send Who-Has Request (%s)!\n",
-            strerror(errno));
-#endif
 }
 
 /** Send a Who-Has request for a device which has a specific Object type and ID.

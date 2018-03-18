@@ -133,7 +133,7 @@ typedef void(
     *reject_function) (
         BACNET_ADDRESS * src,
         uint8_t invoke_id,
-        uint8_t reject_reason);
+        BACNET_REJECT_REASON reject_reason);
 
 void apdu_set_confirmed_ack_handler(
     BACNET_CONFIRMED_SERVICE service_choice,

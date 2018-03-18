@@ -91,7 +91,7 @@ void MyAbortHandler(
 void MyRejectHandler(
     BACNET_ADDRESS * src,
     uint8_t invoke_id,
-    uint8_t reject_reason)
+    BACNET_REJECT_REASON reject_reason)
 {
     /* FIXME: verify src and invoke id */
     (void) src;

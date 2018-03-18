@@ -124,12 +124,12 @@ void MyAbortHandler(
 void MyRejectHandler(
     BACNET_ADDRESS * src,
     uint8_t invoke_id,
-    uint8_t reject_reason)
+    BACNET_REJECT_REASON reject_reason)
 {
     if (address_match(&Target_Address, src) &&
         (invoke_id == Request_Invoke_ID)) {
         printf("BACnet Reject: %s\n",
-            bactext_reject_reason_name((int) reject_reason));
+            bactext_reject_reason_name(reject_reason));
         Error_Detected = true;
     }
 }

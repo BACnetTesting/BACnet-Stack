@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+      <Type Name="BACNET_ADDRESS">
+        <DisplayString>MAC length = {mac_len}</DisplayString>
+    </Type>
+    <Type Name="BACnet_Device_Address">
+        <DisplayString>MAC length = {mac_len}</DisplayString>
+    </Type>
+
+  <Type Name="ROUTER_PORT">
+    <DisplayString>Port_Support = {port_support}</DisplayString>
+  </Type>
+
+  <Type Name="PORT_SUPPORT">
+    <DisplayString>ID {port_id}</DisplayString>
+    <DisplayString>Type {portType}</DisplayString>
+  </Type>
+
+</AutoVisualizer>
+
+
+<!-- 
+  For help, see
+  https://msdn.microsoft.com/en-us/library/jj620914.aspx
+-->

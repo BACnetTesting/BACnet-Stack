@@ -178,8 +178,8 @@ static void set_broadcast_address(
     bip_set_broadcast_addr(htonl(broadcast_address));
 #else
     /* these are network byte order variables */
-    long broadcast_address = 0;
-    long net_mask = 0;
+    uint32_t broadcast_address = 0;
+    uint32_t net_mask = 0;
 
     net_mask = getIpMaskForIpAddress(net_address);
     if (BIP_Debug) {
@@ -213,7 +213,7 @@ void bip_set_interface(
     }
 }
 
-static char *winsock_error_code_text(
+const char *winsock_error_code_text(
     int code)
 {
     switch (code) {

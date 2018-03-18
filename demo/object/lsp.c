@@ -37,7 +37,7 @@
 #include "wp.h"
 #include "lsp.h"
 #include "handlers.h"
-#include "proplist.h"
+// #include "proplist.h"
 
 #ifndef MAX_LIFE_SAFETY_POINTS
 #define MAX_LIFE_SAFETY_POINTS 7

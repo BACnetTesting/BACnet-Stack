@@ -154,9 +154,6 @@ void handler_read_property(
             fprintf(stderr, "RP: Message too large.\n");
 #endif
         } else {
-#if PRINT_ENABLED
-            fprintf(stderr, "RP: Sending Ack!\n");
-#endif
             error = false;
         }
     } else {

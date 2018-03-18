@@ -2,7 +2,7 @@
 
 # tools - only if you need them.
 # Most platforms have this already defined
-CC = g++
+# CC = g++
 # AR = ar
 # MAKE = make
 # SIZE = size
@@ -13,9 +13,9 @@ CC = g++
 # If BACNET_DEFINES has not already been set, configure to your needs here
 MY_BACNET_DEFINES = -DPRINT_ENABLED=1
 MY_BACNET_DEFINES += -DBACAPP_ALL
-MY_BACNET_DEFINES += -DBACFILE
-MY_BACNET_DEFINES += -DINTRINSIC_REPORTING
-MY_BACNET_DEFINES += -DBACNET_TIME_MASTER
+#MY_BACNET_DEFINES += -DBACFILE
+#MY_BACNET_DEFINES += -DINTRINSIC_REPORTING
+#MY_BACNET_DEFINES += -DBACNET_TIME_MASTER
 MY_BACNET_DEFINES += -DBACNET_PROPERTY_LISTS=1
 BACNET_DEFINES ?= $(MY_BACNET_DEFINES)
 
@@ -45,9 +45,13 @@ BACNET_PORT ?= linux
 
 # Default compiler settings
 OPTIMIZATION = -Os
-DEBUGGING =
+## EKH: Forcing debugging for now
+DEBUGGING = -g3 
 # C++ does not require missing prototypes WARNINGS = -Wall -Wmissing-prototypes
 WARNINGS = -Wall
+
+STANDARDS =  -x c++ -std=c++0x
+
 ifeq (${BUILD},debug)
 OPTIMIZATION = -O0
 DEBUGGING = -g -DDEBUG_ENABLED=1
@@ -55,6 +59,7 @@ ifeq (${BACDL_DEFINE},-DBACDL_BIP=1)
 DEFINES += -DBIP_DEBUG
 endif
 endif
+
 CFLAGS  = $(WARNINGS) $(DEBUGGING) $(OPTIMIZATION) $(STANDARDS) $(INCLUDES) $(DEFINES)
 
 # Export the variables defined here to all subprocesses
@@ -65,17 +70,14 @@ CFLAGS  = $(WARNINGS) $(DEBUGGING) $(OPTIMIZATION) $(STANDARDS) $(INCLUDES) $(DE
 # removing from this build script until we are ready to tackle IPv6
 # (this only happens (a) does, when compiling C++, so not noticed with steve's 'standard' C only build process
 
-all: library demos gateway router-ipv6 ${DEMO_LINUX}
-.PHONY : all library demos router gateway clean
+all: library demos ${DEMO_LINUX}
+.PHONY : all library demos clean
 
 library:
 	$(MAKE) -s -C lib all
 
 demos:
 	$(MAKE) -C demo all
-
-gateway:
-	$(MAKE) -B -s -C demo gateway
 
 server:
 	$(MAKE) -B -C demo server
@@ -97,9 +99,6 @@ abort:
 
 error:
 	$(MAKE) -B -C demo error
-
-router: library
-	$(MAKE) -s -C demo router
 
 router-ipv6:
 	$(MAKE) -B -s -C demo router-ipv6
@@ -123,6 +122,4 @@ bdk-atxx4-mstp: ports/bdk-atxx4-mstp/Makefile
 clean:
 	$(MAKE) -s -C lib clean
 	$(MAKE) -s -C demo clean
-	$(MAKE) -s -C demo/router clean
-	$(MAKE) -s -C demo/router-ipv6 clean
-	$(MAKE) -s -C demo/gateway clean
+

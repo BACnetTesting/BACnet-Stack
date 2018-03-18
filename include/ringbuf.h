@@ -49,51 +49,50 @@ or      www.github.com/bacnettesting/bacnet-stack
 * @{
 */
 struct ring_buffer_t {
-    /** block of memory or array of data */
-    volatile uint8_t *buffer;
-    /** how many bytes for each chunk */
-    unsigned element_size;
-    /** number of chunks of data */
-    unsigned element_count;
-    /** where the writes go */
-    volatile unsigned head;
-    /** where the reads come from */
-    volatile unsigned tail;
-    /* maximum depth reached */
-    volatile unsigned depth;
+	/** block of memory or array of data */
+	volatile uint8_t *buffer;
+	/** how many bytes for each chunk */
+	unsigned element_size;
+	/** number of chunks of data */
+	unsigned element_count;
+	/** where the writes go */
+	volatile unsigned head;
+	/** where the reads come from */
+	volatile unsigned tail;
+	/* maximum depth reached */
+	volatile unsigned depth;
 };
 typedef struct ring_buffer_t RING_BUFFER;
 /** @} */
 
 
-    unsigned Ringbuf_Count(RING_BUFFER const *b);
-    unsigned Ringbuf_Depth(RING_BUFFER const *b);
-    unsigned Ringbuf_Depth_Reset(RING_BUFFER *b);
-    unsigned Ringbuf_Size(RING_BUFFER const *b);
-    bool Ringbuf_Full(RING_BUFFER const *b);
-    bool Ringbuf_Empty(RING_BUFFER const *b);
-    /* tail */
-    volatile uint8_t *Ringbuf_Peek(RING_BUFFER const *b);
-    bool Ringbuf_Pop(RING_BUFFER * b,
-        uint8_t * data_element);
-    bool Ringbuf_Pop_Element(RING_BUFFER * b,
-        uint8_t * this_element,
-        uint8_t * data_element);
-    bool Ringbuf_Put_Front(RING_BUFFER * b,
-        uint8_t * data_element);
-    /* head */
-    bool Ringbuf_Put(RING_BUFFER * b,
-        uint8_t * data_element);
-    /* pair of functions to use head memory directly */
-    volatile uint8_t *Ringbuf_Data_Peek(RING_BUFFER * b);
-    volatile uint8_t *Ringbuf_Peek_Next(RING_BUFFER const *b,
-        uint8_t * data_element);
-    bool Ringbuf_Data_Put(RING_BUFFER * b, volatile uint8_t *data_element);
-    /* Note: element_count must be a power of two */
-    bool Ringbuf_Init(RING_BUFFER * b,
-        volatile uint8_t * buffer,
-        unsigned element_size,
-        unsigned element_count);
+unsigned Ringbuf_Count(RING_BUFFER const *b);
+unsigned Ringbuf_Depth(RING_BUFFER const *b);
+unsigned Ringbuf_Depth_Reset(RING_BUFFER *b);
+unsigned Ringbuf_Size(RING_BUFFER const *b);
+bool Ringbuf_Full(RING_BUFFER const *b);
+bool Ringbuf_Empty(RING_BUFFER const *b);
+/* tail */
+volatile uint8_t *Ringbuf_Peek(RING_BUFFER const *b);
+bool Ringbuf_Pop(RING_BUFFER * b,
+	uint8_t * data_element);
+bool Ringbuf_Put(
+	RING_BUFFER * b,        /* ring buffer structure */
+	uint8_t * data_element);
+/* head */
+bool Ringbuf_Put_Front(
+	uint8_t * data_element);
+/* head */
+/* pair of functions to use head memory directly */
+volatile uint8_t *Ringbuf_Data_Peek(RING_BUFFER * b);
+volatile uint8_t *Ringbuf_Alloc(
+	RING_BUFFER * b);
+bool Ringbuf_Data_Put(RING_BUFFER * b, volatile uint8_t *data_element);
+/* Note: element_count must be a power of two */
+bool Ringbuf_Init(RING_BUFFER * b,
+	volatile uint8_t * buffer,
+	unsigned element_size,
+	unsigned element_count);
 
 #ifdef TEST
 #include "ctest.h"

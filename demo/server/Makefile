@@ -50,7 +50,7 @@ OBJS = ${SRCS:.c=.o}
 all: ${BACNET_LIB_TARGET} Makefile ${TARGET_BIN}
 
 ${TARGET_BIN}: ${OBJS} Makefile ${BACNET_LIB_TARGET}
-	${CC} ${PFLAGS} ${OBJS} ${LFLAGS} -o $@
+	${CXX} ${PFLAGS} ${OBJS} ${LFLAGS} -o $@
 	size $@
 	cp $@ ../../bin
 
@@ -60,11 +60,11 @@ ${BACNET_LIB_TARGET}:
 	( cd ${BACNET_LIB_DIR} ; $(MAKE) clean ; $(MAKE) )
 
 .c.o:
-	${CC} -c ${CFLAGS} $*.c -o $@
+	${CXX} -c ${CFLAGS} $*.c -o $@
 
 depend:
 	rm -f .depend
-	${CC} -MM ${CFLAGS} *.c >> .depend
+	${CXX} -MM ${CFLAGS} *.c >> .depend
 
 clean:
 	rm -f core ${TARGET_BIN} ${OBJS} ${BACNET_LIB_TARGET} $(TARGET).map

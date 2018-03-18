@@ -32,114 +32,153 @@
 #include "rp.h"
 #include "wp.h"
 
-    void Binary_Value_Init(
-        void);
+#include "BACnetObjectBinary.h"
 
-    void Binary_Value_Property_Lists(
-        const BACNET_PROPERTY_ID **pRequired,
-        const BACNET_PROPERTY_ID **pOptional,
-        const BACNET_PROPERTY_ID **pProprietary);
+class BinaryValueObject : public BACnetCommandableBinaryObject
+{
+public:
 
-    bool Binary_Value_Valid_Instance(
-        uint32_t object_instance);
-    unsigned Binary_Value_Count(
-        void);
-    uint32_t Binary_Value_Index_To_Instance(
-        unsigned objectIndex);
-    unsigned Binary_Value_Instance_To_Index(
-        uint32_t object_instance);
-    bool Binary_Value_Object_Instance_Add(
-        uint32_t instance);
+    void Init(void);
 
-    bool Binary_Value_Object_Name(
-        uint32_t object_instance,
-        BACNET_CHARACTER_STRING * object_name);
-    bool Binary_Value_Name_Set(
-        uint32_t object_instance,
-        char *new_name);
+    // Constructor with initialization list, being the preferred method
+    BinaryValueObject(uint32_t instance, std::string &name, std::string &description) :
+        BACnetCommandableBinaryObject(instance, name, description)
+    {
+        Init();
+    }
 
-    char *Binary_Value_Description(
-        uint32_t instance);
-    bool Binary_Value_Description_Set(
-        uint32_t instance,
-        char *new_name);
+};
 
-    BACNET_RELIABILITY Binary_Value_Reliability(
-        uint32_t object_instance);
-    bool Binary_Value_Reliability_Set(
-        uint32_t object_instance,
-        BACNET_RELIABILITY value);
+void Binary_Value_Property_Lists(
+    const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary);
 
-    char *Binary_Value_Inactive_Text(
-        uint32_t instance);
-    bool Binary_Value_Inactive_Text_Set(
-        uint32_t instance,
-        char *new_name);
-    char *Binary_Value_Active_Text(
-        uint32_t instance);
-    bool Binary_Value_Active_Text_Set(
-        uint32_t instance,
-        char *new_name);
+bool Binary_Value_Valid_Instance(
+    uint32_t object_instance);
 
-    int Binary_Value_Read_Property(
-        BACNET_READ_PROPERTY_DATA * rpdata);
+unsigned Binary_Value_Count(
+    void);
 
-    bool Binary_Value_Write_Property(
-        BACNET_WRITE_PROPERTY_DATA * wp_data);
+uint32_t Binary_Value_Index_To_Instance(
+    unsigned objectIndex);
 
-    bool Binary_Value_Encode_Value_List(
-        uint32_t object_instance,
-        BACNET_PROPERTY_VALUE * value_list);
-    bool Binary_Value_Change_Of_Value(
-        uint32_t instance);
-    void Binary_Value_Change_Of_Value_Clear(
-        uint32_t instance);
+// Returns -1 is Instance not found, by design.
+int Binary_Value_Instance_To_Index(
+    uint32_t object_instance);
 
-    BACNET_BINARY_PV Binary_Value_Present_Value(
-        uint32_t instance);
-    bool Binary_Value_Present_Value_Set(
-        uint32_t instance,
-        BACNET_BINARY_PV value);
+bool Binary_Value_Object_Instance_Add(
+    uint32_t instance);
 
-    bool Binary_Value_Out_Of_Service(
-        uint32_t instance);
-    void Binary_Value_Out_Of_Service_Set(
-        uint32_t instance,
-        bool value);
+bool Binary_Value_Object_Name(
+    uint32_t object_instance,
+    BACNET_CHARACTER_STRING * object_name);
 
-    char *Binary_Value_Description(
-        uint32_t instance);
-    bool Binary_Value_Description_Set(
-        uint32_t object_instance,
-        char *text_string);
+bool Binary_Value_Name_Set(
+    uint32_t object_instance,
+    char *new_name);
 
-    char *Binary_Value_Inactive_Text(
-        uint32_t instance);
-    bool Binary_Value_Inactive_Text_Set(
-        uint32_t instance,
-        char *new_name);
-    char *Binary_Value_Active_Text(
-        uint32_t instance);
-    bool Binary_Value_Active_Text_Set(
-        uint32_t instance,
-        char *new_name);
+char *Binary_Value_Description(
+    uint32_t instance);
 
-    BACNET_POLARITY Binary_Value_Polarity(
-        uint32_t instance);
-    bool Binary_Value_Polarity_Set(
-        uint32_t object_instance,
-        BACNET_POLARITY polarity);
-    bool Binary_Value_Create(
-        uint32_t object_instance);
-    bool Binary_Value_Delete(
-        uint32_t object_instance);
-    void Binary_Value_Cleanup(
-        void);
+bool Binary_Value_Description_Set(
+    uint32_t instance,
+    char *new_name);
+
+BACNET_RELIABILITY Binary_Value_Reliability(
+    uint32_t object_instance);
+    
+bool Binary_Value_Reliability_Set(
+    uint32_t object_instance,
+    BACNET_RELIABILITY value);
+
+char *Binary_Value_Inactive_Text(
+    uint32_t instance);
+    
+bool Binary_Value_Inactive_Text_Set(
+    uint32_t instance,
+    char *new_name);
+    
+char *Binary_Value_Active_Text(
+    uint32_t instance);
+    
+bool Binary_Value_Active_Text_Set(
+    uint32_t instance,
+    char *new_name);
+
+int Binary_Value_Read_Property(
+    BACNET_READ_PROPERTY_DATA * rpdata);
+
+bool Binary_Value_Write_Property(
+    BACNET_WRITE_PROPERTY_DATA * wp_data);
+
+bool Binary_Value_Encode_Value_List(
+    uint32_t object_instance,
+    BACNET_PROPERTY_VALUE * value_list);
+bool Binary_Value_Change_Of_Value(
+    uint32_t instance);
+void Binary_Value_Change_Of_Value_Clear(
+    uint32_t instance);
+
+BACNET_BINARY_PV Binary_Value_Present_Value(
+    uint32_t instance);
+bool Binary_Value_Present_Value_Set(
+    uint32_t instance,
+    BACNET_BINARY_PV value);
+
+bool Binary_Value_Out_Of_Service(
+    uint32_t instance);
+void Binary_Value_Out_Of_Service_Set(
+    uint32_t instance,
+    bool value);
+
+char *Binary_Value_Description(
+    uint32_t instance);
+bool Binary_Value_Description_Set(
+    uint32_t object_instance,
+    char *text_string);
+
+char *Binary_Value_Inactive_Text(
+    uint32_t instance);
+
+bool Binary_Value_Inactive_Text_Set(
+    uint32_t instance,
+
+    char *new_name);
+char *Binary_Value_Active_Text(
+    uint32_t instance);
+    
+bool Binary_Value_Active_Text_Set(
+    uint32_t instance,
+    char *new_name);
+
+BACNET_POLARITY Binary_Value_Polarity(
+    uint32_t instance);
+bool Binary_Value_Polarity_Set(
+    uint32_t object_instance,
+    BACNET_POLARITY polarity);
+
+bool Binary_Value_Create(
+    const uint32_t instance,
+    const std::string& nameRoot);
+
+void Binary_Value_Update(
+	const uint32_t instance,
+	const bool value );
+
+bool Binary_Value_Delete(
+    uint32_t object_instance);
+
+void Binary_Value_Cleanup(
+    void);
+
+void Binary_Value_Init(
+    void);
 
 #ifdef TEST
 #include "ctest.h"
-    void testBinary_Value(
-        Test * pTest);
+void testBinary_Value(
+    Test * pTest);
 #endif
 
 #endif

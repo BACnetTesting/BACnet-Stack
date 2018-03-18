@@ -1462,7 +1462,7 @@ int TL_encode_entry(
         case TL_TYPE_BOOL:
             iLen +=
                 encode_context_boolean(&apdu[iLen], pSource->ucRecType,
-                pSource->Datum.ucBoolean);
+                (bool) pSource->Datum.ucBoolean);
             break;
 
         case TL_TYPE_REAL:

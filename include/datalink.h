@@ -40,6 +40,8 @@
 #include "config.h"
 #include "bacdef.h"
 
+void Init_Datalink_Thread( void )  ;
+
 #if defined(BACDL_ETHERNET)
 #include "ethernet.h"
 
@@ -84,7 +86,7 @@
 #endif
 #define datalink_cleanup bip_cleanup
 #define datalink_get_broadcast_address bip_get_broadcast_address
-#ifdef BAC_ROUTING
+#if ( BAC_ROUTING == 1 )
 extern void routed_get_my_address(
     BACNET_ADDRESS * my_address);
 #define datalink_get_my_address routed_get_my_address

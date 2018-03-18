@@ -72,7 +72,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>..\..\demo\object;..\..\demo\handlers;..\..\ports\win32;..\..\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\bits\util;..\..\bits;..\..\demo\object;..\..\demo\handlers;..\..\ports\win32;..\..\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -80,7 +80,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>..\..\demo\object;..\..\demo\handlers;..\..\ports\win32;..\..\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\bits\util;..\..\bits;..\..\demo\object;..\..\demo\handlers;..\..\ports\win32;..\..\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -103,6 +103,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions />
+      <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -135,6 +136,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -144,6 +146,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\bits\logging\logDispatch.c" />
+    <ClCompile Include="..\..\bits\util\bacnetProc.c" />
+    <ClCompile Include="..\..\bits\util\bitsDebug.c" />
+    <ClCompile Include="..\..\bits\util\btaDebug.c" />
+    <ClCompile Include="..\..\bits\util\emm.c" />
+    <ClCompile Include="..\..\bits\util\ese.c" />
+    <ClCompile Include="..\..\bits\util\misc.c" />
     <ClCompile Include="..\..\demo\handler\dlenv.c" />
     <ClCompile Include="..\..\demo\handler\h_alarm_ack.c" />
     <ClCompile Include="..\..\demo\handler\h_arf.c" />
@@ -227,7 +236,6 @@
     <ClCompile Include="..\..\demo\object\csv.c" />
     <ClCompile Include="..\..\demo\object\device-client.c" />
     <ClCompile Include="..\..\demo\object\device.c" />
-    <ClCompile Include="..\..\demo\object\gw_device.c" />
     <ClCompile Include="..\..\demo\object\iv.c" />
     <ClCompile Include="..\..\demo\object\lc.c" />
     <ClCompile Include="..\..\demo\object\lo.c" />
@@ -307,6 +315,15 @@
     <ClCompile Include="..\..\src\wpm.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\bits\util\BACnetToString.h" />
+    <ClInclude Include="..\..\bits\util\bitsDebug.h" />
+    <ClInclude Include="..\..\bits\util\bitsUtil.h" />
+    <ClInclude Include="..\..\bits\util\btaDebug.h" />
+    <ClInclude Include="..\..\bits\util\configParams.h" />
+    <ClInclude Include="..\..\bits\util\emm.h" />
+    <ClInclude Include="..\..\bits\util\ese.h" />
+    <ClInclude Include="..\..\bits\util\linklist.h" />
+    <ClInclude Include="..\..\bits\util\llist.h" />
     <ClInclude Include="..\..\ConnectExUtil\BACnetToString.h" />
     <ClInclude Include="..\..\ConnectExUtil\btaDebug.h" />
     <ClInclude Include="..\..\ConnectExUtil\CEDebug.h" />

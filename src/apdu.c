@@ -58,6 +58,24 @@
 #include "iam.h"
 #include "device.h"
 
+/* Punchlist for EKH */
+/*
+
+    2017.06.13 
+    test server, then move on to router layer.
+        remember DER flag
+        and mac address save in router layer
+
+    2016.10.27 need to put semaphores around stack - two threads now use it
+
+    Lets do some fuzz testing: https://www.evilsocket.net/2015/04/30/fuzzing-with-afl-fuzz-a-practical-example-afl-vs-binutils/
+    Put some range checking on writes (e.g. 0-10v on various settings).
+
+    Network number is, what is network number on startup?
+        check local router table
+
+*/
+
 /** @file apdu.c  Handles APDU services */
 
 //extern int Routed_Device_Service_Approval(
@@ -68,7 +86,8 @@
 
 
 /* APDU Timeout in Milliseconds */
-static uint16_t Timeout_Milliseconds = 3000;
+// todo BTC - has to be 10000 if not modifiable. Should be 6000 if modifyable todonext2,
+static uint16_t Timeout_Milliseconds = 10000;
 /* Number of APDU Retries */
 static uint8_t Number_Of_Retries = 3;
 
@@ -635,13 +654,14 @@ void apdu_handler(
                 }
                 tsm_free_invoke_id(invoke_id);
                 break;
+
             case PDU_TYPE_REJECT:
                 invoke_id = apdu[1];
-                reason = (BACNET_ABORT_REASON) apdu[2];
                 if (Reject_Function)
-                    Reject_Function(src, invoke_id, reason);
+                    Reject_Function(src, invoke_id, (BACNET_REJECT_REASON) apdu[2] );
                 tsm_free_invoke_id(invoke_id);
                 break;
+
             case PDU_TYPE_ABORT:
                 server = apdu[0] & 0x01;
                 invoke_id = apdu[1];
@@ -650,6 +670,7 @@ void apdu_handler(
                     Abort_Function(src, invoke_id, reason, server);
                 tsm_free_invoke_id(invoke_id);
                 break;
+
             default:
                 break;
         }

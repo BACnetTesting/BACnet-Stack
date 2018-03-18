@@ -39,10 +39,10 @@
 #define BACSTR_H
 
 #include <stdint.h>
-#include <stdbool.h>
-#include <stddef.h>
+//#include <stdbool.h>
+//#include <stddef.h>
 #include "bacdef.h"
-#include "config.h"
+//#include "config.h"
 
 /* bit strings
    They could be as large as 256/8=32 octets */

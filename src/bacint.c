@@ -70,10 +70,9 @@ int decode_unsigned16(
     uint16_t * value)
 {
     if (value) {
-        *value = (uint16_t) ((((uint16_t) apdu[0]) << 8) & 0xff00);
-        *value |= ((uint16_t) (((uint16_t) apdu[1]) & 0x00ff));
+        *value = (uint16_t)((((uint16_t)apdu[0]) << 8) & 0xff00);
+        *value |= ((uint16_t)(((uint16_t)apdu[1]) & 0x00ff));
     }
-
     return 2;
 }
 

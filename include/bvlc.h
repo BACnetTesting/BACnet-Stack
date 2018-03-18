@@ -33,7 +33,6 @@
     For access to source code:  info@bac-test.com
             or      www.github.com/bacnettesting/bacnet-stack
 
-####COPYRIGHTEND####
 *********************************************************************/
 #ifndef BVLC_H
 #define BVLC_H

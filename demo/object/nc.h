@@ -22,18 +22,17 @@
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
 *********************************************************************/
+
 #ifndef NC_H
 #define NC_H
 
 #include "event.h"
 
-
-
-
 #define NC_RESCAN_RECIPIENTS_SECS   60
 
 /* max "length" of recipient_list */
 #define NC_MAX_RECIPIENTS 10
+
 /* Recipient types */
     typedef enum {
         RECIPIENT_TYPE_NOTINITIALIZED = 0,
@@ -45,10 +44,17 @@
 #if defined(INTRINSIC_REPORTING)
 /* BACnetRecipient structure */
 /*
+
+BACnetAddress ::= SEQUENCE {
+    network-number 	Unsigned16, -- A value of 0 indicates the local network
+    mac-address 	OCTET STRING -- A string of length 0 indicates a broadcast
+    }
+
 BACnetRecipient ::= CHOICE {
     device [0] BACnetObjectIdentifier,
     address [1] BACnetAddress
-}
+    }
+
 */
     typedef struct BACnet_Recipient {
         uint8_t RecipientType;  /* Type of Recipient */
@@ -60,15 +66,15 @@ BACnetRecipient ::= CHOICE {
 
 
 /* BACnetDestination structure */
-    typedef struct BACnet_Destination {
-        uint8_t ValidDays;
-        BACNET_TIME FromTime;
-        BACNET_TIME ToTime;
-        BACNET_RECIPIENT Recipient;
-        uint32_t ProcessIdentifier;
-        uint8_t Transitions;
-        bool ConfirmedNotify;
-    } BACNET_DESTINATION;
+typedef struct BACnet_Destination {		// Be careful adding fields to this structure, it is mem-compared for equality in add/remove list
+    uint8_t     ValidDays;				// bitfield, not typedef
+    BACNET_TIME FromTime;
+    BACNET_TIME ToTime;
+    BACNET_RECIPIENT Recipient;
+    uint32_t ProcessIdentifier;
+    uint8_t Transitions;
+    bool ConfirmedNotify;
+} BACNET_DESTINATION;
 
 
 /* Structure containing configuration for a Notification Class */
@@ -80,17 +86,17 @@ BACnetRecipient ::= CHOICE {
 
 
 /* Indicates whether the transaction has been confirmed */
-    typedef struct Acked_info {
-        bool bIsAcked;  /* true when transitions is acked */
-        BACNET_DATE_TIME Time_Stamp;    /* time stamp of when a alarm was generated */
-    } ACKED_INFO;
+typedef struct Acked_info {
+    bool bIsAcked;  /* true when transitions is acked */
+    BACNET_DATE_TIME Time_Stamp;    /* time stamp of when a alarm was generated */
+} ACKED_INFO;
 
 
 /* Information needed to send AckNotification */
-    typedef struct Ack_Notification {
-        bool bSendAckNotify;    /* true if need to send AckNotification */
-        BACNET_EVENT_STATE EventState;
-    } ACK_NOTIFICATION;
+typedef struct Ack_Notification {
+    bool                bSendAckNotify;    /* true if need to send AckNotification */
+    BACNET_EVENT_STATE  EventState;
+} ACK_NOTIFICATION;
 
 
 
@@ -130,6 +136,4 @@ BACnetRecipient ::= CHOICE {
     void Notification_Class_find_recipient(
         void);
 #endif /* defined(INTRINSIC_REPORTING) */
-
-
 #endif /* NC_H */

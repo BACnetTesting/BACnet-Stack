@@ -33,28 +33,32 @@
     For access to source code:  info@bac-test.com
             or      www.github.com/bacnettesting/bacnet-stack
 
-####COPYRIGHTEND####
-*
 *********************************************************************/
+
 #ifndef DLENV_H
 #define DLENV_H
 
 #include "datalink.h"
 
-    void dlenv_init(
-        void);
-    int dlenv_register_as_foreign_device(
-        void);
-    void dlenv_maintenance_timer(
-        uint16_t elapsed_seconds);
+void dlenv_init(
+	void);
+
+int dlenv_register_as_foreign_device(
+	void);
+
+void dlenv_maintenance_timer(
+	uint16_t elapsed_seconds);
 
 /* Simple setters and getter. */
 void dlenv_bbmd_address_set(
     long address);
+
 void dlenv_bbmd_port_set(
     int port);
+
 void dlenv_bbmd_ttl_set(
     int ttl_secs);
+
 int dlenv_bbmd_result(
     void);
 

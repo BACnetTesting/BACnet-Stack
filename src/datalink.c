@@ -43,15 +43,22 @@
     For access to source code:  info@bac-test.com
             or      www.github.com/bacnettesting/bacnet-stack
 
-####COPYRIGHTEND####
   */
+
+#ifdef _MSC_VER
+#include <process.h>
+#endif
+
 #include "ethernet.h"
 #include "bip.h"
 #include "bvlc.h"
 #include "arcnet.h"
 #include "dlmstp.h"
 #include "datalink.h"
-#include <string.h>
+#include "logging.h"
+#include "handlers.h"
+#include "dlenv.h"
+#include "bitsDebug.h"
 
 /** @file datalink.c  Optional run-time assignment of datalink transport */
 
@@ -145,3 +152,54 @@ void datalink_set(
     }
 }
 #endif
+
+// Note: This will be removed for the router project, and becomes Init_Router_Thread(), one for each port
+
+#ifdef _MSC_VER
+void DatalinkListen(void *pArgs)
+#else
+void* DatalinkListen(void *pArgs)
+#endif
+{
+	BACNET_ADDRESS src;         /* address where message came from */
+	unsigned timeout = 100;		/* milliseconds */
+	static uint8_t Rx_Buf[MAX_MPDU] ;
+
+	while ( true )
+	{
+		/* returns 0 bytes on timeout */
+		int pdu_len = datalink_receive(&src, &Rx_Buf[0], MAX_MPDU, timeout);
+
+		/* process */
+		if (pdu_len) {
+			npdu_handler(&src, &Rx_Buf[0], pdu_len);
+		}
+	}
+}
+
+
+void Init_Datalink_Thread( void ) 
+{
+
+	dlenv_init();
+
+#ifdef _MSC_VER
+    uintptr_t rcode;
+    rcode = _beginthread(DatalinkListen, 0, NULL);
+    if (rcode == -1L)
+    {
+        syslog(LOG_ERR, "Failed to create thread");
+    }
+#else
+    int rcode;
+    pthread_t threadvar;
+    rcode = pthread_create(&threadvar, NULL,
+        (void *(*)(void *)) DatalinkListen, NULL );
+    if (rcode != 0) {
+        log_printf("Failed to create thread");
+    }
+    // so we don't have to wait for the thread to complete before exiting main()
+    pthread_detach(threadvar);
+#endif
+
+}

@@ -64,12 +64,12 @@ extern long int timezone;
 static uint32_t Object_Instance_Number = 260001;
 static BACNET_CHARACTER_STRING My_Object_Name;
 static BACNET_DEVICE_STATUS System_Status = STATUS_OPERATIONAL;
-static char *Vendor_Name = BACNET_VENDOR_NAME;
+static const char *Vendor_Name = BACNET_VENDOR_NAME;
 static uint16_t Vendor_Identifier = BACNET_VENDOR_ID;
-static char *Model_Name = "BITS Reference Stack";
-static char *Application_Software_Version = "1.0";
-static char *Location = "USA";
-static char *Description = "command line client";
+static const char *Model_Name = "BITS Reference Stack";
+static const char *Application_Software_Version = "1.0";
+static const char *Location = "USA";
+static const char *Description = "command line client";
 extern const char *BACnet_Version;
 /* static uint8_t Protocol_Version = 1; - constant, not settable */
 /* static uint8_t Protocol_Revision = 4; - constant, not settable */
@@ -130,10 +130,12 @@ static object_functions_t Object_Table[] = {
             NULL /* Property_Lists */ ,
             NULL /* ReadRangeInfo */ ,
             NULL /* Iterator */ ,
+#if ( BACNET_SVC_COV_B == 1 )
             NULL /* Value_Lists */ ,
             NULL /* COV */ ,
             NULL /* COV Clear */ ,
-        NULL /* Intrinsic Reporting */ },
+#endif
+			NULL /* Intrinsic Reporting */ },
     {MAX_BACNET_OBJECT_TYPE,
             NULL /* Init */ ,
             NULL /* Count */ ,
@@ -145,10 +147,12 @@ static object_functions_t Object_Table[] = {
             NULL /* Property_Lists */ ,
             NULL /* ReadRangeInfo */ ,
             NULL /* Iterator */ ,
+#if ( BACNET_SVC_COV_B == 1 )
             NULL /* Value_Lists */ ,
             NULL /* COV */ ,
             NULL /* COV Clear */ ,
-        NULL /* Intrinsic Reporting */ }
+#endif
+			NULL /* Intrinsic Reporting */ }
 };
 
 /** Glue function to let the Device object, when called by a handler,
@@ -200,11 +204,7 @@ uint32_t Device_Index_To_Instance(
 uint32_t Device_Object_Instance_Number(
     void)
 {
-#ifdef BAC_ROUTING
-    return Routed_Device_Object_Instance_Number();
-#else
     return Object_Instance_Number;
-#endif
 }
 
 bool Device_Set_Object_Instance_Number(
@@ -354,20 +354,21 @@ const char *Device_Model_Name(
     return Model_Name;
 }
 
-bool Device_Set_Model_Name(
-    const char *name,
-    size_t length)
-{
-    bool status = false;        /*return value */
-
-    if (length < sizeof(Model_Name)) {
-        memmove(Model_Name, name, length);
-        Model_Name[length] = 0;
-        status = true;
-    }
-
-    return status;
-}
+//bool Device_Set_Model_Name(
+//    const char *name,
+//    size_t length)
+//{
+//    bool status = false;        /*return value */
+//
+//    if (length < sizeof(Model_Name)) {
+//        memmove(Model_Name, name, length);
+//			this is so wrong, Model_Name is a pointer, not an array!
+//        Model_Name[length] = 0;
+//        status = true;
+//    }
+//
+//    return status;
+//}
 
 const char *Device_Firmware_Revision(
     void)
@@ -381,20 +382,21 @@ const char *Device_Application_Software_Version(
     return Application_Software_Version;
 }
 
-bool Device_Set_Application_Software_Version(
-    const char *name,
-    size_t length)
-{
-    bool status = false;        /*return value */
-
-    if (length < sizeof(Application_Software_Version)) {
-        memmove(Application_Software_Version, name, length);
-        Application_Software_Version[length] = 0;
-        status = true;
-    }
-
-    return status;
-}
+//bool Device_Set_Application_Software_Version(
+//    const char *name,
+//    size_t length)
+//{
+//    bool status = false;        /*return value */
+//
+//    if (length < sizeof(Application_Software_Version)) {
+//        memmove(Application_Software_Version, name, length);
+//			wrong, location is a pointer, this will crash most devices todo BTC !!!! (see others like it) cr23418468946
+//        Application_Software_Version[length] = 0;
+//        status = true;
+//    }
+//
+//    return status;
+//}
 
 const char *Device_Description(
     void)
@@ -402,20 +404,21 @@ const char *Device_Description(
     return Description;
 }
 
-bool Device_Set_Description(
-    const char *name,
-    size_t length)
-{
-    bool status = false;        /*return value */
-
-    if (length < sizeof(Description)) {
-        memmove(Description, name, length);
-        Description[length] = 0;
-        status = true;
-    }
-
-    return status;
-}
+//bool Device_Set_Description(
+//    const char *name,
+//    size_t length)
+//{
+//    bool status = false;        /*return value */
+//
+//    if (length < sizeof(Description)) {
+//        memmove(Description, name, length);
+//			wrong, location is a pointer, this will crash most devices todo BTC !!!! (see others like it) cr23418468946
+//        Description[length] = 0;
+//        status = true;
+//    }
+//
+//    return status;
+//}
 
 const char *Device_Location(
     void)
@@ -423,20 +426,21 @@ const char *Device_Location(
     return Location;
 }
 
-bool Device_Set_Location(
-    const char *name,
-    size_t length)
-{
-    bool status = false;        /*return value */
-
-    if (length < sizeof(Location)) {
-        memmove(Location, name, length);
-        Location[length] = 0;
-        status = true;
-    }
-
-    return status;
-}
+//bool Device_Set_Location(
+//    const char *name,
+//    size_t length)
+//{
+//    bool status = false;        /*return value */
+//
+//    if (length < sizeof(Location)) {
+//        memmove(Location, name, length);
+//			wrong, location is a pointer, this will crash most devices todo BTC !!!! (see others like it) cr23418468946
+//        Location[length] = 0;
+//        status = true;
+//    }
+//
+//    return status;
+//}
 
 uint8_t Device_Protocol_Version(
     void)

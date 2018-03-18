@@ -128,8 +128,8 @@ uint16_t Add_Routed_Device(
         DEVICE_OBJECT_DATA *pDev = &Devices[i];
         Num_Managed_Devices++;
         iCurrent_Device_Idx = i;
-        pDev->bacObj.mObject_Type = OBJECT_DEVICE;
-        pDev->bacObj.Object_Instance_Number = Object_Instance;
+        bacObj.mObject_Type = OBJECT_DEVICE;
+        bacObj.Object_Instance_Number = Object_Instance;
         if (sObject_Name != NULL)
             Routed_Device_Set_Object_Name(sObject_Name->encoding,
                 sObject_Name->value, sObject_Name->length);
@@ -140,7 +140,7 @@ uint16_t Add_Routed_Device(
             Routed_Device_Set_Description(sDescription, strlen(sDescription));
         else
             Routed_Device_Set_Description("No Descr", strlen("No Descr"));
-        pDev->Database_Revision = 0;    /* Reset/Initialize now */
+        Database_Revision = 0;    /* Reset/Initialize now */
         return i;
     } else
         return -1;
@@ -241,7 +241,7 @@ bool Routed_Device_Address_Lookup(
             result = true;
         } else if (mac_adress != NULL) {
             for (i = 0; i < address_len; i++) {
-                if (pDev->bacDevAddr.mac[i] != mac_adress[i])
+                if (bacDevAddr.mac[i] != mac_adress[i])
                     break;
             }
             if (i == address_len) {     /* Success! */
@@ -398,8 +398,8 @@ bool Routed_Device_Valid_Object_Instance_Number(
     bool bResult = false;
     DEVICE_OBJECT_DATA *pDev = &Devices[iCurrent_Device_Idx];
 
-    if (pDev->bacObj.Object_Instance_Number == object_id)
-        bResult = true;
+//    if (bacObj.Object_Instance_Number == object_id)
+//        bResult = true;
 
     return bResult;
 }
@@ -408,11 +408,11 @@ bool Routed_Device_Name(
     uint32_t object_instance,
     BACNET_CHARACTER_STRING * object_name)
 {
-    DEVICE_OBJECT_DATA *pDev = &Devices[iCurrent_Device_Idx];
-    if (object_instance == pDev->bacObj.Object_Instance_Number) {
-        return characterstring_init_ansi(object_name,
-            pDev->bacObj.Object_Name);
-    }
+//    DEVICE_OBJECT_DATA *pDev = &Devices[iCurrent_Device_Idx];
+//    if (object_instance == bacObj.Object_Instance_Number) {
+//        return characterstring_init_ansi(object_name,
+//            bacObj.Object_Name);
+//    }
 
     return false;
 }
@@ -438,23 +438,23 @@ int Routed_Device_Read_Property_Local(
     apdu = rpdata->application_data;
     switch (rpdata->object_property) {
         case PROP_OBJECT_IDENTIFIER:
-            apdu_len =
-                encode_application_object_id(&apdu[0], OBJECT_DEVICE,
-                pDev->bacObj.Object_Instance_Number);
+//            apdu_len =
+//                encode_application_object_id(&apdu[0], OBJECT_DEVICE,
+//                bacObj.Object_Instance_Number);
             break;
         case PROP_OBJECT_NAME:
-            characterstring_init_ansi(&char_string, pDev->bacObj.Object_Name);
-            apdu_len =
-                encode_application_character_string(&apdu[0], &char_string);
+//            characterstring_init_ansi(&char_string, bacObj.Object_Name);
+//            apdu_len =
+//                encode_application_character_string(&apdu[0], &char_string);
             break;
         case PROP_DESCRIPTION:
-            characterstring_init_ansi(&char_string, pDev->Description);
-            apdu_len =
-                encode_application_character_string(&apdu[0], &char_string);
+//            characterstring_init_ansi(&char_string, Description);
+//            apdu_len =
+//                encode_application_character_string(&apdu[0], &char_string);
             break;
         case PROP_DATABASE_REVISION:
-            apdu_len =
-                encode_application_unsigned(&apdu[0], pDev->Database_Revision);
+//            apdu_len =
+//                encode_application_unsigned(&apdu[0], Database_Revision);
             break;
         default:
             apdu_len = Device_Read_Property_Local(rpdata);
@@ -569,8 +569,8 @@ bool Routed_Device_Set_Object_Name(
 
     if ((encoding == CHARACTER_UTF8) && (length < MAX_DEV_NAME_LEN)) {
         /* Make the change and update the database revision */
-        memmove(pDev->bacObj.Object_Name, value, length);
-        pDev->bacObj.Object_Name[length] = 0;
+        memmove(bacObj.Object_Name, value, length);
+        bacObj.Object_Name[length] = 0;
         Routed_Device_Inc_Database_Revision();
         status = true;
     }
@@ -586,8 +586,8 @@ bool Routed_Device_Set_Description(
     DEVICE_OBJECT_DATA *pDev = &Devices[iCurrent_Device_Idx];
 
     if (length < MAX_DEV_DESC_LEN) {
-        memmove(pDev->Description, name, length);
-        pDev->Description[length] = 0;
+        memmove(Description, name, length);
+        Description[length] = 0;
         status = true;
     }
 
@@ -604,7 +604,7 @@ void Routed_Device_Inc_Database_Revision(
     void)
 {
     DEVICE_OBJECT_DATA *pDev = &Devices[iCurrent_Device_Idx];
-    pDev->Database_Revision++;
+    // todo - delete this whole file... obsolete Database_Revision++;
 }
 
 

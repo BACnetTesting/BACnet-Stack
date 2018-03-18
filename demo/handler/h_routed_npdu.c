@@ -205,50 +205,50 @@ static void network_control_handler(
  * @param apdu [in] The apdu portion of the request, to be processed.
  * @param apdu_len [in] The total (remaining) length of the apdu.
  */
-static void routed_apdu_handler(
-    BACNET_ADDRESS * src,
-    BACNET_ADDRESS * dest,
-    int *DNET_list,
-    uint8_t * apdu,
-    uint16_t apdu_len)
-{
-    int cursor = 0;     /* Starting hint */
-    bool bGotOne = false;
-
-    if (!Routed_Device_Is_Valid_Network(dest->net, DNET_list)) {
-        /* We don't know how to reach this one.
-         * The protocol doesn't specifically state this, but if this message
-         * was broadcast to us, we should assume "someone else" is handling
-         * it and not get involved (ie, send a Reject-Message).
-         * Since we can't reach other routers that src couldn't already reach,
-         * we don't try the standard path of asking Who-Is-Router-to-Network. */
-#if defined(BACDL_BIP)
-        /* If wasn't unicast to us, must have been one of the bcast types.
-         * Drop it. */
-        if (bvlc_get_function_code() != BVLC_ORIGINAL_UNICAST_NPDU)
-            return;
-#endif
-        /* Upper level handlers knew that this was sent as a bcast,
-         * but our only other way to guess at that here is if the dest->adr
-         * is absent, then we know this is some sort of bcast.
-         */
-        if (dest->len > 0) {
-            Send_Reject_Message_To_Network(src, NETWORK_REJECT_NO_ROUTE,
-                dest->net);
-        }       /* else, silently drop it */
-        return;
-    }
-
-    while (Routed_Device_GetNext(dest, DNET_list, &cursor)) {
-        apdu_handler(src, apdu, apdu_len);
-        bGotOne = true;
-        if (cursor < 0) /* If no more matches, */
-            break;      /* We don't need to keep looking */
-    }
-    if (!bGotOne) {
-        /* Just silently drop this packet. */
-    }
-}
+//static void routed_apdu_handler(
+//    BACNET_ADDRESS * src,
+//    BACNET_ADDRESS * dest,
+//    int *DNET_list,
+//    uint8_t * apdu,
+//    uint16_t apdu_len)
+//{
+//    int cursor = 0;     /* Starting hint */
+//    bool bGotOne = false;
+//
+//    if (!Routed_Device_Is_Valid_Network(dest->net, DNET_list)) {
+//        /* We don't know how to reach this one.
+//         * The protocol doesn't specifically state this, but if this message
+//         * was broadcast to us, we should assume "someone else" is handling
+//         * it and not get involved (ie, send a Reject-Message).
+//         * Since we can't reach other routers that src couldn't already reach,
+//         * we don't try the standard path of asking Who-Is-Router-to-Network. */
+//#if defined(BACDL_BIP)
+//        /* If wasn't unicast to us, must have been one of the bcast types.
+//         * Drop it. */
+//        if (bvlc_get_function_code() != BVLC_ORIGINAL_UNICAST_NPDU)
+//            return;
+//#endif
+//        /* Upper level handlers knew that this was sent as a bcast,
+//         * but our only other way to guess at that here is if the dest->adr
+//         * is absent, then we know this is some sort of bcast.
+//         */
+//        if (dest->len > 0) {
+//            Send_Reject_Message_To_Network(src, NETWORK_REJECT_NO_ROUTE,
+//                dest->net);
+//        }       /* else, silently drop it */
+//        return;
+//    }
+//
+//    while (Routed_Device_GetNext(dest, DNET_list, &cursor)) {
+//        apdu_handler(src, apdu, apdu_len);
+//        bGotOne = true;
+//        if (cursor < 0) /* If no more matches, */
+//            break;      /* We don't need to keep looking */
+//    }
+//    if (!bGotOne) {
+//        /* Just silently drop this packet. */
+//    }
+//}
 
 /** Handler for the NPDU portion of a received packet, which may have routing.
  *  This is a fuller handler than the regular npdu_handler, as it manages
@@ -279,41 +279,41 @@ static void routed_apdu_handler(
  *  @param pdu [in]  Buffer containing the NPDU and APDU of the received packet.
  *  @param pdu_len [in] The size of the received message in the pdu[] buffer.
  */
-void routing_npdu_handler(
-    BACNET_ADDRESS * src,
-    int *DNET_list,
-    uint8_t * pdu,
-    uint16_t pdu_len)
-{
-    int apdu_offset = 0;
-    BACNET_ADDRESS dest = { 0 };
-    BACNET_NPCI_DATA npci_data = { 0 };
-
-    /* only handle the version that we know how to handle */
-    if (pdu[0] == BACNET_PROTOCOL_VERSION) {
-        apdu_offset = npdu_decode(&pdu[0], &dest, src, &npci_data);
-        if (apdu_offset <= 0) {
-            debug_printf("NPDU: Decoding failed; Discarded!\n");
-        } else if (npci_data.network_layer_message) {
-            if ((dest.net == 0) || (dest.net == BACNET_BROADCAST_NETWORK)) {
-                network_control_handler(src, DNET_list, &npci_data,
-                    &pdu[apdu_offset], (uint16_t) (pdu_len - apdu_offset));
-            } else {
-                /* The DNET is set, but we don't support downstream routers,
-                 * so we just silently drop this network layer message,
-                 * since only routers can handle it (even if for our DNET) */
-            }
-        } else if (apdu_offset <= pdu_len) {
-            if ((dest.net == 0) || (npci_data.hop_count > 1))
-                routed_apdu_handler(src, &dest, DNET_list, &pdu[apdu_offset],
-                    (uint16_t) (pdu_len - apdu_offset));
-            /* Else, hop_count bottomed out and we discard this one. */
-        }
-    } else {
-        /* Should we send NETWORK_MESSAGE_REJECT_MESSAGE_TO_NETWORK? */
-        debug_printf
-            ("NPDU: Unsupported BACnet Protocol Version=%u.  Discarded!\n",
-            (unsigned) pdu[0]);
-    }
-
-}
+//void routing_npdu_handler(
+//    BACNET_ADDRESS * src,
+//    int *DNET_list,
+//    uint8_t * pdu,
+//    uint16_t pdu_len)
+//{
+//    int apdu_offset = 0;
+//    BACNET_ADDRESS dest = { 0 };
+//    BACNET_NPCI_DATA npci_data = { 0 };
+//
+//    /* only handle the version that we know how to handle */
+//    if (pdu[0] == BACNET_PROTOCOL_VERSION) {
+//        apdu_offset = npdu_decode(&pdu[0], &dest, src, &npci_data);
+//        if (apdu_offset <= 0) {
+//            debug_printf("NPDU: Decoding failed; Discarded!\n");
+//        } else if (npci_data.network_layer_message) {
+//            if ((dest.net == 0) || (dest.net == BACNET_BROADCAST_NETWORK)) {
+//                network_control_handler(src, DNET_list, &npci_data,
+//                    &pdu[apdu_offset], (uint16_t) (pdu_len - apdu_offset));
+//            } else {
+//                /* The DNET is set, but we don't support downstream routers,
+//                 * so we just silently drop this network layer message,
+//                 * since only routers can handle it (even if for our DNET) */
+//            }
+//        } else if (apdu_offset <= pdu_len) {
+//            if ((dest.net == 0) || (npci_data.hop_count > 1))
+//                routed_apdu_handler(src, &dest, DNET_list, &pdu[apdu_offset],
+//                    (uint16_t) (pdu_len - apdu_offset));
+//            /* Else, hop_count bottomed out and we discard this one. */
+//        }
+//    } else {
+//        /* Should we send NETWORK_MESSAGE_REJECT_MESSAGE_TO_NETWORK? */
+//        debug_printf
+//            ("NPDU: Unsupported BACnet Protocol Version=%u.  Discarded!\n",
+//            (unsigned) pdu[0]);
+//    }
+//
+//}

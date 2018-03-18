@@ -60,14 +60,16 @@ typedef struct BACnet_Recipient_List {
 } BACNET_RECIPIENT_LIST;
 
     /* encode service */
-    int timesync_utc_encode_apdu(
-        uint8_t * apdu,
-        BACNET_DATE * my_date,
-        BACNET_TIME * my_time);
-    int timesync_encode_apdu(
-        uint8_t * apdu,
-        BACNET_DATE * my_date,
+int timesync_utc_encode_apdu(
+	uint8_t * apdu,
+	BACNET_DATE * my_date,
+	BACNET_TIME * my_time);
+
+int timesync_encode_apdu(
+	uint8_t * apdu,
+	BACNET_DATE * my_date,
     BACNET_TIME * my_time);
+
 int timesync_encode_apdu_service(
     uint8_t * apdu,
     BACNET_UNCONFIRMED_SERVICE service,

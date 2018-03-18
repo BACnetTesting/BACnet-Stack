@@ -46,6 +46,11 @@
 ####COPYRIGHTEND####
   */
 #include <stdint.h>
+
+#include "config.h"
+
+#if ( BACNET_USE_EVENT_HANDLING == 1 )
+
 #include "bacenum.h"
 #include "bacdcode.h"
 #include "bacdef.h"
@@ -139,8 +144,8 @@ int getevent_ack_encode_apdu_data(
             /* Tag 0: objectIdentifier */
             apdu_len +=
                 encode_context_object_id(&apdu[apdu_len], 0,
-                event_data->objectIdentifier.type,
-                event_data->objectIdentifier.instance);
+                                         event_data->objectIdentifier.type,
+                                         event_data->objectIdentifier.instance);
             /* Tag 1: eventState */
             apdu_len +=
                 encode_context_enumerated(&apdu[apdu_len], 1,
@@ -526,3 +531,5 @@ int main(
 }
 #endif
 #endif /* TEST */
+
+#endif // (INTRINSIC_REPORTING == 1)

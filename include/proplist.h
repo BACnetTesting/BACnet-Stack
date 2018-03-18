@@ -35,6 +35,11 @@
 
 ####COPYRIGHTEND####
 *********************************************************************/
+
+/*
+    This functionality only aimed at supporting EPICS.c
+*/
+
 #ifndef PROPLIST_H
 #define PROPLIST_H
 

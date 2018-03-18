@@ -71,7 +71,7 @@ static BACNET_IP6_ADDRESS BIP6_Broadcast_Addr;
  * @param ifname - C string for name or text address
  */
 void bip6_set_interface(
-    char *ifname)
+    const char *ifname)
 {
     struct ifaddrs *ifa, *ifa_tmp;
     struct sockaddr_in6 *sin;

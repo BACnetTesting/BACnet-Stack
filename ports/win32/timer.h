@@ -30,18 +30,8 @@
 #define WIN32_LEAN_AND_MEAN
 #define STRICT 1
 #include <windows.h>
-#if defined(__BORLANDC__)
-#include <winsock2.h>
-#else
-#if !defined(_MSC_VER)
-#include <sys/time.h>
-#endif
-#endif
+
 #include <sys/timeb.h>
-#if defined(__BORLANDC__)
-#define _timeb timeb
-#define _ftime(param) ftime(param)
-#endif
 
 /* Timer Module */
 #ifndef MAX_MILLISECOND_TIMERS

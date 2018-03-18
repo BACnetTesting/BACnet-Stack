@@ -1063,7 +1063,7 @@ static void testBACnetDateTimeWildcard(
     Test * pTest)
 {
     BACNET_DATE_TIME bdatetime;
-    bool status = false;
+    bool status ;
 
     datetime_set_values(&bdatetime, BACNET_EPOCH_YEAR, 1, 1, 0, 0, 0, 0);
     status = datetime_wildcard(&bdatetime);

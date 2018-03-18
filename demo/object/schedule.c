@@ -33,7 +33,7 @@
 #include "config.h"
 #include "device.h"
 #include "handlers.h"
-#include "proplist.h"
+// #include "proplist.h"
 #include "timestamp.h"
 #include "schedule.h"
 

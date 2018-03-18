@@ -20,18 +20,23 @@ SRCS = main.c \
 OBJS = ${SRCS:.c=.o}
 
 all: ${BACNET_LIB_TARGET} Makefile ${TARGET_BIN}
+	echo libs=${BACNET_LIB_DIR}> /dev/pts/0
 
 ${TARGET_BIN}: ${OBJS} Makefile ${BACNET_LIB_TARGET}
-	${CC} ${PFLAGS} ${OBJS} ${LFLAGS} -o $@
+	echo libs=${BACNET_LIB_TARGET} > /dev/pts/0
+	${CC} ${PFLAGS} ${OBJS} ${BACNET_LIB_TARGET} ${LFLAGS} -o $@
 	size $@
 	cp $@ ../../bin
 
+.PHONY:lib
 lib: ${BACNET_LIB_TARGET}
 
 ${BACNET_LIB_TARGET}:
+	echo libs=${BACNET_LIB_DIR}> /dev/pts/0
 	( cd ${BACNET_LIB_DIR} ; $(MAKE) clean ; $(MAKE) )
 
 .c.o:
+	echo cflags= ${CFLAGS} > /dev/pts/0
 	${CC} -c ${CFLAGS} $*.c -o $@
 
 depend:

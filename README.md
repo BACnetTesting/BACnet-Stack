@@ -26,6 +26,7 @@ suits your application the best and start there.
 ### Description
 
 Shadow of Steve Kargs stack
+    Straight copy of Steve's latest release from https://sourceforge.net/projects/bacnet/
 
 ###Compile MSVC
     * Add MSVC projects, solution, NO FURTHER CHANGES apart from getting MSVC to compile.

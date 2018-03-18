@@ -31,6 +31,15 @@
     <Filter Include="Source Files\ports\win32">
       <UniqueIdentifier>{5c693a3c-1442-4d89-bbb2-5f7c491231d8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\bits">
+      <UniqueIdentifier>{633fe1e3-6209-466c-9fc0-d7e646a9a959}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\bits\util">
+      <UniqueIdentifier>{ade7ad73-b9c3-4d8e-93b1-4ba9415cd746}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\bits\logging">
+      <UniqueIdentifier>{2d1b12d8-9390-4f1b-aa97-7de64db180d2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\demo\handler\h_cov.c">
@@ -507,14 +516,32 @@
     <ClCompile Include="..\..\demo\object\device-client.c">
       <Filter>Source Files\demo\object</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\demo\object\gw_device.c">
-      <Filter>Source Files\demo\object</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\demo\handler\h_bbmd6.c">
       <Filter>Source Files\demo\hander</Filter>
     </ClCompile>
     <ClCompile Include="..\..\demo\handler\h_routed_npdu.c">
       <Filter>Source Files\demo\hander</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\bits\util\bitsDebug.c">
+      <Filter>Source Files\bits\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\bits\util\btaDebug.c">
+      <Filter>Source Files\bits\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\bits\logging\logDispatch.c">
+      <Filter>Source Files\bits\logging</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\bits\util\emm.c">
+      <Filter>Source Files\bits\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\bits\util\ese.c">
+      <Filter>Source Files\bits\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\bits\util\bacnetProc.c">
+      <Filter>Source Files\bits\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\bits\util\misc.c">
+      <Filter>Source Files\bits\util</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -805,6 +832,33 @@
     </ClInclude>
     <ClInclude Include="..\..\ConnectExUtil\llist.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bits\util\BACnetToString.h">
+      <Filter>Source Files\bits\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bits\util\bitsDebug.h">
+      <Filter>Source Files\bits\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bits\util\bitsUtil.h">
+      <Filter>Source Files\bits\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bits\util\btaDebug.h">
+      <Filter>Source Files\bits\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bits\util\configParams.h">
+      <Filter>Source Files\bits\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bits\util\emm.h">
+      <Filter>Source Files\bits\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bits\util\ese.h">
+      <Filter>Source Files\bits\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bits\util\linklist.h">
+      <Filter>Source Files\bits\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bits\util\llist.h">
+      <Filter>Source Files\bits\util</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

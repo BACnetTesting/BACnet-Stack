@@ -33,6 +33,7 @@
 #include "bacenum.h"
 #include "bacapp.h"
 #include "config.h"     /* the custom stuff */
+#if (BACNET_USE_OBJECT_ANALOG_OUTPUT == 1 )
 #include "wp.h"
 #include "ao.h"
 #include "handlers.h"
@@ -199,6 +200,7 @@ unsigned Analog_Output_Present_Value_Priority(
     return priority;
 }
 
+
 bool Analog_Output_Present_Value_Set(
     uint32_t object_instance,
     float value,
@@ -226,6 +228,7 @@ bool Analog_Output_Present_Value_Set(
     return status;
 }
 
+
 bool Analog_Output_Present_Value_Relinquish(
     uint32_t object_instance,
     unsigned priority)
@@ -250,6 +253,7 @@ bool Analog_Output_Present_Value_Relinquish(
 
     return status;
 }
+
 
 /* note: the object name must be unique within this device */
 bool Analog_Output_Object_Name(
@@ -295,7 +299,7 @@ void Analog_Output_Out_Of_Service_Set(
     }
 }
 
-/* return apdu len, or BACNET_STATUS_ERROR on error */
+/* return apdu length, or BACNET_STATUS_ERROR on error */
 int Analog_Output_Read_Property(
     BACNET_READ_PROPERTY_DATA * rpdata)
 {
@@ -313,6 +317,7 @@ int Analog_Output_Read_Property(
         (rpdata->application_data_len == 0)) {
         return BACNET_STATUS_ERROR;
     }
+
     apdu = rpdata->application_data;
     switch (rpdata->object_property) {
         case PROP_OBJECT_IDENTIFIER:
@@ -439,7 +444,7 @@ bool Analog_Output_Write_Property(
     /* decode the some of the request */
     len =
         bacapp_decode_application_data(wp_data->application_data,
-        wp_data->application_data_len, &value);
+            wp_data->application_data_len, &value);
     /* FIXME: len < application_data_len: more data? */
     if (len < 0) {
         /* error while decoding - a value larger than we can handle */
@@ -488,6 +493,7 @@ bool Analog_Output_Write_Property(
                 }
             }
             break;
+
         case PROP_OUT_OF_SERVICE:
             status =
                 WPValidateArgType(&value, BACNET_APPLICATION_TAG_BOOLEAN,
@@ -499,13 +505,13 @@ bool Analog_Output_Write_Property(
             break;
         case PROP_OBJECT_IDENTIFIER:
         case PROP_OBJECT_NAME:
+    case PROP_DESCRIPTION:
         case PROP_OBJECT_TYPE:
         case PROP_STATUS_FLAGS:
         case PROP_EVENT_STATE:
         case PROP_UNITS:
         case PROP_PRIORITY_ARRAY:
         case PROP_RELINQUISH_DEFAULT:
-        case PROP_DESCRIPTION:
             wp_data->error_class = ERROR_CLASS_PROPERTY;
             wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
             break;
@@ -587,3 +593,5 @@ int main(
 }
 #endif /* TEST_ANALOG_INPUT */
 #endif /* TEST */
+
+#endif // if (BACNET_USE_OBJECT_ANALOG_OUTPUT == 1 )

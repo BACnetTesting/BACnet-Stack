@@ -33,10 +33,12 @@
 #include "bacenum.h"
 #include "bacapp.h"
 #include "config.h"     /* the custom stuff */
+#if (BACNET_USE_OBJECT_BINARY_OUTPUT == 1 )
 #include "rp.h"
 #include "wp.h"
 #include "bo.h"
 #include "handlers.h"
+#include "BACnetObjectBinary.h"
 
 #ifndef MAX_BINARY_OUTPUTS
 #define MAX_BINARY_OUTPUTS 4
@@ -44,7 +46,7 @@
 
 /* When all the priorities are level null, the present value returns */
 /* the Relinquish Default value */
-#define RELINQUISH_DEFAULT BINARY_INACTIVE
+// moved to bacnetobjectbinary.h #define RELINQUISH_DEFAULT_BINARY BINARY_INACTIVE
 /* Here is our Priority Array.*/
 static BACNET_BINARY_PV
     Binary_Output_Level[MAX_BINARY_OUTPUTS][BACNET_MAX_PRIORITY];
@@ -157,7 +159,7 @@ unsigned Binary_Output_Instance_To_Index(
 BACNET_BINARY_PV Binary_Output_Present_Value(
     uint32_t object_instance)
 {
-    BACNET_BINARY_PV value = RELINQUISH_DEFAULT;
+    BACNET_BINARY_PV value = RELINQUISH_DEFAULT_BINARY;
     unsigned index = 0;
     unsigned i = 0;
 
@@ -324,7 +326,7 @@ int Binary_Output_Read_Property(
 
             break;
         case PROP_RELINQUISH_DEFAULT:
-            present_value = RELINQUISH_DEFAULT;
+            present_value = RELINQUISH_DEFAULT_BINARY;
             apdu_len = encode_application_enumerated(&apdu[0], present_value);
             break;
         case PROP_ACTIVE_TEXT:
@@ -545,3 +547,5 @@ int main(
 }
 #endif /* TEST_BINARY_INPUT */
 #endif /* TEST */
+
+#endif // if (BACNET_USE_OBJECT_BINARY_OUTPUT == 1 )

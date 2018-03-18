@@ -55,7 +55,7 @@
 #include "alarm_ack.h"
 #include "handlers.h"
 #include "device.h"
-
+#include "debug.h"
 
 /** @file h_alarm_ack.c  Handles Alarm Acknowledgment. */
 
@@ -113,9 +113,7 @@ void handler_alarm_ack(
             abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, ABORT_REASON_SEGMENTATION_NOT_SUPPORTED,
             true);
-#if PRINT_ENABLED
-        fprintf(stderr, "Alarm Ack: Segmented message.  Sending Abort!\n");
-#endif
+        dbTraffic(DB_ERROR, "Alarm Ack: Segmented message.  Sending Abort!\n");
         goto AA_ABORT;
     }
 
@@ -123,34 +121,30 @@ void handler_alarm_ack(
         alarm_ack_decode_service_request(service_request, service_len, &data);
 #if PRINT_ENABLED
     if (len <= 0)
-        fprintf(stderr, "Alarm Ack: Unable to decode Request!\n");
+        dbTraffic(DB_ERROR, "Alarm Ack: Unable to decode Request!\n");
 #endif
     if (len < 0) {
         /* bad decoding - send an abort */
         len =
             abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, ABORT_REASON_OTHER, true);
-#if PRINT_ENABLED
-        fprintf(stderr, "Alarm Ack: Bad Encoding.  Sending Abort!\n");
-#endif
+        dbTraffic(DB_ERROR, "Alarm Ack: Bad Encoding.  Sending Abort!\n");
         goto AA_ABORT;
     }
-#if PRINT_ENABLED
-    fprintf(stderr,
+    dbTraffic(DB_UNUSUAL_TRAFFIC,
         "Alarm Ack Operation: Received acknowledge for object id (%d, %lu) from %s for process id %lu \n",
         data.eventObjectIdentifier.type,
         (unsigned long) data.eventObjectIdentifier.instance,
         data.ackSource.value, (unsigned long) data.ackProcessIdentifier);
-#endif
 
-	/* 	BACnet Testing Observed Incident oi00105
-		ACK of a non-existent object returned the incorrect error code
-		Revealed by BACnet Test Client v1.8.16 ( www.bac-test.com/bacnet-test-client-download )
-			BC 135.1: 9.1.3.3-A
-		Any discussions can be directed to edward@bac-test.com */
+    /* 	BACnet Testing Observed Incident oi00105
+    	ACK of a non-existent object returned the incorrect error code
+    	Revealed by BACnet Test Client v1.8.16 ( www.bac-test.com/bacnet-test-client-download )
+    		BC 135.1: 9.1.3.3-A
+    	Any discussions can be directed to edward@bac-test.com */
 	if (!Device_Valid_Object_Id(data.eventObjectIdentifier.type, data.eventObjectIdentifier.instance))
 	{
-		len =
+        len =
 			bacerror_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
 				service_data->invoke_id,
 				SERVICE_CONFIRMED_ACKNOWLEDGE_ALARM, ERROR_CLASS_OBJECT, ERROR_CODE_UNKNOWN_OBJECT);
@@ -166,10 +160,8 @@ void handler_alarm_ack(
                     encode_simple_ack(&Handler_Transmit_Buffer[pdu_len],
                     service_data->invoke_id,
                     SERVICE_CONFIRMED_ACKNOWLEDGE_ALARM);
-#if PRINT_ENABLED
-                fprintf(stderr, "Alarm Acknowledge: " "Sending Simple Ack!\n");
-#endif
-                break;
+                dbTraffic(DB_UNEXPECTED_ERROR, "Alarm Acknowledge: " "Sending Simple Ack!\n");
+            break;
 
             case -1:
                 len =
@@ -177,34 +169,28 @@ void handler_alarm_ack(
                     service_data->invoke_id,
                     SERVICE_CONFIRMED_ACKNOWLEDGE_ALARM, ERROR_CLASS_OBJECT,
                     error_code);
-#if PRINT_ENABLED
-                fprintf(stderr, "Alarm Acknowledge: error %s!\n",
+                dbTraffic(DB_UNEXPECTED_ERROR, "Alarm Acknowledge: error %s!\n",
                     bactext_error_code_name(error_code));
-#endif
-                break;
+            break;
 
             default:
                 len =
                     abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
                     service_data->invoke_id, ABORT_REASON_OTHER, true);
-#if PRINT_ENABLED
-                fprintf(stderr, "Alarm Acknowledge: abort other!\n");
-#endif
-                break;
+                dbTraffic(DB_UNEXPECTED_ERROR, "Alarm Acknowledge: abort other!\n");
+            break;
         }
     } else {
         len =
             bacerror_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, SERVICE_CONFIRMED_ACKNOWLEDGE_ALARM,
             ERROR_CLASS_OBJECT, ERROR_CODE_NO_ALARM_CONFIGURED);
-#if PRINT_ENABLED
-        fprintf(stderr, "Alarm Acknowledge: error %s!\n",
+        dbTraffic(DB_UNEXPECTED_ERROR, "Alarm Acknowledge: error %s!\n",
             bactext_error_code_name(ERROR_CODE_NO_ALARM_CONFIGURED));
-#endif
     }
 
 
-  AA_ABORT:
+AA_ABORT:
     pdu_len += len;
     bytes_sent =
         datalink_send_pdu(src, &npci_data, &Handler_Transmit_Buffer[0],

@@ -331,6 +331,7 @@ bool characterstring_init(
     return status;
 }
 
+// todo3 - we should create a 'const' string type where the static string can be referenced (any length then) and not use RAM.
 bool characterstring_init_ansi(
     BACNET_CHARACTER_STRING * char_string,
     const char *value)
@@ -419,7 +420,7 @@ bool characterstring_ansi_same(
     }
     /* NULL matches an empty string in our world */
     else if (src) {
-        if (strlen(src) == 0) {
+        if (src[0] == 0) {
             same_status = true;
         }
     } else if (dest) {

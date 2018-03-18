@@ -24,30 +24,32 @@
 *********************************************************************/
 
 /* command line tool that sends a BACnet service, and displays the reply */
-#include <stddef.h>
+//#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
-#include <time.h>       /* for time */
-#include <errno.h>
+//#include <ctype.h>
+//#include <time.h>       /* for time */
+//#include <errno.h>
 #include "address.h"
 #include "bactext.h"
-#include "config.h"
-#include "bacdef.h"
-#include "npdu.h"
-#include "apdu.h"
+//#include "config.h"
+//#include "bacdef.h"
+//#include "npdu.h"
+//#include "apdu.h"
 #include "device.h"
-#include "net.h"
+//#include "net.h"
 #include "datalink.h"
-#include "timesync.h"
+//#include "timesync.h"
 #include "version.h"
-/* some demo stuff needed */
+///* some demo stuff needed */
 #include "filename.h"
 #include "handlers.h"
 #include "client.h"
-#include "txbuf.h"
+//#include "txbuf.h"
 #include "dlenv.h"
+//// #include "logging.h"
+//#include "bitsDebug.h"
 
 /* buffer used for receive */
 static uint8_t Rx_Buf[MAX_MPDU] = { 0 };
@@ -71,7 +73,7 @@ void MyAbortHandler(
 void MyRejectHandler(
     BACNET_ADDRESS * src,
     uint8_t invoke_id,
-    uint8_t reject_reason)
+    BACNET_REJECT_REASON reject_reason)
 {
     /* FIXME: verify src and invoke id */
     (void) src;
@@ -266,7 +268,12 @@ int main(
     btime.min = my_time->tm_min;
     btime.sec = my_time->tm_sec;
     btime.hundredths = 0;
+#if BACNET_SVC_TS_A
     Send_TimeSync_Remote(&dest, &bdate, &btime);
+#else
+    panic();
+#endif
+
     /* loop forever - not necessary for time sync, but we can watch */
     for (;;) {
         /* increment timer - exit if timed out */

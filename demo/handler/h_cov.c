@@ -42,6 +42,9 @@
 #include <string.h>
 #include <errno.h>
 #include "config.h"
+
+#if ( BACNET_SVC_COV_B == 1 )
+
 #include "txbuf.h"
 #include "bacdef.h"
 #include "bacerror.h"
@@ -917,3 +920,5 @@ void handler_cov_subscribe(
 
 
 }
+
+#endif // ( BACNET_SVC_COV_B == 1 )

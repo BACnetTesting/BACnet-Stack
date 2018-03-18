@@ -231,7 +231,7 @@ void MyAbortHandler(
 void MyRejectHandler(
     BACNET_ADDRESS * src,
     uint8_t invoke_id,
-    uint8_t reject_reason)
+    BACNET_REJECT_REASON reject_reason)
 {
     if (address_match(&Target_Address, src) &&
         (invoke_id == Request_Invoke_ID)) {
@@ -1213,7 +1213,7 @@ void PrintHeading(
     printf("-- AE-ACK-B\n");
     printf("-- AE-ACK-A\n");
     printf("-- DM-UTC-B\n");
-#ifdef BAC_ROUTING
+#if ( BAC_ROUTING == 1 )
     /* Next line only for the gateway (ie, if not addressing a subNet) */
     if (Target_Address.net == 0)
         printf("-- NM-RC-B\n");
@@ -1254,7 +1254,7 @@ void PrintHeading(
         printf("-- ReadRange                      Initiate Execute\n");
         printf("-- GetEventInformation            Initiate Execute\n");
         printf("-- SubscribeCOVProperty           Initiate Execute\n");
-#ifdef BAC_ROUTING
+#if ( BAC_ROUTING == 1 )
         if (Target_Address.net == 0) {
             printf
                 ("-- Note: The following Routing Services are Supported:\n");

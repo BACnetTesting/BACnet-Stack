@@ -1519,9 +1519,9 @@ static INDTEXT_DATA bacnet_reject_reason_names[] = {
 };
 
 const char *bactext_reject_reason_name(
-    unsigned index)
+    BACNET_REJECT_REASON index)
 {
-    return indtext_by_index_split_default(bacnet_reject_reason_names, index,
+    return indtext_by_index_split_default(bacnet_reject_reason_names, (unsigned) index,
         REJECT_REASON_PROPRIETARY_FIRST, ASHRAE_Reserved_String,
         Vendor_Proprietary_String);
 }

@@ -132,6 +132,7 @@ int dlenv_register_as_foreign_device(
     void)
 {
     int retval = 0;
+
 #if defined(BACDL_BIP)
     char *pEnv = NULL;
 
@@ -179,6 +180,7 @@ int dlenv_register_as_foreign_device(
  * Call this function to renew our Foreign Device Registration
  * @param elapsed_seconds Number of seconds that have elapsed since last called.
  */
+
 void dlenv_maintenance_timer(
     uint16_t elapsed_seconds)
 {
@@ -296,6 +298,15 @@ void dlenv_init(
         if (ntohs(bip_get_port()) < 1024)
             bip_set_port(htons(0xBAC0));
     }
+
+    printf("BACnet Port = %d\n", ntohs(bip_get_port()));
+
+#if defined(BBMD_ENABLED) && BBMD_ENABLED
+    printf("BBMD Enabled\n");
+#else
+    printf("BBMD *NOT* Enabled\n");
+#endif
+
 #elif defined(BACDL_MSTP)
     pEnv = getenv("BACNET_MAX_INFO_FRAMES");
     if (pEnv) {
@@ -322,6 +333,7 @@ void dlenv_init(
         dlmstp_set_mac_address(127);
     }
 #endif
+
     pEnv = getenv("BACNET_APDU_TIMEOUT");
     if (pEnv) {
         apdu_timeout_set((uint16_t) strtol(pEnv, NULL, 0));
@@ -330,19 +342,23 @@ void dlenv_init(
         apdu_timeout_set(60000);
 #endif
     }
+
     pEnv = getenv("BACNET_APDU_RETRIES");
     if (pEnv) {
         apdu_retries_set((uint8_t) strtol(pEnv, NULL, 0));
     }
+
     /* === Initialize the Datalink Here === */
     if (!datalink_init(getenv("BACNET_IFACE"))) {
         exit(1);
     }
+
 #if (MAX_TSM_TRANSACTIONS)
     pEnv = getenv("BACNET_INVOKE_ID");
     if (pEnv) {
         tsm_invokeID_set((uint8_t) strtol(pEnv, NULL, 0));
     }
 #endif
+
     dlenv_register_as_foreign_device();
 }

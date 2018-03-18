@@ -93,8 +93,8 @@ int ihave_decode_service_request(
     BACNET_I_HAVE_DATA * data)
 {
     int len = 0;
-    uint8_t tag_number = 0;
-    uint32_t len_value = 0;
+    uint8_t tag_number ;
+    uint32_t len_value ;
     BACNET_OBJECT_TYPE decoded_type ;  /* for decoding */
 
     if (apdu_len && data) {

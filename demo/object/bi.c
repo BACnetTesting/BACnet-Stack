@@ -23,11 +23,10 @@
  *
  *********************************************************************/
 
-/* Binary Input Objects customize for your use */
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+
 #include "bacdef.h"
 #include "bacdcode.h"
 #include "bacenum.h"
@@ -36,6 +35,7 @@
 #include "wp.h"
 #include "cov.h"
 #include "config.h"     /* the custom stuff */
+#if (BACNET_USE_OBJECT_BINARY_INPUT == 1 )
 #include "bi.h"
 #include "handlers.h"
 
@@ -55,7 +55,7 @@ static bool Change_Of_Value[MAX_BINARY_INPUTS];
 static BACNET_POLARITY Polarity[MAX_BINARY_INPUTS];
 
 /* These three arrays are used by the ReadPropertyMultiple handler */
-static const BACNET_PROPERTY_ID Binary_Input_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -67,13 +67,16 @@ static const BACNET_PROPERTY_ID Binary_Input_Properties_Required[] = {
     MAX_BACNET_PROPERTY_ID
 };
 
-static const BACNET_PROPERTY_ID Binary_Input_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Properties_Optional[] = {
     PROP_DESCRIPTION,
+    PROP_ACTIVE_TEXT,
+    PROP_INACTIVE_TEXT,
+    PROP_RELIABILITY,
 	PROP_RELIABILITY,
     MAX_BACNET_PROPERTY_ID
 };
 
-static const BACNET_PROPERTY_ID Binary_Input_Properties_Proprietary[] = {
+static const BACNET_PROPERTY_ID Properties_Proprietary[] = {
     MAX_BACNET_PROPERTY_ID
 };
 
@@ -82,17 +85,14 @@ void Binary_Input_Property_Lists(
     const BACNET_PROPERTY_ID **pOptional,
     const BACNET_PROPERTY_ID **pProprietary)
 {
-    if (pRequired) {
-        *pRequired = Binary_Input_Properties_Required;
-    }
-    if (pOptional) {
-        *pOptional = Binary_Input_Properties_Optional;
-    }
-    if (pProprietary) {
-        *pProprietary = Binary_Input_Properties_Proprietary;
-    }
-
+    if (pRequired)
+        *pRequired = Properties_Required;
+    if (pOptional)
+        *pOptional = Properties_Optional;
+    if (pProprietary)
+        *pProprietary = Properties_Proprietary;
 }
+
 
 /* we simply have 0-n object instances.  Yours might be */
 /* more complex, and then you need validate that the */
@@ -205,6 +205,7 @@ bool Binary_Input_Change_Of_Value(
     return status;
 }
 
+
 void Binary_Input_Change_Of_Value_Clear(
     uint32_t object_instance)
 {
@@ -236,7 +237,7 @@ bool Binary_Input_Encode_Value_List(
         value_list->propertyArrayIndex = BACNET_ARRAY_ALL;
         value_list->value.context_specific = false;
         value_list->value.tag = BACNET_APPLICATION_TAG_ENUMERATED;
-        value_list->value.next = NULL;
+        value_list->value.next = NULL;			/* 2014.09.03 - edward@bac-test.com - added this, lack was causing exceptions under MSVC emulation */
         value_list->value.type.Enumerated =
             Binary_Input_Present_Value(object_instance);
         value_list->priority = BACNET_NO_PRIORITY;
@@ -247,7 +248,7 @@ bool Binary_Input_Encode_Value_List(
         value_list->propertyArrayIndex = BACNET_ARRAY_ALL;
         value_list->value.context_specific = false;
         value_list->value.tag = BACNET_APPLICATION_TAG_BIT_STRING;
-        value_list->value.next = NULL;
+        value_list->value.next = NULL;			/* 2014.09.03 - edward@bac-test.com - added this, lack was causing exceptions under MSVC emulation */
         bitstring_init(&value_list->value.type.Bit_String);
         bitstring_set_bit(&value_list->value.type.Bit_String,
             STATUS_FLAG_IN_ALARM, false);
@@ -411,6 +412,7 @@ int Binary_Input_Read_Property(
             bitstring_set_bit(&bit_string, STATUS_FLAG_OUT_OF_SERVICE, state);
             apdu_len = encode_application_bitstring(&apdu[0], &bit_string);
             break;
+
         case PROP_EVENT_STATE:
             /* note: see the details in the standard on how to use this */
             apdu_len =
@@ -520,9 +522,16 @@ bool Binary_Input_Write_Property(
         case PROP_OBJECT_IDENTIFIER:
         case PROP_OBJECT_NAME:
         case PROP_OBJECT_TYPE:
-		    case PROP_PROPERTY_LIST:
+        case PROP_PROPERTY_LIST:
         case PROP_RELIABILITY:
         case PROP_STATUS_FLAGS:
+#if (INTRINSIC_REPORTING_BI_B == 1)
+		case PROP_ACKED_TRANSITIONS:
+		case PROP_EVENT_TIME_STAMPS:
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
+		case PROP_EVENT_DETECTION_ENABLE:
+#endif
+#endif
             wp_data->error_class = ERROR_CLASS_PROPERTY;
             wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
             break;
@@ -603,3 +612,5 @@ int main(
 }
 #endif /* TEST_BINARY_INPUT */
 #endif /* TEST */
+
+#endif // if (BACNET_USE_OBJECT_BINARY_INPUT == 1 )

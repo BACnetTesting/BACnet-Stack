@@ -16,7 +16,7 @@
  along with this program; if not, write to:
  The Free Software Foundation, Inc.
  59 Temple Place - Suite 330
- Boston, MA  02111MAX_BACNET_PROPERTY_ID307, USA.
+ Boston, MA  02111-1307, USA.
 
  As a special exception, if other files instantiate templates or
  use macros or inline functions from this file, or you compile
@@ -58,7 +58,8 @@
 #define BACNET_PROPERTY_LISTS 0
 #endif
 
-#if BACNET_PROPERTY_LISTS
+#if ( BACNET_PROPERTY_LISTS == 1 )
+
 /** @file proplist.c  List of Required and Optional object properties */
 /* note: the PROP_PROPERTY_LIST is NOT included in these lists, on purpose */
 
@@ -115,8 +116,10 @@ static const BACNET_PROPERTY_ID Device_Properties_Optional[] = {
     PROP_RESTORE_PREPARATION_TIME,
     PROP_RESTORE_COMPLETION_TIME,
     PROP_BACKUP_AND_RESTORE_STATE,
+#if ( BACNET_SVC_COV_B == 1 )
     PROP_ACTIVE_COV_SUBSCRIPTIONS,
-    PROP_SLAVE_PROXY_ENABLE,
+#endif
+    PROP_SLAVE_PROXY_ENABLE,        // todo, only allowed in some cases
     PROP_MANUAL_SLAVE_ADDRESS_BINDING,
     PROP_AUTO_SLAVE_DISCOVERY,
     PROP_SLAVE_ADDRESS_BINDING,
@@ -167,10 +170,46 @@ static const BACNET_PROPERTY_ID Accumulator_Properties_Optional[] = {
     PROP_NOTIFY_TYPE,
     PROP_EVENT_TIME_STAMPS,
     PROP_EVENT_MESSAGE_TEXTS,
+    PROP_PROFILE_NAME,
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
     PROP_RELIABILITY_EVALUATION_INHIBIT,
+#endif
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
+    PROP_EVENT_DETECTION_ENABLE,
+#endif
+	MAX_BACNET_PROPERTY_ID
+};
+
+#if ( BACNET_USE_OBJECT_ALERT_ENROLLMENT )
+
+static const BACNET_PROPERTY_ID Alert_Enrollment_Properties_Required[] = {
+
+    PROP_OBJECT_IDENTIFIER,
+    PROP_OBJECT_NAME,
+    PROP_OBJECT_TYPE,
+    PROP_PRESENT_VALUE,
+    PROP_EVENT_STATE,
+    PROP_EVENT_DETECTION_ENABLE,
+    PROP_NOTIFICATION_CLASS,
+    PROP_EVENT_ENABLE,
+    PROP_ACKED_TRANSITIONS,
+    PROP_NOTIFY_TYPE,
+    PROP_EVENT_TIME_STAMPS,
+    PROP_PROPERTY_LIST,
+	MAX_BACNET_PROPERTY_ID
+};
+
+static const BACNET_PROPERTY_ID Alert_Enrollment_Properties_Optional[] = {
+    PROP_DESCRIPTION,
+    PROP_EVENT_MESSAGE_TEXTS,
+    PROP_EVENT_MESSAGE_TEXTS_CONFIG,
+    PROP_EVENT_ALGORITHM_INHIBIT_REF,
+    PROP_EVENT_ALGORITHM_INHIBIT,
     PROP_PROFILE_NAME,
     MAX_BACNET_PROPERTY_ID
 };
+
+#endif
 
 static const BACNET_PROPERTY_ID Analog_Input_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
@@ -204,7 +243,12 @@ static const BACNET_PROPERTY_ID Analog_Input_Properties_Optional[] = {
     PROP_NOTIFY_TYPE,
     PROP_EVENT_TIME_STAMPS,
     PROP_EVENT_MESSAGE_TEXTS,
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
     PROP_RELIABILITY_EVALUATION_INHIBIT,
+#endif
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
+    PROP_EVENT_DETECTION_ENABLE,
+#endif
     PROP_PROFILE_NAME,
     MAX_BACNET_PROPERTY_ID
 };
@@ -242,7 +286,12 @@ static const BACNET_PROPERTY_ID Analog_Output_Properties_Optional[] = {
     PROP_NOTIFY_TYPE,
     PROP_EVENT_TIME_STAMPS,
     PROP_EVENT_MESSAGE_TEXTS,
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
     PROP_RELIABILITY_EVALUATION_INHIBIT,
+#endif
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
+    PROP_EVENT_DETECTION_ENABLE,
+#endif
     PROP_PROFILE_NAME,
     MAX_BACNET_PROPERTY_ID
 };
@@ -276,7 +325,12 @@ static const BACNET_PROPERTY_ID Analog_Value_Properties_Optional[] = {
     PROP_NOTIFY_TYPE,
     PROP_EVENT_TIME_STAMPS,
     PROP_EVENT_MESSAGE_TEXTS,
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
     PROP_RELIABILITY_EVALUATION_INHIBIT,
+#endif
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
+    PROP_EVENT_DETECTION_ENABLE,
+#endif
     PROP_PROFILE_NAME,
     MAX_BACNET_PROPERTY_ID
 };
@@ -340,7 +394,12 @@ static const BACNET_PROPERTY_ID Binary_Input_Properties_Optional[] = {
     PROP_NOTIFY_TYPE,
     PROP_EVENT_TIME_STAMPS,
     PROP_EVENT_MESSAGE_TEXTS,
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
     PROP_RELIABILITY_EVALUATION_INHIBIT,
+#endif
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
+    PROP_EVENT_DETECTION_ENABLE,
+#endif
     PROP_PROFILE_NAME,
     MAX_BACNET_PROPERTY_ID
 };
@@ -380,7 +439,12 @@ static const BACNET_PROPERTY_ID Binary_Output_Properties_Optional[] = {
     PROP_NOTIFY_TYPE,
     PROP_EVENT_TIME_STAMPS,
     PROP_EVENT_MESSAGE_TEXTS,
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
     PROP_RELIABILITY_EVALUATION_INHIBIT,
+#endif
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
+    PROP_EVENT_DETECTION_ENABLE,
+#endif
     PROP_PROFILE_NAME,
     MAX_BACNET_PROPERTY_ID
 };
@@ -418,7 +482,12 @@ static const BACNET_PROPERTY_ID Binary_Value_Properties_Optional[] = {
     PROP_NOTIFY_TYPE,
     PROP_EVENT_TIME_STAMPS,
     PROP_EVENT_MESSAGE_TEXTS,
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
     PROP_RELIABILITY_EVALUATION_INHIBIT,
+#endif
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
+    PROP_EVENT_DETECTION_ENABLE,
+#endif
     PROP_PROFILE_NAME,
     MAX_BACNET_PROPERTY_ID
 };
@@ -438,6 +507,7 @@ static const BACNET_PROPERTY_ID Calendar_Properties_Optional[] = {
     MAX_BACNET_PROPERTY_ID
 };
 
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
 static const BACNET_PROPERTY_ID Channel_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
@@ -468,9 +538,13 @@ static const BACNET_PROPERTY_ID Channel_Properties_Optional[] = {
     PROP_EVENT_MESSAGE_TEXTS,
     PROP_EVENT_MESSAGE_TEXTS_CONFIG,
     PROP_RELIABILITY_EVALUATION_INHIBIT,
+    PROP_EXECUTION_DELAY,
+    PROP_ALLOW_GROUP_DELAY_INHIBIT,
+    PROP_EVENT_DETECTION_ENABLE,
     PROP_PROFILE_NAME,
     MAX_BACNET_PROPERTY_ID
 };
+#endif // ( BACNET_PROTOCOL_REVISION >= 14 )
 
 static const BACNET_PROPERTY_ID Command_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
@@ -515,11 +589,17 @@ static const BACNET_PROPERTY_ID CharacterString_Value_Properties_Optional[] = {
     PROP_NOTIFY_TYPE,
     PROP_EVENT_TIME_STAMPS,
     PROP_EVENT_MESSAGE_TEXTS,
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
     PROP_RELIABILITY_EVALUATION_INHIBIT,
+#endif
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
+    PROP_EVENT_DETECTION_ENABLE,
+#endif
     PROP_PROFILE_NAME,
     MAX_BACNET_PROPERTY_ID
 };
 
+#if (BACNET_PROTOCOL_REVISION >= 14)
 static const BACNET_PROPERTY_ID Lighting_Output_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
@@ -552,10 +632,13 @@ static const BACNET_PROPERTY_ID Lighting_Output_Properties_Optional[] = {
     PROP_MIN_ACTUAL_VALUE,
     PROP_MAX_ACTUAL_VALUE,
     PROP_COV_INCREMENT,
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
     PROP_RELIABILITY_EVALUATION_INHIBIT,
+#endif
     PROP_PROFILE_NAME,
     MAX_BACNET_PROPERTY_ID
 };
+#endif // ( BACNET_PROTOCOL_REVISION >= 14 )
 
 static const BACNET_PROPERTY_ID Load_Control_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
@@ -588,7 +671,9 @@ static const BACNET_PROPERTY_ID Load_Control_Properties_Optional[] = {
     PROP_NOTIFY_TYPE,
     PROP_EVENT_TIME_STAMPS,
     PROP_EVENT_MESSAGE_TEXTS,
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
     PROP_RELIABILITY_EVALUATION_INHIBIT,
+#endif
     PROP_PROFILE_NAME,
     MAX_BACNET_PROPERTY_ID
 };
@@ -627,7 +712,9 @@ static const BACNET_PROPERTY_ID Life_Safety_Point_Properties_Optional[] = {
     PROP_DIRECT_READING,
     PROP_UNITS,
     PROP_MEMBER_OF,
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
     PROP_RELIABILITY_EVALUATION_INHIBIT,
+#endif
     PROP_PROFILE_NAME,
     MAX_BACNET_PROPERTY_ID
 };
@@ -658,7 +745,12 @@ static const BACNET_PROPERTY_ID Multistate_Input_Properties_Optional[] = {
     PROP_NOTIFY_TYPE,
     PROP_EVENT_TIME_STAMPS,
     PROP_EVENT_MESSAGE_TEXTS,
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
     PROP_RELIABILITY_EVALUATION_INHIBIT,
+#endif
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
+    PROP_EVENT_DETECTION_ENABLE,
+#endif
     PROP_PROFILE_NAME,
     MAX_BACNET_PROPERTY_ID
 };
@@ -690,7 +782,12 @@ static const BACNET_PROPERTY_ID Multistate_Output_Properties_Optional[] = {
     PROP_NOTIFY_TYPE,
     PROP_EVENT_TIME_STAMPS,
     PROP_EVENT_MESSAGE_TEXTS,
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
     PROP_RELIABILITY_EVALUATION_INHIBIT,
+#endif
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
+    PROP_EVENT_DETECTION_ENABLE,
+#endif
     PROP_PROFILE_NAME,
     MAX_BACNET_PROPERTY_ID
 };
@@ -722,7 +819,12 @@ static const BACNET_PROPERTY_ID Multistate_Value_Properties_Optional[] = {
     PROP_NOTIFY_TYPE,
     PROP_EVENT_TIME_STAMPS,
     PROP_EVENT_MESSAGE_TEXTS,
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
     PROP_RELIABILITY_EVALUATION_INHIBIT,
+#endif
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
+    PROP_EVENT_DETECTION_ENABLE,
+#endif
     PROP_PROFILE_NAME,
     MAX_BACNET_PROPERTY_ID
 };
@@ -743,6 +845,42 @@ static const BACNET_PROPERTY_ID Notification_Class_Properties_Optional[] = {
     PROP_PROFILE_NAME,
     MAX_BACNET_PROPERTY_ID
 };
+
+#ifdef todo
+    // from BTC
+        protected static PROPERTY_ID[] Schedule_Properties_Required = new PROPERTY_ID[] {
+            PROPERTY_ID.OBJECT_IDENTIFIER,
+            PROPERTY_ID.OBJECT_NAME,
+            PROPERTY_ID.OBJECT_TYPE,
+            PROPERTY_ID.PRESENT_VALUE,
+            PROPERTY_ID.EFFECTIVE_PERIOD,
+            PROPERTY_ID.WEEKLY_SCHEDULE,
+            PROPERTY_ID.SCHEDULE_DEFAULT,
+            PROPERTY_ID.LIST_OF_OBJECT_PROPERTY_REFERENCES,
+            PROPERTY_ID.PRIORITY_FOR_WRITING,
+            PROPERTY_ID.STATUS_FLAGS,
+            PROPERTY_ID.RELIABILITY,
+            PROPERTY_ID.OUT_OF_SERVICE,
+            PROPERTY_ID.PROPERTY_LIST,
+            };
+
+        protected static PROPERTY_ID[] Schedule_Properties_Optional = new PROPERTY_ID[] {
+            PROPERTY_ID.DESCRIPTION,
+            PROPERTY_ID.EXCEPTION_SCHEDULE,
+            PROPERTY_ID.EVENT_DETECTION_ENABLE,
+            PROPERTY_ID.NOTIFICATION_CLASS,
+            PROPERTY_ID.EVENT_ENABLE,
+            PROPERTY_ID.EVENT_STATE,
+            PROPERTY_ID.ACKED_TRANSITIONS,
+            PROPERTY_ID.NOTIFY_TYPE,
+            PROPERTY_ID.EVENT_TIME_STAMPS,
+            PROPERTY_ID.EVENT_MESSAGE_TEXTS,
+            PROPERTY_ID.EVENT_MESSAGE_TEXTS_CONFIG,
+            PROPERTY_ID.RELIABILITY_EVALUATION_INHIBIT,
+            PROPERTY_ID.PROFILE_NAME,
+            };
+#endif
+
 
 static const BACNET_PROPERTY_ID Trend_Log_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
@@ -781,7 +919,12 @@ static const BACNET_PROPERTY_ID Trend_Log_Properties_Optional[] = {
     PROP_INTERVAL_OFFSET,
     PROP_TRIGGER,
     PROP_RELIABILITY,
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
     PROP_RELIABILITY_EVALUATION_INHIBIT,
+#endif
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
+    PROP_EVENT_DETECTION_ENABLE,
+#endif
     PROP_PROFILE_NAME,
     MAX_BACNET_PROPERTY_ID
 };
@@ -836,18 +979,48 @@ static const BACNET_PROPERTY_ID Integer_Value_Properties_Optional[] = {
     PROP_NOTIFY_TYPE,
     PROP_EVENT_TIME_STAMPS,
     PROP_EVENT_MESSAGE_TEXTS,
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
     PROP_EVENT_MESSAGE_TEXTS_CONFIG,
     PROP_EVENT_DETECTION_ENABLE,
     PROP_EVENT_ALGORITHM_INHIBIT_REF,
     PROP_EVENT_ALGORITHM_INHIBIT,
     PROP_TIME_DELAY_NORMAL,
     PROP_RELIABILITY_EVALUATION_INHIBIT,
+#endif
     PROP_MIN_PRES_VALUE,
     PROP_MAX_PRES_VALUE,
     PROP_RESOLUTION,
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
+    PROP_EVENT_DETECTION_ENABLE,
+#endif
     PROP_PROFILE_NAME,
     MAX_BACNET_PROPERTY_ID
 };
+
+#endif
+
+/**
+ * Function that returns the number of BACnet object properties in a list
+ *
+ * @param pList - array of type 'int' that is a list of BACnet object
+ * properties, terminated by a '-1' value.
+ */
+unsigned property_list_count(
+    const BACNET_PROPERTY_ID *pList)
+{
+    unsigned property_count = 0;
+
+    if (pList) {
+        while (*pList != MAX_BACNET_PROPERTY_ID) {
+            property_count++;
+            pList++;
+        }
+    }
+
+    return property_count;
+}
+
+#if ( BACNET_PROPERTY_LISTS == 1 )
 
 /**
  * Function that returns the list of all Optional properties
@@ -864,83 +1037,90 @@ const BACNET_PROPERTY_ID * property_list_optional(
     const BACNET_PROPERTY_ID * pList = NULL;
 
     switch (object_type) {
-        case OBJECT_DEVICE:
-            pList = Device_Properties_Optional;
-            break;
-        case OBJECT_ACCUMULATOR:
-            pList = Accumulator_Properties_Optional;
-            break;
-        case OBJECT_ANALOG_INPUT:
-            pList = Analog_Input_Properties_Optional;
-            break;
-        case OBJECT_ANALOG_OUTPUT:
-            pList = Analog_Output_Properties_Optional;
-            break;
-        case OBJECT_ANALOG_VALUE:
-            pList = Analog_Value_Properties_Optional;
-            break;
-        case OBJECT_AVERAGING:
-            pList = Averaging_Properties_Optional;
-            break;
-        case OBJECT_BINARY_INPUT:
-            pList = Binary_Input_Properties_Optional;
-            break;
-        case OBJECT_BINARY_OUTPUT:
-            pList = Binary_Output_Properties_Optional;
-            break;
-        case OBJECT_BINARY_VALUE:
-            pList = Binary_Value_Properties_Optional;
-            break;
-        case OBJECT_CALENDAR:
-            pList = Calendar_Properties_Optional;
-            break;
-        case OBJECT_CHANNEL:
-            pList = Channel_Properties_Optional;
-            break;
-        case OBJECT_COMMAND:
-            pList = Command_Properties_Optional;
-            break;
-        case OBJECT_CHARACTERSTRING_VALUE:
-            pList =
-                CharacterString_Value_Properties_Optional;
-            break;
-        case OBJECT_LIGHTING_OUTPUT:
-            pList = Lighting_Output_Properties_Optional;
-            break;
-        case OBJECT_LOAD_CONTROL:
-            pList = Load_Control_Properties_Optional;
-            break;
-        case OBJECT_LIFE_SAFETY_POINT:
-            pList =
-                Life_Safety_Point_Properties_Optional;
-            break;
-        case OBJECT_MULTI_STATE_INPUT:
-            pList =
-                Multistate_Input_Properties_Optional;
-            break;
-        case OBJECT_MULTI_STATE_OUTPUT:
-            pList =
-                Multistate_Output_Properties_Optional;
-            break;
-        case OBJECT_MULTI_STATE_VALUE:
-            pList =
-                Multistate_Value_Properties_Optional;
-            break;
-        case OBJECT_NOTIFICATION_CLASS:
-            pList =
-                Notification_Class_Properties_Optional;
-            break;
-        case OBJECT_TRENDLOG:
-            pList = Trend_Log_Properties_Optional;
-            break;
-        case OBJECT_FILE:
-            pList = File_Properties_Optional;
-            break;
-        case OBJECT_INTEGER_VALUE:
-            pList = Integer_Value_Properties_Optional;
-            break;
-        default:
-            break;
+    case OBJECT_DEVICE:
+        pList = Device_Properties_Optional;
+        break;
+    case OBJECT_ACCUMULATOR:
+        pList = Accumulator_Properties_Optional;
+        break;
+#if ( BACNET_USE_OBJECT_ALERT_ENROLLMENT )
+    case OBJECT_ALERT_ENROLLMENT:
+        pList = Alert_Enrollment_Properties_Optional;
+        break;
+#endif
+    case OBJECT_ANALOG_INPUT:
+        pList = Analog_Input_Properties_Optional;
+        break;
+    case OBJECT_ANALOG_OUTPUT:
+        pList = Analog_Output_Properties_Optional;
+        break;
+    case OBJECT_ANALOG_VALUE:
+        pList = Analog_Value_Properties_Optional;
+        break;
+    case OBJECT_AVERAGING:
+        pList = Averaging_Properties_Optional;
+        break;
+    case OBJECT_BINARY_INPUT:
+        pList = Binary_Input_Properties_Optional;
+        break;
+    case OBJECT_BINARY_OUTPUT:
+        pList = Binary_Output_Properties_Optional;
+        break;
+    case OBJECT_BINARY_VALUE:
+        pList = Binary_Value_Properties_Optional;
+        break;
+    case OBJECT_CALENDAR:
+        pList = Calendar_Properties_Optional;
+        break;
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
+    case OBJECT_CHANNEL:
+        pList = Channel_Properties_Optional;
+        break;
+		case OBJECT_LIGHTING_OUTPUT:
+			pList = Lighting_Output_Properties_Optional;
+			break;
+#endif
+    case OBJECT_COMMAND:
+        pList = Command_Properties_Optional;
+        break;
+    case OBJECT_CHARACTERSTRING_VALUE:
+        pList =
+            CharacterString_Value_Properties_Optional;
+        break;
+    case OBJECT_LOAD_CONTROL:
+        pList = Load_Control_Properties_Optional;
+        break;
+    case OBJECT_LIFE_SAFETY_POINT:
+        pList =
+            Life_Safety_Point_Properties_Optional;
+        break;
+    case OBJECT_MULTI_STATE_INPUT:
+        pList =
+            Multistate_Input_Properties_Optional;
+        break;
+    case OBJECT_MULTI_STATE_OUTPUT:
+        pList =
+            Multistate_Output_Properties_Optional;
+        break;
+    case OBJECT_MULTI_STATE_VALUE:
+        pList =
+            Multistate_Value_Properties_Optional;
+        break;
+    case OBJECT_NOTIFICATION_CLASS:
+        pList =
+            Notification_Class_Properties_Optional;
+        break;
+    case OBJECT_TRENDLOG:
+        pList = Trend_Log_Properties_Optional;
+        break;
+    case OBJECT_FILE:
+        pList = File_Properties_Optional;
+        break;
+    case OBJECT_INTEGER_VALUE:
+        pList = Integer_Value_Properties_Optional;
+        break;
+    default:
+        break;
     }
 
     return pList;
@@ -961,84 +1141,91 @@ const BACNET_PROPERTY_ID* property_list_required(
     const BACNET_PROPERTY_ID * pList = NULL;
 
     switch (object_type) {
-        case OBJECT_DEVICE:
-            pList = Device_Properties_Required;
-            break;
-        case OBJECT_ACCUMULATOR:
-            pList = Accumulator_Properties_Required;
-            break;
-        case OBJECT_ANALOG_INPUT:
-            pList = Analog_Input_Properties_Required;
-            break;
-        case OBJECT_ANALOG_OUTPUT:
-            pList = Analog_Output_Properties_Required;
-            break;
-        case OBJECT_ANALOG_VALUE:
-            pList = Analog_Value_Properties_Required;
-            break;
-        case OBJECT_AVERAGING:
-            pList = Averaging_Properties_Required;
-            break;
-        case OBJECT_BINARY_INPUT:
-            pList = Binary_Input_Properties_Required;
-            break;
-        case OBJECT_BINARY_OUTPUT:
-            pList = Binary_Output_Properties_Required;
-            break;
-        case OBJECT_BINARY_VALUE:
-            pList = Binary_Value_Properties_Required;
-            break;
-        case OBJECT_CALENDAR:
-            pList = Calendar_Properties_Required;
-            break;
-        case OBJECT_CHANNEL:
-            pList = Channel_Properties_Required;
-            break;
-        case OBJECT_COMMAND:
-            pList = Command_Properties_Required;
-            break;
-        case OBJECT_CHARACTERSTRING_VALUE:
-            pList =
-                CharacterString_Value_Properties_Required;
-            break;
-        case OBJECT_LOAD_CONTROL:
-            pList = Load_Control_Properties_Required;
-            break;
-        case OBJECT_LIGHTING_OUTPUT:
-            pList = Lighting_Output_Properties_Required;
-            break;
-        case OBJECT_LIFE_SAFETY_POINT:
-            pList =
-                Life_Safety_Point_Properties_Required;
-            break;
-        case OBJECT_MULTI_STATE_INPUT:
-            pList =
-                Multistate_Input_Properties_Required;
-            break;
-        case OBJECT_MULTI_STATE_OUTPUT:
-            pList =
-                Multistate_Output_Properties_Required;
-            break;
-        case OBJECT_MULTI_STATE_VALUE:
-            pList =
-                Multistate_Value_Properties_Required;
-            break;
-        case OBJECT_NOTIFICATION_CLASS:
-            pList =
-                Notification_Class_Properties_Required;
-            break;
-        case OBJECT_TRENDLOG:
-            pList = Trend_Log_Properties_Required;
-            break;
-        case OBJECT_FILE:
-            pList = File_Properties_Required;
-            break;
-        case OBJECT_INTEGER_VALUE:
-            pList = Integer_Value_Properties_Required;
-            break;
-        default:
-            pList = Default_Properties_Required;
-            break;
+    case OBJECT_DEVICE:
+        pList = Device_Properties_Required;
+        break;
+    case OBJECT_ACCUMULATOR:
+        pList = Accumulator_Properties_Required;
+        break;
+#if ( BACNET_USE_OBJECT_ALERT_ENROLLMENT )
+    case OBJECT_ALERT_ENROLLMENT:
+        pList = Alert_Enrollment_Properties_Required;
+        break;
+#endif
+    case OBJECT_ANALOG_INPUT:
+        pList = Analog_Input_Properties_Required;
+        break;
+    case OBJECT_ANALOG_OUTPUT:
+        pList = Analog_Output_Properties_Required;
+        break;
+    case OBJECT_ANALOG_VALUE:
+        pList = Analog_Value_Properties_Required;
+        break;
+    case OBJECT_AVERAGING:
+        pList = Averaging_Properties_Required;
+        break;
+    case OBJECT_BINARY_INPUT:
+        pList = Binary_Input_Properties_Required;
+        break;
+    case OBJECT_BINARY_OUTPUT:
+        pList = Binary_Output_Properties_Required;
+        break;
+    case OBJECT_BINARY_VALUE:
+        pList = Binary_Value_Properties_Required;
+        break;
+    case OBJECT_CALENDAR:
+        pList = Calendar_Properties_Required;
+        break;
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
+    case OBJECT_CHANNEL:
+        pList = Channel_Properties_Required;
+        break;
+		case OBJECT_LIGHTING_OUTPUT:
+			pList = Lighting_Output_Properties_Required;
+			break;
+#endif // ( BACNET_PROTOCOL_REVISION >= 14 )
+    case OBJECT_COMMAND:
+        pList = Command_Properties_Required;
+        break;
+    case OBJECT_CHARACTERSTRING_VALUE:
+        pList =
+            CharacterString_Value_Properties_Required;
+        break;
+    case OBJECT_LOAD_CONTROL:
+        pList = Load_Control_Properties_Required;
+        break;
+    case OBJECT_LIFE_SAFETY_POINT:
+        pList =
+            Life_Safety_Point_Properties_Required;
+        break;
+    case OBJECT_MULTI_STATE_INPUT:
+        pList =
+            Multistate_Input_Properties_Required;
+        break;
+    case OBJECT_MULTI_STATE_OUTPUT:
+        pList =
+            Multistate_Output_Properties_Required;
+        break;
+    case OBJECT_MULTI_STATE_VALUE:
+        pList =
+            Multistate_Value_Properties_Required;
+        break;
+    case OBJECT_NOTIFICATION_CLASS:
+        pList =
+            Notification_Class_Properties_Required;
+        break;
+    case OBJECT_TRENDLOG:
+        pList = Trend_Log_Properties_Required;
+        break;
+    case OBJECT_FILE:
+        pList = File_Properties_Required;
+        break;
+    case OBJECT_INTEGER_VALUE:
+        pList = Integer_Value_Properties_Required;
+        break;
+    default:
+        pList = Default_Properties_Required;
+        break;
     }
 
     return pList;
@@ -1140,27 +1327,29 @@ unsigned property_list_special_count(
 }
 #endif
 
-/**
- * Function that returns the number of BACnet object properties in a list
- *
- * @param pList - array of type 'int' that is a list of BACnet object
- * properties, terminated by a 'MAX_BACNET_PROPERTY_ID' value.
- */
-// todo 2 - this function appears in 3 places....
-unsigned property_list_count(
-    const BACNET_PROPERTY_ID *pList)
-{
-    unsigned property_count = 0;
 
-    if (pList) {
-        while (*pList != MAX_BACNET_PROPERTY_ID) {
-            property_count++;
-            pList++;
-        }
-    }
-
-    return property_count;
-}
+// defined above!
+///**
+// * Function that returns the number of BACnet object properties in a list
+// *
+// * @param pList - array of type 'int' that is a list of BACnet object
+// * properties, terminated by a 'MAX_BACNET_PROPERTY_ID' value.
+// */
+//// todo 2 - this function appears in 3 places....
+//unsigned property_list_count(
+//    const BACNET_PROPERTY_ID *pList)
+//{
+//    unsigned property_count = 0;
+//
+//    if (pList) {
+//        while (*pList != MAX_BACNET_PROPERTY_ID) {
+//            property_count++;
+//            pList++;
+//        }
+//    }
+//
+//    return property_count;
+//}
 
 /**
  * ReadProperty handler for this property.  For the given ReadProperty
@@ -1179,8 +1368,8 @@ int property_list_encode(
     const BACNET_PROPERTY_ID *pListProprietary)
 {
     int apdu_len = 0;   /* return value */
-    uint8_t *apdu = NULL;
-    int max_apdu_len = 0;
+    uint8_t *apdu ;
+    int max_apdu_len ;
     uint32_t count = 0;
     unsigned required_count = 0;
     unsigned optional_count = 0;
@@ -1196,6 +1385,8 @@ int property_list_encode(
     if (required_count >= 3) {
         /* less the 3 always required properties */
         count -= 3;
+    } else {
+        count = 0;
     }
     if ((rpdata == NULL) || (rpdata->application_data == NULL) ||
         (rpdata->application_data_len == 0)) {
@@ -1347,7 +1538,7 @@ void testPropList(
         for (j = 0; j < count; j++) {
             property =
                 property_list_special_property((BACNET_OBJECT_TYPE) i,
-                PROP_ALL, j);
+                                               PROP_ALL, j);
             if (property == PROP_OBJECT_TYPE) {
                 object_type++;
             }
@@ -1385,3 +1576,4 @@ int main(
 }
 #endif /* TEST_PROPLIST */
 #endif /* TEST */
+

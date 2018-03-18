@@ -67,7 +67,7 @@ or      www.github.com/bacnettesting/bacnet-stack
 
     /* functions that are custom per port */
     void bip6_set_interface(
-        char *ifname);
+        const char *ifname);
 
     bool bip6_set_addr(
         BACNET_IP6_ADDRESS *addr);

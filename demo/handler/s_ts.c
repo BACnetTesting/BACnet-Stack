@@ -59,6 +59,7 @@
 
 /** @file s_ts.c  Send TimeSync requests. */
 
+#if BACNET_SVC_TS_A
 /**
  * Sends a TimeSync message to a specific destination
  *
@@ -66,6 +67,7 @@
  * @param bdate - #BACNET_DATE
  * @param btime - #BACNET_TIME
  */
+
 void Send_TimeSync_Remote(
     BACNET_ADDRESS * dest,
     BACNET_DATE * bdate,
@@ -207,3 +209,5 @@ void Send_TimeSync_Device(void)
     Device_getCurrentDateTime(&local_time);
     Send_TimeSync(&local_time.date, &local_time.time);
 }
+
+#endif // #if BACNET_SVC_TS_A

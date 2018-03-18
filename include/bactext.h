@@ -50,7 +50,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "indtext.h"
-
+#include "bacenum.h"
 
 const char *bactext_confirmed_service_name(
     unsigned index);
@@ -83,8 +83,10 @@ const char *bactext_engineering_unit_name(
 bool bactext_engineering_unit_index(
     const char *search_name,
     unsigned *found_index);
+
 const char *bactext_reject_reason_name(
-    unsigned index);
+    BACNET_REJECT_REASON index);
+
 const char *bactext_abort_reason_name(
     unsigned index);
 const char *bactext_error_class_name(

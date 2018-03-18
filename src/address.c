@@ -67,6 +67,16 @@
 /* occurs in BACnet.  A device id is bound to a MAC address. */
 /* The normal method is using Who-Is, and using the data from I-Am */
 
+/* Ed's notes:
+    The address table is unique per device; the path to the peer depends on the devices location on the BACnet network.
+    The address table as constructed cannot be written to by a bacnet client. It contains data (local mac) that is not accessible via the client interface. Ever. Per the spec...
+        (It can, and must be readable, but only the BACnetAddressBinding is visible  i.e. BACnetAddressBinding := deviceId / bacnetAddress   bacnetAddress := net / mac)
+        (Unless of course, who-is-router, or 'router binding' table is added, which, once again, is not visible per the spec.)
+
+    For virtual devices, it can be, and it is, shared between all virtual devices and the application device, since all those that we will ever be interested in are 'external' to 
+    this collection of nodes
+*/
+
 static uint32_t Top_Protected_Entry;
 static uint32_t Own_Device_ID = 0xFFFFFFFF;
 
@@ -93,6 +103,24 @@ static struct Address_Cache_Entry {
 #define BAC_ADDR_SHORT_TIME BAC_ADDR_SECS_1HOUR
 #define BAC_ADDR_FOREVER    0xFFFFFFFF  /* Permanent entry */
 
+#if defined ( _MSC_VER  )
+void print_address_cache(void)
+{
+    char tbuf[100];
+    printf("\nAddress cache:");
+    printf("\n      Inst  APDU  Path                                                 TTL  Flags");
+    for (int i = 0; i < MAX_ADDRESS_CACHE; i++)
+    {
+        printf("\n   %7d  %4u  %21s  %5d  %02x",
+            Address_Cache[i].device_id,
+            Address_Cache[i].max_apdu,
+            "mxxxx", // bactext_bacnet_path ( tbuf, &Address_Cache[i].address.bacnetPath ), 
+            Address_Cache[i].TimeToLive,
+            Address_Cache[i].Flags
+            );
+    }
+}
+#endif
 
 void address_protected_entry_index_set(uint32_t top_protected_entry_index)
 {
@@ -825,15 +853,15 @@ int rr_address_list_encode(
     BACNET_READ_RANGE_DATA * pRequest)
 {
     int iLen = 0;
-    int32_t iTemp = 0;
-    struct Address_Cache_Entry *pMatch = NULL;
+    int32_t iTemp;
+    struct Address_Cache_Entry *pMatch;
     BACNET_OCTET_STRING MAC_Address;
-    uint32_t uiTotal = 0;       /* Number of bound entries in the cache */
-    uint32_t uiIndex = 0;       /* Current entry number */
-    uint32_t uiFirst = 0;       /* Entry number we started encoding from */
+    uint32_t uiTotal;       /* Number of bound entries in the cache */
+    uint32_t uiIndex;       /* Current entry number */
+    uint32_t uiFirst;       /* Entry number we started encoding from */
     uint32_t uiLast = 0;        /* Entry number we finished encoding on */
-    uint32_t uiTarget = 0;      /* Last entry we are required to encode */
-    uint32_t uiRemaining = 0;   /* Amount of unused space in packet */
+    uint32_t uiTarget;      /* Last entry we are required to encode */
+    uint32_t uiRemaining;   /* Amount of unused space in packet */
 
     /* Initialise result flags to all false */
     bitstring_init(&pRequest->ResultFlags);
@@ -970,6 +998,8 @@ int rr_address_list_encode(
  * is never called at all the whole cache is effectivly rendered static and *
  * entries never expire unless explictely deleted.                          *
  ****************************************************************************/
+
+// seems like Karg does not reissue who-is for unbound addresses. Resolve. todo2
 
 void address_cache_timer(
     uint16_t uSeconds)

@@ -73,12 +73,11 @@ typedef bool(
     *write_property_function) (
     BACNET_WRITE_PROPERTY_DATA * wp_data);
 
-
-    /* encode service */
-    int wp_encode_apdu(
-        uint8_t * apdu,
-        uint8_t invoke_id,
-        BACNET_WRITE_PROPERTY_DATA * wp_data);
+/* encode service */
+int wp_encode_apdu(
+    uint8_t * apdu,
+    uint8_t invoke_id,
+    BACNET_WRITE_PROPERTY_DATA * wp_data);
 
 /* decode the service request only */
 int wp_decode_service_request(

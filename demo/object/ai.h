@@ -21,7 +21,21 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*
+
+ -------------------------------------------
+
+    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+
+    July 1, 2017    BITS    Modifications to this file have been made in compliance
+                            to original licensing.
+
+    This file contains changes made by BACnet Interoperability Testing
+    Services, Inc. These changes are subject to the permissions,
+    warranty terms and limitations above.
+    For more information: info@bac-test.com
+    For access to source code:  info@bac-test.com
+            or      www.github.com/bacnettesting/bacnet-stack
+
 *********************************************************************/
 #ifndef AI_H
 #define AI_H
@@ -31,40 +45,56 @@
 #include "bacdef.h"
 #include "rp.h"
 #include "wp.h"
-#if defined(INTRINSIC_REPORTING)
+
+#if (INTRINSIC_REPORTING == 1)
 #include "nc.h"
 #include "getevent.h"
 #include "alarm_ack.h"
 #include "get_alarm_sum.h"
 #endif
 
+#include "BACnetObjectAnalog.h"
 
-typedef struct analog_input_descr {
-    BACNET_EVENT_STATE Event_State;
-    float Present_Value;
-    BACNET_RELIABILITY Reliability;
-    bool Out_Of_Service;
-    uint8_t Units;
+class AnalogInputObject : public BACnetAnalogObject
+{
+public:
+
+    void Init(void);
+
+    // Constructor with initialization list, being the preferred method
+    AnalogInputObject(uint32_t instance, BACNET_ENGINEERING_UNITS units, std::string &name, std::string &description) :
+        BACnetAnalogObject(instance, name, description)
+    {
+        Init();
+        this->Units = units;
+    }
+
+#if ( BACNET_SVC_COV_AI_B == 1 )
     float Prior_Value;
     float COV_Increment;
     bool Changed;
-#if defined(INTRINSIC_REPORTING)
-    uint32_t Time_Delay;
-    uint32_t Notification_Class;
-    float High_Limit;
-    float Low_Limit;
-    float Deadband;
-    unsigned Limit_Enable : 2;
-    unsigned Event_Enable : 3;
-    BACNET_NOTIFY_TYPE Notify_Type;
-    ACKED_INFO Acked_Transitions[MAX_BACNET_EVENT_TRANSITION];
-    BACNET_DATE_TIME Event_Time_Stamps[MAX_BACNET_EVENT_TRANSITION];
-    /* time to generate event notification */
-    uint32_t Remaining_Time_Delay;
-    /* AckNotification informations */
-    ACK_NOTIFICATION Ack_notify_data;
-#endif
-} ANALOG_INPUT_DESCR;
+#endif // BACNET_SVC_COV
+
+    // all the items below are in base class
+    //#if (INTRINSIC_REPORTING == 1)
+    //    uint32_t Time_Delay;
+    //    uint32_t Notification_Class;
+    //    float High_Limit;
+    //    float Low_Limit;
+    //    float Deadband;
+    //    unsigned Limit_Enable:2;
+    //    unsigned Event_Enable:3;
+    //    BACNET_NOTIFY_TYPE Notify_Type ;
+    //    ACKED_INFO Acked_Transitions[MAX_BACNET_EVENT_TRANSITION];
+    //    BACNET_DATE_TIME Event_Time_Stamps[MAX_BACNET_EVENT_TRANSITION];
+    //    /* time to generate event notification */
+    //    uint32_t Remaining_Time_Delay;
+    //    /* AckNotification informations */
+    //    ACK_NOTIFICATION Ack_notify_data;
+    //#endif // INTRINSIC_REPORTING
+
+};
+
 
 void Analog_Input_Property_Lists(
     const BACNET_PROPERTY_ID **pRequired,
@@ -76,22 +106,27 @@ bool Analog_Input_Valid_Instance(
 
 unsigned Analog_Input_Count(
     void);
+
 uint32_t Analog_Input_Index_To_Instance(
     unsigned index);
+
 unsigned Analog_Input_Instance_To_Index(
     uint32_t instance);
+
 bool Analog_Input_Object_Instance_Add(
     uint32_t instance);
 
 bool Analog_Input_Object_Name(
     uint32_t object_instance,
     BACNET_CHARACTER_STRING * object_name);
+
 bool Analog_Input_Name_Set(
     uint32_t object_instance,
     char *new_name);
 
 char *Analog_Input_Description(
     uint32_t instance);
+
 bool Analog_Input_Description_Set(
     uint32_t instance,
     char *new_name);
@@ -99,38 +134,50 @@ bool Analog_Input_Description_Set(
 bool Analog_Input_Units_Set(
     uint32_t instance,
     uint16_t units);
+
 uint16_t Analog_Input_Units(
     uint32_t instance);
 
 int Analog_Input_Read_Property(
     BACNET_READ_PROPERTY_DATA * rpdata);
+
 bool Analog_Input_Write_Property(
     BACNET_WRITE_PROPERTY_DATA * wp_data);
 
 float Analog_Input_Present_Value(
-    uint32_t object_instance);
+    AnalogInputObject *currentObject);
+
 void Analog_Input_Present_Value_Set(
-    uint32_t object_instance,
+    AnalogInputObject *currentObject,
     float value);
 
-bool Analog_Input_Out_Of_Service(
-    uint32_t object_instance);
-void Analog_Input_Out_Of_Service_Set(
-    uint32_t object_instance,
-    bool oos_flag);
+// EKH: 2016.08.07 Obsoleted
+//bool Analog_Input_Out_Of_Service(
+//    DEVICE_OBJECT_DATA *pDev,
+//    uint32_t object_instance);
 
+void Analog_Input_Out_Of_Service_Set(
+    const uint32_t object_instance,
+    const bool oos_flag);
+
+#if ( BACNET_SVC_COV == 1 )
 bool Analog_Input_Change_Of_Value(
     uint32_t instance);
+
 void Analog_Input_Change_Of_Value_Clear(
     uint32_t instance);
+
 bool Analog_Input_Encode_Value_List(
     uint32_t object_instance,
     BACNET_PROPERTY_VALUE * value_list);
+
 float Analog_Input_COV_Increment(
     uint32_t instance);
+
 void Analog_Input_COV_Increment_Set(
     uint32_t instance,
     float value);
+#endif
 
 /* note: header of Intrinsic_Reporting function is required
    even when INTRINSIC_REPORTING is not defined */
@@ -152,11 +199,23 @@ int Analog_Input_Alarm_Summary(
 #endif
 
 bool Analog_Input_Create(
-    uint32_t object_instance);
+    const uint32_t instanceBase,
+    const std::string& nameRoot,
+    const BACNET_ENGINEERING_UNITS units,
+    const double initialValue );
+    
+void Analog_Input_Update(
+	const uint32_t instance,
+	const double value );
+
+double Analog_Input_Present_Value_from_Instance ( const uint32_t instance ) ;
+
 bool Analog_Input_Delete(
     uint32_t object_instance);
+
 void Analog_Input_Cleanup(
     void);
+
 void Analog_Input_Init(
     void);
 
@@ -166,4 +225,4 @@ void testAnalogInput(
     Test * pTest);
 #endif
 
-#endif
+#endif /* AI_H */

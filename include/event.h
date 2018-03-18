@@ -33,8 +33,8 @@
     For access to source code:  info@bac-test.com
             or      www.github.com/bacnettesting/bacnet-stack
 
-####COPYRIGHTEND####
 *********************************************************************/
+
 #ifndef BACNET_EVENT_H_
 #define BACNET_EVENT_H_
 
@@ -133,9 +133,12 @@ typedef struct BACnet_Event_Notification_Data {
         } changeOfLifeSafety;
         /*
          ** EVENT_EXTENDED
-         **
-         ** Not Supported!
          */
+        struct {
+            uint16_t                        vendorId;
+            unsigned                        extendedEventType;      // Vendor choice
+            BACNET_APPLICATION_DATA_VALUE   value;
+        } extended;
         /*
          ** EVENT_BUFFER_READY
          */
@@ -156,53 +159,52 @@ typedef struct BACnet_Event_Notification_Data {
 } BACNET_EVENT_NOTIFICATION_DATA;
 
 
-
 /***************************************************
 **
 ** Creates a Confirmed Event Notification APDU
 **
 ****************************************************/
-    int cevent_notify_encode_apdu(
-        uint8_t * apdu,
-        uint8_t invoke_id,
-        BACNET_EVENT_NOTIFICATION_DATA * data);
+int cevent_notify_encode_apdu(
+    uint8_t * apdu,
+    uint8_t invoke_id,
+    BACNET_EVENT_NOTIFICATION_DATA * data);
 
 /***************************************************
 **
 ** Creates an Unconfirmed Event Notification APDU
 **
 ****************************************************/
-    int uevent_notify_encode_apdu(
-        uint8_t * apdu,
-        BACNET_EVENT_NOTIFICATION_DATA * data);
+int uevent_notify_encode_apdu(
+    uint8_t * apdu,
+    BACNET_EVENT_NOTIFICATION_DATA * data);
 
 /***************************************************
 **
 ** Encodes the service data part of Event Notification
 **
 ****************************************************/
-    int event_notify_encode_service_request(
-        uint8_t * apdu,
-        BACNET_EVENT_NOTIFICATION_DATA * data);
+int event_notify_encode_service_request(
+    uint8_t * apdu,
+    BACNET_EVENT_NOTIFICATION_DATA * data);
 
 /***************************************************
 **
 ** Decodes the service data part of Event Notification
 **
 ****************************************************/
-    int event_notify_decode_service_request(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        BACNET_EVENT_NOTIFICATION_DATA * data);
+int event_notify_decode_service_request(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    BACNET_EVENT_NOTIFICATION_DATA * data);
 
 /***************************************************
 **
 ** Sends an Unconfirmed Event Notifcation to a dest
 **
 ****************************************************/
-    int uevent_notify_send(
-        uint8_t * buffer,
-        BACNET_EVENT_NOTIFICATION_DATA * data,
+int uevent_notify_send(
+    uint8_t * buffer,
+    BACNET_EVENT_NOTIFICATION_DATA * data,
         BACNET_ADDRESS * dest);
 
 
@@ -210,7 +212,7 @@ typedef struct BACnet_Event_Notification_Data {
  * These BIBBs prescribe the BACnet capabilities required to interoperably
  * perform the alarm and event management functions enumerated in 22.2.1.2
  * for the BACnet devices defined therein.
-          *//** @defgroup EVNOTFCN Alarm and Event-Notification (AE-N)
+ *//** @defgroup EVNOTFCN Alarm and Event-Notification (AE-N)
  * @ingroup ALMEVNT
  * 13.6 ConfirmedCOVNotification Service <br>
  * The ConfirmedCOVNotification service is used to notify subscribers about
@@ -227,7 +229,7 @@ typedef struct BACnet_Event_Notification_Data {
  * For unsubscribed notifications, the algorithm for determining when to issue
  * this service is a local matter and may be based on a change of value,
  * periodic updating, or some other criteria.
-          *//** @defgroup ALMACK  Alarm and Event-ACK (AE-ACK)
+ *//** @defgroup ALMACK  Alarm and Event-ACK (AE-ACK)
  * @ingroup ALMEVNT
  * 13.5 AcknowledgeAlarm Service <br>
  * In some systems a device may need to know that an operator has seen the alarm

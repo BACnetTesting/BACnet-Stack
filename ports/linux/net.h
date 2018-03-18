@@ -106,5 +106,7 @@
 extern int bip_get_local_netmask(
     struct in_addr *netmask);
 
+#define closesocket(a)	close(a)
 
+typedef struct sockaddr_in SOCKADDR_IN ;
 #endif

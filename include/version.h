@@ -33,24 +33,11 @@
     For access to source code:  info@bac-test.com
             or      www.github.com/bacnettesting/bacnet-stack
 
-####COPYRIGHTEND####
 *********************************************************************/
+
 #ifndef VERSION_H
 #define VERSION_H
 
-/* This BACnet protocol stack version 0.0.0 - FF.FF.FF */
-#ifndef BACNET_VERSION
-#define BACNET_VERSION(x,y,z) (((x)<<16)+((y)<<8)+(z))
-#endif
-
-#define BACNET_VERSION_TEXT "0.9.1"
-#define BACNET_VERSION_CODE BACNET_VERSION(0,9,1)
-#define BACNET_VERSION_MAJOR ((BACNET_VERSION_CODE>>16)&0xFF)
-#define BACNET_VERSION_MINOR ((BACNET_VERSION_CODE>>8)&0xFF)
-#define BACNET_VERSION_MAINTENANCE (BACNET_VERSION_CODE&0xFF)
-
-
-// extern char *BACnet_Version;
-
+#define BACNET_VERSION_TEXT "0.3"
 
 #endif

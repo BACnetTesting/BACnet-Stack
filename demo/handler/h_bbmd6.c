@@ -310,7 +310,7 @@ int bip6_send_pdu(
         vmac_src = Device_Object_Instance_Number();
         mtu_len = bvlc6_encode_original_broadcast(
             mtu, sizeof(mtu), vmac_src, pdu, pdu_len);
-        debug_printf("BVLC6: Sent Original-Broadcast-NPDU.\n");
+        // debug_printf("BVLC6: Sent Original-Broadcast-NPDU.\n");
     } else if (dest->mac_len == 3) {
         /* valid unicast */
         bbmd6_address_from_bacnet_address(&bvlc_dest, &vmac_dst, dest);
@@ -710,7 +710,7 @@ static int handler_bbmd6_for_non_bbmd(
             case BVLC6_ORIGINAL_UNICAST_NPDU:
                 /* This message is used to send directed NPDUs to
                    another B/IPv6 node or router. */
-                debug_printf("BIP6: Received Original-Unicast-NPDU.\n");
+                // debug_printf("BIP6: Received Original-Unicast-NPDU.\n");
                 if (bbmd6_address_match_self(addr)) {
                     /* ignore messages from my IPv6 address */
                     offset = 0;

@@ -35,6 +35,9 @@
 
 #include "bacdef.h"
 #include "config.h"
+
+#if ( BACNET_SVC_COV_B == 1 )
+
 #include "bactext.h"
 #include "bacerror.h"
 #include "iam.h"
@@ -116,6 +119,7 @@ void MyRejectHandler(
     }
 }
 
+#if ( BACNET_SVC_COV_B == 1 )
 void My_Unconfirmed_COV_Notification_Handler(
     uint8_t * service_request,
     uint16_t service_len,
@@ -132,6 +136,7 @@ void My_Confirmed_COV_Notification_Handler(
 {
     handler_ccov_notification(service_request, service_len, src, service_data);
 }
+#endif
 
 void MyWritePropertySimpleAckHandler(
     BACNET_ADDRESS * src,
@@ -160,11 +165,15 @@ static void Init_Service_Handlers(
     /* we must implement read property - it's required! */
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_READ_PROPERTY,
         handler_read_property);
+
+#if ( BACNET_SVC_COV_B == 1 )
     /* handle the data coming back from COV subscriptions */
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_COV_NOTIFICATION,
         My_Confirmed_COV_Notification_Handler);
     apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_COV_NOTIFICATION,
         My_Unconfirmed_COV_Notification_Handler);
+#endif
+
     /* handle the Simple ack coming back from SubscribeCOV */
     apdu_set_confirmed_simple_ack_handler(SERVICE_CONFIRMED_SUBSCRIBE_COV,
         MyWritePropertySimpleAckHandler);
@@ -187,11 +196,14 @@ void cleanup(
         free(cov_data_old);
     }
 }
+#endif
+
 
 int main(
     int argc,
     char *argv[])
 {
+#if ( BACNET_SVC_COV_B == 1 )
     BACNET_ADDRESS src = {
         0
     };  /* address where message came from */
@@ -420,5 +432,8 @@ int main(
     }
     if (Error_Detected)
         return 1;
+
+#endif // ( BACNET_SVC_COV_B == 1 )
     return 0;
 }
+
