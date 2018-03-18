@@ -267,12 +267,9 @@
     <ClInclude Include="..\..\object\trendlog.h" />
   </ItemGroup>
   <ItemGroup>
-<<<<<<< HEAD
     <ProjectReference Include="..\..\..\lib\MSVC\BACnet Stack Library.vcxproj">
       <Project>{64adfc62-de51-4bc8-8d3e-b45e919003db}</Project>
     </ProjectReference>
-=======
->>>>>>> 12b6295eba67459ca60dbdacab640be4a70b9277
     <ProjectReference Include="..\..\..\lib\MSVC\_lib.vcxproj">
       <Project>{64adfc62-de51-4bc8-8d3e-b45e919003db}</Project>
     </ProjectReference>

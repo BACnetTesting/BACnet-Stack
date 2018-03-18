@@ -1,14 +1,7 @@
-<<<<<<< HEAD
 *.idb
 *.tlog
 *.db
 *.opendb
-=======
-*.idb 
-*.tlog 
-*.db 
-*.opendb 
->>>>>>> 12b6295eba67459ca60dbdacab640be4a70b9277
 *.o
 *.obj
 *.pdb
