@@ -91,7 +91,7 @@ bool ethernet_init(
 int ethernet_send(
     BACNET_ADDRESS * dest,      /* destination address */
     BACNET_ADDRESS * src,       /* source address */
-    BACNET_NPCI_DATA * npci_data,       /* network information */
+    BACNET_NPDU_DATA * npdu_data,       /* network information */
     uint8_t * pdu,      /* any data to be sent - may be null */
     unsigned pdu_len)
 {       /* number of bytes of data */
@@ -100,7 +100,7 @@ int ethernet_send(
     int mtu_len = 0;
     int i = 0;
 
-    (void) npci_data;
+    (void) npdu_data;
     /* don't waste time if the socket is not valid */
     if (Ethernet_Socket < 0) {
         fprintf(stderr, "ethernet: 802.2 socket is invalid!\n");
@@ -161,7 +161,7 @@ int ethernet_send(
 /* returns bytes sent on success, negative number on failure */
 int ethernet_send_pdu(
     BACNET_ADDRESS * dest,      /* destination address */
-    BACNET_NPCI_DATA * npci_data,       /* network information */
+    BACNET_NPDU_DATA * npdu_data,       /* network information */
     uint8_t * pdu,      /* any data to be sent - may be null */
     unsigned pdu_len)
 {       /* number of bytes of data */
@@ -173,12 +173,12 @@ int ethernet_send_pdu(
         src.mac_len++;
     }
 
-    /* FIXME: npci_data? */
+    /* FIXME: npdu_data? */
     /* function to send a packet out the 802.2 socket */
     /* returns 1 on success, 0 on failure */
     return ethernet_send(dest,  /* destination address */
         &src,   /* source address */
-        npci_data, pdu, /* any data to be sent - may be null */
+        npdu_data, pdu, /* any data to be sent - may be null */
         pdu_len);       /* number of bytes of data */
 }
 

@@ -45,7 +45,7 @@
  *  this handler doesn't do much besides stepping over the NPDU header
  *  and passing the remaining bytes to the apdu_handler.
  *  @note The routing (except src) and NCPI information, including
- *  npci_data->data_expecting_reply, are discarded.
+ *  npdu_data->data_expecting_reply, are discarded.
  * @see routing_npdu_handler
  *
  * @ingroup MISCHNDLR
@@ -70,12 +70,12 @@ void npdu_handler(
 {       /* length PDU  */
     int apdu_offset = 0;
     BACNET_ADDRESS dest = { 0 };
-    BACNET_NPCI_DATA npci_data = { 0 };
+    BACNET_NPDU_DATA npdu_data = { 0 };
 
     /* only handle the version that we know how to handle */
     if (pdu[0] == BACNET_PROTOCOL_VERSION) {
-        apdu_offset = npdu_decode(&pdu[0], &dest, src, &npci_data);
-        if (npci_data.network_layer_message) {
+        apdu_offset = npdu_decode(&pdu[0], &dest, src, &npdu_data);
+        if (npdu_data.network_layer_message) {
             /*FIXME: network layer message received!  Handle it! */
 #if PRINT_ENABLED
             fprintf(stderr, "NPDU: Network Layer Message discarded!\n");

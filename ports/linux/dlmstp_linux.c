@@ -123,10 +123,9 @@ void dlmstp_cleanup(
     close(poSharedData->RS485_Handle);
 
     pthread_cond_destroy(&poSharedData->Received_Frame_Flag);
-    pthread_cond_destroy(&poSharedData->Receive_Packet_Flag);
+    sem_destroy(&poSharedData->Receive_Packet_Flag);
     pthread_cond_destroy(&poSharedData->Master_Done_Flag);
     pthread_mutex_destroy(&poSharedData->Received_Frame_Mutex);
-    pthread_mutex_destroy(&poSharedData->Receive_Packet_Mutex);
     pthread_mutex_destroy(&poSharedData->Master_Done_Mutex);
 }
 
@@ -192,8 +191,7 @@ uint16_t dlmstp_receive(
     /* see if there is a packet available, and a place
        to put the reply (if necessary) and process it */
     get_abstime(&abstime, timeout);
-    rv = pthread_cond_timedwait(&poSharedData->Receive_Packet_Flag,
-        &poSharedData->Receive_Packet_Mutex, &abstime);
+    rv = sem_timedwait(&poSharedData->Receive_Packet_Flag, &abstime);
     if (rv == 0) {
         if (poSharedData->Receive_Packet.ready) {
             if (poSharedData->Receive_Packet.pdu_len) {
@@ -358,7 +356,7 @@ uint16_t MSTP_Put_Receive(
             mstp_port->SourceAddress);
         poSharedData->Receive_Packet.pdu_len = mstp_port->DataLength;
         poSharedData->Receive_Packet.ready = true;
-        pthread_cond_signal(&poSharedData->Receive_Packet_Flag);
+        sem_post(&poSharedData->Receive_Packet_Flag);
     }
 
     return pdu_len;
@@ -411,7 +409,7 @@ bool dlmstp_compare_data_expecting_reply(
        src, dest, along with the APDU type, invoke id.
        Seems a bit overkill */
     struct DER_compare_t {
-        BACNET_NPCI_DATA npci_data;
+        BACNET_NPDU_DATA npdu_data;
         BACNET_ADDRESS address;
         uint8_t pdu_type;
         uint8_t invoke_id;
@@ -428,8 +426,8 @@ bool dlmstp_compare_data_expecting_reply(
     request.address.mac_len = 1;
     offset =
         npdu_decode(&request_pdu[0], NULL, &request.address,
-        &request.npci_data);
-    if (request.npci_data.network_layer_message) {
+        &request.npdu_data);
+    if (request.npdu_data.network_layer_message) {
 #if PRINT_ENABLED
         fprintf(stderr,
             "DLMSTP: DER Compare failed: " "Request is Network message.\n");
@@ -455,8 +453,8 @@ bool dlmstp_compare_data_expecting_reply(
     reply.address.mac[0] = dest_address;
     reply.address.mac_len = 1;
     offset =
-        npdu_decode(&reply_pdu[0], &reply.address, NULL, &reply.npci_data);
-    if (reply.npci_data.network_layer_message) {
+        npdu_decode(&reply_pdu[0], &reply.address, NULL, &reply.npdu_data);
+    if (reply.npdu_data.network_layer_message) {
 #if PRINT_ENABLED
         fprintf(stderr,
             "DLMSTP: DER Compare failed: " "Reply is Network message.\n");
@@ -526,7 +524,7 @@ bool dlmstp_compare_data_expecting_reply(
             return false;
         }
     }
-    if (request.npci_data.protocol_version != reply.npci_data.protocol_version) {
+    if (request.npdu_data.protocol_version != reply.npdu_data.protocol_version) {
 #if PRINT_ENABLED
         fprintf(stderr,
             "DLMSTP: DER Compare failed: "
@@ -537,7 +535,7 @@ bool dlmstp_compare_data_expecting_reply(
 #if 0
     /* the NDPU priority doesn't get passed through the stack, and
        all outgoing messages have NORMAL priority */
-    if (request.npci_data.priority != reply.npci_data.priority) {
+    if (request.npdu_data.priority != reply.npdu_data.priority) {
 #if PRINT_ENABLED
         fprintf(stderr,
             "DLMSTP: DER Compare failed: " "NPDU Priority mismatch.\n");
@@ -581,7 +579,21 @@ uint16_t MSTP_Get_Reply(
         mstp_port->DataLength, mstp_port->SourceAddress,
         (uint8_t *) & pkt->buffer[0], pkt->length, pkt->destination_mac);
     if (!matched) {
-        return 0;
+        /* Walk the rest of the ring buffer to see if we can find a match */
+        while (!matched &&
+               (pkt = (struct mstp_pdu_packet *)Ringbuf_Peek_Next(&poSharedData->PDU_Queue, (uint8_t *)pkt)) != NULL) {
+            matched =
+                dlmstp_compare_data_expecting_reply(&mstp_port->InputBuffer[0],
+                                                    mstp_port->DataLength,
+                                                    mstp_port->SourceAddress,
+                                                    (uint8_t *) & pkt->buffer[0],
+                                                    pkt->length,
+                                                    pkt->destination_mac);
+        }
+        if (!matched) {
+            /* Still didn't find a match so just bail out */
+            return 0;
+        }
     }
     if (pkt->data_expecting_reply) {
         frame_type = FRAME_TYPE_BACNET_DATA_EXPECTING_REPLY;
@@ -592,7 +604,8 @@ uint16_t MSTP_Get_Reply(
     pdu_len = MSTP_Create_Frame(&mstp_port->OutputBuffer[0],    /* <-- loading this */
         mstp_port->OutputBufferSize, frame_type, pkt->destination_mac,
         mstp_port->This_Station, (uint8_t *) & pkt->buffer[0], pkt->length);
-    (void) Ringbuf_Pop(&poSharedData->PDU_Queue, NULL);
+    /* This will pop the element no matter where we found it */
+    (void) Ringbuf_Pop_Element(&poSharedData->PDU_Queue, (uint8_t *)pkt, NULL);
 
     return pdu_len;
 }
@@ -895,17 +908,11 @@ bool dlmstp_init(
     /* initialize packet queue */
     poSharedData->Receive_Packet.ready = false;
     poSharedData->Receive_Packet.pdu_len = 0;
-    rv = pthread_cond_init(&poSharedData->Receive_Packet_Flag, NULL);
+    rv = sem_init(&poSharedData->Receive_Packet_Flag, 0, 0);
     if (rv != 0) {
         fprintf(stderr,
             "MS/TP Interface: %s\n cannot allocate PThread Condition.\n",
             ifname);
-        exit(1);
-    }
-    rv = pthread_mutex_init(&poSharedData->Receive_Packet_Mutex, NULL);
-    if (rv != 0) {
-        fprintf(stderr,
-            "MS/TP Interface: %s\n cannot allocate PThread Mutex.\n", ifname);
         exit(1);
     }
 

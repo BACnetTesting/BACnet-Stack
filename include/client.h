@@ -57,7 +57,7 @@ extern "C" {
     int iam_encode_pdu(
         uint8_t * buffer,
         BACNET_ADDRESS * dest,
-        BACNET_NPCI_DATA * npci_data);
+        BACNET_NPDU_DATA * npdu_data);
     void Send_I_Am_Unicast(
         uint8_t * buffer,
         BACNET_ADDRESS * src);
@@ -65,7 +65,7 @@ extern "C" {
         uint8_t * buffer,
         BACNET_ADDRESS * src,
         BACNET_ADDRESS * dest,
-        BACNET_NPCI_DATA * npci_data);
+        BACNET_NPDU_DATA * npdu_data);
 
     void Send_WhoIs(
         int32_t low_limit,
@@ -114,7 +114,7 @@ extern "C" {
         uint8_t * buffer,
         unsigned buffer_len,
         BACNET_ADDRESS * dest,
-        BACNET_NPCI_DATA * npci_data,
+        BACNET_NPDU_DATA * npdu_data,
         BACNET_COV_DATA * cov_data);
     uint8_t Send_COV_Subscribe(
         uint32_t device_id,
@@ -276,7 +276,7 @@ extern "C" {
         uint8_t * buffer,
         BACNET_ADDRESS * dest,
         BACNET_ADDRESS * src,
-        BACNET_NPCI_DATA * npci_data,
+        BACNET_NPDU_DATA * npdu_data,
         uint8_t invoke_id,
         BACNET_ABORT_REASON reason,
         bool server);
@@ -293,7 +293,7 @@ extern "C" {
         uint8_t * buffer,
         BACNET_ADDRESS * dest,
         BACNET_ADDRESS * src,
-        BACNET_NPCI_DATA * npci_data,
+        BACNET_NPDU_DATA * npdu_data,
         uint8_t invoke_id,
         BACNET_CONFIRMED_SERVICE service,
         BACNET_ERROR_CLASS error_class,

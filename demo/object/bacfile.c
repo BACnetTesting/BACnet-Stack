@@ -402,7 +402,7 @@ uint32_t bacfile_instance(
 uint32_t bacfile_instance_from_tsm(
     uint8_t invokeID)
 {
-    BACNET_NPCI_DATA npci_data = { 0 }; /* dummy for getting npdu length */
+    BACNET_NPDU_DATA npdu_data = { 0 }; /* dummy for getting npdu length */
     BACNET_CONFIRMED_SERVICE_DATA service_data = { 0 };
     uint8_t service_choice = 0;
     uint8_t *service_request = NULL;
@@ -416,10 +416,10 @@ uint32_t bacfile_instance_from_tsm(
     bool found = false;
 
     found =
-        tsm_get_transaction_pdu(invokeID, &dest, &npci_data, &apdu[0],
+        tsm_get_transaction_pdu(invokeID, &dest, &npdu_data, &apdu[0],
         &apdu_len);
     if (found) {
-        if (!npci_data.network_layer_message && npci_data.data_expecting_reply
+        if (!npdu_data.network_layer_message && npdu_data.data_expecting_reply
             && (apdu[0] == PDU_TYPE_CONFIRMED_SERVICE_REQUEST)) {
             len =
                 apdu_decode_confirmed_service_request(&apdu[0], apdu_len,

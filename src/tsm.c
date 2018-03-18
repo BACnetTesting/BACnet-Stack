@@ -198,7 +198,7 @@ uint8_t tsm_next_free_invokeID(
 void tsm_set_confirmed_unsegmented_transaction(
     uint8_t invokeID,
     BACNET_ADDRESS * dest,
-    BACNET_NPCI_DATA * ndpu_data,
+    BACNET_NPDU_DATA * ndpu_data,
     uint8_t * apdu,
     uint16_t apdu_len)
 {
@@ -218,7 +218,7 @@ void tsm_set_confirmed_unsegmented_transaction(
                 TSM_List[index].apdu[j] = apdu[j];
             }
             TSM_List[index].apdu_len = apdu_len;
-            npdu_copy_data(&TSM_List[index].npci_data, ndpu_data);
+            npdu_copy_data(&TSM_List[index].npdu_data, ndpu_data);
             bacnet_address_copy(&TSM_List[index].dest, dest);
         }
     }
@@ -231,7 +231,7 @@ void tsm_set_confirmed_unsegmented_transaction(
 bool tsm_get_transaction_pdu(
     uint8_t invokeID,
     BACNET_ADDRESS * dest,
-    BACNET_NPCI_DATA * ndpu_data,
+    BACNET_NPDU_DATA * ndpu_data,
     uint8_t * apdu,
     uint16_t * apdu_len)
 {
@@ -250,7 +250,7 @@ bool tsm_get_transaction_pdu(
             for (j = 0; j < *apdu_len; j++) {
                 apdu[j] = TSM_List[index].apdu[j];
             }
-            npdu_copy_data(ndpu_data, &TSM_List[index].npci_data);
+            npdu_copy_data(ndpu_data, &TSM_List[index].npdu_data);
             bacnet_address_copy(dest, &TSM_List[index].dest);
             found = true;
         }
@@ -277,7 +277,7 @@ void tsm_timer_milliseconds(
                     TSM_List[i].RequestTimer = apdu_timeout();
                     TSM_List[i].RetryCount++;
                     datalink_send_pdu(&TSM_List[i].dest,
-                        &TSM_List[i].npci_data, &TSM_List[i].apdu[0],
+                        &TSM_List[i].npdu_data, &TSM_List[i].apdu[0],
                         TSM_List[i].apdu_len);
                 } else {
                     /* note: the invoke id has not been cleared yet
@@ -360,12 +360,12 @@ bool I_Am_Request = true;
 /* dummy function stubs */
 int datalink_send_pdu(
     BACNET_ADDRESS * dest,
-    BACNET_NPCI_DATA * npci_data,
+    BACNET_NPDU_DATA * npdu_data,
     uint8_t * pdu,
     unsigned pdu_len)
 {
     (void) dest;
-    (void) npci_data;
+    (void) npdu_data;
     (void) pdu;
     (void) pdu_len;
 

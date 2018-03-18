@@ -1,0 +1,281 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{E76EF9AC-3A0A-4BB0-A1E9-606195A3DE96}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>server</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\..\ports\win32\Microsoft Visual Studio\BACnet Solution Settings.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\..\ports\win32\Microsoft Visual Studio\BACnet Solution Settings.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\..\ports\win32\Microsoft Visual Studio\BACnet Solution Settings.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\..\ports\win32\Microsoft Visual Studio\BACnet Solution Settings.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>..\..\..\demo\object;..\..\..\demo\handlers;..\..\..\ports\win32;..\..\..\include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>..\..\..\demo\object;..\..\..\demo\handlers;..\..\..\ports\win32;..\..\..\include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>..\..\..\demo\object;..\..\..\demo\handlers;..\..\..\ports\win32;..\..\..\include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>..\..\..\demo\object;..\..\..\demo\handlers;..\..\..\ports\win32;..\..\..\include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>BACNET_PROPERTY_LISTS=1;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>BACNET_PROPERTY_LISTS=1;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>BACNET_PROPERTY_LISTS=1;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>BACNET_PROPERTY_LISTS=1;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\include\abort.h" />
+    <ClInclude Include="..\..\..\include\access_rule.h" />
+    <ClInclude Include="..\..\..\include\address.h" />
+    <ClInclude Include="..\..\..\include\alarm_ack.h" />
+    <ClInclude Include="..\..\..\include\apdu.h" />
+    <ClInclude Include="..\..\..\include\arcnet.h" />
+    <ClInclude Include="..\..\..\include\arf.h" />
+    <ClInclude Include="..\..\..\include\assigned_access_rights.h" />
+    <ClInclude Include="..\..\..\include\authentication_factor.h" />
+    <ClInclude Include="..\..\..\include\authentication_factor_format.h" />
+    <ClInclude Include="..\..\..\include\awf.h" />
+    <ClInclude Include="..\..\..\include\bacaddr.h" />
+    <ClInclude Include="..\..\..\include\bacapp.h" />
+    <ClInclude Include="..\..\..\include\bacdcode.h" />
+    <ClInclude Include="..\..\..\include\bacdef.h" />
+    <ClInclude Include="..\..\..\include\bacdevobjpropref.h" />
+    <ClInclude Include="..\..\..\include\bacenum.h" />
+    <ClInclude Include="..\..\..\include\bacerror.h" />
+    <ClInclude Include="..\..\..\include\bacint.h" />
+    <ClInclude Include="..\..\..\include\bacnet.h" />
+    <ClInclude Include="..\..\..\include\bacprop.h" />
+    <ClInclude Include="..\..\..\include\bacpropstates.h" />
+    <ClInclude Include="..\..\..\include\bacreal.h" />
+    <ClInclude Include="..\..\..\include\bacsec.h" />
+    <ClInclude Include="..\..\..\include\bacstr.h" />
+    <ClInclude Include="..\..\..\include\bactext.h" />
+    <ClInclude Include="..\..\..\include\bactimevalue.h" />
+    <ClInclude Include="..\..\..\include\bbmd.h" />
+    <ClInclude Include="..\..\..\include\bigend.h" />
+    <ClInclude Include="..\..\..\include\bip.h" />
+    <ClInclude Include="..\..\..\include\bip6.h" />
+    <ClInclude Include="..\..\..\include\bits.h" />
+    <ClInclude Include="..\..\..\include\bvlc.h" />
+    <ClInclude Include="..\..\..\include\bvlc6.h" />
+    <ClInclude Include="..\..\..\include\bytes.h" />
+    <ClInclude Include="..\..\..\include\client.h" />
+    <ClInclude Include="..\..\..\include\config.h" />
+    <ClInclude Include="..\..\..\include\cov.h" />
+    <ClInclude Include="..\..\..\include\crc.h" />
+    <ClInclude Include="..\..\..\include\credential_authentication_factor.h" />
+    <ClInclude Include="..\..\..\include\datalink.h" />
+    <ClInclude Include="..\..\..\include\datetime.h" />
+    <ClInclude Include="..\..\..\include\dcc.h" />
+    <ClInclude Include="..\..\..\include\debug.h" />
+    <ClInclude Include="..\..\..\include\dlenv.h" />
+    <ClInclude Include="..\..\..\include\dlmstp.h" />
+    <ClInclude Include="..\..\..\include\ethernet.h" />
+    <ClInclude Include="..\..\..\include\event.h" />
+    <ClInclude Include="..\..\..\include\fifo.h" />
+    <ClInclude Include="..\..\..\include\filename.h" />
+    <ClInclude Include="..\..\..\include\getevent.h" />
+    <ClInclude Include="..\..\..\include\get_alarm_sum.h" />
+    <ClInclude Include="..\..\..\include\handlers.h" />
+    <ClInclude Include="..\..\..\include\iam.h" />
+    <ClInclude Include="..\..\..\include\ihave.h" />
+    <ClInclude Include="..\..\..\include\indtext.h" />
+    <ClInclude Include="..\..\..\include\key.h" />
+    <ClInclude Include="..\..\..\include\keylist.h" />
+    <ClInclude Include="..\..\..\include\lighting.h" />
+    <ClInclude Include="..\..\..\include\listmanip.h" />
+    <ClInclude Include="..\..\..\include\lso.h" />
+    <ClInclude Include="..\..\..\include\memcopy.h" />
+    <ClInclude Include="..\..\..\include\mstp.h" />
+    <ClInclude Include="..\..\..\include\mstpdef.h" />
+    <ClInclude Include="..\..\..\include\mstptext.h" />
+    <ClInclude Include="..\..\..\include\mydata.h" />
+    <ClInclude Include="..\..\..\include\ngwdevice.h" />
+    <ClInclude Include="..\..\..\include\npdu.h" />
+    <ClInclude Include="..\..\..\include\objects.h" />
+    <ClInclude Include="..\..\..\include\proplist.h" />
+    <ClInclude Include="..\..\..\include\ptransfer.h" />
+    <ClInclude Include="..\..\..\include\rd.h" />
+    <ClInclude Include="..\..\..\include\readrange.h" />
+    <ClInclude Include="..\..\..\include\reject.h" />
+    <ClInclude Include="..\..\..\include\ringbuf.h" />
+    <ClInclude Include="..\..\..\include\rp.h" />
+    <ClInclude Include="..\..\..\include\rpm.h" />
+    <ClInclude Include="..\..\..\include\sbuf.h" />
+    <ClInclude Include="..\..\..\include\timestamp.h" />
+    <ClInclude Include="..\..\..\include\timesync.h" />
+    <ClInclude Include="..\..\..\include\tsm.h" />
+    <ClInclude Include="..\..\..\include\txbuf.h" />
+    <ClInclude Include="..\..\..\include\ucix.h" />
+    <ClInclude Include="..\..\..\include\version.h" />
+    <ClInclude Include="..\..\..\include\vmac.h" />
+    <ClInclude Include="..\..\..\include\whohas.h" />
+    <ClInclude Include="..\..\..\include\whois.h" />
+    <ClInclude Include="..\..\..\include\wp.h" />
+    <ClInclude Include="..\..\..\include\wpm.h" />
+    <ClInclude Include="..\..\object\ai.h" />
+    <ClInclude Include="..\..\object\ao.h" />
+    <ClInclude Include="..\..\object\av.h" />
+    <ClInclude Include="..\..\object\bacfile.h" />
+    <ClInclude Include="..\..\object\bi.h" />
+    <ClInclude Include="..\..\object\bo.h" />
+    <ClInclude Include="..\..\object\bv.h" />
+    <ClInclude Include="..\..\object\channel.h" />
+    <ClInclude Include="..\..\object\command.h" />
+    <ClInclude Include="..\..\object\csv.h" />
+    <ClInclude Include="..\..\object\device.h" />
+    <ClInclude Include="..\..\object\iv.h" />
+    <ClInclude Include="..\..\object\lc.h" />
+    <ClInclude Include="..\..\object\lo.h" />
+    <ClInclude Include="..\..\object\lsp.h" />
+    <ClInclude Include="..\..\object\ms-input.h" />
+    <ClInclude Include="..\..\object\mso.h" />
+    <ClInclude Include="..\..\object\msv.h" />
+    <ClInclude Include="..\..\object\nc.h" />
+    <ClInclude Include="..\..\object\osv.h" />
+    <ClInclude Include="..\..\object\piv.h" />
+    <ClInclude Include="..\..\object\schedule.h" />
+    <ClInclude Include="..\..\object\trendlog.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\lib\MSVC\BACnet Stack Library.vcxproj">
+      <Project>{64adfc62-de51-4bc8-8d3e-b45e919003db}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\lib\MSVC\_lib.vcxproj">
+      <Project>{64adfc62-de51-4bc8-8d3e-b45e919003db}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\proplist.c" />
+    <ClCompile Include="..\main.c" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

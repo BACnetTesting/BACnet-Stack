@@ -147,7 +147,7 @@ void dlmstp_cleanup(
 /* returns number of bytes sent on success, zero on failure */
 int dlmstp_send_pdu(
     BACNET_ADDRESS * dest,      /* destination address */
-    BACNET_NPCI_DATA * npci_data,       /* network information */
+    BACNET_NPDU_DATA * npdu_data,       /* network information */
     uint8_t * pdu,      /* any data to be sent - may be null */
     unsigned pdu_len)
 {       /* number of bytes of data */
@@ -157,7 +157,7 @@ int dlmstp_send_pdu(
 
     pkt = (struct mstp_pdu_packet *) Ringbuf_Data_Peek(&PDU_Queue);
     if (pkt) {
-        pkt->data_expecting_reply = npci_data->data_expecting_reply;
+        pkt->data_expecting_reply = npdu_data->data_expecting_reply;
         for (i = 0; i < pdu_len; i++) {
             pkt->buffer[i] = pdu[i];
         }
@@ -359,7 +359,7 @@ static bool dlmstp_compare_data_expecting_reply(
        src, dest, along with the APDU type, invoke id.
        Seems a bit overkill */
     struct DER_compare_t {
-        BACNET_NPCI_DATA npci_data;
+        BACNET_NPDU_DATA npdu_data;
         BACNET_ADDRESS address;
         uint8_t pdu_type;
         uint8_t invoke_id;
@@ -376,8 +376,8 @@ static bool dlmstp_compare_data_expecting_reply(
     request.address.mac_len = 1;
     offset =
         npdu_decode(&request_pdu[0], NULL, &request.address,
-        &request.npci_data);
-    if (request.npci_data.network_layer_message) {
+        &request.npdu_data);
+    if (request.npdu_data.network_layer_message) {
 #if PRINT_ENABLED
         fprintf(stderr,
             "DLMSTP: DER Compare failed: " "Request is Network message.\n");
@@ -403,8 +403,8 @@ static bool dlmstp_compare_data_expecting_reply(
     reply.address.mac[0] = dest_address;
     reply.address.mac_len = 1;
     offset =
-        npdu_decode(&reply_pdu[0], &reply.address, NULL, &reply.npci_data);
-    if (reply.npci_data.network_layer_message) {
+        npdu_decode(&reply_pdu[0], &reply.address, NULL, &reply.npdu_data);
+    if (reply.npdu_data.network_layer_message) {
 #if PRINT_ENABLED
         fprintf(stderr,
             "DLMSTP: DER Compare failed: " "Reply is Network message.\n");
@@ -474,7 +474,7 @@ static bool dlmstp_compare_data_expecting_reply(
             return false;
         }
     }
-    if (request.npci_data.protocol_version != reply.npci_data.protocol_version) {
+    if (request.npdu_data.protocol_version != reply.npdu_data.protocol_version) {
 #if PRINT_ENABLED
         fprintf(stderr,
             "DLMSTP: DER Compare failed: "
@@ -485,7 +485,7 @@ static bool dlmstp_compare_data_expecting_reply(
 #if 0
     /* the NDPU priority doesn't get passed through the stack, and
        all outgoing messages have NORMAL priority */
-    if (request.npci_data.priority != reply.npci_data.priority) {
+    if (request.npdu_data.priority != reply.npdu_data.priority) {
 #if PRINT_ENABLED
         fprintf(stderr,
             "DLMSTP: DER Compare failed: " "NPDU Priority mismatch.\n");

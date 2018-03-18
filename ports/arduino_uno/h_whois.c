@@ -44,7 +44,7 @@ void sendIamUnicast(uint8_t * buffer,
 {
     BACNET_ADDRESS dest;
     int pdu_len = 0;
-    BACNET_NPCI_DATA npci_data;
+    BACNET_NPDU_DATA npdu_data;
 
     /* encode the data */
     int npdu_len = 0;
@@ -56,15 +56,15 @@ void sendIamUnicast(uint8_t * buffer,
 
     datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
-    npdu_encode_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
-    npdu_len = npdu_encode_pdu(&buffer[0], &dest, &my_address, &npci_data);
+    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_len = npdu_encode_pdu(&buffer[0], &dest, &my_address, &npdu_data);
     /* encode the APDU portion of the packet */
     apdu_len =
         iam_encode_apdu(&buffer[npdu_len], Device_Object_Instance_Number(),
         MAX_APDU, SEGMENTATION_NONE, Device_Vendor_Identifier());
     /* send data */
     pdu_len = npdu_len + apdu_len;
-    int bytes = datalink_send_pdu(&dest, &npci_data, &buffer[0], pdu_len);
+    int bytes = datalink_send_pdu(&dest, &npdu_data, &buffer[0], pdu_len);
 }
 
 void handler_who_is(uint8_t * service_request,

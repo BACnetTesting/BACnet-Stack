@@ -216,13 +216,13 @@ static uint16_t dlmstp_encode_unconfirmed_frame(
     void)
 {
     BACNET_ADDRESS dest;
-    BACNET_NPCI_DATA npci_data;
+    BACNET_NPDU_DATA npdu_data;
     uint16_t len = 0;
 
     if (Send_I_Am_Flag) {
         Send_I_Am_Flag = false;
         TransmitPacket = Handler_Transmit_Buffer;
-        len = iam_encode_pdu(&TransmitPacket[0], &dest, &npci_data);
+        len = iam_encode_pdu(&TransmitPacket[0], &dest, &npdu_data);
     }
 
     return len;
@@ -976,14 +976,14 @@ static bool MSTP_Master_Node_FSM(
 /* returns number of bytes sent on success, zero on failure */
 int dlmstp_send_pdu(
     BACNET_ADDRESS * dest,      /* destination address */
-    BACNET_NPCI_DATA * npci_data,       /* network information */
+    BACNET_NPDU_DATA * npdu_data,       /* network information */
     uint8_t * pdu,      /* any data to be sent - may be null */
     unsigned pdu_len)
 {       /* number of bytes of data */
     int bytes_sent = 0;
 
     if (MSTP_Flag.TransmitPacketPending == false) {
-        MSTP_Flag.TransmitPacketDER = npci_data->data_expecting_reply;
+        MSTP_Flag.TransmitPacketDER = npdu_data->data_expecting_reply;
         TransmitPacket = pdu;
         TransmitPacketLen = pdu_len;
         bytes_sent = pdu_len;

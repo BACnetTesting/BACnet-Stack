@@ -94,7 +94,7 @@ int ethernet_send(
 /* returns number of bytes sent on success, negative on failure */
 int ethernet_send_pdu(
     BACNET_ADDRESS * dest,      /* destination address */
-    BACNET_NPCI_DATA * npci_data,       /* network information */
+    BACNET_NPDU_DATA * npdu_data,       /* network information */
     uint8_t * pdu,      /* any data to be sent - may be null */
     unsigned pdu_len)
 {       /* number of bytes of data */
@@ -104,7 +104,7 @@ int ethernet_send_pdu(
     uint8_t mtu[MAX_MPDU] = { 0 };      /* our buffer */
     int mtu_len = 0;
 
-    (void) npci_data;
+    (void) npdu_data;
     /* load the BACnet address for NPDU data */
     for (i = 0; i < 6; i++) {
         src.mac[i] = Ethernet_MAC_Address[i];

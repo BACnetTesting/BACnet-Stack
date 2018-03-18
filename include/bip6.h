@@ -43,7 +43,7 @@ extern "C" {
         BACNET_ADDRESS * my_address);
     int bip6_send_pdu(
         BACNET_ADDRESS * dest,
-        BACNET_NPCI_DATA * npci_data,
+        BACNET_NPDU_DATA * npdu_data,
         uint8_t * pdu,
         unsigned pdu_len);
     uint16_t bip6_receive(

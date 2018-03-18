@@ -246,7 +246,7 @@ static bool bbmd6_address_from_bacnet_address(
  *
  * @param dest - Points to a #BACNET_ADDRESS structure containing the
  *  destination address.
- * @param npci_data - Points to a BACNET_NPCI_DATA structure containing the
+ * @param npdu_data - Points to a BACNET_NPDU_DATA structure containing the
  *  destination network layer control flags and data.
  * @param mtu - the bytes of data to send
  * @param mtu_len - the number of bytes of data to send
@@ -255,7 +255,7 @@ static bool bbmd6_address_from_bacnet_address(
  */
 int bip6_send_pdu(
     BACNET_ADDRESS * dest,
-    BACNET_NPCI_DATA * npci_data,
+    BACNET_NPDU_DATA * npdu_data,
     uint8_t * pdu,
     unsigned pdu_len)
 {
@@ -266,7 +266,7 @@ int bip6_send_pdu(
     uint32_t vmac_dst = 0;
 
     /* this datalink doesn't need to know the npdu data */
-    (void) npci_data;
+    (void) npdu_data;
     /* handle various broadcasts: */
     if ((dest->net == BACNET_BROADCAST_NETWORK) || (dest->mac_len == 0)) {
         /* mac_len = 0 is a broadcast address */

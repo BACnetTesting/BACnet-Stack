@@ -60,7 +60,7 @@ bool(*datalink_init) (char *ifname);
  * @ingroup DLTemplates
  *
  * @param dest [in] Destination address.
- * @param npci_data [in] The NPDU header (Network) information.
+ * @param npdu_data [in] The NPDU header (Network) information.
  * @param pdu [in] Buffer of data to be sent - may be null.
  * @param pdu_len [in] Number of bytes in the pdu buffer.
  * @return Number of bytes sent on success, negative number on failure.
@@ -68,7 +68,7 @@ bool(*datalink_init) (char *ifname);
 int (
     *datalink_send_pdu) (
     BACNET_ADDRESS * dest,
-    BACNET_NPCI_DATA * npci_data,
+    BACNET_NPDU_DATA * npdu_data,
     uint8_t * pdu,
     unsigned pdu_len);
 
