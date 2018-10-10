@@ -29,22 +29,22 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-  */
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -132,17 +132,19 @@ void objects_device_delete(
                 do {
                     pObject = (BACNET_OBJECT_ID *) Keylist_Data_Delete_By_Index(pDevice->Object_List, 0);
                     /* free any dynamic memory used */
-                    if (pObject) {
-                        free(pObject);
-                    }
+                    // EKH - no point in checking pointer. free() handles the NULL case, and some of my EMMs do a much better check of pObject validity than a simple check for NULL anyway!
+                    // if (pObject) {
+                    free(pObject);
+                    // }
                 } while (pObject);
                 Keylist_Delete(pDevice->Object_List);
             }
             free(pDevice);
         }
     }
-    // return pDevice;
+    // EKH: 2016.05.29 Do not return the pointer to freed memory!
 }
+
 
 #ifdef TEST
 #include <assert.h>
@@ -187,13 +189,13 @@ void testBACnetObjects(
         testBACnetObjectsCompare(pTest, pDevice, device_id);
     }
     for (test_point = 0; test_point < max_test_points; test_point++) {
-        device_id = test_point * (BACNET_MAX_INSTANCE / max_test_points);
+        test_point * (BACNET_MAX_INSTANCE / max_test_points);
         pDevice = objects_device_data(test_point);
         testBACnetObjectsCompare(pTest, pDevice, Keylist_Key(Device_List,
                 test_point));
     }
     for (test_point = 0; test_point < max_test_points; test_point++) {
-        pDevice = objects_device_delete(0);
+        objects_device_delete(0);
     }
 }
 

@@ -1,60 +1,51 @@
-/**************************************************************************
+/****************************************************************************************
 *
-* Copyright (C) 2016 BACnet Interoperability Testing Services, Inc.
-* 
-*       <info@bac-test.com>
+*   Copyright (C) 2018 BACnet Interoperability Testing Services, Inc.
 *
-* Permission is hereby granted, to whom a copy of this software and
-* associated documentation files (the "Software") is provided by BACnet
-* Interoperability Testing Services, Inc., to deal in the Software
-* without restriction, including without limitation the rights to use,
-* copy, modify, merge, subject to the following conditions:
+*   This program is free software : you can redistribute it and/or modify
+*   it under the terms of the GNU Lesser General Public License as published by
+*   the Free Software Foundation, either version 3 of the License, or
+*   (at your option) any later version.
 *
-* The above copyright notice and this permission notice shall be included
-* in all copies or substantial portions of the Software.
+*   This program is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+*   GNU Lesser General Public License for more details.
 *
-* The software is provided on a non-exclusive basis.
+*   You should have received a copy of the GNU Lesser General Public License
+*   along with this program.If not, see <http://www.gnu.org/licenses/>.
 *
-* The permission is provided in perpetuity.
+*   For more information : info@bac-test.com
 *
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*   For access to source code :
 *
-*********************************************************************/
+*       info@bac-test.com
+*           or
+*       www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-#include <stdbool.h>
-#include <stdio.h>
-#ifdef __GNUC__
-#include <ctype.h>		// for toupper()
-#endif
-#include <string.h>
-//#include <winsock2.h>
-#include "BACnetToString.h"
+#include "bitsUtil.h"
 
 // does the command line parameter exist?
-bool CommandLineExists(const int argc, char **argv, const char *parameter)
+bool CommandLineParameterExists(const int argc, char **argv, const char *parameter)
 {
     if (argc < 2) {
         return false;
     }
 
     for (int i = 1; i < argc; i++) {
-        if ( strlen(argv[i]) > 1 &&
+        if ( bits_strlen(argv[i]) > 1 &&
                 argv[i][0] == '-' &&
-                toupper((int) argv[i][1]) == toupper( (int) *parameter)) {
+                bits_toupper((int) argv[i][1]) == bits_toupper( (int) *parameter)) {
             return true;
         }
     }
     return false ;
 }
 
-// returns pointer to the arg following the parameter string 
 
+// returns pointer to the arg following the parameter string - If it exists. Else NULL (reason we can't use it for the above function)
 char *CommandLineParameter(const int argc, char **argv, const char *parameter)
 {
     if (argc < 3) {
@@ -64,11 +55,7 @@ char *CommandLineParameter(const int argc, char **argv, const char *parameter)
     for (int i = 1; i < argc-1; i++) {
         if (strlen(argv[i]) > 1 &&
             argv[i][0] == '-' &&
-#ifdef _MSC_VER
-            !_strcmpi(&argv[i][1], parameter)) 
-#else
-            !strcmp(&argv[i][1], parameter))
-#endif
+            isMatchCaseInsensitive(&argv[i][1], parameter))
         {
             if (argc > i) return argv[i + 1];
         }
@@ -77,29 +64,29 @@ char *CommandLineParameter(const int argc, char **argv, const char *parameter)
 }
 
 
-bool ipep_address_parse(
-    SOCKADDR_IN *ipep,
-    const char *string )
-{
-    //unsigned mac[6];
-    //unsigned port;
-    //int count = 0;
-
-    //count = sscanf( string, "%u.%u.%u.%u:%u", &mac[0], &mac[1], &mac[2],
-    //            &mac[3], &port);
-    //        
-    // if (count != 5) return false ;
-    // 
-    // ipep->sin_addr.S_un.S_un_b.s_b1 = mac[0];
-    // ipep->sin_addr.S_un.S_un_b.s_b2 = mac[1];
-    // ipep->sin_addr.S_un.S_un_b.s_b3 = mac[2];
-    // ipep->sin_addr.S_un.S_un_b.s_b4 = mac[3];
-
-    // ipep->sin_port = htons(port);
-
-    // return true;
-    return StringTo_IPEP(ipep, string);
-}
+//bool ipep_address_parse(
+//    SOCKADDR_IN *ipep,
+//    const char *string )
+//{
+//    //unsigned mac[6];
+//    //unsigned port;
+//    //int count = 0;
+//
+//    //count = sscanf( string, "%u.%u.%u.%u:%u", &mac[0], &mac[1], &mac[2],
+//    //            &mac[3], &port);
+//    //        
+//    // if (count != 5) return false ;
+//    // 
+//    // ipep->sin_addr.S_un.S_un_b.s_b1 = mac[0];
+//    // ipep->sin_addr.S_un.S_un_b.s_b2 = mac[1];
+//    // ipep->sin_addr.S_un.S_un_b.s_b3 = mac[2];
+//    // ipep->sin_addr.S_un.S_un_b.s_b4 = mac[3];
+//
+//    // ipep->sin_port = htons(port);
+//
+//    // return true;
+//    return StringTo_IPEP(ipep, string);
+//}
 
 //char *ipep_address_sprintf(
 //    char *string,

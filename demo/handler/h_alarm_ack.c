@@ -21,22 +21,23 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -56,10 +57,11 @@
 #include "handlers.h"
 #include "device.h"
 #include "debug.h"
+#include "bitsDebug.h"
 
 /** @file h_alarm_ack.c  Handles Alarm Acknowledgment. */
 
-static alarm_ack_function Alarm_Ack[MAX_BACNET_OBJECT_TYPE];
+static alarm_ack_function Alarm_Ack[MAX_BACNET_OBJECT_TYPE];    // todo 3 - this is a very inefficient array
 
 void handler_alarm_ack_set(
     BACNET_OBJECT_TYPE object_type,
@@ -99,7 +101,7 @@ void handler_alarm_ack(
     BACNET_ADDRESS my_address;
     BACNET_NPCI_DATA npci_data;
     BACNET_ALARM_ACK_DATA data;
-    BACNET_ERROR_CODE error_code;
+    BACNET_ERROR_CODE error_code = ERROR_CODE_OTHER ; // todo2 placeholder
 
     /* encode the NPDU portion of the packet */
     datalink_get_my_address(&my_address);
@@ -113,7 +115,7 @@ void handler_alarm_ack(
             abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, ABORT_REASON_SEGMENTATION_NOT_SUPPORTED,
             true);
-        dbTraffic(DB_ERROR, "Alarm Ack: Segmented message.  Sending Abort!\n");
+        dbTraffic(DBD_ALL, DB_BTC_ERROR, "Alarm Ack: Segmented message.  Sending Abort!\n");
         goto AA_ABORT;
     }
 
@@ -121,17 +123,17 @@ void handler_alarm_ack(
         alarm_ack_decode_service_request(service_request, service_len, &data);
 #if PRINT_ENABLED
     if (len <= 0)
-        dbTraffic(DB_ERROR, "Alarm Ack: Unable to decode Request!\n");
+        dbTraffic(DBD_ALL, DB_BTC_ERROR, "Alarm Ack: Unable to decode Request!\n");
 #endif
     if (len < 0) {
         /* bad decoding - send an abort */
         len =
             abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, ABORT_REASON_OTHER, true);
-        dbTraffic(DB_ERROR, "Alarm Ack: Bad Encoding.  Sending Abort!\n");
+        dbTraffic(DBD_ALL, DB_BTC_ERROR, "Alarm Ack: Bad Encoding.  Sending Abort!\n");
         goto AA_ABORT;
     }
-    dbTraffic(DB_UNUSUAL_TRAFFIC,
+    dbTraffic(DBD_ALL, DB_BTC_ERROR,
         "Alarm Ack Operation: Received acknowledge for object id (%d, %lu) from %s for process id %lu \n",
         data.eventObjectIdentifier.type,
         (unsigned long) data.eventObjectIdentifier.instance,
@@ -151,8 +153,9 @@ void handler_alarm_ack(
 	}
     else if (Alarm_Ack[data.eventObjectIdentifier.type]) {
 
-        ack_result =
-            Alarm_Ack[data.eventObjectIdentifier.type] (&data, &error_code);
+        panic();
+        //ack_result =
+        //    Alarm_Ack[data.eventObjectIdentifier.type] (&data, &error_code);
 
         switch (ack_result) {
             case 1:
@@ -160,7 +163,7 @@ void handler_alarm_ack(
                     encode_simple_ack(&Handler_Transmit_Buffer[pdu_len],
                     service_data->invoke_id,
                     SERVICE_CONFIRMED_ACKNOWLEDGE_ALARM);
-                dbTraffic(DB_UNEXPECTED_ERROR, "Alarm Acknowledge: " "Sending Simple Ack!\n");
+                dbTraffic(DBD_ALL, DB_BTC_ERROR, "Alarm Acknowledge: " "Sending Simple Ack!\n");
             break;
 
             case -1:
@@ -169,7 +172,7 @@ void handler_alarm_ack(
                     service_data->invoke_id,
                     SERVICE_CONFIRMED_ACKNOWLEDGE_ALARM, ERROR_CLASS_OBJECT,
                     error_code);
-                dbTraffic(DB_UNEXPECTED_ERROR, "Alarm Acknowledge: error %s!\n",
+                dbTraffic(DBD_ALL, DB_BTC_ERROR, "Alarm Acknowledge: error %s!\n",
                     bactext_error_code_name(error_code));
             break;
 
@@ -177,7 +180,7 @@ void handler_alarm_ack(
                 len =
                     abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
                     service_data->invoke_id, ABORT_REASON_OTHER, true);
-                dbTraffic(DB_UNEXPECTED_ERROR, "Alarm Acknowledge: abort other!\n");
+                dbTraffic(DBD_ALL, DB_BTC_ERROR, "Alarm Acknowledge: abort other!\n");
             break;
         }
     } else {
@@ -185,10 +188,9 @@ void handler_alarm_ack(
             bacerror_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, SERVICE_CONFIRMED_ACKNOWLEDGE_ALARM,
             ERROR_CLASS_OBJECT, ERROR_CODE_NO_ALARM_CONFIGURED);
-        dbTraffic(DB_UNEXPECTED_ERROR, "Alarm Acknowledge: error %s!\n",
+        dbTraffic(DBD_ALL, DB_BTC_ERROR, "Alarm Acknowledge: error %s!\n",
             bactext_error_code_name(ERROR_CODE_NO_ALARM_CONFIGURED));
     }
-
 
 AA_ABORT:
     pdu_len += len;

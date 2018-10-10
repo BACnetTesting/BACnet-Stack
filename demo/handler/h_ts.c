@@ -21,63 +21,65 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-*********************************************************************/
-#include <stddef.h>
-#include <stdint.h>
 #include <stdio.h>
-#include "config.h"
-#include "device.h"
+#include <time.h>
 #include "datetime.h"
-#include "bacdef.h"
+//#include "bacdef.h"
 #include "bacdcode.h"
 #include "timesync.h"
-#include "handlers.h"
-#include "client.h"
 #include "bacaddr.h"
+#include "bitsDebug.h"
 
 /** @file h_ts.c  Handles TimeSync requests. */
 
-#if defined(BACNET_TIME_MASTER)
+#if (BACNET_TIME_MASTER == 1)
 /* sending time sync to recipients */
 #ifndef MAX_TIME_SYNC_RECIPIENTS
 #define MAX_TIME_SYNC_RECIPIENTS 16
 #endif
+
 BACNET_RECIPIENT_LIST Time_Sync_Recipients[MAX_TIME_SYNC_RECIPIENTS];
 /* variable used for controlling when to
    automatically send a TimeSynchronization request */
 static BACNET_DATE_TIME Next_Sync_Time;
 #endif
 
-#if PRINT_ENABLED
+static BACNET_DATE_TIME bdt;
+
 static void show_bacnet_date_time(
     BACNET_DATE * bdate,
     BACNET_TIME * btime)
 {
     /* show the date received */
-    fprintf(stderr, "%u", (unsigned) bdate->year);
-    fprintf(stderr, "/%u", (unsigned) bdate->month);
-    fprintf(stderr, "/%u", (unsigned) bdate->day);
+    dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "%u", (unsigned) bdate->year);
+    dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "/%u", (unsigned) bdate->month);
+    dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "/%u", (unsigned) bdate->day);
     /* show the time received */
-    fprintf(stderr, " %02u", (unsigned) btime->hour);
-    fprintf(stderr, ":%02u", (unsigned) btime->min);
-    fprintf(stderr, ":%02u", (unsigned) btime->sec);
-    fprintf(stderr, ".%02u", (unsigned) btime->hundredths);
-    fprintf(stderr, "\r\n");
+    dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, " %02u", (unsigned) btime->hour);
+    dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, ":%02u", (unsigned) btime->min);
+    dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, ":%02u", (unsigned) btime->sec);
+    dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, ".%02u", (unsigned) btime->hundredths);
+    dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "\r\n");
 }
+
+#if defined ( _MSC_VER  ) || defined ( __GNUC__ )
+extern int32_t emulationOffset;
 #endif
 
 void handler_timesync(
@@ -86,28 +88,63 @@ void handler_timesync(
     BACNET_ADDRESS * src)
 {
     int len = 0;
-    BACNET_DATE bdate;
-    BACNET_TIME btime;
+//    BACNET_DATE bdate;
+//    BACNET_TIME btime;
 
     (void) src;
     (void) service_len;
     len =
-        timesync_decode_service_request(service_request, service_len, &bdate,
-        &btime);
+        timesync_decode_service_request(service_request, service_len, &bdt.date, &bdt.time);
     if (len > 0) {
-        if (datetime_is_valid(&bdate, &btime)) {
+        if (datetime_is_valid(&bdt.date, &bdt.time)) {
             /* fixme: only set the time if off by some amount */
-#if PRINT_ENABLED
-            fprintf(stderr, "Received TimeSyncronization Request\r\n");
-            show_bacnet_date_time(&bdate, &btime);
-#else
-            /* FIXME: set the time?
-               Maybe only set the time if off by some amount */
+        dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "Received TimeSyncronization Request\r\n");
+        show_bacnet_date_time(&bdt.date, &bdt.time);
+
+#if defined ( _MSC_VER  ) || defined ( __GNUC__ )
+        struct tm *tLocal ;
+        struct tm tSet = { 0 } ;
+        time_t clockTime;
+        time_t localTime;
+        time_t setTime;
+        /*
+        struct tm
+
+        int    tm_sec   Seconds [0,60].
+        int    tm_min   Minutes [0,59].
+        int    tm_hour  Hour [0,23].
+        int    tm_mday  Day of month [1,31].
+        int    tm_mon   Month of year [0,11].
+        int    tm_year  Years since 1900.
+        int    tm_wday  Day of week [0,6] (Sunday =0).
+        int    tm_yday  Day of year [0,365].
+        int    tm_isdst Daylight Savings flag.
+        */
+
+        time(&clockTime);
+        tLocal = (struct tm *) localtime(&clockTime);
+        localTime = mktime(tLocal);
+
+        tSet.tm_sec = bdt.time.sec;
+        tSet.tm_min = bdt.time.min;
+        tSet.tm_hour = bdt.time.hour;
+        tSet.tm_mday = bdt.date.day;
+        tSet.tm_mon = bdt.date.month - 1 ;
+        tSet.tm_year = bdt.date.year - 1900 ;
+        tSet.tm_isdst = -1; // tLocal->tm_isdst;    // -1 means 'figure it out'
+
+        setTime = mktime(&tSet);
+
+        if (setTime > 0)
+        {
+            time_t delta = setTime - localTime;
+            emulationOffset = delta ;
+        }
 #endif
         }
     }
-
 }
+
 
 void handler_timesync_utc(
     uint8_t * service_request,
@@ -125,18 +162,16 @@ void handler_timesync_utc(
         &btime);
     if (len > 0) {
         if (datetime_is_valid(&bdate, &btime)) {
-#if PRINT_ENABLED
-            fprintf(stderr, "Received TimeSyncronization Request\r\n");
-            show_bacnet_date_time(&bdate, &btime);
-#endif
-            /* FIXME: set the time?
-               only set the time if off by some amount */
+            dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "Received TimeSyncronization Request\r\n");
+            show_bacnet_date_time(&bdt.date, &bdt.time);
         }
     }
-
+            /* FIXME: set the time?
+               only set the time if off by some amount */
 }
 
-#if defined(BACNET_TIME_MASTER)
+
+#if (BACNET_TIME_MASTER == 1)
 /** Handle a request to list all the timesync recipients.
  *
  *  Invoked by a request to read the Device object's
@@ -159,7 +194,8 @@ int handler_timesync_encode_recipients(
 }
 #endif
 
-#if defined(BACNET_TIME_MASTER)
+
+#if (BACNET_TIME_MASTER == 1)
 bool handler_timesync_recipient_write(
     BACNET_WRITE_PROPERTY_DATA * wp_data)
 {
@@ -173,7 +209,8 @@ bool handler_timesync_recipient_write(
 }
 #endif
 
-#if defined(BACNET_TIME_MASTER)
+
+#if (BACNET_TIME_MASTER == 1)
 static void handler_timesync_send(
     BACNET_DATE_TIME * current_date_time)
 {
@@ -193,7 +230,8 @@ static void handler_timesync_send(
 }
 #endif
 
-#if defined(BACNET_TIME_MASTER)
+
+#if (BACNET_TIME_MASTER == 1)
 static void handler_timesync_update(
     uint32_t device_interval,
     BACNET_DATE_TIME * current_date_time)
@@ -253,7 +291,8 @@ static void handler_timesync_update(
 }
 #endif
 
-#if defined(BACNET_TIME_MASTER)
+
+#if (BACNET_TIME_MASTER == 1)
 bool handler_timesync_recipient_address_set(
     unsigned index,
     BACNET_ADDRESS *address)
@@ -272,7 +311,8 @@ bool handler_timesync_recipient_address_set(
 }
 #endif
 
-#if defined(BACNET_TIME_MASTER)
+
+#if (BACNET_TIME_MASTER == 1)
 void handler_timesync_task(
     BACNET_DATE_TIME * current_date_time)
 {
@@ -293,7 +333,8 @@ void handler_timesync_task(
 }
 #endif
 
-#if defined(BACNET_TIME_MASTER)
+
+#if (BACNET_TIME_MASTER == 1)
 void handler_timesync_init(void)
 {
     unsigned i = 0;

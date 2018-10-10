@@ -406,7 +406,7 @@ static bool Able_To_Meet_Shed_Request(
     if (priority >= 4) {
         /* is the level able to be lowered? */
         requested_level = Requested_Shed_Level_Value(object_index);
-        level = Analog_Output_Present_Value(object_instance);
+        level = Analog_Output_Present_Value_from_Instance(object_instance);
         if (level >= requested_level) {
             status = true;
         }
@@ -1464,6 +1464,7 @@ void testLoadControl(
     uint32_t decoded_instance = 0;
     BACNET_READ_PROPERTY_DATA rpdata;
 
+    Analog_Output_Init();
     Load_Control_Init();
     rpdata.application_data = &apdu[0];
     rpdata.application_data_len = sizeof(apdu);

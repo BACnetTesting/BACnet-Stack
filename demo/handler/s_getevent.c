@@ -20,44 +20,45 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
 *
-*********************************************************************/
-#include <stddef.h>
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
+//#include <stddef.h>
 #include <stdint.h>
-#include <errno.h>
-#include <string.h>
+//#include <errno.h>
+//#include <string.h>
 #include "config.h"
-#include "txbuf.h"
+//#include "txbuf.h"
 #include "bacdef.h"
 #include "bacdcode.h"
-#include "address.h"
+//#include "address.h"
 #include "tsm.h"
-#include "npdu.h"
-#include "apdu.h"
-#include "device.h"
+//#include "npdu.h"
+//#include "apdu.h"
+//#include "device.h"
 #include "datalink.h"
 #include "dcc.h"
 #include "getevent.h"
-#include "bacenum.h"
-/* some demo stuff needed */
-#include "handlers.h"
+//#include "bacenum.h"
+///* some demo stuff needed */
+//#include "handlers.h"
 #include "txbuf.h"
 #include "client.h"
-#define PRINT_ENABLED 1
+
 /** @file s_getevent.c  Send a GetEventInformation request. */
 
 /** Send a GetEventInformation request to a remote network for a specific device, a range,
@@ -82,7 +83,7 @@ uint8_t Send_GetEvent(
     pdu_len =
         npdu_encode_pdu(&Handler_Transmit_Buffer[0], target_address,
         &my_address, &npci_data);
-    
+
     invoke_id = tsm_next_free_invokeID();
     if (invoke_id) {
         /* encode the APDU portion of the packet */
@@ -92,11 +93,11 @@ uint8_t Send_GetEvent(
         bytes_sent =
             datalink_send_pdu(target_address, &npci_data,
             &Handler_Transmit_Buffer[0], pdu_len);
-    #if PRINT_ENABLED
+#if PRINT_ENABLED
         if (bytes_sent <= 0)
             fprintf(stderr, "Failed to Send GetEventInformation Request (%s)!\n",
                 strerror(errno));
-    #endif
+#endif
     } else {
             tsm_free_invoke_id(invoke_id);
             invoke_id = 0;

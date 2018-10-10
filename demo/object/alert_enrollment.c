@@ -22,6 +22,7 @@
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
 *********************************************************************/
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -34,6 +35,7 @@
 #include "bacapp.h"
 #include "client.h"
 #include "config.h"
+#if ( BACNET_USE_OBJECT_ALERT_ENROLLMENT==1 )
 #include "device.h"
 #include "event.h"
 #include "handlers.h"
@@ -962,4 +964,4 @@ void Alert_Enrollment_Class_find_recipient(
     }
 }
 #endif /* defined(INTRINSIC_REPORTING) */
-
+#endif // #if ( BACNET_USE_OBJECT_ALERT_ENROLLMENT )

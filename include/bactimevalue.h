@@ -20,30 +20,31 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-*********************************************************************/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
 #ifndef _BAC_TIME_VALUE_H_
 #define _BAC_TIME_VALUE_H_
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include "bacdef.h"
-#include "bacenum.h"
+//#include <stdint.h>
+//#include <stdbool.h>
+//#include <stddef.h>
+//#include "bacdef.h"
+//#include "bacenum.h"
 #include "bacapp.h"
 
 typedef struct {
@@ -53,18 +54,18 @@ typedef struct {
 
 
 
-    int bacapp_encode_time_value(uint8_t * apdu,
-        BACNET_TIME_VALUE * value);
+int bacapp_encode_time_value(uint8_t * apdu,
+    BACNET_TIME_VALUE * value);
 
-    int bacapp_encode_context_time_value(uint8_t * apdu,
-        uint8_t tag_number,
-        BACNET_TIME_VALUE * value);
+int bacapp_encode_context_time_value(uint8_t * apdu,
+    uint8_t tag_number,
+    BACNET_TIME_VALUE * value);
 
-    int bacapp_decode_time_value(uint8_t * apdu,
-        BACNET_TIME_VALUE * value);
+int bacapp_decode_time_value(uint8_t * apdu,
+    BACNET_TIME_VALUE * value);
 
-    int bacapp_decode_context_time_value(uint8_t * apdu,
-        uint8_t tag_number,
-        BACNET_TIME_VALUE * value);
+int bacapp_decode_context_time_value(uint8_t * apdu,
+    uint8_t tag_number,
+    BACNET_TIME_VALUE * value);
 
 #endif

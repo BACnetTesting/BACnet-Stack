@@ -1,42 +1,38 @@
 /**************************************************************************
-*
-* Copyright (C) 2016 BACnet Interoperability Testing Services, Inc.
-* 
-*       <info@bac-test.com>
-*
-* Permission is hereby granted, to whom a copy of this software and
-* associated documentation files (the "Software") is provided by BACnet
-* Interoperability Testing Services, Inc., to deal in the Software
-* without restriction, including without limitation the rights to use,
-* copy, modify, merge, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included
-* in all copies or substantial portions of the Software.
-*
-* The software is provided on a non-exclusive basis.
-*
-* The permission is provided in perpetuity.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*
+
+Copyright (C) 2018 BACnet Interoperability Testing Services, Inc.
+
+This program is free software : you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with this program.If not, see <http://www.gnu.org/licenses/>.
+
+    For more information : info@bac-test.com
+        For access to source code : 
+                info@bac-test.com
+                    or 
+                www.github.com/bacnettesting/bacnet-stack
+
 *********************************************************************/
 
 #include <stdio.h>
 
-#include "bacTarget.h"
+// #include "bacTarget.h"
 #include "config.h"
 //#include "bacenum.h"
 #include "bacdef.h"
 #include "npdu.h"
 #include "BACnetToString.h"
 #include "datalink.h"
-#include "bitsUtil.h"
+// #include "bitsUtil.h"
 #include "net.h"
 
 // This has to be a bullet-proof pdu-to-string decoder...
@@ -48,9 +44,39 @@ typedef struct
     const char  *name;
 } StringTable ;
 
+#if 0
+StringTable BPT_Typetab[] =
+{
+    { BPT_BBMD,    "BBMD"} ,
+    { BPT_MSTP,    "MSTP"} ,
+    { BPT_BIP,     "B/IP"}
+};
+
+
+const BPT_TYPE StringTo_PF(const char *name)
+{
+    for (uint i = 0; i < sizeof(BPT_Typetab) / sizeof(StringTable); i++)
+    {
+        if (isMatchCaseInsensitive( name, BPT_Typetab[i].name )) return (const BPT_TYPE) BPT_Typetab[i].val ;
+    }
+    panic();
+    return BPT_BIP ;
+}
+
+
+const char *BPT_ToString(BPT_TYPE pf)
+{
+    for (uint i = 0; i < sizeof(BPT_Typetab) / sizeof(StringTable); i++)
+    {
+        if ((int)pf == BPT_Typetab[i].val) return BPT_Typetab[i].name;
+    }
+    panic();
+    return "m0022";
+}
+#endif
 
 bool StringTo_IPEP (
-    SOCKADDR_IN *ipep,
+    struct sockaddr_in  *ipep,
     const char *string)
 {
     unsigned mac[6];
@@ -62,7 +88,7 @@ bool StringTo_IPEP (
 
     if (count != 5) return false;
 
-    // ipaddr is in wire order, so take advantage of the fact we don't have to shuffle bytes, and remove MSVC dependencies
+    // ipaddr is in wire order, so take advantage of the fact we don't have to shuffle bytes, and we can ignore endian dependencies
 
     ((uint8_t *)&ipep->sin_addr)[0] = mac[0];
     ((uint8_t *)&ipep->sin_addr)[1] = mac[1];
@@ -74,18 +100,20 @@ bool StringTo_IPEP (
     return true;
 }
 
+
 const char *IPEP_ToString (
     char *string,
-    const SOCKADDR_IN *ipep)
+    const struct sockaddr_in *ipep)
 {
     sprintf(string, "%u.%u.%u.%u:%u",
     		((uint8_t *)&ipep->sin_addr)[0],
 			((uint8_t *)&ipep->sin_addr)[1],
 			((uint8_t *)&ipep->sin_addr)[2],
 			((uint8_t *)&ipep->sin_addr)[3],
-        ntohs(ipep->sin_port));
-    return string;
+			ntohs(ipep->sin_port));
+    return (const char *) string;
 }
+
 
 const char *IPAddr_ToString(
     char *string,
@@ -100,7 +128,7 @@ const char *IPAddr_ToString(
 }
 
 
-char *BVLCToString(uint8_t *pdu)
+const char *BVLCToString(uint8_t *pdu)
 {
     int iptr = 0;
     if (pdu[iptr++] != 0x81) return "Not BVLC";
@@ -128,7 +156,7 @@ char *BVLCToString(uint8_t *pdu)
 const char *BACnetPktToString(uint8_t *pdu)
 {
     BACNET_NPCI_DATA npci_data;
-    int apdu_offset;
+    // int apdu_offset;
 //    int apdu_len;
     BACNET_ADDRESS src;
     BACNET_ADDRESS dest;
@@ -142,7 +170,7 @@ const char *BACnetPktToString(uint8_t *pdu)
         return "Does not start with BAC version (1)";
     }
 
-    apdu_offset = npdu_decode(pdu, &dest, &src, &npci_data);
+    npci_decode(pdu, &dest, &src, &npci_data);
 
     if (npci_data.network_layer_message) return "Net Msg";
 
@@ -176,6 +204,6 @@ const char *BACnetMacAddrToString(BACNET_MAC_ADDRESS *addr)
         return tbuf;
     }
 
-    return "m0001 - todo";
+    return "m0026 - todo";
 }
 

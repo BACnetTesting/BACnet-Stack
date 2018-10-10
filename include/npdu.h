@@ -20,21 +20,23 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-*********************************************************************/
 #ifndef NPDU_H
 #define NPDU_H
 
@@ -49,7 +51,7 @@
 #endif
 
 /* an NPDU structure keeps the parameter stack to a minimum */
-typedef struct BACNET_NPCI_DATA_t {
+typedef struct bacnet_npci_data_t {
     uint8_t protocol_version;
     /* parts of the control octet: */
     bool data_expecting_reply;
@@ -74,30 +76,33 @@ typedef struct router_port_t {
     struct router_port_t *next;         /**< Point to next in linked list */
 } BACNET_ROUTER_PORT;
 
+uint8_t npdu_encode_max_seg_max_apdu(
+    int max_segs,
+    int max_apdu);
 
-    uint8_t npdu_encode_max_seg_max_apdu(
-        int max_segs,
-        int max_apdu);
+int16_t npdu_encode_pdu(
+    uint8_t * npdu,
+    const BACNET_ADDRESS * dest,
+    const BACNET_ADDRESS * src,
+    const BACNET_NPCI_DATA * npci_data);
 
-    int npdu_encode_pdu(
-        uint8_t * npdu,
-        BACNET_ADDRESS * dest,
-        BACNET_ADDRESS * src,
-        BACNET_NPCI_DATA * npci_data);
+void npdu_setup_npci_data(
+    BACNET_NPCI_DATA * npdu,
+    bool data_expecting_reply,
+    BACNET_MESSAGE_PRIORITY priority);
 
-    void npdu_setup_npci_data(
-        BACNET_NPCI_DATA * npdu,
-        bool data_expecting_reply,
-        BACNET_MESSAGE_PRIORITY priority);
+void npdu_copy_data(
+    BACNET_NPCI_DATA * dest,
+    BACNET_NPCI_DATA * src);
 
-    void npdu_copy_data(
-        BACNET_NPCI_DATA * dest,
-        BACNET_NPCI_DATA * src);
+int npci_decode(
+    const uint8_t * npdu,
+    BACNET_ADDRESS * dest,
+    BACNET_ADDRESS * src,
+    BACNET_NPCI_DATA * npci_data);
 
-    int npdu_decode(
-        uint8_t * npdu,
-        BACNET_ADDRESS * dest,
-        BACNET_ADDRESS * src,
-        BACNET_NPCI_DATA * npci_data);
+void init_common_npci(
+    BACNET_NPCI_DATA * npci_data,
+    bool data_expecting_reply);
 
 #endif

@@ -21,7 +21,22 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -199,6 +214,7 @@ void Trend_Log_Init(
             TempTime.tm_hour = 0;
             TempTime.tm_min = 0;
             TempTime.tm_sec = 0;
+            TempTime.tm_isdst = -1; // means 'figure it out'
             tClock = mktime(&TempTime);
 
             for (iEntry = 0; iEntry < TL_MAX_ENTRIES; iEntry++) {
@@ -967,9 +983,11 @@ time_t TL_BAC_Time_To_Local(
     LocalTime.tm_hour = SourceTime->time.hour;
     LocalTime.tm_min = SourceTime->time.min;
     LocalTime.tm_sec = SourceTime->time.sec;
+    LocalTime.tm_isdst = -1;    // means 'figure it out'
 
     return (mktime(&LocalTime));
 }
+
 
 /*****************************************************************************
  * Convert a local time in seconds since the local epoch into a BACnet time  *

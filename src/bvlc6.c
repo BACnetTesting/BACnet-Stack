@@ -29,8 +29,22 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
 #include <stdint.h>     /* for standard integer types uint8_t etc. */
 #include <stdbool.h>    /* for the standard bool type. */
@@ -145,7 +159,7 @@ int bvlc6_encode_result(
         if (bytes_encoded == 4) {
             encode_unsigned24(&pdu[4], vmac);
             encode_unsigned16(&pdu[7], result_code);
-            bytes_encoded = (int)length;
+            bytes_encoded = length;
         }
     }
 
@@ -231,7 +245,7 @@ int bvlc6_encode_original_unicast(
                     pdu[10+i] = npdu[i];
                 }
             }
-            bytes_encoded = (int)length;
+            bytes_encoded = length;
         }
     }
 
@@ -279,7 +293,7 @@ int bvlc6_decode_original_unicast(
         if (npdu_len) {
             *npdu_len = length;
         }
-        bytes_consumed = (int)pdu_len;
+        bytes_consumed = pdu_len;
     }
 
     return bytes_consumed;
@@ -328,7 +342,7 @@ int bvlc6_encode_original_broadcast(
                     pdu[7+i] = npdu[i];
                 }
             }
-            bytes_encoded = (int)length;
+            bytes_encoded = length;
         }
     }
 
@@ -371,7 +385,7 @@ int bvlc6_decode_original_broadcast(
         if (npdu_len) {
             *npdu_len = length;
         }
-        bytes_consumed = (int)pdu_len;
+        bytes_consumed = pdu_len;
     }
 
     return bytes_consumed;
@@ -414,7 +428,7 @@ int bvlc6_encode_address_resolution(
         if (bytes_encoded == 4) {
             encode_unsigned24(&pdu[4], vmac_src);
             encode_unsigned24(&pdu[7], vmac_target);
-            bytes_encoded = (int)length;
+            bytes_encoded = length;
         }
     }
 
@@ -478,7 +492,7 @@ int bvlc6_encode_address(
             pdu[i] = bip6_address->address[i];
         }
         encode_unsigned16(&pdu[IP6_ADDRESS_MAX], bip6_address->port);
-        bytes_encoded = (int)length;
+        bytes_encoded = length;
     }
 
     return bytes_encoded;
@@ -506,7 +520,7 @@ int bvlc6_decode_address(
             bip6_address->address[i] = pdu[i];
         }
         decode_unsigned16(&pdu[IP6_ADDRESS_MAX], &bip6_address->port);
-        bytes_consumed = (int)length;
+        bytes_consumed = length;
     }
 
     return bytes_consumed;
@@ -777,7 +791,7 @@ int bvlc6_encode_forwarded_address_resolution(
             encode_unsigned24(&pdu[offset], vmac_target);
             offset += 3;
             bvlc6_encode_address(&pdu[offset], pdu_size-offset, bip6_address);
-            bytes_encoded = (int)length;
+            bytes_encoded = length;
         }
     }
 
@@ -817,7 +831,7 @@ int bvlc6_decode_forwarded_address_resolution(
         if (bip6_address) {
             bvlc6_decode_address(&pdu[offset], pdu_len-offset, bip6_address);
         }
-        bytes_consumed = (int)length;
+        bytes_consumed = length;
     }
 
     return bytes_consumed;
@@ -853,7 +867,7 @@ static int bvlc6_encode_address_ack(
             encode_unsigned24(&pdu[offset], vmac_src);
             offset += 3;
             encode_unsigned24(&pdu[offset], vmac_dst);
-            bytes_encoded = (int)length;
+            bytes_encoded = length;
         }
     }
 
@@ -916,7 +930,7 @@ int bvlc6_decode_address_resolution_ack(
         if (vmac_dst) {
             decode_unsigned24(&pdu[offset], vmac_dst);
         }
-        bytes_consumed = (int)length;
+        bytes_consumed = length;
     }
 
     return bytes_consumed;
@@ -952,7 +966,7 @@ int bvlc6_encode_virtual_address_resolution(
             BVLC6_VIRTUAL_ADDRESS_RESOLUTION, length);
         if (bytes_encoded == 4) {
             encode_unsigned24(&pdu[4], vmac_src);
-            bytes_encoded = (int)length;
+            bytes_encoded = length;
         }
     }
 
@@ -1085,7 +1099,7 @@ int bvlc6_encode_forwarded_npdu(
                     pdu[offset+i] = npdu[i];
                 }
             }
-            bytes_encoded = (int)length;
+            bytes_encoded = length;
         }
     }
 
@@ -1138,7 +1152,7 @@ int bvlc6_decode_forwarded_npdu(
         if (npdu_len) {
             *npdu_len = length;
         }
-        bytes_consumed = (int)pdu_len;
+        bytes_consumed = pdu_len;
     }
 
     return bytes_consumed;
@@ -1182,7 +1196,7 @@ int bvlc6_encode_register_foreign_device(
             encode_unsigned24(&pdu[offset], vmac_src);
             offset += 3;
             encode_unsigned16(&pdu[offset], ttl_seconds);
-            bytes_encoded = (int)length;
+            bytes_encoded = length;
         }
     }
 
@@ -1216,7 +1230,7 @@ int bvlc6_decode_register_foreign_device(
         if (ttl_seconds) {
             decode_unsigned16(&pdu[offset], ttl_seconds);
         }
-        bytes_consumed = (int)length;
+        bytes_consumed = length;
     }
 
     return bytes_consumed;
@@ -1268,7 +1282,7 @@ int bvlc6_encode_delete_foreign_device(
                 offset += 2;
                 encode_unsigned16(&pdu[offset],
                     fdt_entry->ttl_seconds_remaining);
-                bytes_encoded = (int)length;
+                bytes_encoded = length;
             }
         }
     }
@@ -1311,9 +1325,9 @@ int bvlc6_decode_delete_foreign_device(
             offset += 2;
             decode_unsigned16(&pdu[offset],
                 &fdt_entry->ttl_seconds_remaining);
-            bytes_consumed = (int)length;
+            bytes_consumed = length;
         }
-        bytes_consumed = (int)length;
+        bytes_consumed = length;
     }
 
     return bytes_consumed;
@@ -1357,7 +1371,7 @@ int bvlc6_encode_secure_bvll(
                     pdu[4+i] = sbuf[i];
                 }
             }
-            bytes_encoded = (int)length;
+            bytes_encoded = length;
         }
     }
 
@@ -1393,7 +1407,7 @@ int bvlc6_decode_secure_bvll(
                 sbuf[i] = pdu[i];
             }
         }
-        bytes_consumed = (int)pdu_len;
+        bytes_consumed = pdu_len;
     }
 
     return bytes_consumed;
@@ -1446,7 +1460,7 @@ int bvlc6_encode_distribute_broadcast_to_network(
                     pdu[7+i] = npdu[i];
                 }
             }
-            bytes_encoded = (int)length;
+            bytes_encoded = length;
         }
     }
 
@@ -1489,7 +1503,7 @@ int bvlc6_decode_distribute_broadcast_to_network(
         if (npdu_len) {
             *npdu_len = length;
         }
-        bytes_consumed = (int)pdu_len;
+        bytes_consumed = pdu_len;
     }
 
     return bytes_consumed;
@@ -2043,7 +2057,7 @@ static void test_BVLC6_Delete_Foreign_Device_Message(
 {
     uint8_t pdu[64] = { 0 };
     uint32_t test_vmac_src = 0;
-    BACNET_IP6_FOREIGN_DEVICE_TABLE_ENTRY test_fdt_entry = {0};
+    BACNET_IP6_FOREIGN_DEVICE_TABLE_ENTRY test_fdt_entry = {{{0}}};
     uint8_t message_type = 0;
     uint16_t length = 0;
     int len = 0, test_len = 0;
@@ -2073,7 +2087,7 @@ static void test_BVLC6_Delete_Foreign_Device(
     Test * pTest)
 {
     uint32_t vmac_src = 0;
-    BACNET_IP6_FOREIGN_DEVICE_TABLE_ENTRY fdt_entry = {0};
+    BACNET_IP6_FOREIGN_DEVICE_TABLE_ENTRY fdt_entry = {{{0}}};
     unsigned int i = 0;
 
     /* test with zeros */

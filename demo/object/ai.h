@@ -21,22 +21,25 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+*  2018.07.04 EKH Diffed in hints from Binary Value for future reference
+*
+****************************************************************************************/
 
- -------------------------------------------
-
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-*********************************************************************/
 #ifndef AI_H
 #define AI_H
 
@@ -45,55 +48,53 @@
 #include "bacdef.h"
 #include "rp.h"
 #include "wp.h"
+#include "BACnetObjectAnalog.h"
 
-#if (INTRINSIC_REPORTING == 1)
+#if (INTRINSIC_REPORTING_B == 1)
 #include "nc.h"
 #include "getevent.h"
 #include "alarm_ack.h"
-#include "get_alarm_sum.h"
+// Deprecated since Rev 13    #include "get_alarm_sum.h"
 #endif
 
-#include "BACnetObjectAnalog.h"
 
-class AnalogInputObject : public BACnetAnalogObject
-{
-public:
+typedef struct analog_input_descr {
 
-    void Init(void);
+    BACNET_OBJECT   common;         // must be first field in structure due to llist
 
-    // Constructor with initialization list, being the preferred method
-    AnalogInputObject(uint32_t instance, BACNET_ENGINEERING_UNITS units, std::string &name, std::string &description) :
-        BACnetAnalogObject(instance, name, description)
-    {
-        Init();
-        this->Units = units;
-    }
+    float Present_Value;
+    BACNET_ENGINEERING_UNITS Units;
 
-#if ( BACNET_SVC_COV_AI_B == 1 )
+    bool Out_Of_Service;
+    BACNET_RELIABILITY Reliability;
+    BACNET_RELIABILITY reliabilityShadowValue ;
+    
+#if (BACNET_SVC_COV_B == 1)
+    BACNET_EVENT_STATE Event_State;
     float Prior_Value;
     float COV_Increment;
     bool Changed;
-#endif // BACNET_SVC_COV
+    bool prior_OOS;
+#endif
 
-    // all the items below are in base class
-    //#if (INTRINSIC_REPORTING == 1)
-    //    uint32_t Time_Delay;
-    //    uint32_t Notification_Class;
-    //    float High_Limit;
-    //    float Low_Limit;
-    //    float Deadband;
-    //    unsigned Limit_Enable:2;
-    //    unsigned Event_Enable:3;
-    //    BACNET_NOTIFY_TYPE Notify_Type ;
-    //    ACKED_INFO Acked_Transitions[MAX_BACNET_EVENT_TRANSITION];
-    //    BACNET_DATE_TIME Event_Time_Stamps[MAX_BACNET_EVENT_TRANSITION];
-    //    /* time to generate event notification */
-    //    uint32_t Remaining_Time_Delay;
-    //    /* AckNotification informations */
-    //    ACK_NOTIFICATION Ack_notify_data;
-    //#endif // INTRINSIC_REPORTING
+#if (INTRINSIC_REPORTING_B == 1)
+    uint32_t Time_Delay;
+    uint32_t Notification_Class;
+    float High_Limit;
+    float Low_Limit;
+    float Deadband;
+    unsigned Limit_Enable : 2;
+    unsigned Event_Enable : 3;
+    BACNET_NOTIFY_TYPE Notify_Type;
+    ACKED_INFO Acked_Transitions[MAX_BACNET_EVENT_TRANSITION];
+    BACNET_DATE_TIME Event_Time_Stamps[MAX_BACNET_EVENT_TRANSITION];
+    /* time to generate event notification */
+    uint32_t Remaining_Time_Delay;
+    /* AckNotification informations */
+    ACK_NOTIFICATION Ack_notify_data;
+#endif
 
-};
+} ANALOG_INPUT_DESCR;
 
 
 void Analog_Input_Property_Lists(
@@ -110,19 +111,19 @@ unsigned Analog_Input_Count(
 uint32_t Analog_Input_Index_To_Instance(
     unsigned index);
 
-unsigned Analog_Input_Instance_To_Index(
-    uint32_t instance);
-
-bool Analog_Input_Object_Instance_Add(
-    uint32_t instance);
+// making static
+//int Analog_Input_Instance_To_Index(
+//    const DEVICE_OBJECT_DATA *pDev,
+//    const uint32_t object_instance);
 
 bool Analog_Input_Object_Name(
     uint32_t object_instance,
     BACNET_CHARACTER_STRING * object_name);
 
-bool Analog_Input_Name_Set(
-    uint32_t object_instance,
-    char *new_name);
+//bool Analog_Input_Name_Set(
+//    DEVICE_OBJECT_DATA *pDev,
+//    uint32_t object_instance,
+//    char *new_name);
 
 char *Analog_Input_Description(
     uint32_t instance);
@@ -144,11 +145,12 @@ int Analog_Input_Read_Property(
 bool Analog_Input_Write_Property(
     BACNET_WRITE_PROPERTY_DATA * wp_data);
 
+#if 0
 float Analog_Input_Present_Value(
-    AnalogInputObject *currentObject);
+    ANALOG_INPUT_DESCR *currentObject);
 
 void Analog_Input_Present_Value_Set(
-    AnalogInputObject *currentObject,
+    ANALOG_INPUT_DESCR *currentObject,
     float value);
 
 // EKH: 2016.08.07 Obsoleted
@@ -156,11 +158,13 @@ void Analog_Input_Present_Value_Set(
 //    DEVICE_OBJECT_DATA *pDev,
 //    uint32_t object_instance);
 
-void Analog_Input_Out_Of_Service_Set(
-    const uint32_t object_instance,
-    const bool oos_flag);
+//void Analog_Input_Out_Of_Service_Set(
+//    DEVICE_OBJECT_DATA *pDev,
+//    const uint32_t object_instance,
+//    const bool oos_flag);
+#endif
 
-#if ( BACNET_SVC_COV == 1 )
+#if ( BACNET_SVC_COV_B == 1 )
 bool Analog_Input_Change_Of_Value(
     uint32_t instance);
 
@@ -171,6 +175,7 @@ bool Analog_Input_Encode_Value_List(
     uint32_t object_instance,
     BACNET_PROPERTY_VALUE * value_list);
 
+#if 0
 float Analog_Input_COV_Increment(
     uint32_t instance);
 
@@ -178,37 +183,39 @@ void Analog_Input_COV_Increment_Set(
     uint32_t instance,
     float value);
 #endif
+#endif
 
 /* note: header of Intrinsic_Reporting function is required
    even when INTRINSIC_REPORTING is not defined */
 void Analog_Input_Intrinsic_Reporting(
     uint32_t object_instance);
 
-#if defined(INTRINSIC_REPORTING)
+#if (INTRINSIC_REPORTING_B == 1)
 int Analog_Input_Event_Information(
     unsigned index,
     BACNET_GET_EVENT_INFORMATION_DATA * getevent_data);
 
 int Analog_Input_Alarm_Ack(
     BACNET_ALARM_ACK_DATA * alarmack_data,
+    BACNET_ERROR_CLASS * error_class,
     BACNET_ERROR_CODE * error_code);
 
-int Analog_Input_Alarm_Summary(
-    unsigned index,
-    BACNET_GET_ALARM_SUMMARY_DATA * getalarm_data);
+// Deprecated since Rev 13   
+//int Analog_Input_Alarm_Summary(
+//    unsigned index,
+//    BACNET_GET_ALARM_SUMMARY_DATA * getalarm_data);
 #endif
 
 bool Analog_Input_Create(
-    const uint32_t instanceBase,
-    const std::string& nameRoot,
-    const BACNET_ENGINEERING_UNITS units,
-    const double initialValue );
-    
+    const uint32_t instance,
+    const char *name );
+
 void Analog_Input_Update(
 	const uint32_t instance,
 	const double value );
 
-double Analog_Input_Present_Value_from_Instance ( const uint32_t instance ) ;
+double Analog_Input_Present_Value_from_Instance ( 
+    const uint32_t instance ) ;
 
 bool Analog_Input_Delete(
     uint32_t object_instance);
@@ -218,6 +225,10 @@ void Analog_Input_Cleanup(
 
 void Analog_Input_Init(
     void);
+
+//AnalogInputObject *Analog_Input_Instance_To_Object(
+//    DEVICE_OBJECT_DATA *pDev,
+//    uint32_t object_instance);
 
 #ifdef TEST
 #include "ctest.h"

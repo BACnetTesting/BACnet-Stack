@@ -20,22 +20,23 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -66,27 +67,28 @@
 
 /** @file h_cov.c  Handles Change of Value (COV) services. */
 
-typedef struct BACnet_COV_Address {
-    bool valid:1;
-    BACNET_ADDRESS dest;
-} BACNET_COV_ADDRESS;
+// in cov.h
+//typedef struct BACnet_COV_Address {
+//    bool valid:1;
+//    BACNET_ADDRESS dest;
+//} BACNET_COV_ADDRESS;
 
 /* note: This COV service only monitors the properties
    of an object that have been specified in the standard.  */
-typedef struct BACnet_COV_Subscription_Flags {
-    bool valid:1;
-    bool issueConfirmedNotifications:1; /* optional */
-    bool send_requested:1;
-} BACNET_COV_SUBSCRIPTION_FLAGS;
-
-typedef struct BACnet_COV_Subscription {
-    BACNET_COV_SUBSCRIPTION_FLAGS flag;
-    uint8_t dest_index;
-    uint8_t invokeID;   /* for confirmed COV */
-    uint32_t subscriberProcessIdentifier;
-    uint32_t lifetime;  /* optional */
-    BACNET_OBJECT_ID monitoredObjectIdentifier;
-} BACNET_COV_SUBSCRIPTION;
+//typedef struct BACnet_COV_Subscription_Flags {
+//    bool valid:1;
+//    bool issueConfirmedNotifications:1; /* optional */
+//    bool send_requested:1;
+//} BACNET_COV_SUBSCRIPTION_FLAGS;
+//
+//typedef struct BACnet_COV_Subscription {
+//    BACNET_COV_SUBSCRIPTION_FLAGS flag;
+//    uint8_t dest_index;
+//    uint8_t invokeID;   /* for confirmed COV */
+//    uint32_t subscriberProcessIdentifier;
+//    uint32_t lifetime;  /* optional */
+//    BACNET_OBJECT_ID monitoredObjectIdentifier;
+//} BACNET_COV_SUBSCRIPTION;
 
 #ifndef MAX_COV_SUBCRIPTIONS
 #define MAX_COV_SUBCRIPTIONS 128
@@ -767,6 +769,7 @@ void handler_cov_task(
     handler_cov_fsm();
 }
 
+#if ( BACNET_SVC_COV_B == 1)
 static bool cov_subscribe(
     BACNET_ADDRESS * src,
     BACNET_SUBSCRIBE_COV_DATA * cov_data,
@@ -797,6 +800,7 @@ static bool cov_subscribe(
 
     return status;
 }
+#endif
 
 /** Handler for a COV Subscribe Service request.
  * @ingroup DSCOV

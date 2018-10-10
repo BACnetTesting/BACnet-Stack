@@ -182,7 +182,7 @@ bool Multistate_Input_Present_Value_Set(
     index = Multistate_Input_Instance_To_Index(object_instance);
     if (index < MAX_MULTISTATE_INPUTS) {
         if ((value > 0) && (value <= MULTISTATE_NUMBER_OF_STATES)) {
-            Present_Value[index] = (uint8_t) value;
+            Present_Value[index] = (uint8_t)value;
             status = true;
         }
     }
@@ -249,7 +249,8 @@ bool Multistate_Input_Description_Set(
                     break;
                 }
             }
-        } else {
+        }
+        else {
             for (i = 0; i < sizeof(Object_Description[index]); i++) {
                 Object_Description[index][i] = 0;
             }
@@ -278,16 +279,18 @@ static bool Multistate_Input_Description_Write(
             if (encoding == CHARACTER_UTF8) {
                 status =
                     characterstring_ansi_copy(Object_Description[index],
-                    sizeof(Object_Description[index]), char_string);
+                        sizeof(Object_Description[index]), char_string);
                 if (!status) {
                     *error_class = ERROR_CLASS_PROPERTY;
                     *error_code = ERROR_CODE_VALUE_OUT_OF_RANGE;
                 }
-            } else {
+            }
+            else {
                 *error_class = ERROR_CLASS_PROPERTY;
                 *error_code = ERROR_CODE_CHARACTER_SET_NOT_SUPPORTED;
             }
-        } else {
+        }
+        else {
             *error_class = ERROR_CLASS_PROPERTY;
             *error_code = ERROR_CODE_NO_SPACE_TO_WRITE_PROPERTY;
         }
@@ -332,7 +335,8 @@ bool Multistate_Input_Name_Set(
                     break;
                 }
             }
-        } else {
+        }
+        else {
             for (i = 0; i < sizeof(Object_Name[index]); i++) {
                 Object_Name[index][i] = 0;
             }
@@ -361,16 +365,18 @@ static bool Multistate_Input_Object_Name_Write(
             if (encoding == CHARACTER_UTF8) {
                 status =
                     characterstring_ansi_copy(Object_Name[index],
-                    sizeof(Object_Name[index]), char_string);
+                        sizeof(Object_Name[index]), char_string);
                 if (!status) {
                     *error_class = ERROR_CLASS_PROPERTY;
                     *error_code = ERROR_CODE_VALUE_OUT_OF_RANGE;
                 }
-            } else {
+            }
+            else {
                 *error_class = ERROR_CLASS_PROPERTY;
                 *error_code = ERROR_CODE_CHARACTER_SET_NOT_SUPPORTED;
             }
-        } else {
+        }
+        else {
             *error_class = ERROR_CLASS_PROPERTY;
             *error_code = ERROR_CODE_NO_SPACE_TO_WRITE_PROPERTY;
         }
@@ -418,7 +424,8 @@ bool Multistate_Input_State_Text_Set(
                     break;
                 }
             }
-        } else {
+        }
+        else {
             for (i = 0; i < sizeof(State_Text[index][state_index]); i++) {
                 State_Text[index][state_index][i] = 0;
             }
@@ -450,20 +457,23 @@ static bool Multistate_Input_State_Text_Write(
             if (encoding == CHARACTER_UTF8) {
                 status =
                     characterstring_ansi_copy(State_Text[index][state_index],
-                    sizeof(State_Text[index][state_index]), char_string);
+                        sizeof(State_Text[index][state_index]), char_string);
                 if (!status) {
                     *error_class = ERROR_CLASS_PROPERTY;
                     *error_code = ERROR_CODE_VALUE_OUT_OF_RANGE;
                 }
-            } else {
+            }
+            else {
                 *error_class = ERROR_CLASS_PROPERTY;
                 *error_code = ERROR_CODE_CHARACTER_SET_NOT_SUPPORTED;
             }
-        } else {
+        }
+        else {
             *error_class = ERROR_CLASS_PROPERTY;
             *error_code = ERROR_CODE_NO_SPACE_TO_WRITE_PROPERTY;
         }
-    } else {
+    }
+    else {
         *error_class = ERROR_CLASS_PROPERTY;
         *error_code = ERROR_CODE_VALUE_OUT_OF_RANGE;
     }
@@ -491,115 +501,120 @@ int Multistate_Input_Read_Property(
     }
     apdu = rpdata->application_data;
     switch (rpdata->object_property) {
-        case PROP_OBJECT_IDENTIFIER:
-            apdu_len =
-                encode_application_object_id(&apdu[0],
+    case PROP_OBJECT_IDENTIFIER:
+        apdu_len =
+            encode_application_object_id(&apdu[0],
                 OBJECT_MULTI_STATE_INPUT, rpdata->object_instance);
-            break;
-            /* note: Name and Description don't have to be the same.
-               You could make Description writable and different */
-        case PROP_OBJECT_NAME:
-            Multistate_Input_Object_Name(rpdata->object_instance,
-                &char_string);
-            apdu_len =
-                encode_application_character_string(&apdu[0], &char_string);
-            break;
-        case PROP_DESCRIPTION:
-            characterstring_init_ansi(&char_string,
-                Multistate_Input_Description(rpdata->object_instance));
-            apdu_len =
-                encode_application_character_string(&apdu[0], &char_string);
-            break;
-        case PROP_OBJECT_TYPE:
-            apdu_len =
-                encode_application_enumerated(&apdu[0],
+        break;
+        /* note: Name and Description don't have to be the same.
+           You could make Description writable and different */
+    case PROP_OBJECT_NAME:
+        Multistate_Input_Object_Name(rpdata->object_instance,
+            &char_string);
+        apdu_len =
+            encode_application_character_string(&apdu[0], &char_string);
+        break;
+    case PROP_DESCRIPTION:
+        characterstring_init_ansi(&char_string,
+            Multistate_Input_Description(rpdata->object_instance));
+        apdu_len =
+            encode_application_character_string(&apdu[0], &char_string);
+        break;
+    case PROP_OBJECT_TYPE:
+        apdu_len =
+            encode_application_enumerated(&apdu[0],
                 OBJECT_MULTI_STATE_INPUT);
-            break;
-        case PROP_PRESENT_VALUE:
-            present_value =
-                Multistate_Input_Present_Value(rpdata->object_instance);
-            apdu_len = encode_application_unsigned(&apdu[0], present_value);
-            break;
-        case PROP_STATUS_FLAGS:
-            /* note: see the details in the standard on how to use these */
-            bitstring_init(&bit_string);
-            bitstring_set_bit(&bit_string, STATUS_FLAG_IN_ALARM, false);
-            bitstring_set_bit(&bit_string, STATUS_FLAG_FAULT, false);
-            bitstring_set_bit(&bit_string, STATUS_FLAG_OVERRIDDEN, false);
-            if (Multistate_Input_Out_Of_Service(rpdata->object_instance)) {
-                bitstring_set_bit(&bit_string, STATUS_FLAG_OUT_OF_SERVICE,
-                    true);
-            } else {
-                bitstring_set_bit(&bit_string, STATUS_FLAG_OUT_OF_SERVICE,
-                    false);
-            }
-            apdu_len = encode_application_bitstring(&apdu[0], &bit_string);
-            break;
-        case PROP_EVENT_STATE:
-            /* note: see the details in the standard on how to use this */
-            apdu_len =
-                encode_application_enumerated(&apdu[0], EVENT_STATE_NORMAL);
-            break;
-        case PROP_OUT_OF_SERVICE:
-            state = Multistate_Input_Out_Of_Service(rpdata->object_instance);
-            apdu_len = encode_application_boolean(&apdu[0], state);
-            break;
-        case PROP_NUMBER_OF_STATES:
-            apdu_len =
-                encode_application_unsigned(&apdu[apdu_len],
+        break;
+    case PROP_PRESENT_VALUE:
+        present_value =
+            Multistate_Input_Present_Value(rpdata->object_instance);
+        apdu_len = encode_application_unsigned(&apdu[0], present_value);
+        break;
+    case PROP_STATUS_FLAGS:
+        /* note: see the details in the standard on how to use these */
+        bitstring_init(&bit_string);
+        bitstring_set_bit(&bit_string, STATUS_FLAG_IN_ALARM, false);
+        bitstring_set_bit(&bit_string, STATUS_FLAG_FAULT, false);
+        bitstring_set_bit(&bit_string, STATUS_FLAG_OVERRIDDEN, false);
+        if (Multistate_Input_Out_Of_Service(rpdata->object_instance)) {
+            bitstring_set_bit(&bit_string, STATUS_FLAG_OUT_OF_SERVICE,
+                true);
+        }
+        else {
+            bitstring_set_bit(&bit_string, STATUS_FLAG_OUT_OF_SERVICE,
+                false);
+        }
+        apdu_len = encode_application_bitstring(&apdu[0], &bit_string);
+        break;
+    case PROP_EVENT_STATE:
+        /* note: see the details in the standard on how to use this */
+        apdu_len =
+            encode_application_enumerated(&apdu[0], EVENT_STATE_NORMAL);
+        break;
+    case PROP_OUT_OF_SERVICE:
+        state = Multistate_Input_Out_Of_Service(rpdata->object_instance);
+        apdu_len = encode_application_boolean(&apdu[0], state);
+        break;
+    case PROP_NUMBER_OF_STATES:
+        apdu_len =
+            encode_application_unsigned(&apdu[apdu_len],
                 Multistate_Input_Max_States(rpdata->object_instance));
-            break;
-        case PROP_STATE_TEXT:
-            if (rpdata->array_index == 0) {
-                /* Array element zero is the number of elements in the array */
-                apdu_len =
-                    encode_application_unsigned(&apdu[0],
+        break;
+    case PROP_STATE_TEXT:
+        if (rpdata->array_index == 0) {
+            /* Array element zero is the number of elements in the array */
+            apdu_len =
+                encode_application_unsigned(&apdu[0],
                     Multistate_Input_Max_States(rpdata->object_instance));
-            } else if (rpdata->array_index == BACNET_ARRAY_ALL) {
-                /* if no index was specified, then try to encode the entire list */
-                /* into one packet. */
-                max_states =
-                    Multistate_Input_Max_States(rpdata->object_instance);
-                for (i = 1; i <= max_states; i++) {
-                    characterstring_init_ansi(&char_string,
-                        Multistate_Input_State_Text(rpdata->object_instance,
-                            i));
-                    /* FIXME: this might go beyond MAX_APDU length! */
-                    len =
-                        encode_application_character_string(&apdu[apdu_len],
+        }
+        else if (rpdata->array_index == BACNET_ARRAY_ALL) {
+            /* if no index was specified, then try to encode the entire list */
+            /* into one packet. */
+            max_states =
+                Multistate_Input_Max_States(rpdata->object_instance);
+            for (i = 1; i <= max_states; i++) {
+                characterstring_init_ansi(&char_string,
+                    Multistate_Input_State_Text(rpdata->object_instance,
+                        i));
+                /* FIXME: this might go beyond MAX_LPDU_IP length! */
+                len =
+                    encode_application_character_string(&apdu[apdu_len],
                         &char_string);
-                    /* add it if we have room */
+                /* add it if we have room */
                     if ((apdu_len + len) < MAX_APDU) {
-                        apdu_len += len;
-                    } else {
-                        rpdata->error_code =
-                            ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
-                        apdu_len = BACNET_STATUS_ABORT;
-                        break;
-                    }
+                    apdu_len += len;
                 }
-            } else {
-                max_states =
-                    Multistate_Input_Max_States(rpdata->object_instance);
-                if (rpdata->array_index <= max_states) {
-                    characterstring_init_ansi(&char_string,
-                        Multistate_Input_State_Text(rpdata->object_instance,
-                            rpdata->array_index));
-                    apdu_len =
-                        encode_application_character_string(&apdu[0],
-                        &char_string);
-                } else {
-                    rpdata->error_class = ERROR_CLASS_PROPERTY;
-                    rpdata->error_code = ERROR_CODE_INVALID_ARRAY_INDEX;
-                    apdu_len = BACNET_STATUS_ERROR;
+                else {
+                    rpdata->error_code =
+                        ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
+                    apdu_len = BACNET_STATUS_ABORT;
+                    break;
                 }
             }
-            break;
-        default:
-            rpdata->error_class = ERROR_CLASS_PROPERTY;
-            rpdata->error_code = ERROR_CODE_UNKNOWN_PROPERTY;
-            apdu_len = BACNET_STATUS_ERROR;
-            break;
+        }
+        else {
+            max_states =
+                Multistate_Input_Max_States(rpdata->object_instance);
+            if (rpdata->array_index <= max_states) {
+                characterstring_init_ansi(&char_string,
+                    Multistate_Input_State_Text(rpdata->object_instance,
+                        rpdata->array_index));
+                apdu_len =
+                    encode_application_character_string(&apdu[0],
+                        &char_string);
+            }
+            else {
+                rpdata->error_class = ERROR_CLASS_PROPERTY;
+                rpdata->error_code = ERROR_CODE_INVALID_ARRAY_INDEX;
+                apdu_len = BACNET_STATUS_ERROR;
+            }
+        }
+        break;
+    default:
+        rpdata->error_class = ERROR_CLASS_PROPERTY;
+        rpdata->error_code = ERROR_CODE_UNKNOWN_PROPERTY;
+        apdu_len = BACNET_STATUS_ERROR;
+        break;
     }
     /*  only array properties can have array options */
     if ((apdu_len >= 0) && (rpdata->object_property != PROP_STATE_TEXT) &&
@@ -628,7 +643,7 @@ bool Multistate_Input_Write_Property(
     /* decode the first chunk of the request */
     len =
         bacapp_decode_application_data(wp_data->application_data,
-        wp_data->application_data_len, &value);
+            wp_data->application_data_len, &value);
     /* len < application_data_len: extra data for arrays only */
     if (len < 0) {
         /* error while decoding - a value larger than we can handle */

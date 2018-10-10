@@ -1,42 +1,46 @@
-/**************************************************************************
+/****************************************************************************************
+*
+*   Copyright (C) 2018 BACnet Interoperability Testing Services, Inc.
+*
+*   This program is free software : you can redistribute it and/or modify
+*   it under the terms of the GNU Lesser General Public License as published by
+*   the Free Software Foundation, either version 3 of the License, or
+*   (at your option) any later version.
 
-Copyright (C) 2018 BACnet Interoperability Testing Services, Inc.
+*   This program is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+*   GNU Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public License
+*   along with this program.If not, see <http://www.gnu.org/licenses/>.
+*
+*   For more information : info@bac-test.com
+*
+*   For access to source code :
+*
+*       info@bac-test.com
+*           or
+*       www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-This program is free software : you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
-GNU Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public License
-along with this program.If not, see <http://www.gnu.org/licenses/>.
-
-For more information : info@bac-test.com
-For access to source code : info@bac-test.com
-or www.github.com/bacnettesting/bacnet-stack
-
-*********************************************************************/
-
-
-// for future ref: embedded string / printf functions: 
+// for future ref: embedded string / printf functions:
 //      http://elm-chan.org/fsw/strf/xprintf.html
 //      http://www.sparetimelabs.com/tinyprintf/tinyprintf.php
 
-#ifdef _MSC_VER
-#include <wtypes.h>
-#endif
+//#ifdef _MSC_VER
+//#include <wtypes.h>
+//#endif
 
 #include <stdio.h>
 #include <stdint.h>
-#include <stdarg.h>
-// #include "debug.h"
-#include "debug.h"
-#include "logging.h"
+//#include <stdarg.h>
+//// #include "debug.h"
+//#include "debug.h"
+#include "logging/logging.h"
 #include "btaDebug.h"
+#include "bitsDebug.h"
 
 void hexdump(
     char *title,
@@ -76,6 +80,7 @@ void DumpIpPort ( const char *title, uint32_t ipAddr, uint16_t hoPort )
     printf("%u.%u.%u.%u:%u", ip[0], ip[1], ip[2], ip[3], hoPort );
 }
 
+#if defined ( _MSC_VER ) || defined ( __GNUC__ )
 char *NwoIPAddrToString( char *tbuf, const uint32_t nwoIpAddr)
 {
     // static char tbuf[30];
@@ -87,6 +92,7 @@ char *NwoIPAddrToString( char *tbuf, const uint32_t nwoIpAddr)
 #endif
     return tbuf;
 }
+#endif
 
 void sys_panic( const char *file, const int line )
 {
@@ -108,24 +114,24 @@ void sys_panic_desc(const char *file, const int line, const char *description )
 
 #if DB_TRAFFIC
 
-void sys_dbTraffic(DB_LEVEL lev, const char *format, ...);
+void sys_dbTraffic(DBD_DebugDomain domain, DB_LEVEL lev, const char *format, ...);
 
 static DB_LEVEL	dbTrafficLevel = DB_NOTE ;
 
-void sys_dbTrafficAssert(DB_LEVEL lev, bool assertion, const char *message )
-{
-    if (assertion) {
-        return;
-    }
-    sys_dbTraffic(lev, message);
-}
+//void sys_dbTrafficAssert(DB_LEVEL lev, bool assertion, const char *message )
+//{
+//    if (assertion) {
+//        return;
+//    }
+//    sys_dbTraffic(lev, message);
+//}
 
 
 #if defined ( _MSC_VER  )
 HANDLE hIOMutex ;
 #endif
 
-void sys_dbTraffic(DB_LEVEL lev, const char *format, ...)
+void sys_dbTraffic(DBD_DebugDomain domain, DB_LEVEL lev, const char *format, ...)
 {
     va_list ap;
     char tbuf[1000];
@@ -139,9 +145,9 @@ void sys_dbTraffic(DB_LEVEL lev, const char *format, ...)
         va_start(ap, format);
 #if defined ( _MSC_VER  ) || defined ( __GNUC__ )
         printf("\n\r");
-#endif        
+#endif
         vsprintf(tbuf, format, ap);
-        
+
 #if defined ( _MSC_VER  ) || defined ( __GNUC__ )
         printf("%s", tbuf);
 
@@ -161,7 +167,7 @@ void sys_dbTraffic(DB_LEVEL lev, const char *format, ...)
         {
             SendBTAmessage(tbuf);
         }
-        
+
         va_end(ap);
     }
 

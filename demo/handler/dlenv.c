@@ -20,35 +20,41 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
 /* environment variables used for the command line tools */
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+
 #include "config.h"
 #include "bacdef.h"
 #include "apdu.h"
+#include "bbmd.h"
 #include "datalink.h"
 #include "handlers.h"
 #include "dlenv.h"
 #include "tsm.h"
+#if (BACNET_PROTOCOL_REVISION >= 17)
+#include "netport.h"
+#endif
+#include "bitsDebug.h"
 
 /** @file dlenv.c  Initialize the DataLink configuration. */
 
@@ -59,7 +65,10 @@ static uint16_t BBMD_Timer_Seconds;
 static long bbmd_timetolive_seconds = 60000;
 static long bbmd_port = 0xBAC0;
 static long bbmd_address = 0;
+static long bbmd_mask = 0xFFFFFFFF;
 static int bbmd_result = 0;
+static BBMD_TABLE_ENTRY BBMD_Table_Entry;
+
 
 /* Simple setters for BBMD registration variables. */
 
@@ -128,6 +137,7 @@ int dlenv_bbmd_result(
  *         0 if no registration request is sent, or
  *         -1 if registration fails.
  */
+
 int dlenv_register_as_foreign_device(
     void)
 {
@@ -135,6 +145,10 @@ int dlenv_register_as_foreign_device(
 
 #if defined(BACDL_BIP)
     char *pEnv = NULL;
+    unsigned a[4] = {0};
+    char bbmd_env[32] = "";
+    unsigned entry_number = 0;
+    int c;
 
     pEnv = getenv("BACNET_BBMD_PORT");
     if (pEnv) {
@@ -157,22 +171,138 @@ int dlenv_register_as_foreign_device(
     if (bbmd_address) {
         struct in_addr addr;
         addr.s_addr = bbmd_address;
-        fprintf(stderr, "Registering with BBMD at %s:%ld for %ld seconds\n",
+        dbTraffic(DBD_ALL, DB_DEBUG, "Registering with BBMD at %s:%ld for %ld seconds\n",
             inet_ntoa(addr), bbmd_port, bbmd_timetolive_seconds);
         retval =
             bvlc_register_with_bbmd(bbmd_address, htons((uint16_t) bbmd_port),
             (uint16_t) bbmd_timetolive_seconds);
         if (retval < 0)
-            fprintf(stderr, "FAILED to Register with BBMD at %s \n",
+        dbTraffic(DBD_ALL, DB_ERROR, "FAILED to Register with BBMD at %s \n",
                 inet_ntoa(addr));
         BBMD_Timer_Seconds = (uint16_t) bbmd_timetolive_seconds;
+    } else {
+        for (entry_number = 1; entry_number <= 128; entry_number++) {
+            sprintf(bbmd_env,"BACNET_BDT_ADDR_%u", entry_number);
+            pEnv = getenv(bbmd_env);
+            if (pEnv) {
+                bbmd_address = bip_getaddrbyname(pEnv);
+            } else if (entry_number == 1) {
+                /* BDT 1 is self (note: can be overridden) */
+                bbmd_address = bip_get_addr();
+            }
+            if (bbmd_address) {
+                bbmd_port = 0xBAC0;
+                sprintf(bbmd_env,"BACNET_BDT_PORT_%u", entry_number);
+                pEnv = getenv(bbmd_env);
+                if (pEnv) {
+                    bbmd_port = strtol(pEnv, NULL, 0);
+                    if (bbmd_port > 0xFFFF) {
+                        bbmd_port = 0xBAC0;
+                    }
+                } else if (entry_number == 1) {
+                    /* BDT 1 is self (note: can be overridden) */
+                    bbmd_port = bip_get_port();
+                }
+                bbmd_mask = 0xFFFFFFFF;
+                sprintf(bbmd_env,"BACNET_BDT_MASK_%u", entry_number);
+                pEnv = getenv(bbmd_env);
+                if (pEnv) {
+                    c = sscanf(pEnv, "%3u.%3u.%3u.%3u",
+                        &a[0],&a[1],&a[2],&a[3]);
+                    if (c == 4) {
+                        bbmd_mask =
+                            ((a[0]&0xFF)<<24)|((a[1]&0xFF)<<16)|
+                            ((a[2]&0xFF)<<8)|(a[3]&0xFF);
+                    }
+                }
+                BBMD_Table_Entry.valid = true;
+                BBMD_Table_Entry.dest_address.s_addr = bbmd_address;
+                BBMD_Table_Entry.dest_port = bbmd_port;
+                BBMD_Table_Entry.broadcast_mask.s_addr = bbmd_mask;
+                bvlc_add_bdt_entry_local(&BBMD_Table_Entry);
+            }
+        }
     }
-
     bbmd_result = retval;
 #endif
     return retval;
 }
 
+#if (BACNET_PROTOCOL_REVISION >= 17)
+#if defined(BACDL_BIP)
+/**
+ * Datalink network port object settings
+ */
+static void dlenv_network_port_init(void)
+{
+    uint32_t instance = 0;
+    uint32_t address = 0;
+    uint32_t broadcast = 0;
+    uint32_t test_broadcast = 0;
+    uint32_t mask = 0;
+    uint16_t port = 0;
+    uint8_t mac[4+2] = {0};
+    uint8_t prefix = 0;
+
+    instance = Network_Port_Index_To_Instance(0);
+    Network_Port_Name_Set(instance, "BACnet/IP Port");
+    Network_Port_Type_Set(instance, PORT_TYPE_BIP);
+    port = bip_get_port();
+    Network_Port_BIP_Port_Set(instance, port);
+    address = bip_get_addr();
+    memcpy(&mac[0], &address, 4);
+    memcpy(&mac[4], &port, 2);
+    Network_Port_MAC_Address_Set(instance, &mac[0], 6);
+    broadcast = bip_get_broadcast_addr();
+    for (prefix = 0; prefix < 32; prefix++) {
+        mask = htonl((0xFFFFFFFF << (32 - prefix)) & 0xFFFFFFFF);
+        test_broadcast = (address & mask) | (~mask);
+        if (test_broadcast == broadcast) {
+            break;
+        }
+    }
+    Network_Port_IP_Subnet_Prefix_Set(instance, prefix);
+}
+#elif defined(BACDL_MSTP)
+/**
+ * Datalink network port object settings
+ */
+static void dlenv_network_port_init(void)
+{
+    uint32_t instance = 0;
+    uint8_t mac[1] = {0};
+
+    instance = Network_Port_Index_To_Instance(0);
+    Network_Port_Name_Set(instance, "MS/TP Port");
+    Network_Port_MSTP_Max_Master_Set(instance, dlmstp_max_master());
+    Network_Port_MSTP_Max_Info_Frames_Set(instance, dlmstp_max_info_frames());
+    Network_Port_Link_Speed_Set(instance, dlmstp_baud_rate());
+    mac[0] = dlmstp_mac_address();
+    Network_Port_MAC_Address_Set(instance, &mac[0], 1);
+}
+#elif defined(BACDL_BIP6)
+/**
+ * Datalink network port object settings
+ */
+static void dlenv_network_port_init(void)
+{
+    uint32_t instance = 0;
+    const char *bip_port_name = ;
+
+    instance = Network_Port_Index_To_Instance(0);
+    Network_Port_Name_Set(instance, "BACnet/IPv6 Port");
+
+}
+#endif
+#else
+/**
+ * Datalink network port object settings
+ */
+static void dlenv_network_port_init(void)
+{
+    /* do nothing */
+}
+#endif
 
 /** Datalink maintenance timer
  * @ingroup DataLink
@@ -191,6 +321,7 @@ void dlenv_maintenance_timer(
         } else {
             BBMD_Timer_Seconds -= elapsed_seconds;
         }
+
         if (BBMD_Timer_Seconds == 0) {
             (void) dlenv_register_as_foreign_device();
             /* If that failed (negative), maybe just a network issue.
@@ -237,6 +368,11 @@ void dlenv_maintenance_timer(
  *       Registration (0..65535). Defaults to 60000 seconds.
  *   - BACNET_BBMD_ADDRESS - dotted IPv4 address of the BBMD or Foreign
  *       Device Registrar.
+ *   - BACNET_BDT_ADDR_1 - dotted IPv4 address of the BBMD table entry 1..128
+ *   - BACNET_BDT_PORT_1 - UDP port of the BBMD table entry 1..128 (optional)
+ *   - BACNET_BDT_MASK_1 - dotted IPv4 mask of the BBMD table
+ *       entry 1..128 (optional)
+ *   - BACNET_IP_NAT_ADDR - dotted IPv4 address of the public facing router
  * - BACDL_MSTP: (BACnet MS/TP)
  *   - BACNET_MAX_INFO_FRAMES
  *   - BACNET_MAX_MASTER
@@ -298,11 +434,20 @@ void dlenv_init(
         if (ntohs(bip_get_port()) < 1024)
             bip_set_port(htons(0xBAC0));
     }
+    
+    pEnv = getenv("BACNET_IP_NAT_ADDR");
+    if (pEnv) {
+        struct in_addr nat_addr;
+        nat_addr.s_addr = bip_getaddrbyname(pEnv);
+        if (nat_addr.s_addr) {
+            bvlc_set_global_address_for_nat(&nat_addr);
+        }
+    }
 
     printf("BACnet Port = %d\n", ntohs(bip_get_port()));
 
 #if defined(BBMD_ENABLED) && BBMD_ENABLED
-    printf("BBMD Enabled\n");
+    printf("BBMD is enabled\n");
 #else
     printf("BBMD *NOT* Enabled\n");
 #endif
@@ -359,6 +504,6 @@ void dlenv_init(
         tsm_invokeID_set((uint8_t) strtol(pEnv, NULL, 0));
     }
 #endif
-
+    dlenv_network_port_init();
     dlenv_register_as_foreign_device();
 }

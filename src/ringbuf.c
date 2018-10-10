@@ -34,20 +34,22 @@
 * This exception does not invalidate any other reasons why a work
 * based on this file might be covered by the GNU General Public
 * License.
-
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************
 *
 * @section DESCRIPTION
 *
@@ -195,7 +197,7 @@ volatile uint8_t *Ringbuf_Peek(RING_BUFFER const *b)
 }
 
 /**
-* DESCRIPTION: Copy the data from the front of the list, and removes it
+* Looks at the data from the next element of the list without removing it
 *
 * @param  b - pointer to RING_BUFFER structure
 * @param  data_element - find the next element from this one
@@ -335,6 +337,7 @@ bool Ringbuf_Put(RING_BUFFER * b,
             Ringbuf_Depth_Update(b);
             status = true;
         }
+			// dbTraffic(DBD_ALL, DB_ERROR, "Ringbuf full %p Size:%d %d %d Count:%u\n",
     }
 
     return status;

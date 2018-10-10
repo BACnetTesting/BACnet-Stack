@@ -13,14 +13,22 @@ BACNET_PORT_DIR = ../ports/${BACNET_PORT}
 BACNET_OBJECT = ../demo/object
 BACNET_HANDLER = ../demo/handler
 BACNET_CORE = ../src
+BACNET_UTIL=../bits
 BACNET_INCLUDE = ../include
 BACNET_UTIL = ../bits/util
 
 # compiler configuration
-#STANDARDS = -std=c99
+#set by main makefile STANDARDS = -std=gnu11
 INCLUDE1 = -I$(BACNET_PORT_DIR) -I$(BACNET_OBJECT) -I$(BACNET_HANDLER)
 INCLUDE2 = -I$(BACNET_INCLUDE)
-INCLUDES = $(INCLUDE1) $(INCLUDE2) -I../bits -I../bits/util -I../bits/logging
+INCLUDES = $(INCLUDE1) $(INCLUDE2) \
+	-I../bits \
+	-I../bits/util \
+	-I../bits/persist \
+	-I../bits/logging \
+	-I../bits/bitsRouter \
+	-I../bits/osLayer/linux \
+	-I../bits/ipc/udp
 
 # target
 TARGET = bacnet
@@ -83,10 +91,12 @@ CORE_SRC = \
 	$(BACNET_CORE)/authentication_factor_format.c \
 	$(BACNET_CORE)/authentication_factor.c \
 	$(BACNET_CORE)/credential_authentication_factor.c \
+	$(BACNET_UTIL)/BACnetObject.c \
 	$(BACNET_UTIL)/btaDebug.c \
 	$(BACNET_UTIL)/ese.c \
 	$(BACNET_UTIL)/misc.c \
 	$(BACNET_UTIL)/linklist.c \
+	$(BACNET_UTIL)/llist.c \
 	$(BACNET_UTIL)/../util/bitsDebug.c \
 	$(BACNET_UTIL)/../util/BACnetToString.c \
 	$(BACNET_UTIL)/../util/commandLine.c \
@@ -95,6 +105,8 @@ CORE_SRC = \
 	$(BACNET_UTIL)/../util/bacnetProc.c \
 	$(BACNET_UTIL)/../logging/logDispatch.c \
 	$(BACNET_UTIL)/../logging/linuxConio.c \
+	$(BACNET_UTIL)/persist/sqlite/sqlitePersist.c \
+	$(BACNET_UTIL)/persist/sqlite/sqlite3.c \
 	$(BACNET_CORE)/version.c
 
 HANDLER_SRC = \
@@ -225,12 +237,21 @@ all: $(LIBRARY)
 
 lib: $(LIBRARY)
 
-$(LIBRARY): $(OBJS) Makefile
+$(LIBRARY): $(OBJS) Makefile $(BACNET_UTIL)/persist/sqlite/sqlite3.o
 	$(AR) rcs $@ $(OBJS)
 
 .c.o:
-	echo libfile compile $*.c $(STANDARDS)
+	# echo libfile compile $*.c standards= $(STANDARDS) 
+	# echo libfile compile $*.c cflags= $(CFLAGS) 
 	${CC} -c ${CFLAGS} $*.c -o $@
+
+# sqlite3 is 'C', compile separately
+$(BACNET_UTIL)/persist/sqlite/sqlite3.o : $(BACNET_UTIL)/persist/sqlite/sqlite3.c
+	# echo attempting to build sqlite3.o, cflags = $(CFLAGS) $(DEBUGMAKE)
+	# gcc -c ${CFLAGS} $*.c -o $@
+	gcc -c $*.c -o $@
+	# echo  $(AR) rcs $(LIBRARY) $(BACNET_UTIL)/persist/sqlite/sqlite3.o $(DEBUGMAKE)
+	$(AR) rcs $(LIBRARY) $(BACNET_UTIL)/persist/sqlite/sqlite3.o
 
 depend:
 	rm -f .depend
@@ -238,5 +259,6 @@ depend:
 
 clean:
 	rm -rf core $(OBJS) $(LIBRARY)
+	rm -rf $(BACNET_UTIL)/persist/sqlite/sqlite3.o
 
 include: .depend

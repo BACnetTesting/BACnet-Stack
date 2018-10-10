@@ -20,24 +20,37 @@
  * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- *********************************************************************/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-
-#include "bacdef.h"
-#include "bacdcode.h"
-#include "bacenum.h"
-#include "bacapp.h"
-#include "rp.h"
-#include "wp.h"
-#include "cov.h"
+//#include <stdbool.h>
+//#include <stdint.h>
+//#include <stdio.h>
+//
+//#include "platform.h"
+//#include "bacdef.h"
+//#include "bacdcode.h"
+//#include "bacenum.h"
+//#include "bactext.h"
 #include "config.h"     /* the custom stuff */
 #if (BACNET_USE_OBJECT_BINARY_INPUT == 1 )
 #include "bi.h"
 #include "handlers.h"
+#include "bitsDebug.h"
 
 #ifndef MAX_BINARY_INPUTS
 #define MAX_BINARY_INPUTS 5
@@ -72,7 +85,6 @@ static const BACNET_PROPERTY_ID Properties_Optional[] = {
     PROP_ACTIVE_TEXT,
     PROP_INACTIVE_TEXT,
     PROP_RELIABILITY,
-	PROP_RELIABILITY,
     MAX_BACNET_PROPERTY_ID
 };
 
@@ -152,7 +164,7 @@ unsigned Binary_Input_Instance_To_Index(
     if (object_instance < MAX_BINARY_INPUTS) {
         index = object_instance;
     }
-
+    dbTraffic(DBD_ALL, DB_BTC_ERROR, "Illegal index, %s, %d", __FILE__, __LINE__);
     return index;
 }
 

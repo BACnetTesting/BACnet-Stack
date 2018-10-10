@@ -21,7 +21,22 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
@@ -571,8 +586,8 @@ int decode_security_response_safe(uint8_t * apdu,
                 return -1;
             }
             resp->response.incorrect_key.number_of_keys = apdu[curr++];
-            if (apdu_len_remaining - 10 <
-                resp->response.incorrect_key.number_of_keys * 2) {
+            if (apdu_len_remaining - 10u <
+                resp->response.incorrect_key.number_of_keys * 2u) {
                 return -1;
             }
             for (i = 0; i < (int)resp->response.incorrect_key.number_of_keys; i++) {

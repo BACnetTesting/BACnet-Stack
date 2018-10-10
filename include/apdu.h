@@ -20,22 +20,23 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-
-Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-July 1, 2017    BITS    Modifications to this file have been made in compliance
-to original licensing.
-
-This file contains changes made by BACnet Interoperability Testing
-Services, Inc. These changes are subject to the permissions,
-warranty terms and limitations above.
-For more information: info@bac-test.com
-For access to source code:  info@bac-test.com
-or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-*********************************************************************/
 #ifndef APDU_H
 #define APDU_H
 
@@ -113,6 +114,7 @@ typedef void(
         BACNET_CONFIRMED_SERVICE_ACK_DATA * service_data);
 
 /* generic error reply function */
+#if ( BACNET_CLIENT == 1 )
 typedef void(
     *error_function) (
         BACNET_ADDRESS * src,
@@ -142,6 +144,7 @@ void apdu_set_confirmed_ack_handler(
 void apdu_set_confirmed_simple_ack_handler(
     BACNET_CONFIRMED_SERVICE service_choice,
     confirmed_simple_ack_function pFunction);
+#endif
 
 /* configure reject for confirmed services that are not supported */
 void apdu_set_unrecognized_service_handler_handler(
@@ -164,10 +167,11 @@ bool apdu_service_supported(
  */
 bool apdu_service_supported_to_index(
     BACNET_SERVICES_SUPPORTED service_supported,
-    size_t * index,
+    size_t * objectIndex,
     bool * bIsConfirmed);
 
 
+#if ( BACNET_CLIENT == 1 )
 void apdu_set_error_handler(
     BACNET_CONFIRMED_SERVICE service_choice,
     error_function pFunction);
@@ -177,6 +181,7 @@ void apdu_set_abort_handler(
 
 void apdu_set_reject_handler(
     reject_function pFunction);
+#endif
 
 uint16_t apdu_decode_confirmed_service_request(
     uint8_t * apdu, /* APDU data */

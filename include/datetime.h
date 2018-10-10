@@ -20,26 +20,30 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-*********************************************************************/
 #ifndef DATE_TIME_H
 #define DATE_TIME_H
 
 #include <stdint.h>
 #include <stdbool.h>
+
+#define BACNET_EPOCH_YEAR 1900
 
 typedef enum BACnet_Weekday {
     BACNET_WEEKDAY_MONDAY = 1,
@@ -194,38 +198,38 @@ void datetime_add_minutes(
     int32_t minutes);
 
 /* date and time wildcards */
-    bool datetime_wildcard_year(
-        BACNET_DATE *bdate);
-    void datetime_wildcard_year_set(
-        BACNET_DATE *bdate);
-    bool datetime_wildcard_month(
-        BACNET_DATE *bdate);
-    void datetime_wildcard_month_set(
-        BACNET_DATE *bdate);
-    bool datetime_wildcard_day(
-        BACNET_DATE *bdate);
-    void datetime_wildcard_day_set(
-        BACNET_DATE *bdate);
-    bool datetime_wildcard_weekday(
-        BACNET_DATE *bdate);
-    void datetime_wildcard_weekday_set(
-        BACNET_DATE *bdate);
-    bool datetime_wildcard_hour(
-        BACNET_TIME *btime);
-    void datetime_wildcard_hour_set(
-        BACNET_TIME *btime);
-    bool datetime_wildcard_minute(
-        BACNET_TIME *btime);
-    void datetime_wildcard_minute_set(
-        BACNET_TIME *btime);
-    bool datetime_wildcard_second(
-        BACNET_TIME *btime);
-    void datetime_wildcard_second_set(
-        BACNET_TIME *btime);
-    bool datetime_wildcard_hundredths(
-        BACNET_TIME *btime);
-    void datetime_wildcard_hundredths_set(
-        BACNET_TIME *btime);
+bool datetime_wildcard_year(
+    BACNET_DATE *bdate);
+void datetime_wildcard_year_set(
+    BACNET_DATE *bdate);
+bool datetime_wildcard_month(
+    BACNET_DATE *bdate);
+void datetime_wildcard_month_set(
+    BACNET_DATE *bdate);
+bool datetime_wildcard_day(
+    BACNET_DATE *bdate);
+void datetime_wildcard_day_set(
+    BACNET_DATE *bdate);
+bool datetime_wildcard_weekday(
+    BACNET_DATE *bdate);
+void datetime_wildcard_weekday_set(
+    BACNET_DATE *bdate);
+bool datetime_wildcard_hour(
+    BACNET_TIME *btime);
+void datetime_wildcard_hour_set(
+    BACNET_TIME *btime);
+bool datetime_wildcard_minute(
+    BACNET_TIME *btime);
+void datetime_wildcard_minute_set(
+    BACNET_TIME *btime);
+bool datetime_wildcard_second(
+    BACNET_TIME *btime);
+void datetime_wildcard_second_set(
+    BACNET_TIME *btime);
+bool datetime_wildcard_hundredths(
+    BACNET_TIME *btime);
+void datetime_wildcard_hundredths_set(
+    BACNET_TIME *btime);
 bool datetime_wildcard(
     BACNET_DATE_TIME * bdatetime);
 bool datetime_wildcard_present(
@@ -255,6 +259,10 @@ int bacapp_decode_context_datetime(
     uint8_t tag_number,
     BACNET_DATE_TIME * value);
 
+bool    daterange_date_is_valid(BACNET_DATE *date);
+bool    daterange_is_valid(BACNET_DATE_RANGE *daterange);
+bool    date_compare_weeknday(BACNET_DATE *date, BACNET_WEEKNDAY *week);
+    
 #ifdef TEST
 #include "ctest.h"
 void testDateTime(

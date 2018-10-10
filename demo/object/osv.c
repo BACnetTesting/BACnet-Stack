@@ -365,7 +365,8 @@ bool OctetString_Value_Write_Property(BACNET_WRITE_PROPERTY_DATA * wp_data)
 }
 
 
-void OctetString_Value_Intrinsic_Reporting(uint32_t object_instance)
+void OctetString_Value_Intrinsic_Reporting(
+    uint32_t object_instance)
 {
 }
 

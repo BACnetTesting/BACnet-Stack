@@ -20,23 +20,27 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-*********************************************************************/
 #ifndef BACENUM_H
 #define BACENUM_H
+
+#include "config.h"
 
 typedef enum {
     PROP_ACKED_TRANSITIONS = 0,
@@ -382,6 +386,8 @@ typedef enum {
     PROP_COVU_PERIOD = 349,
     PROP_COVU_RECIPIENTS = 350,
     PROP_EVENT_MESSAGE_TEXTS = 351,
+
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
     /* enumerations 352-363 are defined in Addendum 2010-af */
     PROP_EVENT_MESSAGE_TEXTS_CONFIG = 352,
     PROP_EVENT_DETECTION_ENABLE = 353,
@@ -395,6 +401,9 @@ typedef enum {
     PROP_PROCESS_IDENTIFIER_FILTER = 361,
     PROP_SUBSCRIBED_RECIPIENTS = 362,
     PROP_PORT_FILTER = 363,
+#endif
+
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
     /* enumeration 364 is defined in Addendum 2010-ae */
     PROP_AUTHORIZATION_EXEMPTIONS = 364,
     /* enumerations 365-370 are defined in Addendum 2010-aa */
@@ -404,8 +413,15 @@ typedef enum {
     PROP_EXECUTION_DELAY = 368,
     PROP_LAST_PRIORITY = 369,
     PROP_WRITE_STATUS = 370,
+#endif
+
     /* enumeration 371 is defined in Addendum 2010-ao */
+	/* Note: Although Property_List is defined in revision 14 and should not be valid if a prior version is specified, the reality is this
+		implmentation of the stack uses this enum for some internal processes, so we allow it to be defined for that purpose only even if 
+		selected revision < 14 */
     PROP_PROPERTY_LIST = 371,
+
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
     /* enumeration 372 is defined in Addendum 2010-ak */
     PROP_SERIAL_NUMBER = 372,
     /* enumerations 373-386 are defined in Addendum 2010-i */
@@ -436,6 +452,7 @@ typedef enum {
     PROP_STATE_CHANGE_VALUES = 396,
     PROP_TIMER_RUNNING = 397,
     PROP_TIMER_STATE = 398,
+#endif
     /* enumerations 399-427 are defined in Addendum 2012-ai */
     PROP_APDU_LENGTH = 399,
     PROP_IP_ADDRESS = 400,
@@ -454,7 +471,7 @@ typedef enum {
     PROP_BBMD_ACCEPT_FD_REGISTRATIONS = 413,
     PROP_BBMD_BROADCAST_DISTRIBUTION_TABLE = 414,
     PROP_BBMD_FOREIGN_DEVICE_TABLE = 415,
-	PROP_CHANGES_PENDING = 416,
+    PROP_CHANGES_PENDING = 416,
     PROP_COMMAND = 417,
     PROP_FD_BBMD_ADDRESS = 418,
     PROP_FD_SUBSCRIPTION_LIFETIME = 419,
@@ -535,12 +552,16 @@ typedef enum {
     /* are reserved for use in the ReadPropertyConditional and */
     /* ReadPropertyMultiple services or services not defined in this standard. */
     /* Enumerated values 0-511 are reserved for definition by ASHRAE.  */
+
     /* Enumerated values 512-4194303 may be used by others subject to the  */
     /* procedures and constraints described in Clause 23.  */
+    PROP_PROPRIETARY_COMM_STATS = 512,
+
     /* do the max range inside of enum so that
        compilers will allocate adequate sized datatype for enum
        which is used to store decoding */
     MAX_BACNET_PROPERTY_ID = 4194303
+
 } BACNET_PROPERTY_ID;
 
 
@@ -591,6 +612,16 @@ typedef enum {
     STATUS_BACKUP_IN_PROGRESS = 5,
     MAX_DEVICE_STATUS = 6
 } BACNET_DEVICE_STATUS;
+
+typedef enum {
+  BR_STATE_IDLE = 0,
+  BR_STATE_PREPARE_BACKUP = 1,
+  BR_STATE_PREPARE_RESTORE = 2,
+  BR_STATE_PERFORMING_BACKUP = 3,
+  BR_STATE_PERFORMING_RESTORE = 4,
+  BR_STATE_BACKUP_FAILURE = 5,
+  BR_STATE_RESTORE_FAILURE = 6
+} BACNET_BACKUP_RESTORE_STATE;
 
 typedef enum {
     /* Acceleration */
@@ -940,9 +971,9 @@ typedef enum {
     RESTART_REASON_HARDWARE_WATCHDOG = 5,
     RESTART_REASON_SOFTWARE_WATCHDOG = 6,
     RESTART_REASON_SUSPENDED = 7,
-/* Enumerated values 0-63 are reserved for definition by ASHRAE.
-   Enumerated values 64-255 may be used by others subject to the
-   procedures and constraints described in Clause 23. */
+    /* Enumerated values 0-63 are reserved for definition by ASHRAE.
+       Enumerated values 64-255 may be used by others subject to the
+       procedures and constraints described in Clause 23. */
     /* do the max range inside of enum so that
        compilers will allocate adequate sized datatype for enum
        which is used to store decoding */
@@ -1221,21 +1252,23 @@ typedef enum {
     OBJECT_BITSTRING_VALUE = 39,        /* Addendum 2008-w */
     OBJECT_CHARACTERSTRING_VALUE = 40,  /* Addendum 2008-w */
     OBJECT_DATE_PATTERN_VALUE = 41,     /* Addendum 2008-w */
-    OBJECT_DATE_VALUE = 42,     /* Addendum 2008-w */
+    OBJECT_DATE_VALUE = 42,             /* Addendum 2008-w */
     OBJECT_DATETIME_PATTERN_VALUE = 43, /* Addendum 2008-w */
-    OBJECT_DATETIME_VALUE = 44, /* Addendum 2008-w */
-    OBJECT_INTEGER_VALUE = 45,  /* Addendum 2008-w */
+    OBJECT_DATETIME_VALUE = 44,         /* Addendum 2008-w */
+    OBJECT_INTEGER_VALUE = 45,          /* Addendum 2008-w */
     OBJECT_LARGE_ANALOG_VALUE = 46,     /* Addendum 2008-w */
     OBJECT_OCTETSTRING_VALUE = 47,      /* Addendum 2008-w */
     OBJECT_POSITIVE_INTEGER_VALUE = 48, /* Addendum 2008-w */
     OBJECT_TIME_PATTERN_VALUE = 49,     /* Addendum 2008-w */
-    OBJECT_TIME_VALUE = 50,     /* Addendum 2008-w */
+    OBJECT_TIME_VALUE = 50,             /* Addendum 2008-w */
     OBJECT_NOTIFICATION_FORWARDER = 51, /* Addendum 2010-af */
     OBJECT_ALERT_ENROLLMENT = 52,       /* Addendum 2010-af */
-    OBJECT_CHANNEL = 53,        /* Addendum 2010-aa */
+    OBJECT_CHANNEL = 53,                /* Addendum 2010-aa */
     OBJECT_LIGHTING_OUTPUT = 54,        /* Addendum 2010-i */
+#if ( BACNET_PROTOCOL_REVISION >= 17 )
     OBJECT_BINARY_LIGHTING_OUTPUT = 55, /* Addendum 135-2012az */
-    OBJECT_NETWORK_PORT = 56,   /* Addendum 135-2012az */
+    OBJECT_NETWORK_PORT = 56,           /* Addendum 135-2012az */
+#endif
     /* Enumerated values 0-127 are reserved for definition by ASHRAE. */
     /* Enumerated values 128-1023 may be used by others subject to  */
     /* the procedures and constraints described in Clause 23. */
@@ -1245,7 +1278,7 @@ typedef enum {
     OBJECT_PROPRIETARY_MIN = 128,
     OBJECT_PROPRIETARY_MAX = 1023,
     MAX_BACNET_OBJECT_TYPE = 1024,
-    OBJECT_NO_TYPE = 0x7fff
+    OBJECT_NO_TYPE = 0x7FFFu
 } BACNET_OBJECT_TYPE;
 
 typedef enum {
@@ -1929,6 +1962,7 @@ typedef enum BACnetDaysOfWeek {
     MAX_BACNET_DAYS_OF_WEEK = 7
 } BACNET_DAYS_OF_WEEK;
 
+// these are used as an index in some arrays.
 typedef enum BACnetEventTransitionBits {
     TRANSITION_TO_OFFNORMAL = 0,
     TRANSITION_TO_FAULT = 1,
@@ -2146,10 +2180,12 @@ typedef enum {
     PORT_TYPE_BIP = 5,
     PORT_TYPE_ZIGBEE = 6,
     PORT_TYPE_VIRTUAL = 7,
-    PORT_TYPE_NON_BACNET = 8
-        /* Enumerated values 0-63 are reserved for definition by ASHRAE.
-           Enumerated values 64-255 may be used by others subject to the
-           procedures and constraints described in Clause 23. */
+    PORT_TYPE_NON_BACNET = 8,
+    PORT_TYPE_BIP6 = 9,
+    /* Enumerated values 0-63 are reserved for definition by ASHRAE.
+       Enumerated values 64-255 may be used by others subject to the
+       procedures and constraints described in Clause 23. */
+    PORT_TYPE_MAX = 255
 } BACNET_PORT_TYPE;
 
 /* BACnetNetworkNumberQuality ::= ENUMERATED */
@@ -2170,9 +2206,9 @@ typedef enum {
     PORT_COMMAND_RESTART_AUTONEGOTIATION = 5,
     PORT_COMMAND_DISCONNECT = 6,
     PORT_COMMAND_RESTART_PORT = 7
-        /* Enumerated values 0-127 are reserved for definition by ASHRAE.
-           Enumerated values 128-255 may be used by others subject to the
-           procedures and constraints described in Clause 23. */
+    /* Enumerated values 0-127 are reserved for definition by ASHRAE.
+       Enumerated values 128-255 may be used by others subject to the
+       procedures and constraints described in Clause 23. */
 } BACNET_PORT_COMMAND;
 
 typedef enum {
@@ -2246,9 +2282,9 @@ typedef enum {
     ACCESS_CREDENTIAL_DISABLE_MANUAL = 2,
     ACCESS_CREDENTIAL_DISABLE_LOCKOUT = 3,
     ACCESS_CREDENTIAL_DISABLE_MAX = 4
-    /* Enumerated values 0-63 are reserved for definition by ASHRAE.
-       Enumerated values 64-65535 may be used by others subject to
-       the procedures and constraints described in Clause 23. */
+        /* Enumerated values 0-63 are reserved for definition by ASHRAE.
+           Enumerated values 64-65535 may be used by others subject to
+           the procedures and constraints described in Clause 23. */
 } BACNET_ACCESS_CREDENTIAL_DISABLE;
 
 typedef enum {
@@ -2263,9 +2299,9 @@ typedef enum {
     CREDENTIAL_DISABLED_INACTIVITY = 8,
     CREDENTIAL_DISABLED_MANUAL = 9,
     CREDENTIAL_DISABLED_MAX = 10
-    /* Enumerated values 0-63 are reserved for definition by ASHRAE.
-       Enumerated values 64-65535 may be used by others subject to
-       the procedures and constraints described in Clause 23. */
+        /* Enumerated values 0-63 are reserved for definition by ASHRAE.
+           Enumerated values 64-65535 may be used by others subject to
+           the procedures and constraints described in Clause 23. */
 } BACNET_ACCESS_CREDENTIAL_DISABLE_REASON;
 
 typedef enum {
@@ -2276,9 +2312,9 @@ typedef enum {
     AUTHENTICATION_DISABLED_DAMAGED = 4,
     AUTHENTICATION_DISABLED_DESTROYED = 5,
     AUTHENTICATION_DISABLED_MAX = 6
-    /* Enumerated values 0-63 are reserved for definition by ASHRAE.
-       Enumerated values 64-65535 may be used by others subject to
-       the procedures and constraints described in Clause 23. */
+        /* Enumerated values 0-63 are reserved for definition by ASHRAE.
+           Enumerated values 64-65535 may be used by others subject to
+           the procedures and constraints described in Clause 23. */
 } BACNET_AUTHENTICATION_DISABLE_REASON;
 
 typedef enum {
@@ -2349,15 +2385,28 @@ typedef enum BACnetNetworkPortCommand_T {
     NETWORK_PORT_COMMAND_RESTART_AUTONEGOTIATION = 5,
     NETWORK_PORT_COMMAND_DISCONNECT = 6,
     NETWORK_PORT_COMMAND_RESTART_PORT = 7,
-    /* Enumerated values 0-127 are reserved for definition 
-       by ASHRAE. Enumerated values 128-255 may be used 
-       by others subject to the procedures and constraints 
-       described in Clause 23.*/
+    /* Enumerated values 0-127 are reserved for definition
+       by ASHRAE. Enumerated values 128-255 may be used
+       by others subject to the procedures and constraints
+       described in Clause 23. */
     /* do the max range inside of enum so that
        compilers will allocate adequate sized datatype for enum
        which is used to store decoding */
     NETWORK_PORT_COMMAND_PROPRIETARY_MIN = 128,
     NETWORK_PORT_COMMAND_PROPRIETARY_MAX = 255
 } BACNET_NETWORK_PORT_COMMAND;
+
+typedef enum BACnetProtocolLevel_T {
+    BACNET_PROTOCOL_LEVEL_PHYSICAL=0,
+    BACNET_PROTOCOL_LEVEL_PROTOCOL=1,
+    BACNET_PROTOCOL_LEVEL_BACNET_APPLICATION=2,
+    BACNET_PROTOCOL_LEVEL_NON_BACNET_APPLICATION=3
+} BACNET_PROTOCOL_LEVEL;
+
+typedef enum BACnetIPMode_T {
+    BACNET_IP_MODE_NORMAL = 0,
+    BACNET_IP_MODE_FOREIGN = 1,
+    BACNET_IP_MODE_BBMD = 2
+} BACNET_IP_MODE;
 
 #endif /* end of BACENUM_H */

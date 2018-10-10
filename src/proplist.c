@@ -29,22 +29,23 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-  */
 #include <stdint.h>
 #include "bacenum.h"
 #include "bacdef.h"
@@ -62,6 +63,10 @@
 
 /** @file proplist.c  List of Required and Optional object properties */
 /* note: the PROP_PROPERTY_LIST is NOT included in these lists, on purpose */
+
+        // compare these lists against BTC BACnetObjects.cs
+        // Here is a clue: BC       E:\Dev\BITS\BACnet Dev\BACnetLibrary\BACnetObjects.cs
+        //                          E:\Dev\BITS Reference Stack\BITS Reference Stack - Feature Creep\src\proplist.c
 
 static const BACNET_PROPERTY_ID Default_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
@@ -119,7 +124,9 @@ static const BACNET_PROPERTY_ID Device_Properties_Optional[] = {
 #if ( BACNET_SVC_COV_B == 1 )
     PROP_ACTIVE_COV_SUBSCRIPTIONS,
 #endif
-    PROP_SLAVE_PROXY_ENABLE,        // todo, only allowed in some cases
+#if ( BACNET_PROTOCOL_REVISION < 17 )
+    PROP_SLAVE_PROXY_ENABLE,        // todo, only allowed in some cases - moved to Port Object at Rev 17
+#endif
     PROP_MANUAL_SLAVE_ADDRESS_BINDING,
     PROP_AUTO_SLAVE_DISCOVERY,
     PROP_SLAVE_ADDRESS_BINDING,
@@ -133,6 +140,106 @@ static const BACNET_PROPERTY_ID Device_Properties_Optional[] = {
     PROP_PROFILE_NAME,
     MAX_BACNET_PROPERTY_ID
 };
+
+
+#if 0
+        protected static PROPERTY_ID[] Access_Door_Properties_Required = new PROPERTY_ID[] {
+            PROPERTY_ID.PRESENT_VALUE,
+            PROPERTY_ID.GLOBAL_IDENTIFIER,
+            PROPERTY_ID.OCCUPANCY_STATE,
+            PROPERTY_ID.STATUS_FLAGS,
+            PROPERTY_ID.EVENT_STATE,
+            PROPERTY_ID.RELIABILITY,
+            PROPERTY_ID.OUT_OF_SERVICE,
+            PROPERTY_ID.PRIORITY_ARRAY,
+            PROPERTY_ID.RELINQUISH_DEFAULT,
+            PROPERTY_ID.DOOR_PULSE_TIME,
+            PROPERTY_ID.DOOR_EXTENDED_PULSE_TIME,
+            PROPERTY_ID.DOOR_OPEN_TOO_LONG_TIME,
+            PROPERTY_ID.CURRENT_COMMAND_PRIORITY,
+        };
+
+
+        protected static PROPERTY_ID[] Access_Door_Properties_Optional = new PROPERTY_ID[] {
+            PROPERTY_ID.DESCRIPTION,
+            PROPERTY_ID.DOOR_STATUS,
+            PROPERTY_ID.LOCK_STATUS,
+            PROPERTY_ID.SECURED_STATUS,
+            PROPERTY_ID.DOOR_MEMBERS,
+            PROPERTY_ID.DOOR_UNLOCK_DELAY_TIME,
+            PROPERTY_ID.DOOR_ALARM_STATE,
+            PROPERTY_ID.MASKED_ALARM_VALUES,
+            PROPERTY_ID.MAINTENANCE_REQUIRED,
+            PROPERTY_ID.TIME_DELAY,
+            PROPERTY_ID.NOTIFICATION_CLASS,
+            PROPERTY_ID.ALARM_VALUES,
+            PROPERTY_ID.FAULT_VALUES,
+            PROPERTY_ID.EVENT_ENABLE,
+            PROPERTY_ID.ACKED_TRANSITIONS,
+            PROPERTY_ID.NOTIFY_TYPE,
+            PROPERTY_ID.EVENT_TIME_STAMPS,
+            PROPERTY_ID.EVENT_MESSAGE_TEXTS,
+            PROPERTY_ID.EVENT_MESSAGE_TEXTS_CONFIG,
+            PROPERTY_ID.EVENT_DETECTION_ENABLE,
+            PROPERTY_ID.EVENT_ALGORITHM_INHIBIT_REF,
+            PROPERTY_ID.EVENT_ALGORITHM_INHIBIT,
+            PROPERTY_ID.TIME_DELAY_NORMAL,
+            PROPERTY_ID.RELIABILITY_EVALUATION_INHIBIT,
+            PROPERTY_ID.VALUE_SOURCE,
+            PROPERTY_ID.VALUE_SOURCE_ARRAY,
+            PROPERTY_ID.LAST_COMMAND_TIME,
+            PROPERTY_ID.COMMAND_TIME_ARRAY,
+            PROPERTY_ID.TAGS,
+            PROPERTY_ID.PROFILE_LOCATION,
+            PROPERTY_ID.PROFILE_NAME,
+        };
+
+
+        protected static PROPERTY_ID[] Access_Zone_Properties_Required = new PROPERTY_ID[] {
+            PROPERTY_ID.GLOBAL_IDENTIFIER,
+            PROPERTY_ID.OCCUPANCY_STATE,
+            PROPERTY_ID.STATUS_FLAGS,
+            PROPERTY_ID.EVENT_STATE,
+            PROPERTY_ID.RELIABILITY,
+            PROPERTY_ID.OUT_OF_SERVICE,
+            PROPERTY_ID.ENTRY_POINTS,
+            PROPERTY_ID.EXIT_POINTS,
+        };
+
+        protected static PROPERTY_ID[] Access_Zone_Properties_Optional = new PROPERTY_ID[] {
+            PROPERTY_ID.DESCRIPTION,
+            PROPERTY_ID.OCCUPANCY_COUNT,
+            PROPERTY_ID.OCCUPANCY_COUNT_ENABLE,
+            PROPERTY_ID.ADJUST_VALUE,
+            PROPERTY_ID.OCCUPANCY_UPPER_LIMIT,
+            PROPERTY_ID.OCCUPANCY_LOWER_LIMIT,
+            PROPERTY_ID.CREDENTIALS_IN_ZONE,
+            PROPERTY_ID.LAST_CREDENTIAL_ADDED,
+            PROPERTY_ID.LAST_CREDENTIAL_ADDED_TIME,
+            PROPERTY_ID.LAST_CREDENTIAL_REMOVED,
+            PROPERTY_ID.LAST_CREDENTIAL_REMOVED_TIME,
+            PROPERTY_ID.PASSBACK_MODE,
+            PROPERTY_ID.PASSBACK_TIMEOUT,
+            PROPERTY_ID.TIME_DELAY,
+            PROPERTY_ID.NOTIFICATION_CLASS,
+            PROPERTY_ID.ALARM_VALUES,
+            PROPERTY_ID.EVENT_ENABLE,
+            PROPERTY_ID.ACKED_TRANSITIONS,
+            PROPERTY_ID.NOTIFY_TYPE,
+            PROPERTY_ID.EVENT_TIME_STAMPS,
+            PROPERTY_ID.EVENT_MESSAGE_TEXTS,
+            PROPERTY_ID.EVENT_MESSAGE_TEXTS_CONFIG,
+            PROPERTY_ID.EVENT_DETECTION_ENABLE,
+            PROPERTY_ID.EVENT_ALGORITHM_INHIBIT_REF,
+            PROPERTY_ID.EVENT_ALGORITHM_INHIBIT,
+            PROPERTY_ID.TIME_DELAY_NORMAL,
+            PROPERTY_ID.RELIABILITY_EVALUATION_INHIBIT,
+            PROPERTY_ID.TAGS,
+            PROPERTY_ID.PROFILE_LOCATION,
+            PROPERTY_ID.PROFILE_NAME
+        };
+
+#endif
 
 static const BACNET_PROPERTY_ID Accumulator_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
@@ -177,7 +284,7 @@ static const BACNET_PROPERTY_ID Accumulator_Properties_Optional[] = {
 #if ( BACNET_PROTOCOL_REVISION >= 14 )
     PROP_EVENT_DETECTION_ENABLE,
 #endif
-	MAX_BACNET_PROPERTY_ID
+    MAX_BACNET_PROPERTY_ID
 };
 
 #if ( BACNET_USE_OBJECT_ALERT_ENROLLMENT )
@@ -196,7 +303,7 @@ static const BACNET_PROPERTY_ID Alert_Enrollment_Properties_Required[] = {
     PROP_NOTIFY_TYPE,
     PROP_EVENT_TIME_STAMPS,
     PROP_PROPERTY_LIST,
-	MAX_BACNET_PROPERTY_ID
+    MAX_BACNET_PROPERTY_ID
 };
 
 static const BACNET_PROPERTY_ID Alert_Enrollment_Properties_Optional[] = {
@@ -829,6 +936,84 @@ static const BACNET_PROPERTY_ID Multistate_Value_Properties_Optional[] = {
     MAX_BACNET_PROPERTY_ID
 };
 
+#if 0
+        protected static PROPERTY_ID[] Network_Port_Properties_Required = new PROPERTY_ID[] {
+            PROPERTY_ID.STATUS_FLAGS,
+            PROPERTY_ID.RELIABILITY,
+            PROPERTY_ID.OUT_OF_SERVICE,
+            PROPERTY_ID.NETWORK_TYPE,
+            PROPERTY_ID.PROTOCOL_LEVEL,
+            PROPERTY_ID.NETWORK_NUMBER,
+            PROPERTY_ID.NETWORK_NUMBER_QUALITY,
+            PROPERTY_ID.CHANGES_PENDING,
+            PROPERTY_ID.APDU_LENGTH,
+            PROPERTY_ID.LINK_SPEED,
+        };
+
+        protected static PROPERTY_ID[] Network_Port_Properties_Optional = new PROPERTY_ID[] {
+            PROPERTY_ID.DESCRIPTION,
+            PROPERTY_ID.REFERENCE_PORT,
+            PROPERTY_ID.COMMAND,
+            PROPERTY_ID.MAC_ADDRESS,
+            PROPERTY_ID.LINK_SPEEDS,
+            PROPERTY_ID.LINK_SPEED_AUTONEGOTIATE,
+            PROPERTY_ID.NETWORK_INTERFACE_NAME,
+            PROPERTY_ID.BACNET_IP_MODE,
+            PROPERTY_ID.IP_ADDRESS,
+            PROPERTY_ID.BACNET_IP_UDP_PORT,
+            PROPERTY_ID.IP_SUBNET_MASK,
+            PROPERTY_ID.IP_DEFAULT_GATEWAY,
+            PROPERTY_ID.BACNET_IP_MULTICAST_ADDRESS,
+            PROPERTY_ID.IP_DNS_SERVER,
+            PROPERTY_ID.IP_DHCP_ENABLE,
+            PROPERTY_ID.IP_DHCP_LEASE_TIME,
+            PROPERTY_ID.IP_DHCP_LEASE_TIME_REMAINING,
+            PROPERTY_ID.IP_DHCP_SERVER,
+            PROPERTY_ID.BACNET_IP_NAT_TRAVERSAL,
+            PROPERTY_ID.BACNET_IP_GLOBAL_ADDRESS,
+            PROPERTY_ID.BBMD_BROADCAST_DISTRIBUTION_TABLE,
+            PROPERTY_ID.BBMD_ACCEPT_FD_REGISTRATIONS,
+            PROPERTY_ID.BBMD_FOREIGN_DEVICE_TABLE,
+            PROPERTY_ID.FD_BBMD_ADDRESS,
+            PROPERTY_ID.FD_SUBSCRIPTION_LIFETIME,
+            PROPERTY_ID.BACNET_IPV6_MODE,
+            PROPERTY_ID.IPV6_ADDRESS,
+            PROPERTY_ID.IPV6_PREFIX_LENGTH,
+            PROPERTY_ID.BACNET_IPV6_UDP_PORT,
+            PROPERTY_ID.IPV6_DEFAULT_GATEWAY,
+            PROPERTY_ID.BACNET_IPV6_MULTICAST_ADDRESS,
+            PROPERTY_ID.IPV6_DNS_SERVER,
+            PROPERTY_ID.IPV6_AUTO_ADDRESSING_ENABLE,
+            PROPERTY_ID.IPV6_DHCP_LEASE_TIME,
+            PROPERTY_ID.IPV6_DHCP_LEASE_TIME_REMAINING,
+            PROPERTY_ID.IPV6_DHCP_SERVER,
+            PROPERTY_ID.IPV6_ZONE_INDEX,
+            PROPERTY_ID.MAX_MASTER,
+            PROPERTY_ID.MAX_INFO_FRAMES,
+            PROPERTY_ID.SLAVE_PROXY_ENABLE,
+            PROPERTY_ID.MANUAL_SLAVE_ADDRESS_BINDING,
+            PROPERTY_ID.AUTO_SLAVE_DISCOVERY,
+            PROPERTY_ID.SLAVE_ADDRESS_BINDING,
+            PROPERTY_ID.VIRTUAL_MAC_ADDRESS_TABLE,
+            PROPERTY_ID.ROUTING_TABLE,
+            PROPERTY_ID.EVENT_DETECTION_ENABLE,
+            PROPERTY_ID.NOTIFICATION_CLASS,
+            PROPERTY_ID.EVENT_ENABLE,
+            PROPERTY_ID.ACKED_TRANSITIONS,
+            PROPERTY_ID.NOTIFY_TYPE,
+            PROPERTY_ID.EVENT_TIME_STAMPS,
+            PROPERTY_ID.EVENT_MESSAGE_TEXTS,
+            PROPERTY_ID.EVENT_MESSAGE_TEXTS_CONFIG,
+            PROPERTY_ID.EVENT_STATE,
+            PROPERTY_ID.RELIABILITY_EVALUATION_INHIBIT,
+            PROPERTY_ID.TAGS,
+            PROPERTY_ID.PROFILE_LOCATION,
+            PROPERTY_ID.PROFILE_NAME
+        };
+
+
+#endif
+
 static const BACNET_PROPERTY_ID Notification_Class_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
@@ -848,6 +1033,87 @@ static const BACNET_PROPERTY_ID Notification_Class_Properties_Optional[] = {
 
 #ifdef todo
     // from BTC
+        protected static PROPERTY_ID[] Octectstring_Value_Properties_Required = new PROPERTY_ID[] {
+            PROPERTY_ID.PRESENT_VALUE,
+            PROPERTY_ID.STATUS_FLAGS,
+        };
+
+
+        protected static PROPERTY_ID[] Octectstring_Value_Properties_Optional = new PROPERTY_ID[] {
+            PROPERTY_ID.DESCRIPTION,
+            PROPERTY_ID.EVENT_DETECTION_ENABLE,
+            PROPERTY_ID.RELIABILITY,
+            PROPERTY_ID.PRIORITY_ARRAY,
+            PROPERTY_ID.OUT_OF_SERVICE,
+            PROPERTY_ID.RELINQUISH_DEFAULT,
+            PROPERTY_ID.COV_INCREMENT,
+            PROPERTY_ID.TIME_DELAY,
+            PROPERTY_ID.NOTIFICATION_CLASS,
+            PROPERTY_ID.HIGH_LIMIT,
+            PROPERTY_ID.LOW_LIMIT,
+            PROPERTY_ID.DEADBAND,
+            PROPERTY_ID.LIMIT_ENABLE,
+            PROPERTY_ID.EVENT_ENABLE,
+            PROPERTY_ID.EVENT_STATE,
+            PROPERTY_ID.ACKED_TRANSITIONS,
+            PROPERTY_ID.NOTIFY_TYPE,
+            PROPERTY_ID.EVENT_TIME_STAMPS,
+            PROPERTY_ID.EVENT_MESSAGE_TEXTS,
+            PROPERTY_ID.RELIABILITY_EVALUATION_INHIBIT,
+            PROPERTY_ID.PROFILE_NAME,
+            // i just cut&pasted the above from Large_Integer_Value - revisit!
+    };
+
+        protected static PROPERTY_ID[] Positive_Integer_Value_Properties_Required = new PROPERTY_ID[] {
+        PROPERTY_ID.PRESENT_VALUE,
+        PROPERTY_ID.STATUS_FLAGS,
+        PROPERTY_ID.UNITS,
+    };
+
+
+        protected static PROPERTY_ID[] Positive_Integer_Value_Properties_Optional = new PROPERTY_ID[] {
+            PROPERTY_ID.DESCRIPTION,
+            PROPERTY_ID.EVENT_DETECTION_ENABLE,
+            PROPERTY_ID.RELIABILITY,
+            PROPERTY_ID.PRIORITY_ARRAY,
+            PROPERTY_ID.OUT_OF_SERVICE,
+            PROPERTY_ID.RELINQUISH_DEFAULT,
+            PROPERTY_ID.COV_INCREMENT,
+            PROPERTY_ID.TIME_DELAY,
+            PROPERTY_ID.NOTIFICATION_CLASS,
+            PROPERTY_ID.HIGH_LIMIT,
+            PROPERTY_ID.LOW_LIMIT,
+            PROPERTY_ID.DEADBAND,
+            PROPERTY_ID.LIMIT_ENABLE,
+            PROPERTY_ID.EVENT_ENABLE,
+            PROPERTY_ID.EVENT_STATE,
+            PROPERTY_ID.ACKED_TRANSITIONS,
+            PROPERTY_ID.NOTIFY_TYPE,
+            PROPERTY_ID.EVENT_TIME_STAMPS,
+            PROPERTY_ID.EVENT_MESSAGE_TEXTS,
+            PROPERTY_ID.RELIABILITY_EVALUATION_INHIBIT,
+            PROPERTY_ID.PROFILE_NAME,
+/*
+ * todo - add the rest... build a parser for bacnet spec??
+        Event_Message_Texts_Config BACnetARRAY[3] of CharacterString O6
+        Event_Algorithm_Inhibit_Ref BACnetObjectPropertyReference O6
+        Event_Algorithm_Inhibit BOOLEAN O6,7
+        Time_Delay_Normal Unsigned O6
+        Min_Pres_Value Unsigned O
+        Max_Pres_Value Unsigned O
+        Resolution Unsigned O
+        Property_List BACnetARRAY[N] of BACnetPropertyIdentifier R
+        Fault_High_Limit Unsigned O9
+        Fault_Low_Limit Unsigned O9
+        Current_Command_Priority BACnetOptionalUnsigned O2
+        Value_Source BACnetValueSource O10,12,14
+        Value_Source_Array BACnetARRAY[16] of BACnetValueSource O11,13
+        Last_Command_Time BACnetTimeStamp O11,13
+        Command_Time_Array BACnetARRAY[16] of BACnetTimeStamp O13
+        Tags BACnetARRAY[N] of BACnetNameValue O
+        Profile_Location CharacterString O
+*/
+    };
         protected static PROPERTY_ID[] Schedule_Properties_Required = new PROPERTY_ID[] {
             PROPERTY_ID.OBJECT_IDENTIFIER,
             PROPERTY_ID.OBJECT_NAME,
@@ -1076,9 +1342,9 @@ const BACNET_PROPERTY_ID * property_list_optional(
     case OBJECT_CHANNEL:
         pList = Channel_Properties_Optional;
         break;
-		case OBJECT_LIGHTING_OUTPUT:
-			pList = Lighting_Output_Properties_Optional;
-			break;
+        case OBJECT_LIGHTING_OUTPUT:
+            pList = Lighting_Output_Properties_Optional;
+            break;
 #endif
     case OBJECT_COMMAND:
         pList = Command_Properties_Optional;
@@ -1180,9 +1446,9 @@ const BACNET_PROPERTY_ID* property_list_required(
     case OBJECT_CHANNEL:
         pList = Channel_Properties_Required;
         break;
-		case OBJECT_LIGHTING_OUTPUT:
-			pList = Lighting_Output_Properties_Required;
-			break;
+        case OBJECT_LIGHTING_OUTPUT:
+            pList = Lighting_Output_Properties_Required;
+            break;
 #endif // ( BACNET_PROTOCOL_REVISION >= 14 )
     case OBJECT_COMMAND:
         pList = Command_Properties_Required;

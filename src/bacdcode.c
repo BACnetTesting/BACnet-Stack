@@ -29,22 +29,22 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-  */
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
 #include <string.h>
 
@@ -318,7 +318,7 @@ int encode_closing_tag(
 
 
 int decode_tag_number(
-    uint8_t * apdu,
+    const uint8_t * apdu,
     uint8_t * tag_number)
 {
     int len = 1;        /* return value */
@@ -382,7 +382,7 @@ bool decode_is_closing_tag(
 /* from clause 20.2.1.3.2 Constructed Data */
 /* returns the number of apdu bytes consumed */
 int decode_tag_number_and_value(
-    uint8_t * apdu,
+    const uint8_t * apdu,
     uint8_t * tag_number,
     uint32_t * value)
 {
@@ -390,7 +390,7 @@ int decode_tag_number_and_value(
     uint16_t value16;
     uint32_t value32;
 
-    len = decode_tag_number(&apdu[0], tag_number);
+    len = decode_tag_number(&apdu[0], tag_number); // todo2 is len meant to be incremented or not???
     if (IS_EXTENDED_VALUE(apdu[0])) {
         /* tagged as uint32_t */
         if (apdu[len] == 255) {
@@ -683,11 +683,11 @@ int decode_bitstring(
             len = 1;
             for (i = 0; i < bytes_used; i++) {
                 bitstring_set_octet(bit_string, (uint8_t) i,
-                    byte_reverse_bits(apdu[len++]));
+                                    byte_reverse_bits(apdu[len++]));
             }
             unused_bits = (uint8_t) (apdu[0] & 0x07);
             bitstring_set_bits_used(bit_string, (uint8_t) bytes_used,
-                unused_bits);
+                                    unused_bits);
         }
     }
 
@@ -703,7 +703,7 @@ int decode_context_bitstring(
     int len = 0;
 
     if (decode_is_context_tag(&apdu[len], tag_number) &&
-        !decode_is_closing_tag(&apdu[len])) {
+        !decode_is_closing_tag(&apdu[len])) {                   // todo2 (BTC), karg?
         len +=
             decode_tag_number_and_value(&apdu[len], &tag_number, &len_value);
         len += decode_bitstring(&apdu[len], len_value, bit_string);
@@ -732,7 +732,7 @@ int encode_bitstring(
         used_bytes = bitstring_bytes_used(bit_string);
         remaining_used_bits =
             (uint8_t) (bitstring_bits_used(bit_string) - ((used_bytes -
-                    1) * 8));
+                       1) * 8));
         /* number of unused bits in the subsequent final octet */
         apdu[len++] = (uint8_t) (8 - remaining_used_bits);
         for (i = 0; i < used_bytes; i++) {
@@ -754,7 +754,7 @@ int encode_application_bitstring(
     bit_string_encoded_length += bitstring_bytes_used(bit_string);
     len =
         encode_tag(&apdu[0], BACNET_APPLICATION_TAG_BIT_STRING, false,
-        bit_string_encoded_length);
+                   bit_string_encoded_length);
     len += encode_bitstring(&apdu[len], bit_string);
 
     return len;
@@ -783,8 +783,8 @@ int decode_object_id(
     BACNET_OBJECT_TYPE *object_type,
     uint32_t * instance)
 {
-    uint32_t value = 0;
-    int len = 0;
+    uint32_t value ;
+    int len ;
 
     len = decode_unsigned32(apdu, &value);
     *object_type =
@@ -820,7 +820,6 @@ int decode_context_object_id(
     } else {
         len = BACNET_STATUS_ERROR;
     }
-
     return len;
 }
 
@@ -899,10 +898,8 @@ int encode_octet_string(
            to bounds check since it might not be the only data chunk */
         len = (int) octetstring_length(octet_string);
         value = octetstring_value(octet_string);
-        if (value) {
             for (i = 0; i < len; i++) {
                 apdu[i] = value[i];
-            }
         }
     }
 
@@ -921,7 +918,7 @@ int encode_application_octet_string(
     if (octet_string) {
         apdu_len =
             encode_tag(&apdu[0], BACNET_APPLICATION_TAG_OCTET_STRING, false,
-            octetstring_length(octet_string));
+                       octetstring_length(octet_string));
         /* FIXME: probably need to pass in the length of the APDU
            to bounds check since it might not be the only data chunk */
         if ((apdu_len + octetstring_length(octet_string)) < MAX_APDU) {
@@ -967,7 +964,7 @@ int decode_octet_string(
     BACNET_OCTET_STRING * octet_string)
 {
     int len = 0;        /* return value */
-    bool status = false;
+    bool status ;
 
     status = octetstring_init(octet_string, &apdu[0], len_value);
     if (status) {
@@ -983,11 +980,11 @@ int decode_context_octet_string(
     BACNET_OCTET_STRING * octet_string)
 {
     int len = 0;        /* return value */
-    bool status = false;
+    bool status ;
     uint32_t len_value = 0;
 
     if (decode_is_context_tag(&apdu[len], tag_number) &&
-        !decode_is_closing_tag(&apdu[len])) {
+        !decode_is_closing_tag(&apdu[len])) {       // todo2 - todo2 (BTC), karg?
         len +=
             decode_tag_number_and_value(&apdu[len], &tag_number, &len_value);
 
@@ -1092,7 +1089,7 @@ int decode_character_string(
     BACNET_CHARACTER_STRING * char_string)
 {
     int len = 0;        /* return value */
-    bool status = false;
+    bool status ;
 
     status =
         characterstring_init(char_string, (BACNET_CHARACTER_STRING_ENCODING) apdu[0], (char *)&apdu[1],
@@ -1135,8 +1132,8 @@ int decode_context_character_string(
 /* and 20.2.1 General Rules for Encoding BACnet Tags */
 /* returns the number of apdu bytes consumed */
 int decode_unsigned(
-    uint8_t * apdu,
-    uint32_t len_value,
+    const uint8_t * apdu,
+    const uint32_t len_value,
     uint32_t * value)
 {
     uint16_t unsigned16_value = 0;
@@ -1174,7 +1171,7 @@ int decode_context_unsigned(
     int len = 0;
 
     if (decode_is_context_tag(&apdu[len], tag_number) &&
-        !decode_is_closing_tag(&apdu[len])) {
+        !decode_is_closing_tag(&apdu[len])) {                    // todo2 - todo2 (BTC), karg?
         len +=
             decode_tag_number_and_value(&apdu[len], &tag_number, &len_value);
         len += decode_unsigned(&apdu[len], len_value, value);
@@ -1668,7 +1665,7 @@ int encode_bacnet_date(
         apdu[0] = (uint8_t) (bdate->year - 1900);
     } else if (bdate->year < 0x100) {
         /* allow 2 digit years */
-        apdu[0] = (uint8_t) bdate->year;
+        apdu[0] = (uint8_t) bdate->year;    // EKH: I think I quite disagree here. It is the plan to represent the year as the actual value e.g. 2016, so why make an exception ? [btc todo - run greenscreen against this]
     } else {
         /*
          ** Don't try and guess what the user meant here. Just fail
@@ -1815,6 +1812,7 @@ int encode_bacnet_address(
     return apdu_len;
 }
 
+
 /* BACnetAddress */
 int decode_bacnet_address(
     uint8_t * apdu,
@@ -1857,6 +1855,7 @@ int decode_bacnet_address(
 
     return len;
 }
+
 
 /* BACnetAddress */
 int encode_context_bacnet_address(

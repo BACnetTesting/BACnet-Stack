@@ -29,21 +29,23 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
- Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
- July 1, 2017    BITS    Modifications to this file have been made in compliance
- to original licensing.
-
- This file contains changes made by BACnet Interoperability Testing
- Services, Inc. These changes are subject to the permissions,
- warranty terms and limitations above.
- For more information: info@bac-test.com
- For access to source code:  info@bac-test.com
- or      www.github.com/bacnettesting/bacnet-stack
-
- ####COPYRIGHTEND#### */
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
@@ -56,7 +58,7 @@
 /** @file datetime.c  Manipulate BACnet Date and Time values */
 
 /* define our epic beginnings */
-#define BACNET_EPOCH_YEAR 1900
+// in datetime.h #define BACNET_EPOCH_YEAR 1900
 /* 1/1/1900 is a Monday */
 #define BACNET_EPOCH_DOW BACNET_WEEKDAY_MONDAY
 
@@ -395,7 +397,6 @@ int datetime_wildcard_compare_date(
 {
     int diff = 0;
 
-    if (date1 && date2) {
         if ((date1->year != 1900 + 0xFF) && (date2->year != 1900 + 0xFF)) {
             diff = (int)date1->year - (int)date2->year;
         }
@@ -410,7 +411,6 @@ int datetime_wildcard_compare_date(
                 /* we ignore weekday in comparison */
             }
         }
-    }
 
     return diff;
 }
@@ -421,7 +421,6 @@ int datetime_wildcard_compare_time(
 {
     int diff = 0;
 
-    if (time1 && time2) {
         if ((time1->hour != 0xFF) && (time2->hour != 0xFF)) {
             diff = (int)time1->hour - (int)time2->hour;
         }
@@ -437,7 +436,6 @@ int datetime_wildcard_compare_time(
                     if ((time1->hundredths != 0xFF) &&
                         (time2->hundredths != 0xFF)) {
                         diff = (int)time1->hundredths - (int)time2->hundredths;
-                    }
                 }
             }
         }
@@ -631,12 +629,10 @@ uint32_t datetime_seconds_since_midnight(
 uint16_t datetime_minutes_since_midnight(
     BACNET_TIME * btime)
 {
-    uint32_t minutes = 0;
+    uint16_t minutes = 0;
 
     if (btime) {
-        minutes = minutes_since_midnight(
-            btime->hour,
-            btime->min);
+        minutes = minutes_since_midnight(btime->hour, btime->min);
     }
 
     return minutes;
@@ -1521,3 +1517,52 @@ int main(
 
 #endif /* TEST_DATE_TIME */
 #endif /* TEST */
+
+
+BACNET_DATE wildcard_date = { 1900 + 0xFF, 0xFF, 0xFF, BACNET_WEEKDAY_ANY };
+BACNET_TIME wildcard_time = { 0xFF, 0xFF, 0xFF, 0xFF };
+
+bool daterange_date_is_valid(BACNET_DATE *date)
+{
+    return datetime_date_is_valid(date) || datetime_compare_date(&wildcard_date, date) == 0;
+}
+ 
+bool daterange_is_valid(BACNET_DATE_RANGE *daterange)
+{
+    return daterange_date_is_valid(&daterange->startdate) && daterange_date_is_valid(&daterange->enddate);
+}
+
+bool date_compare_weeknday(BACNET_DATE *d, BACNET_WEEKNDAY *w)
+{
+    if (d->wday != 0xFF && w->dayofweek != 0xFF && d->wday != w->dayofweek) return false;
+    
+    if (d->month == 0xFF || w->month == 0xFF || d->month == w->month || (w->month == 13 && (d->month & 1) == 1) || (w->month == 14 && (d->month & 1) == 0))
+    {
+        // days remaining in current month
+        uint8_t days = (int)datetime_month_days(d->year, d->month) - d->day;
+    
+        switch (w->weekofmonth) {
+        case 1:     //day 1-7
+            return (d->day >= 1 && d->day <= 7); 
+        case 2:     //day 8-14
+            return (d->day >= 8 && d->day <= 14);
+        case 3:     //day 15-21
+            return (d->day >= 15 && d->day <= 21);
+        case 4:     //day 22-28
+            return (d->day >= 22 && d->day <= 28);
+        case 5:     //day 29-31
+            return (d->day >= 29 && d->day <= 31);
+        case 6:     //last 7 days
+            return (days < 7);
+        case 7:     //any of 7 days prior to last 7 days
+            return (days >= 7) && (days < 14);
+        case 8:     //any of 7 days prior to last 14 days
+            return (days >= 14) && (days < 21);
+        case 9:     //any of 7 days prior to last 21 days
+            return (days >= 21) && (days < 28);
+        case 0xFF:  //any week
+            return true;
+        }
+    }   
+    return false;
+}

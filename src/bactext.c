@@ -29,22 +29,22 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-  */
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
 #include <stdio.h>
 #include "indtext.h"
@@ -96,7 +96,7 @@ const char *bactext_confirmed_service_name(
     unsigned index)
 {
     return indtext_by_index_default(bacnet_confirmed_service_names, index,
-        ASHRAE_Reserved_String);
+                                    ASHRAE_Reserved_String);
 }
 
 static INDTEXT_DATA bacnet_unconfirmed_service_names[] = {
@@ -131,7 +131,7 @@ const char *bactext_unconfirmed_service_name(
     unsigned index)
 {
     return indtext_by_index_default(bacnet_unconfirmed_service_names, index,
-        ASHRAE_Reserved_String);
+                                    ASHRAE_Reserved_String);
 }
 
 static INDTEXT_DATA bacnet_application_tag_names[] = {
@@ -174,7 +174,7 @@ const char *bactext_application_tag_name(
     unsigned index)
 {
     return indtext_by_index_default(bacnet_application_tag_names, index,
-        ASHRAE_Reserved_String);
+                                    ASHRAE_Reserved_String);
 }
 
 bool bactext_application_tag_index(
@@ -182,7 +182,7 @@ bool bactext_application_tag_index(
     unsigned *found_index)
 {
     return indtext_by_istring(bacnet_application_tag_names, search_name,
-        found_index);
+                              found_index);
 }
 
 static INDTEXT_DATA bacnet_object_type_names[] = {
@@ -296,6 +296,10 @@ static INDTEXT_DATA bacnet_object_type_names[] = {
     ,
     {OBJECT_LIGHTING_OUTPUT, "lighting-output"}
     ,
+    {OBJECT_BINARY_LIGHTING_OUTPUT, "binary-lighting-output"}
+    ,
+    {OBJECT_NETWORK_PORT, "network-port"}
+    ,
     {0, NULL}
     /* Enumerated values 0-127 are reserved for definition by ASHRAE.
        Enumerated values 128-1023 may be used by others subject to
@@ -306,7 +310,7 @@ const char *bactext_object_type_name(
     unsigned index)
 {
     return indtext_by_index_split_default(bacnet_object_type_names, index, 128,
-        ASHRAE_Reserved_String, Vendor_Proprietary_String);
+                                          ASHRAE_Reserved_String, Vendor_Proprietary_String);
 }
 
 bool bactext_object_type_index(
@@ -314,8 +318,49 @@ bool bactext_object_type_index(
     unsigned *found_index)
 {
     return indtext_by_istring(bacnet_object_type_names, search_name,
-        found_index);
+                              found_index);
 }
+
+
+bool bactext_object_type_enum(
+    const char *search_name,
+    BACNET_OBJECT_TYPE *found_type)
+{
+	unsigned index ;
+	bool status = bactext_object_type_index ( search_name, &index ) ;
+	if ( status )
+	{
+		*found_type = (BACNET_OBJECT_TYPE) index ;
+	}
+	return status ;
+}
+
+
+static INDTEXT_DATA	objTypeAcronyms[] = {
+		{ OBJECT_ANALOG_INPUT, "AI" },
+		{ OBJECT_BINARY_INPUT, "BI" },
+		{ OBJECT_ANALOG_OUTPUT, "AO" },
+		{ OBJECT_BINARY_OUTPUT, "BO" },
+		{ OBJECT_ANALOG_VALUE, "AV" },
+		{ OBJECT_BINARY_VALUE, "BV" },
+	    {0, NULL}
+};
+
+
+bool bactext_object_type_enum_by_acronym(
+		const char *search_name,
+		BACNET_OBJECT_TYPE *found_type)
+{
+	unsigned index ;
+	bool status = indtext_by_istring(objTypeAcronyms, search_name,
+                              &index);
+	if ( status )
+	{
+		*found_type = (BACNET_OBJECT_TYPE) index ;
+	}
+	return status ;
+}
+
 
 static INDTEXT_DATA bacnet_property_names[] = {
 /* FIXME: use the enumerations from bacenum.h */
@@ -977,6 +1022,7 @@ static INDTEXT_DATA bacnet_property_names[] = {
     ,
     {PROP_EVENT_MESSAGE_TEXTS, "event-message-texts"}
     ,
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
     {PROP_EVENT_MESSAGE_TEXTS_CONFIG, "event-message-texts-config"}
     ,
     {PROP_EVENT_DETECTION_ENABLE, "event-detection-enable"}
@@ -1046,8 +1092,114 @@ static INDTEXT_DATA bacnet_property_names[] = {
     ,
     {PROP_TRANSITION, "transition"}
     ,
-    {PROP_EGRESS_ACTIVE, "egress-active"}
-    ,
+    {PROP_EGRESS_ACTIVE, "egress-active"},
+#endif
+#if ( BACNET_PROTOCOL_REVISION >= 17 )
+    {PROP_INTERFACE_VALUE, "inteface-value"},
+    {PROP_FAULT_HIGH_LIMIT, "fault-high-limit"},
+    {PROP_FAULT_LOW_LIMIT, "fault-low-limit"},
+    {PROP_LOW_DIFF_LIMIT, "low-diff-limit"},
+    {PROP_STRIKE_COUNT, "strike-count"},
+    {PROP_TIME_OF_STRIKE_COUNT_RESET, "strike-count"},
+    {PROP_DEFAULT_TIMEOUT, "default-timeout"},
+    {PROP_INITIAL_TIMEOUT, "initial-timeout"},
+    {PROP_LAST_STATE_CHANGE, "last-state-change"},
+    {PROP_STATE_CHANGE_VALUES, "state-change-values"},
+    {PROP_TIMER_RUNNING, "timer-running"},
+    {PROP_TIMER_STATE, "timer-state"},
+    {PROP_APDU_LENGTH, "apdu-length"},
+    {PROP_IP_ADDRESS, "ip-address"},
+    {PROP_IP_DEFAULT_GATEWAY, "ip-default-gateway"},
+    {PROP_IP_DHCP_ENABLE, "ip-dhcp-enable"},
+    {PROP_IP_DHCP_LEASE_TIME, "ip-dhcp-lease-time"},
+    {PROP_IP_DHCP_LEASE_TIME_REMAINING, "ip-dhcp-lease-time-remaining"},
+    {PROP_IP_DHCP_SERVER, "ip-dhcp-server"},
+    {PROP_IP_DNS_SERVER, "ip-dns-server"},
+    {PROP_BACNET_IP_GLOBAL_ADDRESS, "bacnet-ip-global-address"},
+    {PROP_BACNET_IP_MODE, "bacnet-ip-mode"},
+    {PROP_BACNET_IP_MULTICAST_ADDRESS, "bacnet-ip-multicast-address"},
+    {PROP_BACNET_IP_NAT_TRAVERSAL, "bacnet-ip-nat-traversal"},
+    {PROP_IP_SUBNET_MASK, "ip-subnet-mask"},
+    {PROP_BACNET_IP_UDP_PORT, "bacnet-ip-udp-port"},
+    {PROP_BBMD_ACCEPT_FD_REGISTRATIONS, "bbmd-accept-fd-registrations"},
+    {PROP_BBMD_BROADCAST_DISTRIBUTION_TABLE, "bbmd-broadcast-distribution-table"},
+    {PROP_BBMD_FOREIGN_DEVICE_TABLE, "bbmd-foreign-device-table"},
+    {PROP_CHANGES_PENDING, "changes-pending"},
+    {PROP_COMMAND, "command"},
+    {PROP_FD_BBMD_ADDRESS, "fd-bbmd-address"},
+    {PROP_FD_SUBSCRIPTION_LIFETIME, "fd-subscription-lifetime"},
+    {PROP_LINK_SPEED, "link-speed"},
+    {PROP_LINK_SPEEDS, "link-speeds"},
+    {PROP_LINK_SPEED_AUTONEGOTIATE, "link-speed-autonegotiate"},
+    {PROP_MAC_ADDRESS, "mac-address"},
+    {PROP_NETWORK_INTERFACE_NAME, "network-interface-name"},
+    {PROP_NETWORK_NUMBER, "network-number"},
+    {PROP_NETWORK_NUMBER_QUALITY, "network-number-quality"},
+    {PROP_NETWORK_TYPE, "network-type"},
+    {PROP_ROUTING_TABLE, "routing-table"},
+    {PROP_VIRTUAL_MAC_ADDRESS_TABLE, "virtual-mac-address-table"},
+    {PROP_COMMAND_TIME_ARRAY, "command-time-array"},
+    {PROP_CURRENT_COMMAND_PRIORITY, "current-command-priority"},
+    {PROP_LAST_COMMAND_TIME, "last-command-time"},
+    {PROP_VALUE_SOURCE, "value-source"},
+    {PROP_VALUE_SOURCE_ARRAY, "value-source-array"},
+    {PROP_BACNET_IPV6_MODE, "bacnet-ipv6-mode"},
+    {PROP_IPV6_ADDRESS, "ipv6-address"},
+    {PROP_IPV6_PREFIX_LENGTH, "ipv6-prefix-length"},
+    {PROP_BACNET_IPV6_UDP_PORT, "bacnet-ipv6-udp-port"},
+    {PROP_IPV6_DEFAULT_GATEWAY, "ipv6-default-gateway"},
+    {PROP_BACNET_IPV6_MULTICAST_ADDRESS, "bacnet-ipv6-multicast-address"},
+    {PROP_IPV6_DNS_SERVER, "ipv6-dns-server"},
+    {PROP_IPV6_AUTO_ADDRESSING_ENABLE, "ipv6-auto-addressing-enable"},
+    {PROP_IPV6_DHCP_LEASE_TIME, "ipv6-dhcp-lease-time"},
+    {PROP_IPV6_DHCP_LEASE_TIME_REMAINING, "ipv6-dhcp-lease-time-remaining"},
+    {PROP_IPV6_DHCP_SERVER, "ipv6-dhcp-server"},
+    {PROP_IPV6_ZONE_INDEX, "ipv6-zone-index"},
+    {PROP_ASSIGNED_LANDING_CALLS, "assigned-landing-calls"},
+    {PROP_CAR_ASSIGNED_DIRECTION, "car-assigned-direction"},
+    {PROP_CAR_DOOR_COMMAND, "car-door-command"},
+    {PROP_CAR_DOOR_STATUS, "car-door-status"},
+    {PROP_CAR_DOOR_TEXT, "car-door-text"},
+    {PROP_CAR_DOOR_ZONE, "car-door-zone"},
+    {PROP_CAR_DRIVE_STATUS, "car-drive-status"},
+    {PROP_CAR_LOAD, "car-load"},
+    {PROP_CAR_LOAD_UNITS, "car-load-units"},
+    {PROP_CAR_MODE, "car-mode"},
+    {PROP_CAR_MOVING_DIRECTION, "car-moving-direction"},
+    {PROP_CAR_POSITION, "car-position"},
+    {PROP_ELEVATOR_GROUP, "elevator-group"},
+    {PROP_ENERGY_METER, "energy-meter"},
+    {PROP_ENERGY_METER_REF, "energy-meter-ref"},
+    {PROP_ESCALATOR_MODE, "escalator-mode"},
+    {PROP_FAULT_SIGNALS, "fault-signals"},
+    {PROP_FLOOR_TEXT, "floor-text"},
+    {PROP_GROUP_ID, "group-id"},
+    {PROP_GROUP_MODE, "group-mode"},
+    {PROP_HIGHER_DECK, "higher-deck"},
+    {PROP_INSTALLATION_ID, "installation-id"},
+    {PROP_LANDING_CALLS, "landing-calls"},
+    {PROP_LANDING_CALL_CONTROL, "landing-call-control"},
+    {PROP_LANDING_DOOR_STATUS, "landing-door-status"},
+    {PROP_LOWER_DECK, "lower-deck"},
+    {PROP_MACHINE_ROOM_ID, "machine-room-id"},
+    {PROP_MAKING_CAR_CALL, "making-car-call"},
+    {PROP_NEXT_STOPPING_FLOOR, "next-stopping-floor"},
+    {PROP_OPERATION_DIRECTION, "operation-direction"},
+    {PROP_PASSENGER_ALARM, "passenger-alarm"},
+    {PROP_POWER_MODE, "power-mode"},
+    {PROP_REGISTERED_CAR_CALL, "registered-car-call"},
+    {PROP_ACTIVE_COV_MULTIPLE_SUBSCRIPTIONS, "active-cov-multiple-subscriptions"},
+    {PROP_PROTOCOL_LEVEL, "protocol-level"},
+    {PROP_REFERENCE_PORT, "reference-port"},
+    {PROP_DEPLOYED_PROFILE_LOCATION, "deployed-profile-location"},
+    {PROP_PROFILE_LOCATION, "profile-location"},
+    {PROP_TAGS, "tags"},
+    {PROP_SUBORDINATE_NODE_TYPES, "subordinate-node-types"},
+    {PROP_SUBORDINATE_TAGS, "subordinate-tags"},
+    {PROP_SUBORDINATE_RELATIONSHIPS, "subordinate-relationships"},
+    {PROP_DEFAULT_SUBORDINATE_RELATIONSHIP, "default-subordinate-relationship"},
+    {PROP_REPRESENTS, "represents"},
+#endif
     {0, NULL}
     /* Enumerated values 0-511 are reserved for definition by ASHRAE.
        Enumerated values 512-4194303 may be used by others subject to the
@@ -1061,6 +1213,7 @@ const char *bactext_property_name(
         ASHRAE_Reserved_String, Vendor_Proprietary_String);
 }
 
+
 const char *bactext_property_name_default(
     unsigned index,
     const char *default_string)
@@ -1068,6 +1221,7 @@ const char *bactext_property_name_default(
     return indtext_by_index_default(bacnet_property_names, index,
         default_string);
 }
+
 
 unsigned bactext_property_id(
     const char *name)
@@ -1470,6 +1624,62 @@ static INDTEXT_DATA bacnet_engineering_unit_names[] = {
     {UNITS_WATTS_PER_METER_PER_DEGREE_KELVIN,
         "watts-per-meter-per-degree-Kelvin"}
     ,
+#if ( BACNET_PROTOCOL_REVISION >= 17 )
+    {UNITS_PER_MILLE,"per-mille"},
+    {UNITS_GRAMS_PER_GRAM,"grams-per-gram"},
+    {UNITS_KILOGRAMS_PER_KILOGRAM,"kilograms-per-kilogram"},
+    {UNITS_GRAMS_PER_KILOGRAM,"grams-per-kilogram"},
+    {UNITS_MILLIGRAMS_PER_GRAM,"milligrams-per-gram"},
+    {UNITS_MILLIGRAMS_PER_KILOGRAM,"milligrams-per-kilogram"},
+    {UNITS_GRAMS_PER_MILLILITER,"grams-per-milliliter"},
+    {UNITS_GRAMS_PER_LITER,"grams-per-liter"},
+    {UNITS_MILLIGRAMS_PER_LITER,"milligrams-per-liter"},
+    {UNITS_MICROGRAMS_PER_LITER,"micrograms-per-liter"},
+    {UNITS_GRAMS_PER_CUBIC_METER,"grams-per-cubic-meter"},
+    {UNITS_MILLIGRAMS_PER_CUBIC_METER,"milligrams-per-cubic-meter"},
+    {UNITS_MICROGRAMS_PER_CUBIC_METER,"micrograms-per-cubic-meter"},
+    {UNITS_NANOGRAMS_PER_CUBIC_METER,"nanograms-per-cubic-meter"},
+    {UNITS_GRAMS_PER_CUBIC_CENTIMETER,"grams-per-cubic-centimeter"},
+    {UNITS_BECQUERELS,"becquerels"},
+    {UNITS_MEGABECQUERELS,"megabecquerels"},
+    {UNITS_GRAY,"gray"},
+    {UNITS_MILLIGRAY,"milligray"},
+    {UNITS_MICROGRAY,"microgray"},
+    {UNITS_SIEVERTS,"sieverts"},
+    {UNITS_MILLISIEVERTS,"millisieverts"},
+    {UNITS_MICROSIEVERTS,"microsieverts"},
+    {UNITS_MICROSIEVERTS_PER_HOUR,"microsieverts-per-hour"},
+    {UNITS_DECIBELS_A,"decibels-a"},
+    {UNITS_NEPHELOMETRIC_TURBIDITY_UNIT,"nephelometric-turbidity-unit"},
+    {UNITS_PH,"pH"},
+    {UNITS_GRAMS_PER_SQUARE_METER,"grams-per-square-meter"},
+    {UNITS_MINUTES_PER_DEGREE_KELVIN,"minutes-per-degree-kelvin"},
+    {UNITS_OHM_METER_SQUARED_PER_METER,"ohm-meter-squared-per-meter"},
+    {UNITS_AMPERE_SECONDS,"ampere-seconds"},
+    {UNITS_VOLT_AMPERE_HOURS,"volt-ampere-hours"},
+    {UNITS_KILOVOLT_AMPERE_HOURS,"kilovolt-ampere-hours"},
+    {UNITS_MEGAVOLT_AMPERE_HOURS,"megavolt-ampere-hours"},
+    {UNITS_VOLT_AMPERE_HOURS_REACTIVE,"volt-ampere-hours-reactive"},
+    {UNITS_KILOVOLT_AMPERE_HOURS_REACTIVE,"kilovolt-ampere-hours-reactive"},
+    {UNITS_MEGAVOLT_AMPERE_HOURS_REACTIVE,"megavolt-ampere-hours-reactive"},
+    {UNITS_VOLT_SQUARE_HOURS,"volt-square-hours"},
+    {UNITS_AMPERE_SQUARE_HOURS,"ampere-square-hours"},
+    {UNITS_JOULE_PER_HOURS,"joule-per-hours"},
+    {UNITS_CUBIC_FEET_PER_DAY,"cubic-feet-per-day"},
+    {UNITS_CUBIC_METERS_PER_DAY,"cubic-meters-per-day"},
+    {UNITS_WATT_HOURS_PER_CUBIC_METER,"watt-hours-per-cubic-meter"},
+    {UNITS_JOULES_PER_CUBIC_METER,"joules-per-cubic-meter"},
+    {UNITS_MOLE_PERCENT,"mole-percent"},
+    {UNITS_PASCAL_SECONDS,"pascal-seconds"},
+    {UNITS_MILLION_STANDARD_CUBIC_FEET_PER_MINUTE,"million-standard-cubic-feet-per-minute"},
+    {UNITS_STANDARD_CUBIC_FEET_PER_DAY,"standard-cubic-feet-per-day"},
+    {UNITS_MILLION_STANDARD_CUBIC_FEET_PER_DAY,"million-standard-cubic-feet-per-day"},
+    {UNITS_THOUSAND_CUBIC_FEET_PER_DAY,"thousand-cubic-feet-per-day"},
+    {UNITS_THOUSAND_STANDARD_CUBIC_FEET_PER_DAY,"thousand-standard-cubic-feet-per-day"},
+    {UNITS_POUNDS_MASS_PER_DAY,"pounds-mass-per-day"},
+    {UNITS_MILLIREMS,"millirems"},
+    {UNITS_MILLIREMS_PER_HOUR,"millirems-per-hour"},
+#endif
     {0, NULL}
 /* Enumerated values 0-255 are reserved for definition by ASHRAE.
    Enumerated values 256-65535 may be used by others subject to
@@ -1490,6 +1700,42 @@ bool bactext_engineering_unit_index(
     return indtext_by_istring(bacnet_engineering_unit_names, search_name,
         found_index);
 }
+
+
+bool bactext_engineering_unit_enum(
+    const char *search_name,
+    BACNET_ENGINEERING_UNITS *found_units)
+{
+	unsigned index ;
+	bool success = bactext_engineering_unit_index ( search_name, &index ) ;
+	if ( success )
+	{
+		*found_units = (BACNET_ENGINEERING_UNITS) index ;
+	}
+	return success ;
+}
+
+static INDTEXT_DATA	engineeringUnitAcronyms[] = {
+		{ UNITS_KILOWATT_HOURS, "KWH" },
+		{ UNITS_NO_UNITS, "" },
+	    {0, NULL}
+};
+
+
+bool bactext_engineering_unit_enum_by_acronym(
+		const char *search_name,
+		BACNET_ENGINEERING_UNITS *found_unit_enum)
+{
+	unsigned index ;
+	bool status = indtext_by_istring(engineeringUnitAcronyms, search_name,
+                              &index);
+	if ( status )
+	{
+		*found_unit_enum = (BACNET_ENGINEERING_UNITS) index ;
+	}
+	return status ;
+}
+
 
 static INDTEXT_DATA bacnet_reject_reason_names[] = {
     {REJECT_REASON_OTHER, "Other"}
@@ -1927,7 +2173,7 @@ const char *bactext_month_name(
         ASHRAE_Reserved_String);
 }
 
-INDTEXT_DATA bacnet_week_of_month_names[] = {
+static INDTEXT_DATA bacnet_week_of_month_names[] = {
     {1, "days numbered 1-7"}
     ,
     {2, "days numbered 8-14"}
@@ -2083,7 +2329,7 @@ bool bactext_binary_present_value_index(
         found_index);
 }
 
-INDTEXT_DATA bacnet_binary_polarity_names[] = {
+static INDTEXT_DATA bacnet_binary_polarity_names[] = {
     {POLARITY_NORMAL, "normal"}
     ,
     {POLARITY_REVERSE, "reverse"}
@@ -2228,8 +2474,7 @@ INDTEXT_DATA network_layer_msg_names[] = {
     ,
     {NETWORK_MESSAGE_I_AM_ROUTER_TO_NETWORK, "I-Am-Router-To-Network"}
     ,
-    {NETWORK_MESSAGE_I_COULD_BE_ROUTER_TO_NETWORK,
-        "I-Could-Be-Router-To-Network"}
+    {NETWORK_MESSAGE_I_COULD_BE_ROUTER_TO_NETWORK, "I-Could-Be-Router-To-Network"}
     ,
     {NETWORK_MESSAGE_REJECT_MESSAGE_TO_NETWORK, "Reject-Message-to-Network"}
     ,
@@ -2259,6 +2504,44 @@ const char *bactext_network_layer_msg_name(
     else
         return "Invalid Network Layer Message";
 }
+
+#if 0 // only really introduced in routing branch
+const char *bactext_bacnet_mac_address(char *tbuf, BACNET_MAC_ADDRESS *addr)
+{
+    if (addr->len == 6)
+    {
+        sprintf(tbuf, "%03d.%03d.%03d.%03d:%-5d",
+            addr->bytes[0],
+            addr->bytes[1],
+            addr->bytes[2],
+            addr->bytes[3],
+            (addr->bytes[4] << 8) | addr->bytes[5]
+        );
+    }
+    else if (addr->len == 1)
+    {
+        sprintf(tbuf, "%-21d",
+            addr->bytes[0]
+        );
+    }
+    else
+    {
+        sprintf(tbuf, "%s", "** Illegal Mac Address **");
+    }
+    return (const char *) tbuf;
+}
+
+
+const char *bactext_bacnet_path(char *tbuf, BACNET_PATH *addr)
+{
+    char mtBuf[100]; 
+    size_t len = strlen ( bactext_bacnet_mac_address(tbuf, &addr->localMac) ) ;
+    sprintf(&tbuf[len], ": %d :", addr->glAdr.net);
+    strcat(tbuf, bactext_bacnet_mac_address(mtBuf, &addr->glAdr.mac));
+    return (const char *)tbuf;
+}
+#endif
+
 
 static INDTEXT_DATA life_safety_state_names[] = {
 	{LIFE_SAFETY_STATE_QUIET, "quiet"}

@@ -30,11 +30,14 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include "config.h"     /* the custom stuff */
+
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
+
 #include "bacdef.h"
 #include "bacdcode.h"
 #include "bacenum.h"
 #include "bacapp.h"
-#include "config.h"     /* the custom stuff */
 #include "rp.h"
 #include "wp.h"
 #include "lighting.h"
@@ -1471,3 +1474,5 @@ int main(
 }
 #endif /* TEST_LIGHTING_INPUT */
 #endif /* TEST */
+
+#endif // ( BACNET_PROTOCOL_REVISION >= 14 )

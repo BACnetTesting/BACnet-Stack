@@ -20,22 +20,23 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -53,9 +54,9 @@
 /* device object has the handling for all objects */
 #include "device.h"
 #include "handlers.h"
+#include "bitsDebug.h"
 
 /** @file h_wp.c  Handles Write Property requests. */
-
 
 /** Handler for a WriteProperty Service request.
  * @ingroup DSWP
@@ -94,17 +95,13 @@ void handler_write_property(
     pdu_len =
         npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
         &npci_data);
-#if PRINT_ENABLED
-    fprintf(stderr, "WP: Received Request!\n");
-#endif
+    dbTraffic(DBD_ALL, DB_UNUSUAL_TRAFFIC, "WP: Received Request!");
     if (service_data->segmented_message) {
         len =
             abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, ABORT_REASON_SEGMENTATION_NOT_SUPPORTED,
             true);
-#if PRINT_ENABLED
-        fprintf(stderr, "WP: Segmented message.  Sending Abort!\n");
-#endif
+        dbTraffic(DBD_ALL, DB_ERROR, "WP: Segmented message.  Sending Abort!");
         goto WP_ABORT;
     }   /* decode the service request only */
     len = wp_decode_service_request(service_request, service_len, &wp_data);
@@ -124,26 +121,20 @@ void handler_write_property(
         len =
             abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, ABORT_REASON_OTHER, true);
-#if PRINT_ENABLED
-        fprintf(stderr, "WP: Bad Encoding. Sending Abort!\n");
-#endif
+        dbTraffic(DBD_ALL, DB_ERROR, "WP: Bad Encoding. Sending Abort!");
         goto WP_ABORT;
     }
     if (Device_Write_Property(&wp_data)) {
         len =
             encode_simple_ack(&Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, SERVICE_CONFIRMED_WRITE_PROPERTY);
-#if PRINT_ENABLED
-        fprintf(stderr, "WP: Sending Simple Ack!\n");
-#endif
+        dbTraffic(DBD_ALL, DB_UNUSUAL_TRAFFIC, "WP: Sending Simple Ack!");
     } else {
         len =
             bacerror_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, SERVICE_CONFIRMED_WRITE_PROPERTY,
             wp_data.error_class, wp_data.error_code);
-#if PRINT_ENABLED
-        fprintf(stderr, "WP: Sending Error!\n");
-#endif
+        // dbTraffic(DBD_ALL, DB_UNUSUAL_TRAFFIC, "WP: Sending Error Class:%s Code:%s!", bactext_error_class_name( wp_data.error_class), bactext_error_code_name(wp_data.error_code)  );
     }
   WP_ABORT:
     pdu_len += len;

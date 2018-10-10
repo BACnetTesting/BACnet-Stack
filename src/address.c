@@ -30,22 +30,22 @@
  based on this file might be covered by the GNU General Public
  License.
 
- -------------------------------------------
-
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-*/
-
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
 #include <stddef.h>
 #include <stdint.h>
@@ -81,11 +81,11 @@ static uint32_t Top_Protected_Entry;
 static uint32_t Own_Device_ID = 0xFFFFFFFF;
 
 static struct Address_Cache_Entry {
-    uint8_t Flags;
-    uint32_t device_id;
+    uint8_t         Flags;
+    uint32_t        device_id;
     unsigned max_apdu;
     BACNET_ADDRESS address;
-    uint32_t TimeToLive;
+    uint32_t        TimeToLive;
 } Address_Cache[MAX_ADDRESS_CACHE];
 
 /* State flags for cache entries */
@@ -106,7 +106,7 @@ static struct Address_Cache_Entry {
 #if defined ( _MSC_VER  )
 void print_address_cache(void)
 {
-    char tbuf[100];
+//    char tbuf[100];
     printf("\nAddress cache:");
     printf("\n      Inst  APDU  Path                                                 TTL  Flags");
     for (int i = 0; i < MAX_ADDRESS_CACHE; i++)
@@ -1079,6 +1079,7 @@ static void set_file_address(
     }
 }
 
+#ifdef BACNET_ADDRESS_CACHE_FILE
 void testAddressFile(
     Test * pTest)
 {
@@ -1125,6 +1126,7 @@ void testAddressFile(
     ct_test(pTest, bacnet_address_same(&test_address, &src));
 
 }
+#endif
 
 void testAddress(
     Test * pTest)
@@ -1186,8 +1188,10 @@ int main(
     /* individual tests */
     rc = ct_addTestFunction(pTest, testAddress);
     assert(rc);
+#ifdef BACNET_ADDRESS_CACHE_FILE
     rc = ct_addTestFunction(pTest, testAddressFile);
     assert(rc);
+#endif
 
 
     ct_setStream(pTest, stdout);

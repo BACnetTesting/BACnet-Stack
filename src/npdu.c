@@ -29,31 +29,29 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-  */
-#include <stdbool.h>
-#include <stdint.h>
-#include "bacdef.h"
 #include "bacdcode.h"
-#include "bacint.h"
-#include "bacenum.h"
+//#include "bacint.h"
+//#include "bacenum.h"
 #include "bits.h"
 #include "npdu.h"
-#include "apdu.h"
+//#include "apdu.h"
 
 /** @file npdu.c  Encode/Decode NPDUs - Network Protocol Data Units */
 
@@ -141,11 +139,11 @@ ABORT.indication               Yes         Yes         Yes        No
  * 		   NPDU section.
  *         If 0 or negative, there were problems with the data or encoding.
  */
-int npdu_encode_pdu(
+int16_t npdu_encode_pdu(
     uint8_t * npdu,
-    BACNET_ADDRESS * dest,
-    BACNET_ADDRESS * src,
-    BACNET_NPCI_DATA * npci_data)
+    const BACNET_ADDRESS * dest,
+    const BACNET_ADDRESS * src,
+    const BACNET_NPCI_DATA * npci_data)
 {
     int len = 0;        /* return value - number of octets loaded in this function */
     uint8_t i = 0;      /* counter  */
@@ -319,8 +317,8 @@ void npdu_setup_npci_data(
  *         bytes left in the NPDU; if not a network msg, the APDU follows.
  *         If 0 or negative, there were problems with the data or arguments.
  */
-int npdu_decode(
-    uint8_t * npdu,
+int npci_decode(
+    const uint8_t * npdu,
     BACNET_ADDRESS * dest,
     BACNET_ADDRESS * src,
     BACNET_NPCI_DATA * npci_data)

@@ -22,7 +22,6 @@
     <ProjectGuid>{64ADFC62-DE51-4BC8-8D3E-B45E919003DB}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>server</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -146,12 +145,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\bits\config\csv\readConfigCSVbbmd.c" />
     <ClCompile Include="..\..\bits\logging\logDispatch.c" />
+    <ClCompile Include="..\..\bits\osLayer\win\osLayer.c" />
+    <ClCompile Include="..\..\bits\util\BACnetObject.c" />
     <ClCompile Include="..\..\bits\util\bacnetProc.c" />
+    <ClCompile Include="..\..\bits\util\BACnetToString.c" />
     <ClCompile Include="..\..\bits\util\bitsDebug.c" />
     <ClCompile Include="..\..\bits\util\btaDebug.c" />
+    <ClCompile Include="..\..\bits\util\commandLine.c" />
     <ClCompile Include="..\..\bits\util\emm.c" />
     <ClCompile Include="..\..\bits\util\ese.c" />
+    <ClCompile Include="..\..\bits\util\llist.c" />
+    <ClCompile Include="..\..\bits\util\menuDiags.c" />
     <ClCompile Include="..\..\bits\util\misc.c" />
     <ClCompile Include="..\..\demo\handler\dlenv.c" />
     <ClCompile Include="..\..\demo\handler\h_alarm_ack.c" />
@@ -173,7 +179,6 @@
     <ClCompile Include="..\..\demo\handler\h_pt.c" />
     <ClCompile Include="..\..\demo\handler\h_pt_a.c" />
     <ClCompile Include="..\..\demo\handler\h_rd.c" />
-    <ClCompile Include="..\..\demo\handler\h_routed_npdu.c" />
     <ClCompile Include="..\..\demo\handler\h_rp.c" />
     <ClCompile Include="..\..\demo\handler\h_rpm.c" />
     <ClCompile Include="..\..\demo\handler\h_rpm_a.c" />
@@ -230,6 +235,7 @@
     <ClCompile Include="..\..\demo\object\bi.c" />
     <ClCompile Include="..\..\demo\object\bo.c" />
     <ClCompile Include="..\..\demo\object\bv.c" />
+    <ClCompile Include="..\..\demo\object\calendar.c" />
     <ClCompile Include="..\..\demo\object\channel.c" />
     <ClCompile Include="..\..\demo\object\command.c" />
     <ClCompile Include="..\..\demo\object\credential_data_input.c" />
@@ -244,6 +250,7 @@
     <ClCompile Include="..\..\demo\object\mso.c" />
     <ClCompile Include="..\..\demo\object\msv.c" />
     <ClCompile Include="..\..\demo\object\nc.c" />
+    <ClCompile Include="..\..\demo\object\netport.c" />
     <ClCompile Include="..\..\demo\object\osv.c" />
     <ClCompile Include="..\..\demo\object\piv.c" />
     <ClCompile Include="..\..\demo\object\schedule.c" />
@@ -315,6 +322,7 @@
     <ClCompile Include="..\..\src\wpm.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\bits\osLayer\win\osLayer.h" />
     <ClInclude Include="..\..\bits\util\BACnetToString.h" />
     <ClInclude Include="..\..\bits\util\bitsDebug.h" />
     <ClInclude Include="..\..\bits\util\bitsUtil.h" />
@@ -420,6 +428,12 @@
     <ClInclude Include="..\..\include\whois.h" />
     <ClInclude Include="..\..\include\wp.h" />
     <ClInclude Include="..\..\include\wpm.h" />
+    <ClInclude Include="..\..\ports\win32\net.h" />
+    <ClInclude Include="..\..\ports\win32\rs485.h" />
+    <ClInclude Include="..\..\ports\win32\timer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\README.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

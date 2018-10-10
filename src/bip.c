@@ -29,25 +29,26 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
 
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-  */
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
 
 #include <stdint.h>     /* for standard integer types uint8_t etc. */
 #include <stdbool.h>    /* for the standard bool type. */
+
 #include "bacdcode.h"
 #include "bacint.h"
 #include "bip.h"
@@ -136,17 +137,11 @@ uint16_t bip_get_port(
 static int bip_decode_bip_address(
     BACNET_ADDRESS * bac_addr,
     struct in_addr *address,    /* in network format */
-    uint16_t * port)
-{       /* in network format */
-    int len = 0;
-
-    if (bac_addr) {
-        memcpy(&address->s_addr, &bac_addr->mac[0], 4);
-        memcpy(port, &bac_addr->mac[4], 2);
-        len = 6;
-    }
-
-    return len;
+    uint16_t *port)             /* in network byte order */
+{
+    memcpy(&address->s_addr, &bac_addr->mac[0], 4);
+    memcpy(port, &bac_addr->mac[4], 2);
+    return 6;
 }
 
 /** Function to send a packet out the BACnet/IP socket (Annex J).
@@ -158,12 +153,14 @@ static int bip_decode_bip_address(
  * @param pdu_len [in] Number of bytes in the pdu buffer.
  * @return Number of bytes sent on success, negative number on failure.
  */
+
 int bip_send_pdu(
-    BACNET_ADDRESS * dest,      /* destination address */
+    BACNET_ADDRESS * dest,              /* destination address */
     BACNET_NPCI_DATA * npci_data,       /* network information */
-    uint8_t * pdu,      /* any data to be sent - may be null */
-    unsigned pdu_len)
-{       /* number of bytes of data */
+    uint8_t * pdu,                      /* any data to be sent - may be null - todo 2 - why null? */
+    unsigned pdu_len                    /* number of bytes of data */
+    )
+{
     struct sockaddr_in bip_dest;
     uint8_t mtu[MAX_MPDU] = { 0 };
     int mtu_len = 0;
@@ -225,15 +222,15 @@ int bip_send_pdu(
  *
  * @param src [out] Source of the packet - who should receive any response.
  * @param pdu [out] A buffer to hold the PDU portion of the received packet,
- * 					after the BVLC portion has been stripped off.
+ *                  after the BVLC portion has been stripped off.
  * @param max_pdu [in] Size of the pdu[] buffer.
  * @param timeout [in] The number of milliseconds to wait for a packet.
  * @return The number of octets (remaining) in the PDU, or zero on failure.
  */
 uint16_t bip_receive(
     BACNET_ADDRESS * src,       /* source address */
-    uint8_t * pdu,      /* PDU data */
-    uint16_t max_pdu,   /* amount of space available in the PDU  */
+    uint8_t * pdu,              /* PDU data */
+    uint16_t max_pdu,           /* amount of space available in the PDU  */
     unsigned timeout)
 {
     int received_bytes = 0;
@@ -257,7 +254,8 @@ uint16_t bip_receive(
         select_timeout.tv_sec = timeout / 1000;
         select_timeout.tv_usec =
             1000 * (timeout - select_timeout.tv_sec * 1000);
-    } else {
+    }
+    else {
         select_timeout.tv_sec = 0;
         select_timeout.tv_usec = 1000 * timeout;
     }
@@ -372,6 +370,7 @@ uint16_t bip_receive(
     return pdu_len;
 }
 
+
 void bip_get_my_address(
     BACNET_ADDRESS * my_address)
 {
@@ -391,21 +390,21 @@ void bip_get_my_address(
 
 }
 
+
 void bip_get_broadcast_address(
-    BACNET_ADDRESS * dest)
-{       /* destination address */
+    BACNET_ADDRESS * dest       /* destination address */
+    )
+{
     int i = 0;  /* counter */
 
-    if (dest) {
-        dest->mac_len = 6;
-        memcpy(&dest->mac[0], &BIP_Broadcast_Address.s_addr, 4);
-        memcpy(&dest->mac[4], &BIP_Port, 2);
-        dest->net = BACNET_BROADCAST_NETWORK;
-        dest->len = 0;  /* no SLEN */
-        for (i = 0; i < MAX_MAC_LEN; i++) {
-            /* no SADR */
-            dest->adr[i] = 0;
-        }
+    dest->mac_len = 6;
+    memcpy(&dest->mac[0], &BIP_Broadcast_Address.s_addr, 4);
+    memcpy(&dest->mac[4], &BIP_Port, 2);
+    dest->net = BACNET_BROADCAST_NETWORK;
+    dest->len = 0;  /* no SLEN */
+    for (i = 0; i < MAX_MAC_LEN; i++) {
+        /* no SADR */
+        dest->adr[i] = 0;
     }
-
 }
+

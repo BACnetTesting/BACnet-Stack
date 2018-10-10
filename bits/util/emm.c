@@ -1,25 +1,29 @@
-/**************************************************************************
-
-Copyright (C) 2018 BACnet Interoperability Testing Services, Inc.
-
-This program is free software : you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
-GNU Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public License
-along with this program.If not, see <http://www.gnu.org/licenses/>.
-
-For more information : info@bac-test.com
-For access to source code : info@bac-test.com
-or www.github.com/bacnettesting/bacnet-stack
-
-*********************************************************************/
+/****************************************************************************************
+*
+*   Copyright (C) 2018 BACnet Interoperability Testing Services, Inc.
+*
+*   This program is free software : you can redistribute it and/or modify
+*   it under the terms of the GNU Lesser General Public License as published by
+*   the Free Software Foundation, either version 3 of the License, or
+*   (at your option) any later version.
+*
+*   This program is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+*   GNU Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public License
+*   along with this program.If not, see <http://www.gnu.org/licenses/>.
+*
+*   For more information : info@bac-test.com
+*
+*   For access to source code :
+*
+*       info@bac-test.com
+*           or
+*       www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
 /*
  (Deeply) Embedded Memory Manager (EMM) for small systems.
@@ -44,6 +48,7 @@ or www.github.com/bacnettesting/bacnet-stack
 // for linux only
 #include <malloc.h>
 
+#include "config.h"
 // now in emm.h #define DELIBERATELY_FAIL_MALLOCS   0  
 // in emm.h #define EMMTRACELOG                 1       // alloc checking 
 
@@ -378,10 +383,9 @@ void* emm_sys_malloc(uint16_t size)
     emmCount++;
 
 #if ( CHECK_FENCES == 1 )
-    // todo2 change this back to malloc, and TEST!
-    ptr = (uint8_t *)calloc(size + sizeof ( EMM_FENCE ) * 2, 1);
+    ptr = (uint8_t *)malloc(size + sizeof ( EMM_FENCE ) * 2);
 #else
-    ptr = (uint8_t *) calloc(size, 1);
+    ptr = (uint8_t *) malloc(size);
 #endif
 
     
@@ -415,9 +419,9 @@ void* emm_sys_malloc(uint16_t size)
 }
 
 #if ( EMMTRACELOG == 1 )
-void* emm_sys_safe_malloc(uint8_t tag, uint16_t size)
+void* emm_sys_safe_calloc(uint8_t tag, uint16_t size)
 #else
-void* emm_sys_safe_malloc(uint16_t size)
+void* emm_sys_safe_calloc(uint16_t size)
 #endif
 {
     uint8_t *ptr;
@@ -438,7 +442,6 @@ void* emm_sys_safe_malloc(uint16_t size)
     // todo2 change this back to malloc, and TEST!
     ptr = (uint8_t *)calloc(size + sizeof ( EMM_FENCE ) * 2, 1);
 #else
-    // todo2 change this back to malloc, and TEST!
     ptr = (uint8_t *)calloc(size, 1);
 #endif
 
@@ -467,6 +470,65 @@ void* emm_sys_safe_malloc(uint16_t size)
     ((EMM_FENCE *)(ptr + size + sizeof (EMM_FENCE)))->tag = tag ;
 #endif
     return ptr + sizeof ( EMM_FENCE ) ;
+#else
+    return ptr;
+#endif
+}
+
+
+#if ( EMMTRACELOG == 1 )
+void* emm_sys_safe_malloc(uint8_t tag, uint16_t size)
+#else
+void* emm_sys_safe_malloc(uint16_t size)
+#endif
+{
+    uint8_t *ptr;
+
+#if ( BAC_DEBUG == 1 )
+    if (size > 0x0C00)
+    {
+        panic();
+        return NULL;
+    }
+#else
+#error
+#endif
+
+    emmCount++;
+
+#if ( CHECK_FENCES == 1 )
+    // todo2 change this back to malloc, and TEST!
+    ptr = (uint8_t *)calloc(size + sizeof(EMM_FENCE) * 2, 1);
+#else
+    // todo2 change this back to malloc, and TEST!
+    ptr = (uint8_t *)calloc(size, 1);
+#endif
+
+
+#if (EMMTRACELOG == 1 )
+    if (ptr == NULL) {
+        uxFails++;
+        ese_enqueue(ese004_04_failed_to_malloc);
+    }
+    else
+    {
+        TraceAlloc(tag, ptr, size);
+    }
+#endif
+
+#if ( CHECK_FENCES == 1 )
+    if (ptr == NULL) return NULL;
+    ((EMM_FENCE *)ptr)->length = size;
+    ((EMM_FENCE *)ptr)->signature = 'E';
+#if ( EMMTRACELOG == 1 )
+    ((EMM_FENCE *)ptr)->tag = tag;
+#endif
+    ((EMM_FENCE *)(ptr + size + sizeof(EMM_FENCE)))->length = size;
+    ((EMM_FENCE *)(ptr + size + sizeof(EMM_FENCE)))->signature = 'E';
+#if ( EMMTRACELOG == 1 )
+    ((EMM_FENCE *)(ptr + size + sizeof(EMM_FENCE)))->tag = tag;
+#endif
+    return ptr + sizeof(EMM_FENCE);
 #else
     return ptr;
 #endif
@@ -512,7 +574,7 @@ void emm_free(void *mptr)
 #else   // BAC_DEBUG
     
     free(mptr);
-    
+    // todo1 - RPM bug here, revealed by BTC (longer and longer,,, i think)
 #endif  // BAC_DEBUG
 }
 

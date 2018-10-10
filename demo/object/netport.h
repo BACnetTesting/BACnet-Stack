@@ -29,31 +29,45 @@
  * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+ *
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
 
 #ifndef NETPORT_H
 #define NETPORT_H
 
-#include <stdbool.h>
-#include <stdint.h>
-#include "bacdef.h"
+//#include <stdbool.h>
+//#include <stdint.h>
+//#include "bacdef.h"
 #include "bacenum.h"
-#include "apdu.h"
+//#include "apdu.h"
 #include "rp.h"
 #include "wp.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+#include "readrange.h"
+// #include "bacstr.h"
 
     void Network_Port_Property_Lists(
-        const int **pRequired,
-        const int **pOptional,
-        const int **pProprietary);
+        const BACNET_PROPERTY_ID **pRequired,
+        const BACNET_PROPERTY_ID **pOptional,
+        const BACNET_PROPERTY_ID **pProprietary);
 
     bool Network_Port_Object_Name(
         uint32_t object_instance,
         BACNET_CHARACTER_STRING * object_name);
+
     bool Network_Port_Name_Set(
         uint32_t object_instance,
         char *new_name);
@@ -64,11 +78,141 @@ extern "C" {
         uint32_t instance,
         char *new_name);
 
+    BACNET_RELIABILITY Network_Port_Reliability(
+        uint32_t object_instance);
+
+    bool Network_Port_Reliability_Set(
+        uint32_t object_instance,
+        BACNET_RELIABILITY value);
+
     bool Network_Port_Out_Of_Service(
         uint32_t instance);
-    void Network_Port_Out_Of_Service_Set(
+    bool Network_Port_Out_Of_Service_Set(
         uint32_t instance,
         bool oos_flag);
+
+    uint8_t Network_Port_Type(
+        uint32_t object_instance);
+    bool Network_Port_Type_Set(
+        uint32_t object_instance,
+        uint8_t value);
+
+    uint16_t Network_Port_Network_Number(
+        uint32_t object_instance);
+    bool Network_Port_Network_Number_Set(
+        uint32_t object_instance,
+        uint16_t value);
+
+    BACNET_PORT_QUALITY Network_Port_Quality(
+        uint32_t object_instance);
+    bool Network_Port_Quality_Set(
+        uint32_t object_instance,
+        BACNET_PORT_QUALITY value);
+
+    bool Network_Port_MAC_Address(
+        uint32_t object_instance,
+        BACNET_OCTET_STRING *mac_address);
+    bool Network_Port_MAC_Address_Set(
+        uint32_t object_instance,
+        uint8_t *mac_src,
+        uint8_t mac_len);
+
+    uint16_t Network_Port_APDU_Length(
+        uint32_t object_instance);
+    bool Network_Port_APDU_Length_Set(
+        uint32_t object_instance,
+        uint16_t value);
+
+    uint8_t Network_Port_MSTP_Max_Master(
+        uint32_t object_instance);
+    bool Network_Port_MSTP_Max_Master_Set(
+        uint32_t object_instance,
+        uint8_t value);
+
+    uint8_t Network_Port_MSTP_Max_Info_Frames(
+        uint32_t object_instance);
+    bool Network_Port_MSTP_Max_Info_Frames_Set(
+        uint32_t object_instance,
+        uint8_t value);
+
+    uint32_t Network_Port_Link_Speed(
+        uint32_t object_instance);
+    bool Network_Port_Link_Speed_Set(
+        uint32_t object_instance,
+        uint32_t value);
+
+    bool Network_Port_IP_Address(
+        uint32_t object_instance,
+        BACNET_OCTET_STRING *ip_address);
+    bool Network_Port_IP_Address_Get(
+        uint32_t object_instance,
+        uint8_t *a, uint8_t *b, uint8_t *c, uint8_t *d);
+    bool Network_Port_IP_Address_Set(
+        uint32_t object_instance,
+        uint8_t a, uint8_t b, uint8_t c, uint8_t d);
+
+    uint8_t Network_Port_IP_Subnet_Prefix(
+        uint32_t object_instance);
+    bool Network_Port_IP_Subnet_Prefix_Set(
+        uint32_t object_instance,
+        uint8_t value);
+
+    bool Network_Port_IP_Subnet(
+        uint32_t object_instance,
+        BACNET_OCTET_STRING *subnet_mask);
+    bool Network_Port_IP_Subnet_Get(
+        uint32_t object_instance,
+        uint8_t *a, uint8_t *b, uint8_t *c, uint8_t *d);
+    bool Network_Port_IP_Subnet_Set(
+        uint32_t object_instance,
+        uint8_t a, uint8_t b, uint8_t c, uint8_t d);
+
+    bool Network_Port_IP_Gateway(
+        uint32_t object_instance,
+        BACNET_OCTET_STRING *subnet_mask);
+    bool Network_Port_IP_Gateway_Get(
+        uint32_t object_instance,
+        uint8_t *a, uint8_t *b, uint8_t *c, uint8_t *d);
+    bool Network_Port_IP_Gateway_Set(
+        uint32_t object_instance,
+        uint8_t a, uint8_t b, uint8_t c, uint8_t d);
+
+    bool Network_Port_IP_DNS_Server(
+        uint32_t object_instance,
+        unsigned index,
+        BACNET_OCTET_STRING *subnet_mask);
+    bool Network_Port_IP_DNS_Server_Get(
+        uint32_t object_instance,
+        unsigned index,
+        uint8_t *a, uint8_t *b, uint8_t *c, uint8_t *d);
+    bool Network_Port_IP_DNS_Server_Set(
+        uint32_t object_instance,
+        unsigned index,
+        uint8_t a, uint8_t b, uint8_t c, uint8_t d);
+
+    uint16_t Network_Port_BIP_Port(
+        uint32_t object_instance);
+    bool Network_Port_BIP_Port_Set(
+        uint32_t object_instance,
+        uint16_t value);
+
+    BACNET_IP_MODE Network_Port_BIP_Mode(
+        uint32_t object_instance);
+    bool Network_Port_BIP_Mode_Set(
+        uint32_t object_instance,
+        BACNET_IP_MODE value);
+
+    bool Network_Port_BBMD_Accept_FD_Registrations(
+        uint32_t object_instance);
+    bool Network_Port_BBMD_Accept_FD_Registrations_Set(
+        uint32_t object_instance,
+        bool value);
+
+    bool Network_Port_Changes_Pending(
+        uint32_t instance);
+    bool Network_Port_Changes_Pending_Set(
+        uint32_t instance,
+        bool flag);
 
     bool Network_Port_Valid_Instance(
         uint32_t object_instance);
@@ -78,13 +222,34 @@ extern "C" {
 
     uint32_t Network_Port_Index_To_Instance(
         unsigned find_index);
+    unsigned Network_Port_Instance_To_Index(
+        uint32_t object_instance);
+
+    bool Network_Port_Set_Network_Port_Instance_ID(
+        unsigned index,
+        uint32_t object_instance);
+
+    int Network_Port_Read_Range_BDT(
+        uint8_t * apdu,
+        BACNET_READ_RANGE_DATA * pRequest);
+
+    int Network_Port_Read_Range_FDT(
+        uint8_t * apdu,
+        BACNET_READ_RANGE_DATA * pRequest);
+
+    bool Network_Port_Read_Range(
+        BACNET_READ_RANGE_DATA * pRequest,
+        RR_PROP_INFO * pInfo);
 
     bool Network_Port_Create(
         uint32_t object_instance);
+
     bool Network_Port_Delete(
         uint32_t object_instance);
+
     void Network_Port_Cleanup(
         void);
+
     void Network_Port_Init(
         void);
 
@@ -96,7 +261,6 @@ extern "C" {
     bool Network_Port_Write_Property(
         BACNET_WRITE_PROPERTY_DATA * wp_data);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+    // PORT_SUPPORT *FindFirstActiveMSTPport(void);
+
 #endif

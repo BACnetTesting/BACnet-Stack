@@ -1,27 +1,31 @@
-/**************************************************************************
+/****************************************************************************************
+*
+*   Copyright (C) 2018 BACnet Interoperability Testing Services, Inc.
+*
+*   This program is free software : you can redistribute it and/or modify
+*   it under the terms of the GNU Lesser General Public License as published by
+*   the Free Software Foundation, either version 3 of the License, or
+*   (at your option) any later version.
+*
+*   This program is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+*   GNU Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public License
+*   along with this program.If not, see <http://www.gnu.org/licenses/>.
+*
+*   For more information : info@bac-test.com
+*
+*   For access to source code :
+*
+*       info@bac-test.com
+*           or
+*       www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-Copyright (C) 2018 BACnet Interoperability Testing Services, Inc.
-
-This program is free software : you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
-GNU Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public License
-along with this program.If not, see <http://www.gnu.org/licenses/>.
-
-For more information : info@bac-test.com
-For access to source code : info@bac-test.com
-or www.github.com/bacnettesting/bacnet-stack
-
-*********************************************************************/
-
-// Embedded debug codes for diagnostics. Can be examined by memory browser, 
+// Embedded debug codes for diagnostics. Can be examined by memory browser,
 // or displayed in BACnet Device Description
 // or reported by BTA
 
@@ -34,7 +38,7 @@ or www.github.com/bacnettesting/bacnet-stack
 
 typedef enum {
     // remember to skip all decimal values with embedded '0's
-    ese001_01_bcast_pdu_length_too_short=1,
+    ese001_01_startup = 1,
     ese002_02_fwd_pdu_length_too_short_spare,
     ese003_03_incoming_IP_congestion,
     ese004_04_failed_to_malloc,
@@ -43,7 +47,7 @@ typedef enum {
     ese007_07_bad_malloc_free,
     ese008_08_duplicate_free,
     ese009_09_mstp_output_queue_full,
-    ese011_0B_IP_failed_to_send = 11 ,
+    ese011_0B_IP_failed_to_send = 11,
     ese012_0C_IP_failed_to_alloc,
     ese013_0D_IP_err,
     ese014_0E_Non_BACnetIP_pkt_recd,
@@ -62,12 +66,11 @@ typedef enum {
     ese028_1C_Attempt_to_send_BTA_before_IP_ready,
     ese029_1D_EMM_trace_table_miss,
     ese031_1F_EMM_spare = 31,
-    } ESE;
+} ESE;
 
-
-extern bool sendTokenPassingFrames;
-extern uint8_t ltOrUDPoffset, sourceNet, sourceNode;
-extern uint8_t eseHead ;
+// extern bool sendTokenPassingFrames;
+// extern uint8_t ltOrUDPoffset, sourceNet, sourceNode;
+extern uint8_t eseHead;
 extern uint8_t sys_err_buffer[MX_ESE];
 void ese_enqueue_init_fail(ESE rc);
 
@@ -76,4 +79,9 @@ void ese_enqueue(ESE value);
 void ese_enqueue_once(ESE value);
 bool ese_available(void);
 uint8_t ese_dequeue(void);
-
+// todo - move to own header, make independent? (or merge into syserr?)
+void FlashErr1msTick(void);
+void FlashErr10msTick(void);
+void FlashErr_enqueue(uint8_t value);
+void FlashErr_enqueue_once(uint8_t value);
+void FlashErr_clear(void);

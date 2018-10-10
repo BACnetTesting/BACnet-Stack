@@ -22,6 +22,7 @@
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
 *********************************************************************/
+
 #ifndef ALERT_ENROLLMENT_H
 #define ALERT_ENROLLMENT_H
 
@@ -49,25 +50,25 @@ BACnetRecipient ::= CHOICE {
     address [1] BACnetAddress
 }
 */
-//typedef struct BACnet_Recipient {
-//	NC_RECIPIENT_TYPE RecipientType;  /* Type of Recipient */
-//    union {
-//        uint32_t DeviceIdentifier;
-//        BACNET_GLOBAL_ADDRESS Address;
-//    } _;
-//} BACNET_RECIPIENT;
+typedef struct BACnet_Recipient {
+	NC_RECIPIENT_TYPE RecipientType;  /* Type of Recipient */
+    union {
+        uint32_t DeviceIdentifier;
+        // BACNET_GLOBAL_ADDRESS Address;
+    } _;
+} BACNET_RECIPIENT;
 
 
-///* BACnetDestination structure */
-//typedef struct BACnet_Destination {
-//    uint8_t ValidDays;
-//    BACNET_TIME FromTime;
-//    BACNET_TIME ToTime;
-//    BACNET_RECIPIENT Recipient;
-//    uint32_t ProcessIdentifier;
-//    uint8_t Transitions;
-//    bool ConfirmedNotify;
-//} BACNET_DESTINATION;
+/* BACnetDestination structure */
+typedef struct BACnet_Destination {
+    uint8_t ValidDays;
+    BACNET_TIME FromTime;
+    BACNET_TIME ToTime;
+    BACNET_RECIPIENT Recipient;
+    uint32_t ProcessIdentifier;
+    uint8_t Transitions;
+    bool ConfirmedNotify;
+} BACNET_DESTINATION;
 
 
 /* Structure containing configuration for a Alert_Enrollment Class */

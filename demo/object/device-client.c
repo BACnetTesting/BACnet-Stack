@@ -21,7 +21,21 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
 /** @file device-client.c Lightweight base "class" for handling all
  * BACnet objects belonging to a BACnet device, as well as
@@ -47,6 +61,9 @@
 #include "handlers.h"
 #include "datalink.h"
 #include "address.h"
+#if (BACNET_PROTOCOL_REVISION >= 17)
+#include "netport.h"
+#endif
 /* include the device object */
 #include "device.h"     /* me */
 
@@ -88,7 +105,7 @@ static BACNET_DATE Local_Date;  /* rely on OS, if there is one */
    BACnet UTC offset is expressed in minutes. */
 static int32_t UTC_Offset = 5 * 60;
 static bool Daylight_Savings_Status = false;    /* rely on OS */
-#if defined(BACNET_TIME_MASTER)
+#if (BACNET_TIME_MASTER == 1)
 static bool Align_Intervals;
 static uint32_t Interval_Minutes;
 static uint32_t Interval_Offset_Minutes;
@@ -119,40 +136,79 @@ int Device_Read_Property_Local(
 
 /* All included BACnet objects */
 static object_functions_t Object_Table[] = {
-    {OBJECT_DEVICE,
-            NULL /* Init - don't init Device or it will recourse! */ ,
-            Device_Count,
-            Device_Index_To_Instance,
-            Device_Valid_Object_Instance_Number,
-            Device_Object_Name,
-            Device_Read_Property_Local,
-            NULL /* Write_Property */ ,
-            NULL /* Property_Lists */ ,
-            NULL /* ReadRangeInfo */ ,
-            NULL /* Iterator */ ,
-#if ( BACNET_SVC_COV_B == 1 )
-            NULL /* Value_Lists */ ,
-            NULL /* COV */ ,
-            NULL /* COV Clear */ ,
+    {
+    OBJECT_DEVICE,
+    NULL /* Init - don't init Device or it will recourse! */ ,
+    Device_Count,
+    Device_Index_To_Instance,
+    Device_Valid_Object_Instance_Number,
+    Device_Object_Name,
+    Device_Read_Property_Local,
+    NULL /* Write_Property */ ,
+    NULL /* Property_Lists */ ,
+#if ( BACNET_SVC_RR_B == 1 )
+    NULL /* ReadRangeInfo */ ,
 #endif
-			NULL /* Intrinsic Reporting */ },
-    {MAX_BACNET_OBJECT_TYPE,
-            NULL /* Init */ ,
-            NULL /* Count */ ,
-            NULL /* Index_To_Instance */ ,
-            NULL /* Valid_Instance */ ,
-            NULL /* Object_Name */ ,
-            NULL /* Read_Property */ ,
-            NULL /* Write_Property */ ,
-            NULL /* Property_Lists */ ,
-            NULL /* ReadRangeInfo */ ,
-            NULL /* Iterator */ ,
+    NULL /* Iterator */ ,
 #if ( BACNET_SVC_COV_B == 1 )
-            NULL /* Value_Lists */ ,
-            NULL /* COV */ ,
-            NULL /* COV Clear */ ,
+    NULL /* Value_Lists */ ,
+    NULL /* COV */ ,
+    NULL /* COV Clear */ ,
 #endif
-			NULL /* Intrinsic Reporting */ }
+#if (INTRINSIC_REPORTING_B == 1)
+    NULL /* Intrinsic Reporting */
+#endif
+    },
+
+#if (BACNET_PROTOCOL_REVISION >= 17)
+    {
+    OBJECT_NETWORK_PORT,
+    Network_Port_Init,
+    Network_Port_Count,
+    Network_Port_Index_To_Instance,
+    Network_Port_Valid_Instance,
+    Network_Port_Object_Name,
+    Network_Port_Read_Property,
+    Network_Port_Write_Property,
+    Network_Port_Property_Lists,
+#if ( BACNET_SVC_RR_B == 1 )
+    NULL /* ReadRangeInfo */ ,
+#endif
+    NULL /* Iterator */ ,
+#if ( BACNET_SVC_COV_B == 1 )
+    NULL /* Value_Lists */ ,
+    NULL /* COV */ ,
+    NULL /* COV Clear */ ,
+#endif
+#if (INTRINSIC_REPORTING_B == 1)
+    NULL /* Intrinsic Reporting */
+#endif
+    },
+#endif
+
+    {
+    MAX_BACNET_OBJECT_TYPE,
+    NULL /* Init */ ,
+    NULL /* Count */ ,
+    NULL /* Index_To_Instance */ ,
+    NULL /* Valid_Instance */ ,
+    NULL /* Object_Name */ ,
+    NULL /* Read_Property */ ,
+    NULL /* Write_Property */ ,
+    NULL /* Property_Lists */ ,
+#if ( BACNET_SVC_RR_B == 1 )
+    NULL /* ReadRangeInfo */ ,
+#endif
+    NULL /* Iterator */ ,
+#if ( BACNET_SVC_COV_B == 1 )
+    NULL /* Value_Lists */ ,
+    NULL /* COV */ ,
+    NULL /* COV Clear */ ,
+#endif
+#if (INTRINSIC_REPORTING_B == 1)
+    NULL /* Intrinsic Reporting */
+#endif
+    }
 };
 
 /** Glue function to let the Device object, when called by a handler,
@@ -730,7 +786,8 @@ bool Device_Daylight_Savings_Status(void)
     return Daylight_Savings_Status;
 }
 
-#if defined(BACNET_TIME_MASTER)
+
+#if (BACNET_TIME_MASTER == 1)
 /**
  * Sets the time sync interval in minutes
  *

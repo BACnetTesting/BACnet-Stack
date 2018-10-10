@@ -20,21 +20,23 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-*********************************************************************/
 #ifndef BACAPP_H
 #define BACAPP_H
 
@@ -53,10 +55,13 @@
 
 
 struct BACnet_Application_Data_Value;
+
 typedef struct BACnet_Application_Data_Value {
-    bool context_specific;      /* true if context specific data */
-    uint8_t context_tag;        /* only used for context specific data */
-    uint8_t tag;        /* application tag data type */
+
+    bool context_specific;          /* true if context specific data */
+    uint8_t context_tag;            /* only used for context specific data */
+    BACNET_APPLICATION_TAG tag;     /* application tag data type */
+
     union {
         /* NULL - not needed as it is encoded in the tag alone */
 #if defined (BACAPP_BOOLEAN)
@@ -148,6 +153,7 @@ typedef struct BACnet_Object_Property_Value {
 int bacapp_encode_data(
     uint8_t * apdu,
     BACNET_APPLICATION_DATA_VALUE * value);
+
 int bacapp_decode_data(
     uint8_t * apdu,
     uint8_t tag_data_type,
@@ -200,40 +206,47 @@ int bacapp_data_len(
     uint8_t * apdu,
     unsigned max_apdu_len,
     BACNET_PROPERTY_ID property);
+
 int bacapp_decode_data_len(
     uint8_t * apdu,
     uint8_t tag_data_type,
     uint32_t len_value_type);
+
 int bacapp_decode_application_data_len(
     uint8_t * apdu,
     unsigned max_apdu_len);
+
 int bacapp_decode_context_data_len(
     uint8_t * apdu,
     unsigned max_apdu_len,
     BACNET_PROPERTY_ID property);
 
-#ifndef BACAPP_PRINT_ENABLED
+// todo2 reverse
+#define BACAPP_PRINT_ENABLED    1
+#define BACAPP_SNPRINTF_ENABLED 1
+
+#if ( BACAPP_PRINT_ENABLED != 1 )
 #if PRINT_ENABLED || defined TEST
-#define BACAPP_PRINT_ENABLED
+#define BACAPP_PRINT_ENABLED    1
 #define BACAPP_SNPRINTF_ENABLED
 #endif
 #endif
 
 #ifdef BACAPP_SNPRINTF_ENABLED
-    int bacapp_snprintf_value(
-        char *str,
-        size_t str_len,
-        BACNET_OBJECT_PROPERTY_VALUE * object_value);
+int bacapp_snprintf_value(
+    char *str,
+    size_t str_len,
+    BACNET_OBJECT_PROPERTY_VALUE * object_value);
 #endif
 
-#ifdef BACAPP_PRINT_ENABLED
-    bool bacapp_parse_application_data(
-        BACNET_APPLICATION_TAG tag_number,
-        const char *argv,
-        BACNET_APPLICATION_DATA_VALUE * value);
-    bool bacapp_print_value(
-        FILE * stream,
-        BACNET_OBJECT_PROPERTY_VALUE * value);
+#if ( BACAPP_PRINT_ENABLED == 1 )
+bool bacapp_parse_application_data(
+    BACNET_APPLICATION_TAG tag_number,
+    const char *argv,
+    BACNET_APPLICATION_DATA_VALUE * value);
+bool bacapp_print_value(
+    FILE * stream,
+    BACNET_OBJECT_PROPERTY_VALUE * value);
 #else
 /* Provide harmless return values */
 #define bacapp_parse_application_data(x,y,z)   false
@@ -243,14 +256,14 @@ int bacapp_decode_context_data_len(
 #ifdef TEST
 #include "ctest.h"
 #include "datetime.h"
-    bool bacapp_same_value(
-        BACNET_APPLICATION_DATA_VALUE * value,
-        BACNET_APPLICATION_DATA_VALUE * test_value);
+bool bacapp_same_value(
+    BACNET_APPLICATION_DATA_VALUE * value,
+    BACNET_APPLICATION_DATA_VALUE * test_value);
 
-    void testBACnetApplicationDataLength(
-        Test * pTest);
-    void testBACnetApplicationData(
-        Test * pTest);
+void testBACnetApplicationDataLength(
+    Test * pTest);
+void testBACnetApplicationData(
+    Test * pTest);
 #endif
 
 #endif

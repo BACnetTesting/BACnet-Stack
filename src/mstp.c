@@ -30,20 +30,22 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- *
- *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
- *
- *   July 1, 2017    BITS    Modifications to this file have been made in compliance
- *                           to original licensing.
- *
- *   This file contains changes made by BACnet Interoperability Testing
- *   Services, Inc. These changes are subject to the permissions,
- *   warranty terms and limitations above.
- *       For more information: info@bac-test.com
- *       For access to source code:  info@bac-test.com
- *               or      www.github.com/bacnettesting/bacnet-stack
- *
-   */
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
 /** @file mstp.c  BACnet Master-Slave Twisted Pair (MS/TP) functions */
 
@@ -71,6 +73,22 @@
 #define DEBUG_ENABLED 1
 #endif
 #include "debug.h"
+#include "bitsDebug.h"
+
+uint32_t SilenceTimer(
+    volatile struct mstp_port_struct_t *mstp_port)
+{
+    // todo 1
+//    return bits_multiTimer_elapsed_milliseconds(mstp_port->silenceTimerHandle);
+    return 1;
+}
+
+void SilenceTimerReset(
+    volatile struct mstp_port_struct_t *mstp_port)
+{
+    // todo 1
+//    bits_multiTimer_reset(mstp_port->silenceTimerHandle);
+}
 
 #if PRINT_ENABLED
 #undef PRINT_ENABLED_RECEIVE
@@ -196,7 +214,8 @@ void MSTP_Fill_BACnet_Address(
         /* mac_len = 0 if broadcast address */
         src->mac_len = 0;
         src->mac[0] = 0;
-    } else {
+    }
+    else {
         src->mac_len = 1;
         src->mac[0] = mstp_address;
     }
@@ -219,7 +238,7 @@ uint16_t MSTP_Create_Frame(
     uint8_t source,         /* source address */
     uint8_t * data,         /* any data to be sent - may be null */
     uint16_t data_len)      /* number of bytes of data (up to 501) */
-{       
+{
     uint8_t crc8 = 0xFF;        /* used to calculate the crc value */
     uint16_t crc16 = 0xFFFF;    /* used to calculate the crc value */
     uint16_t index = 0; /* used to load the data portion of the frame */
@@ -258,7 +277,8 @@ uint16_t MSTP_Create_Frame(
             index++;
             buffer[index] = crc16 >> 8;
             index++;
-        } else
+        }
+        else
             return 0;
     }
 
@@ -273,330 +293,310 @@ void MSTP_Create_And_Send_Frame(
     uint8_t source,                                     /* source address */
     uint8_t * data,                                     /* any data to be sent - may be null */
     uint16_t data_len)                                  /* number of bytes of data (up to 501) */
-{       
-    uint16_t len ;      /* number of bytes to send */
+{
+    uint16_t len;      /* number of bytes to send */
 
     len =
-        MSTP_Create_Frame((uint8_t *) & mstp_port->OutputBuffer[0],
-        mstp_port->OutputBufferSize, 
-        frame_type, 
-        destination, 
-        source, 
-        data,
-        data_len);
+        MSTP_Create_Frame((uint8_t *)& mstp_port->OutputBuffer[0],
+            mstp_port->OutputBufferSize,
+            frame_type,
+            destination,
+            source,
+            data,
+            data_len);
 
-    RS485_Send_Frame(mstp_port, (uint8_t *) & mstp_port->OutputBuffer[0], len);
+    RS485_Send_Frame(mstp_port, (uint8_t *)& mstp_port->OutputBuffer[0], len);
     /* FIXME: be sure to reset SilenceTimer() after each octet is sent! */
 }
 
 void MSTP_Receive_Frame_FSM(
     volatile struct mstp_port_struct_t *mstp_port)
 {
-    MSTP_RECEIVE_STATE receive_state = mstp_port->receive_state;
-    printf_receive
-        ("MSTP Rx: State=%s Data=%02X hCRC=%02X Index=%u EC=%u DateLen=%u Silence=%u\n",
-        mstptext_receive_state(mstp_port->receive_state),
-        mstp_port->DataRegister, mstp_port->HeaderCRC, mstp_port->Index,
-        mstp_port->EventCount, mstp_port->DataLength,
-        mstp_port->SilenceTimer((void *) mstp_port));
+    // MSTP_RECEIVE_STATE receive_state = mstp_port->receive_state;
+
     switch (mstp_port->receive_state) {
-            /* In the IDLE state, the node waits for the beginning of a frame. */
-        case MSTP_RECEIVE_STATE_IDLE:
+
+    case MSTP_RECEIVE_STATE_IDLE:
+        /* In the IDLE state, the node waits
+           for the beginning of a frame. */
+        if (mstp_port->ReceiveError == true) {
             /* EatAnError */
-            if (mstp_port->ReceiveError == true) {
-                mstp_port->ReceiveError = false;
-                mstp_port->SilenceTimerReset((void *) mstp_port);
-                INCREMENT_AND_LIMIT_UINT8(mstp_port->EventCount);
-                /* wait for the start of a frame. */
-            } else if (mstp_port->DataAvailable == true) {
-                printf_receive_data("MSTP Rx: %02X ", mstp_port->DataRegister);
+            mstp_port->ReceiveError = false;
+            SilenceTimerReset(mstp_port);
+            INCREMENT_AND_LIMIT_UINT8(mstp_port->EventCount);
+            /* wait for the start of a frame. */
+        }
+        else if (mstp_port->DataAvailable == true) {
+            if (mstp_port->DataRegister == 0x55) {
                 /* Preamble1 */
-                if (mstp_port->DataRegister == 0x55) {
-                    /* receive the remainder of the frame. */
-                    mstp_port->receive_state = MSTP_RECEIVE_STATE_PREAMBLE;
-                }
-                /* EatAnOctet */
-                else {
-                    printf_receive_data("\n");
-                    /* wait for the start of a frame. */
-                }
-                mstp_port->DataAvailable = false;
-                mstp_port->SilenceTimerReset((void *) mstp_port);
-                INCREMENT_AND_LIMIT_UINT8(mstp_port->EventCount);
+                /* receive the remainder of the frame. */
+                mstp_port->receive_state = MSTP_RECEIVE_STATE_PREAMBLE;
             }
-            break;
-            /* In the PREAMBLE state, the node waits for the second octet of the preamble. */
-        case MSTP_RECEIVE_STATE_PREAMBLE:
+            mstp_port->DataAvailable = false;
+            SilenceTimerReset(mstp_port);
+            INCREMENT_AND_LIMIT_UINT8(mstp_port->EventCount);
+        }
+        break;
+
+    case MSTP_RECEIVE_STATE_PREAMBLE:
+        /* In the PREAMBLE state, the node waits for the
+           second octet of the preamble. */
+        if (SilenceTimer(mstp_port) > Tframe_abort) {
             /* Timeout */
-            if (mstp_port->SilenceTimer((void *) mstp_port) > Tframe_abort) {
-                /* a correct preamble has not been received */
-                /* wait for the start of a frame. */
-                mstp_port->receive_state = MSTP_RECEIVE_STATE_IDLE;
-            }
+            /* a correct preamble has not been received */
+            /* wait for the start of a frame. */
+            mstp_port->receive_state = MSTP_RECEIVE_STATE_IDLE;
+        }
+        else if (mstp_port->ReceiveError == true) {
             /* Error */
-            else if (mstp_port->ReceiveError == true) {
-                mstp_port->ReceiveError = false;
-                mstp_port->SilenceTimerReset((void *) mstp_port);
-                INCREMENT_AND_LIMIT_UINT8(mstp_port->EventCount);
-                /* wait for the start of a frame. */
-                mstp_port->receive_state = MSTP_RECEIVE_STATE_IDLE;
-            } else if (mstp_port->DataAvailable == true) {
-                printf_receive_data("%02X ", mstp_port->DataRegister);
+            mstp_port->ReceiveError = false;
+            SilenceTimerReset(mstp_port);
+            INCREMENT_AND_LIMIT_UINT8(mstp_port->EventCount);
+            /* wait for the start of a frame. */
+            mstp_port->receive_state = MSTP_RECEIVE_STATE_IDLE;
+        }
+        else if (mstp_port->DataAvailable == true) {
+            if (mstp_port->DataRegister == 0xFF) {
                 /* Preamble2 */
-                if (mstp_port->DataRegister == 0xFF) {
-                    mstp_port->Index = 0;
-                    mstp_port->HeaderCRC = 0xFF;
-                    /* receive the remainder of the frame. */
-                    mstp_port->receive_state = MSTP_RECEIVE_STATE_HEADER;
-                }
+                mstp_port->Index = 0;
+                mstp_port->HeaderCRC = 0xFF;
+                /* receive the remainder of the frame. */
+                mstp_port->receive_state = MSTP_RECEIVE_STATE_HEADER;
+            }
+            else if (mstp_port->DataRegister == 0x55) {
                 /* ignore RepeatedPreamble1 */
-                else if (mstp_port->DataRegister == 0x55) {
-                    /* wait for the second preamble octet. */
-                }
+                /* wait for the second preamble octet. */
+            }
+            else {
                 /* NotPreamble */
-                else {
-                    /* wait for the start of a frame. */
-                    mstp_port->receive_state = MSTP_RECEIVE_STATE_IDLE;
-                }
-                mstp_port->DataAvailable = false;
-                mstp_port->SilenceTimerReset((void *) mstp_port);
-                INCREMENT_AND_LIMIT_UINT8(mstp_port->EventCount);
+                /* wait for the start of a frame. */
+                mstp_port->receive_state = MSTP_RECEIVE_STATE_IDLE;
             }
-            break;
-            /* In the HEADER state, the node waits for the fixed message header. */
-        case MSTP_RECEIVE_STATE_HEADER:
+            mstp_port->DataAvailable = false;
+            SilenceTimerReset(mstp_port);
+            INCREMENT_AND_LIMIT_UINT8(mstp_port->EventCount);
+        }
+        break;
+
+    case MSTP_RECEIVE_STATE_HEADER:
+        /* In the HEADER state, the node waits
+           for the fixed message header. */
+        if (SilenceTimer(mstp_port) > Tframe_abort) {
             /* Timeout */
-            if (mstp_port->SilenceTimer((void *) mstp_port) > Tframe_abort) {
-                /* indicate that an error has occurred during the reception of a frame */
-                mstp_port->ReceivedInvalidFrame = true;
-                /* wait for the start of a frame. */
-                mstp_port->receive_state = MSTP_RECEIVE_STATE_IDLE;
-                printf_receive_error("MSTP: Rx Header: SilenceTimer %u > %d\n",
-                // ekh todo 2 - This is a place where a frame can go into error and EventCount < 4 oi00116
-                    (unsigned) mstp_port->SilenceTimer((void *) mstp_port),
-                    Tframe_abort);
-            }
+            /* indicate that an error has occurred during the reception of a frame */
+            mstp_port->ReceivedInvalidFrame = true;
+            /* wait for the start of a frame. */
+            mstp_port->receive_state = MSTP_RECEIVE_STATE_IDLE;
+            // ekh todo 2 - This is a place where a frame can go into error and EventCount < 4 oi00116
+        }
+        else if (mstp_port->ReceiveError == true) {
             /* Error */
-            else if (mstp_port->ReceiveError == true) {
-                mstp_port->ReceiveError = false;
-                mstp_port->SilenceTimerReset((void *) mstp_port);
-                INCREMENT_AND_LIMIT_UINT8(mstp_port->EventCount);
-                /* indicate that an error has occurred during the reception of a frame */
-                // ekh todo 2 - This is a place where a frame can go into error and EventCount < 4 oi00116
-                mstp_port->ReceivedInvalidFrame = true;
-                printf_receive_error("MSTP: Rx Header: ReceiveError\n");
-                /* wait for the start of a frame. */
-                mstp_port->receive_state = MSTP_RECEIVE_STATE_IDLE;
-            } else if (mstp_port->DataAvailable == true) {
-                printf_receive_data("%02X ", mstp_port->DataRegister);
+            mstp_port->ReceiveError = false;
+            SilenceTimerReset(mstp_port);
+            INCREMENT_AND_LIMIT_UINT8(mstp_port->EventCount);
+            /* indicate that an error has occurred during the reception of a frame */
+            // ekh todo 2 - This is a place where a frame can go into error and EventCount < 4 oi00116
+            mstp_port->ReceivedInvalidFrame = true;
+            /* wait for the start of a frame. */
+            mstp_port->receive_state = MSTP_RECEIVE_STATE_IDLE;
+        }
+        else if (mstp_port->DataAvailable == true) {
+            if (mstp_port->Index == 0) {
                 /* FrameType */
-                if (mstp_port->Index == 0) {
-                    mstp_port->HeaderCRC =
-                        CRC_Calc_Header(mstp_port->DataRegister,
+                mstp_port->HeaderCRC =
+                    CRC_Calc_Header(mstp_port->DataRegister,
                         mstp_port->HeaderCRC);
-                    mstp_port->FrameType = mstp_port->DataRegister;
-                    mstp_port->Index = 1;
-                }
+                mstp_port->FrameType = mstp_port->DataRegister;
+                mstp_port->Index = 1;
+            }
+            else if (mstp_port->Index == 1) {
                 /* Destination */
-                else if (mstp_port->Index == 1) {
-                    mstp_port->HeaderCRC =
-                        CRC_Calc_Header(mstp_port->DataRegister,
+                mstp_port->HeaderCRC =
+                    CRC_Calc_Header(mstp_port->DataRegister,
                         mstp_port->HeaderCRC);
-                    mstp_port->DestinationAddress = mstp_port->DataRegister;
-                    mstp_port->Index = 2;
-                }
+                mstp_port->DestinationAddress = mstp_port->DataRegister;
+                mstp_port->Index = 2;
+            }
+            else if (mstp_port->Index == 2) {
                 /* Source */
-                else if (mstp_port->Index == 2) {
-                    mstp_port->HeaderCRC =
-                        CRC_Calc_Header(mstp_port->DataRegister,
+                mstp_port->HeaderCRC =
+                    CRC_Calc_Header(mstp_port->DataRegister,
                         mstp_port->HeaderCRC);
-                    mstp_port->SourceAddress = mstp_port->DataRegister;
-                    mstp_port->Index = 3;
-                }
+                mstp_port->SourceAddress = mstp_port->DataRegister;
+                mstp_port->Index = 3;
+            }
+            else if (mstp_port->Index == 3) {
                 /* Length1 */
-                else if (mstp_port->Index == 3) {
-                    mstp_port->HeaderCRC =
-                        CRC_Calc_Header(mstp_port->DataRegister,
+                mstp_port->HeaderCRC =
+                    CRC_Calc_Header(mstp_port->DataRegister,
                         mstp_port->HeaderCRC);
-                    mstp_port->DataLength = mstp_port->DataRegister * 256;
-                    mstp_port->Index = 4;
-                }
+                mstp_port->DataLength = mstp_port->DataRegister * 256;
+                mstp_port->Index = 4;
+            }
+            else if (mstp_port->Index == 4) {
                 /* Length2 */
-                else if (mstp_port->Index == 4) {
-                    mstp_port->HeaderCRC =
-                        CRC_Calc_Header(mstp_port->DataRegister,
+                mstp_port->HeaderCRC =
+                    CRC_Calc_Header(mstp_port->DataRegister,
                         mstp_port->HeaderCRC);
-                    mstp_port->DataLength += mstp_port->DataRegister;
-                    mstp_port->Index = 5;
-                }
+                mstp_port->DataLength += mstp_port->DataRegister;
+                mstp_port->Index = 5;
+            }
+            else if (mstp_port->Index == 5) {
                 /* HeaderCRC */
-                else if (mstp_port->Index == 5) {
-                    mstp_port->HeaderCRC =
-                        CRC_Calc_Header(mstp_port->DataRegister,
+                mstp_port->HeaderCRC =
+                    CRC_Calc_Header(mstp_port->DataRegister,
                         mstp_port->HeaderCRC);
-                    mstp_port->HeaderCRCActual = mstp_port->DataRegister;
-                    /* don't wait for next state - do it here */
-                    if (mstp_port->HeaderCRC != 0x55) {
-                        /* BadCRC */
-                        /* indicate that an error has occurred during
-                           the reception of a frame */
-                        mstp_port->ReceivedInvalidFrame = true;
-                        printf_receive_error
-                            ("MSTP: Rx Header: BadCRC [%02X]\n",
-                            mstp_port->DataRegister);
-                        /* wait for the start of the next frame. */
-                        mstp_port->receive_state = MSTP_RECEIVE_STATE_IDLE;
-                    } else {
-                        if (mstp_port->DataLength == 0) {
-                            /* NoData */
-                            printf_receive_data("%s",
-                                mstptext_frame_type((unsigned)
-                                    mstp_port->FrameType));
-                            if ((mstp_port->DestinationAddress ==
-                                    mstp_port->This_Station)
-                                || (mstp_port->DestinationAddress ==
-                                    MSTP_BROADCAST_ADDRESS)) {
-                                /* ForUs */
-                                /* indicate that a frame with no data has been received */
-                                mstp_port->ReceivedValidFrame = true;
-                            } else {
-                                /* NotForUs */
-                                mstp_port->ReceivedValidFrameNotForUs = true;
-                            }
-                            /* wait for the start of the next frame. */
-                            mstp_port->receive_state = MSTP_RECEIVE_STATE_IDLE;
-                        } else {
-                            /* receive the data portion of the frame. */
-                            if ((mstp_port->DestinationAddress ==
-                                    mstp_port->This_Station)
-                                || (mstp_port->DestinationAddress ==
-                                    MSTP_BROADCAST_ADDRESS)) {
-                                if (mstp_port->DataLength <=
-                                    mstp_port->InputBufferSize) {
-                                    /* Data */
-                                    mstp_port->receive_state =
-                                        MSTP_RECEIVE_STATE_DATA;
-                                } else {
-                                    /* FrameTooLong */
-                                    printf_receive_error
-                                        ("MSTP: Rx Header: FrameTooLong %u\n",
-                                        (unsigned) mstp_port->DataLength);
-                                    mstp_port->receive_state =
-                                        MSTP_RECEIVE_STATE_SKIP_DATA;
-                                }
-                            } else {
-                                /* NotForUs */
-                                mstp_port->receive_state =
-                                    MSTP_RECEIVE_STATE_SKIP_DATA;
-                            }
-                            mstp_port->Index = 0;
-                            mstp_port->DataCRC = 0xFFFF;
-                        }
-                    }
-                }
-                /* not per MS/TP standard, but it is a case not covered */
-                else {
-                    mstp_port->ReceiveError = false;
-                    /* indicate that an error has occurred during  */
-                    /* the reception of a frame */
+#ifdef MSTP_ANALYZER
+                mstp_port->HeaderCRCActual = mstp_port->DataRegister;
+#endif
+                /* don't wait for next state - do it here */
+                if (mstp_port->HeaderCRC != 0x55) {
+                    /* BadCRC */
+                    /* indicate that an error has occurred during
+                       the reception of a frame */
                     mstp_port->ReceivedInvalidFrame = true;
-                    printf_receive_error("MSTP: Rx Data: BadIndex %u\n",
-                        (unsigned) mstp_port->Index);
-                    /* wait for the start of a frame. */
+                    /* wait for the start of the next frame. */
                     mstp_port->receive_state = MSTP_RECEIVE_STATE_IDLE;
                 }
-                mstp_port->SilenceTimerReset((void *) mstp_port);
-                INCREMENT_AND_LIMIT_UINT8(mstp_port->EventCount);
-                mstp_port->DataAvailable = false;
-            }
-            break;
-            /* In the DATA state, the node waits for the data portion of a frame. */
-        case MSTP_RECEIVE_STATE_DATA:
-        case MSTP_RECEIVE_STATE_SKIP_DATA:
-            /* Timeout */
-            if (mstp_port->SilenceTimer((void *) mstp_port) > Tframe_abort) {
-                /* indicate that an error has occurred during the reception of a frame */
-                mstp_port->ReceivedInvalidFrame = true;
-                printf_receive_error
-                    ("MSTP: Rx Data: SilenceTimer %ums > %dms\n",
-                    (unsigned) mstp_port->SilenceTimer((void *) mstp_port),
-                    Tframe_abort);
-                /* wait for the start of the next frame. */
-                mstp_port->receive_state = MSTP_RECEIVE_STATE_IDLE;
-            }
-            /* Error */
-            else if (mstp_port->ReceiveError == true) {
-                mstp_port->ReceiveError = false;
-                mstp_port->SilenceTimerReset((void *) mstp_port);
-                /* indicate that an error has occurred during the reception of a frame */
-                mstp_port->ReceivedInvalidFrame = true;
-                printf_receive_error("MSTP: Rx Data: ReceiveError\n");
-                /* wait for the start of the next frame. */
-                mstp_port->receive_state = MSTP_RECEIVE_STATE_IDLE;
-            } else if (mstp_port->DataAvailable == true) {
-                printf_receive_data("%02X ", mstp_port->DataRegister);
-                if (mstp_port->Index < mstp_port->DataLength) {
-                    /* DataOctet */
-                    mstp_port->DataCRC =
-                        CRC_Calc_Data(mstp_port->DataRegister,
-                        mstp_port->DataCRC);
-                    if (mstp_port->Index < mstp_port->InputBufferSize) {
-                        mstp_port->InputBuffer[mstp_port->Index] =
-                            mstp_port->DataRegister;
-                    }
-                    mstp_port->Index++;
-                    mstp_port->receive_state = MSTP_RECEIVE_STATE_DATA;
-                } else if (mstp_port->Index == mstp_port->DataLength) {
-                    /* CRC1 */
-                    mstp_port->DataCRC =
-                        CRC_Calc_Data(mstp_port->DataRegister,
-                        mstp_port->DataCRC);
-                    mstp_port->DataCRCActualMSB = mstp_port->DataRegister;
-                    mstp_port->Index++;
-                    mstp_port->receive_state = MSTP_RECEIVE_STATE_DATA;
-                } else if (mstp_port->Index == (mstp_port->DataLength + 1)) {
-                    /* CRC2 */
-                    mstp_port->DataCRC =
-                        CRC_Calc_Data(mstp_port->DataRegister,
-                        mstp_port->DataCRC);
-                    mstp_port->DataCRCActualLSB = mstp_port->DataRegister;
-                    printf_receive_data("%s",
-                        mstptext_frame_type((unsigned) mstp_port->FrameType));
-                    /* STATE DATA CRC - no need for new state */
-                    /* indicate the complete reception of a valid frame */
-                    if (mstp_port->DataCRC == 0xF0B8) {
-                        if (mstp_port->receive_state ==
-                            MSTP_RECEIVE_STATE_DATA) {
+                else {
+                    if (mstp_port->DataLength == 0) {
+                        /* NoData */
+                        if ((mstp_port->DestinationAddress == mstp_port->This_Station) ||
+                            (mstp_port->DestinationAddress == MSTP_BROADCAST_ADDRESS)) {
                             /* ForUs */
+                            /* indicate that a frame with no data has been received */
                             mstp_port->ReceivedValidFrame = true;
-                        } else {
+                            mstp_port->btaReceivedValidFrame = true;
+                        }
+                        else {
                             /* NotForUs */
                             mstp_port->ReceivedValidFrameNotForUs = true;
+                            mstp_port->btaReceivedValidFrame = true;
                         }
-                    } else {
-                        mstp_port->ReceivedInvalidFrame = true;
-                        printf_receive_error("MSTP: Rx Data: BadCRC [%02X]\n",
-                            mstp_port->DataRegister);
+                        /* wait for the start of the next frame. */
+                        mstp_port->receive_state = MSTP_RECEIVE_STATE_IDLE;
                     }
-                    mstp_port->receive_state = MSTP_RECEIVE_STATE_IDLE;
-                } else {
-                    mstp_port->ReceivedInvalidFrame = true;
-                    mstp_port->receive_state = MSTP_RECEIVE_STATE_IDLE;
+                    else {
+                        /* receive the data portion of the frame. */
+                        if ((mstp_port->DestinationAddress == mstp_port->This_Station) ||
+                            (mstp_port->DestinationAddress == MSTP_BROADCAST_ADDRESS)) {
+                            if (mstp_port->DataLength <= mstp_port->InputBufferSize) {
+                                /* Data */
+                                mstp_port->receive_state = MSTP_RECEIVE_STATE_DATA;
+                            }
+                            else {
+                                /* FrameTooLong */
+                                mstp_port->receive_state = MSTP_RECEIVE_STATE_SKIP_DATA;
+                            }
+                        }
+                        else {
+                            /* NotForUs */
+                            mstp_port->receive_state = MSTP_RECEIVE_STATE_SKIP_DATA;
+                        }
+                        mstp_port->Index = 0;
+                        mstp_port->DataCRC = 0xFFFF;
+                    }
                 }
-                mstp_port->DataAvailable = false;
-                mstp_port->SilenceTimerReset((void *) mstp_port);
             }
-            break;
-        default:
-            /* shouldn't get here - but if we do... */
+            /* (Karg wrote this) not per MS/TP standard, but it is a case not covered */
+            else {
+                mstp_port->ReceiveError = false;
+                /* indicate that an error has occurred during  */
+                /* the reception of a frame */
+                mstp_port->ReceivedInvalidFrame = true;
+                /* wait for the start of a frame. */
+                mstp_port->receive_state = MSTP_RECEIVE_STATE_IDLE;
+            }
+            SilenceTimerReset(mstp_port);
+            INCREMENT_AND_LIMIT_UINT8(mstp_port->EventCount);
+            mstp_port->DataAvailable = false;
+        }
+        break;
+
+    case MSTP_RECEIVE_STATE_DATA:
+    case MSTP_RECEIVE_STATE_SKIP_DATA:
+        /* In the DATA state, the node waits
+           for the data portion of a frame. */
+        if (SilenceTimer(mstp_port) > Tframe_abort) {
+            /* Timeout */
+            /* indicate that an error has occurred during the reception of a frame */
+            mstp_port->ReceivedInvalidFrame = true;
+            /* wait for the start of the next frame. */
             mstp_port->receive_state = MSTP_RECEIVE_STATE_IDLE;
-            break;
+        }
+        else if (mstp_port->ReceiveError == true) {
+            /* Error */
+            mstp_port->ReceiveError = false;
+            SilenceTimerReset(mstp_port);
+            /* indicate that an error has occurred during the reception of a frame */
+            mstp_port->ReceivedInvalidFrame = true;
+            /* wait for the start of the next frame. */
+            mstp_port->receive_state = MSTP_RECEIVE_STATE_IDLE;
+        }
+        else if (mstp_port->DataAvailable == true) {
+            if (mstp_port->Index < mstp_port->DataLength) {
+                /* DataOctet */
+                mstp_port->DataCRC =
+                    CRC_Calc_Data(mstp_port->DataRegister,
+                        mstp_port->DataCRC);
+                if (mstp_port->Index < mstp_port->InputBufferSize) {
+                    mstp_port->InputBuffer[mstp_port->Index] =
+                        mstp_port->DataRegister;
+                }
+                mstp_port->Index++;
+            }
+            else if (mstp_port->Index == mstp_port->DataLength) {
+                /* CRC1 */
+                mstp_port->DataCRC =
+                    CRC_Calc_Data(mstp_port->DataRegister,
+                        mstp_port->DataCRC);
+#ifdef MSTP_ANALYZER
+                mstp_port->DataCRCActualMSB = mstp_port->DataRegister;
+#endif
+                mstp_port->Index++;
+            }
+            else if (mstp_port->Index == (mstp_port->DataLength + 1)) {
+                /* CRC2 */
+                mstp_port->DataCRC =
+                    CRC_Calc_Data(mstp_port->DataRegister,
+                        mstp_port->DataCRC);
+#ifdef MSTP_ANALYZER
+                mstp_port->DataCRCActualLSB = mstp_port->DataRegister;
+#endif
+                /* STATE DATA CRC - no need for new state */
+                /* indicate the complete reception of a valid frame */
+                if (mstp_port->DataCRC == 0xF0B8) {
+                    if (mstp_port->receive_state == MSTP_RECEIVE_STATE_DATA) {
+                        /* ForUs */
+                        mstp_port->ReceivedValidFrame = true;
+                        mstp_port->btaReceivedValidFrame = true;
+                    }
+                    else {
+                        /* NotForUs */
+                        mstp_port->ReceivedValidFrameNotForUs = true;
+                        mstp_port->btaReceivedValidFrame = true;
+                    }
+                }
+                else {
+                    mstp_port->ReceivedInvalidFrame = true;
+                    // todo3 - add bta diagnostics for invalid frames, noise etc.
+                }
+                mstp_port->receive_state = MSTP_RECEIVE_STATE_IDLE;
+            }
+            else {
+                mstp_port->ReceivedInvalidFrame = true;
+                mstp_port->receive_state = MSTP_RECEIVE_STATE_IDLE;
+            }
+            mstp_port->DataAvailable = false;
+            SilenceTimerReset(mstp_port);
+        }
+        break;
+    default:
+        /* shouldn't get here - but if we do... */
+        mstp_port->receive_state = MSTP_RECEIVE_STATE_IDLE;
+        break;
     }
-    if ((receive_state != MSTP_RECEIVE_STATE_IDLE) &&
-        (mstp_port->receive_state == MSTP_RECEIVE_STATE_IDLE)) {
-        printf_receive_data("\n");
-        fflush(stderr);
-    }
+
 }
 
 /* returns true if we need to transition immediately */
@@ -604,13 +604,13 @@ bool MSTP_Master_Node_FSM(
     volatile struct mstp_port_struct_t * mstp_port)
 {
     unsigned length = 0;
-    uint8_t next_poll_station = 0;
-    uint8_t next_this_station = 0;
-    uint8_t next_next_station = 0;
+    uint8_t next_poll_station ;
+    uint8_t next_this_station ;
+    uint8_t next_next_station ;
     uint16_t my_timeout = 10, ns_timeout = 0, mm_timeout = 0;
     /* transition immediately to the next state */
     bool transition_now = false;
-    MSTP_MASTER_STATE master_state = mstp_port->master_state;
+    // MSTP_MASTER_STATE master_state = mstp_port->master_state;
 
     /* some calculations that several states need */
     next_poll_station =
@@ -619,8 +619,34 @@ bool MSTP_Master_Node_FSM(
         (mstp_port->This_Station + 1) % (mstp_port->Nmax_master + 1);
     next_next_station =
         (mstp_port->Next_Station + 1) % (mstp_port->Nmax_master + 1);
+    
     switch (mstp_port->master_state) {
-        case MSTP_MASTER_STATE_INITIALIZE:
+    case MSTP_MASTER_STATE_INITIALIZE:
+        if (mstp_port->This_Station == 255) {
+            panic(); // add automac
+            //dlmstp_automac_handler(mstp_port);
+            //if (mstp_port->This_Station != 255) {
+            //    mstp_port->Next_Station = automac_next_station(mstp_port->This_Station);
+            //    if (mstp_port->Next_Station == 255) {
+            //        /* indicate that the next station is unknown */
+            //        mstp_port->Next_Station = mstp_port->This_Station;
+            //        mstp_port->Poll_Station = mstp_port->This_Station;
+            //        mstp_port->TokenCount = Npoll;
+            //        mstp_port->EventCount = 0;
+            //        mstp_port->SoleMaster = true;
+            //        mstp_port->master_state = MSTP_MASTER_STATE_POLL_FOR_MASTER;
+            //    }
+            //    else {
+            //        mstp_port->Poll_Station = mstp_port->This_Station;
+            //        mstp_port->TokenCount = 1;
+            //        mstp_port->EventCount = 0;
+            //        mstp_port->RetryCount = 0;
+            //        mstp_port->SoleMaster = false;
+            //        mstp_port->master_state = MSTP_MASTER_STATE_PASS_TOKEN;
+            //    }
+            //}
+        }
+        else {
             /* DoneInitializing */
             /* indicate that the next station is unknown */
             mstp_port->Next_Station = mstp_port->This_Station;
@@ -631,578 +657,551 @@ bool MSTP_Master_Node_FSM(
             mstp_port->SoleMaster = false;
             mstp_port->master_state = MSTP_MASTER_STATE_IDLE;
             transition_now = true;
-            break;
-        case MSTP_MASTER_STATE_IDLE:
-            /* In the IDLE state, the node waits for a frame. */
-            if (mstp_port->ReceivedInvalidFrame == true) {
-                /* ReceivedInvalidFrame */
-                /* invalid frame was received */
-                /* wait for the next frame - remain in IDLE */
-                mstp_port->ReceivedInvalidFrame = false;
-            } else if (mstp_port->ReceivedValidFrame == true) {
-                printf_master("MSTP: ReceivedValidFrame "
-                    "Src=%02X Dest=%02X DataLen=%u " "FC=%u ST=%u Type=%s\n",
-                    mstp_port->SourceAddress, mstp_port->DestinationAddress,
-                    mstp_port->DataLength, mstp_port->FrameCount,
-                    mstp_port->SilenceTimer((void *) mstp_port),
-                    mstptext_frame_type((unsigned) mstp_port->FrameType));
-                if ((mstp_port->DestinationAddress == mstp_port->This_Station)
-                    || (mstp_port->DestinationAddress ==
-                        MSTP_BROADCAST_ADDRESS)) {
-                    /* destined for me! */
-                    switch (mstp_port->FrameType) {
-                        case FRAME_TYPE_TOKEN:
-                            /* ReceivedToken */
-                            /* tokens can't be broadcast */
-                            if (mstp_port->DestinationAddress ==
-                                MSTP_BROADCAST_ADDRESS) {
-                                break;
-                            }
-                            mstp_port->ReceivedValidFrame = false;
-                            mstp_port->FrameCount = 0;
-                            mstp_port->SoleMaster = false;
-                            mstp_port->master_state =
-                                MSTP_MASTER_STATE_USE_TOKEN;
-                            transition_now = true;
-                            break;
-                        case FRAME_TYPE_POLL_FOR_MASTER:
-                            /* ReceivedPFM */
-                            MSTP_Create_And_Send_Frame(mstp_port,
-                                FRAME_TYPE_REPLY_TO_POLL_FOR_MASTER,
-                                mstp_port->SourceAddress,
-                                mstp_port->This_Station, NULL, 0);
-                            break;
-                        case FRAME_TYPE_BACNET_DATA_NOT_EXPECTING_REPLY:
-                            /* indicate successful reception to the higher layers */
-                            (void) MSTP_Put_Receive(mstp_port);
-                            break;
-                        case FRAME_TYPE_BACNET_DATA_EXPECTING_REPLY:
-                            /*mstp_port->ReplyPostponedTimer = 0; */
-                            /* indicate successful reception to the higher layers  */
-                            (void) MSTP_Put_Receive(mstp_port);
-                            /* broadcast DER just remains IDLE */
-                            if (mstp_port->DestinationAddress !=
-                                MSTP_BROADCAST_ADDRESS) {
-                                mstp_port->master_state =
-                                    MSTP_MASTER_STATE_ANSWER_DATA_REQUEST;
-                            }
-                            break;
-                        case FRAME_TYPE_TEST_REQUEST:
-                            MSTP_Create_And_Send_Frame(mstp_port,
-                                FRAME_TYPE_TEST_RESPONSE,
-                                mstp_port->SourceAddress,
-                                mstp_port->This_Station,
-                                mstp_port->InputBuffer, mstp_port->DataLength);
-                            break;
-                        case FRAME_TYPE_TEST_RESPONSE:
-                        default:
-                            break;
+        }
+        break;
+
+    case MSTP_MASTER_STATE_IDLE:
+        /* In the IDLE state, the node waits for a frame. */
+        if (mstp_port->ReceivedInvalidFrame == true) {
+            /* ReceivedInvalidFrame */
+            /* invalid frame was received */
+            /* wait for the next frame - remain in IDLE */
+            mstp_port->ReceivedInvalidFrame = false;
+        }
+        else if (mstp_port->ReceivedValidFrame == true) {
+            if ((mstp_port->DestinationAddress == mstp_port->This_Station)
+                || (mstp_port->DestinationAddress ==
+                    MSTP_BROADCAST_ADDRESS)) {
+                /* destined for me! */
+                switch (mstp_port->FrameType) {
+                case FRAME_TYPE_TOKEN:
+                    /* ReceivedToken */
+                    /* tokens can't be broadcast */
+                    if (mstp_port->DestinationAddress == MSTP_BROADCAST_ADDRESS) {
+                        break;
                     }
-                }
-                /* For DATA_EXPECTING_REPLY, we will keep the Rx Frame for
-                   reference, and the flag will be cleared in the next state */
-                if (mstp_port->master_state !=
-                    MSTP_MASTER_STATE_ANSWER_DATA_REQUEST) {
                     mstp_port->ReceivedValidFrame = false;
+                    mstp_port->FrameCount = 0;
+                    mstp_port->SoleMaster = false;
+                mstp_port->master_state = MSTP_MASTER_STATE_USE_TOKEN;
+                    transition_now = true;
+                    break;
+                case FRAME_TYPE_POLL_FOR_MASTER:
+                    /* ReceivedPFM */
+                    /* DestinationAddress is equal to TS */
+                    if (mstp_port->DestinationAddress ==
+                        mstp_port->This_Station) {
+                        MSTP_Create_And_Send_Frame(
+                            mstp_port,
+                            FRAME_TYPE_REPLY_TO_POLL_FOR_MASTER,
+                            mstp_port->SourceAddress,
+                            mstp_port->This_Station, NULL, 0);
+                    }
+                    break;
+                case FRAME_TYPE_BACNET_DATA_NOT_EXPECTING_REPLY:
+                    /* indicate successful reception to the higher layers */
+                    (void)MSTP_Put_Receive(mstp_port);
+                    break;
+                case FRAME_TYPE_BACNET_DATA_EXPECTING_REPLY:
+                    /*mstp_port->ReplyPostponedTimer = 0; */
+                    /* indicate successful reception to the higher layers  */
+                    (void)MSTP_Put_Receive(mstp_port);
+                    /* broadcast DER just remains IDLE */
+                    if (mstp_port->DestinationAddress != MSTP_BROADCAST_ADDRESS) {
+                        mstp_port->master_state =
+                            MSTP_MASTER_STATE_ANSWER_DATA_REQUEST;
+                    }
+                    break;
+                case FRAME_TYPE_TEST_REQUEST:
+                    MSTP_Create_And_Send_Frame(
+                        mstp_port,
+                        FRAME_TYPE_TEST_RESPONSE,
+                        mstp_port->SourceAddress,
+                        mstp_port->This_Station,
+                        mstp_port->InputBuffer,
+                        mstp_port->DataLength);
+                    break;
+                case FRAME_TYPE_TEST_RESPONSE:
+                default:
+                    break;
                 }
-            } else if (mstp_port->SilenceTimer((void *) mstp_port) >= Tno_token) {
-                /* LostToken */
-                /* assume that the token has been lost */
-                mstp_port->EventCount = 0;      /* Addendum 135-2004d-8 */
-                mstp_port->master_state = MSTP_MASTER_STATE_NO_TOKEN;
-                /* set the receive frame flags to false in case we received
-                   some bytes and had a timeout for some reason */
-                mstp_port->ReceivedInvalidFrame = false;
-                mstp_port->ReceivedValidFrame = false;
-                transition_now = true;
             }
-            break;
-        case MSTP_MASTER_STATE_USE_TOKEN:
-            /* In the USE_TOKEN state, the node is allowed to send one or  */
-            /* more data frames. These may be BACnet Data frames or */
-            /* proprietary frames. */
-            /* FIXME: We could wait for up to Tusage_delay */
-            length = (unsigned) MSTP_Get_Send(mstp_port, 0);
-            if (length < 1) {
-                /* NothingToSend */
-                mstp_port->FrameCount = mstp_port->Nmax_info_frames;
+            /* For DATA_EXPECTING_REPLY, we will keep the Rx Frame for
+               reference, and the flag will be cleared in the next state */
+            if (mstp_port->master_state != MSTP_MASTER_STATE_ANSWER_DATA_REQUEST) {
+                mstp_port->ReceivedValidFrame = false;
+            }
+        }
+        else if (SilenceTimer(mstp_port) >= Tno_token) {
+            /* LostToken */
+            /* assume that the token has been lost */
+            mstp_port->EventCount = 0;      /* Addendum 135-2004d-8 */
+            mstp_port->master_state = MSTP_MASTER_STATE_NO_TOKEN;
+            /* set the receive frame flags to false in case we received
+               some bytes and had a timeout for some reason */
+            mstp_port->ReceivedInvalidFrame = false;
+            mstp_port->ReceivedValidFrame = false;
+            mstp_port->ReceivedValidFrameNotForUs = false;
+            transition_now = true;
+        }
+        break;
+
+    case MSTP_MASTER_STATE_USE_TOKEN:
+        /* In the USE_TOKEN state, the node is allowed to send one or  */
+        /* more data frames. These may be BACnet Data frames or */
+        /* proprietary frames. */
+        /* Note: FIXME: We could wait for up to Tusage_delay */
+        length = (unsigned)MSTP_Get_Send(mstp_port, 0);
+        if (length < 1) {
+            /* NothingToSend */
+            mstp_port->FrameCount = mstp_port->Nmax_info_frames;
+            mstp_port->master_state = MSTP_MASTER_STATE_DONE_WITH_TOKEN;
+            transition_now = true;
+        }
+        else {
+            uint8_t frame_type = mstp_port->OutputBuffer[2];
+            uint8_t destination = mstp_port->OutputBuffer[3];
+            MSTP_Create_And_Send_Frame(
+                mstp_port,
+                frame_type,
+                destination,
+                mstp_port->This_Station,
+                (uint8_t *)& mstp_port->OutputBuffer[0],
+                (uint16_t)length);
+
+
+            mstp_port->FrameCount++;
+            switch (frame_type) {
+            case FRAME_TYPE_BACNET_DATA_EXPECTING_REPLY:
+                if (destination == MSTP_BROADCAST_ADDRESS) {
+                    /* SendNoWait */
+                    mstp_port->master_state = MSTP_MASTER_STATE_DONE_WITH_TOKEN;
+                }
+                else {
+                    /* SendAndWait */
+                    mstp_port->master_state = MSTP_MASTER_STATE_WAIT_FOR_REPLY;
+                }
+                break;
+            case FRAME_TYPE_TEST_REQUEST:
+                /* SendAndWait */
+                mstp_port->master_state = MSTP_MASTER_STATE_WAIT_FOR_REPLY;
+                break;
+            case FRAME_TYPE_TEST_RESPONSE:
+            case FRAME_TYPE_BACNET_DATA_NOT_EXPECTING_REPLY:
+            default:
+                /* SendNoWait */
+                mstp_port->master_state = MSTP_MASTER_STATE_DONE_WITH_TOKEN;
+                break;
+            }
+        }
+        break;
+
+    case MSTP_MASTER_STATE_WAIT_FOR_REPLY:
+        /* In the WAIT_FOR_REPLY state, the node waits for  */
+        /* a reply from another node. */
+        if (SilenceTimer(mstp_port) >= Treply_timeout) {
+            /* ReplyTimeout */
+            /* assume that the request has failed */
+            mstp_port->FrameCount = mstp_port->Nmax_info_frames;
+            mstp_port->master_state = MSTP_MASTER_STATE_DONE_WITH_TOKEN;
+            /* Any retry of the data frame shall await the next entry */
+            /* to the USE_TOKEN state. (Because of the length of the timeout,  */
+            /* this transition will cause the token to be passed regardless */
+            /* of the initial value of FrameCount.) */
+            transition_now = true;
+        }
+        else {
+            if (mstp_port->ReceivedInvalidFrame == true) {
+                /* InvalidFrame */
+                /* error in frame reception */
+                mstp_port->ReceivedInvalidFrame = false;
                 mstp_port->master_state = MSTP_MASTER_STATE_DONE_WITH_TOKEN;
                 transition_now = true;
-            } else {
-                uint8_t frame_type = mstp_port->OutputBuffer[2];
-                uint8_t destination = mstp_port->OutputBuffer[3];
-                RS485_Send_Frame(mstp_port,
-                    (uint8_t *) & mstp_port->OutputBuffer[0],
-                    (uint16_t) length);
-                mstp_port->FrameCount++;
-                switch (frame_type) {
-                    case FRAME_TYPE_BACNET_DATA_EXPECTING_REPLY:
-                        if (destination == MSTP_BROADCAST_ADDRESS) {
-                            /* SendNoWait */
-                            mstp_port->master_state =
-                                MSTP_MASTER_STATE_DONE_WITH_TOKEN;
-                        } else {
-                            /* SendAndWait */
-                            mstp_port->master_state =
-                                MSTP_MASTER_STATE_WAIT_FOR_REPLY;
-                        }
-                        break;
-                    case FRAME_TYPE_TEST_REQUEST:
-                        /* SendAndWait */
-                        mstp_port->master_state =
-                            MSTP_MASTER_STATE_WAIT_FOR_REPLY;
-                        break;
-                    case FRAME_TYPE_TEST_RESPONSE:
-                    case FRAME_TYPE_BACNET_DATA_NOT_EXPECTING_REPLY:
-                    default:
-                        /* SendNoWait */
+            }
+            else if (mstp_port->ReceivedValidFrame == true) {
+                if (mstp_port->DestinationAddress == mstp_port->This_Station) {
+                    /* What did we receive? */
+                    switch (mstp_port->FrameType) {
+                    case FRAME_TYPE_REPLY_POSTPONED:
+                        /* ReceivedReplyPostponed */
                         mstp_port->master_state =
                             MSTP_MASTER_STATE_DONE_WITH_TOKEN;
                         break;
-                }
-            }
-            break;
-        case MSTP_MASTER_STATE_WAIT_FOR_REPLY:
-            /* In the WAIT_FOR_REPLY state, the node waits for  */
-            /* a reply from another node. */
-            if (mstp_port->SilenceTimer((void *) mstp_port) >= Treply_timeout) {
-                /* ReplyTimeout */
-                /* assume that the request has failed */
-                mstp_port->FrameCount = mstp_port->Nmax_info_frames;
-                mstp_port->master_state = MSTP_MASTER_STATE_DONE_WITH_TOKEN;
-                /* Any retry of the data frame shall await the next entry */
-                /* to the USE_TOKEN state. (Because of the length of the timeout,  */
-                /* this transition will cause the token to be passed regardless */
-                /* of the initial value of FrameCount.) */
-                transition_now = true;
-            } else {
-                if (mstp_port->ReceivedInvalidFrame == true) {
-                    /* InvalidFrame */
-                    /* error in frame reception */
-                    mstp_port->ReceivedInvalidFrame = false;
-                    mstp_port->master_state =
-                        MSTP_MASTER_STATE_DONE_WITH_TOKEN;
-                    transition_now = true;
-                } else if (mstp_port->ReceivedValidFrame == true) {
-                    if (mstp_port->DestinationAddress ==
-                        mstp_port->This_Station) {
-                        switch (mstp_port->FrameType) {
-                            case FRAME_TYPE_REPLY_POSTPONED:
-                                /* ReceivedReplyPostponed */
-                                mstp_port->master_state =
-                                    MSTP_MASTER_STATE_DONE_WITH_TOKEN;
-                                break;
-                            case FRAME_TYPE_TEST_RESPONSE:
-                                mstp_port->master_state =
-                                    MSTP_MASTER_STATE_DONE_WITH_TOKEN;
-                                break;
-                            case FRAME_TYPE_BACNET_DATA_NOT_EXPECTING_REPLY:
-                                /* ReceivedReply */
-                                /* or a proprietary type that indicates a reply */
-                                /* indicate successful reception to the higher layers */
-                                (void) MSTP_Put_Receive(mstp_port);
-                                mstp_port->master_state =
-                                    MSTP_MASTER_STATE_DONE_WITH_TOKEN;
-                                break;
-                            default:
-                                /* if proprietary frame was expected, you might
-                                   need to transition to DONE WITH TOKEN */
-                                mstp_port->master_state =
-                                    MSTP_MASTER_STATE_IDLE;
-                                break;
-                        }
-                    } else {
-                        /* ReceivedUnexpectedFrame */
-                        /* an unexpected frame was received */
-                        /* This may indicate the presence of multiple tokens.  */
-                        /* Synchronize with the network. */
-                        /* This action drops the token. */
+                    case FRAME_TYPE_TEST_RESPONSE:
+                        mstp_port->master_state =
+                            MSTP_MASTER_STATE_DONE_WITH_TOKEN;
+                        break;
+                    case FRAME_TYPE_BACNET_DATA_NOT_EXPECTING_REPLY:
+                        /* ReceivedReply */
+                        /* or a proprietary type that indicates a reply */
+                        /* indicate successful reception to the higher layers */
+                        (void)MSTP_Put_Receive(mstp_port);
+                        mstp_port->master_state = MSTP_MASTER_STATE_DONE_WITH_TOKEN;
+                        break;
+                    default:
+                        /* if proprietary frame was expected, you might
+                           need to transition to DONE WITH TOKEN */
                         mstp_port->master_state = MSTP_MASTER_STATE_IDLE;
+                        break;
                     }
-                    mstp_port->ReceivedValidFrame = false;
-                    transition_now = true;
                 }
+                else {
+                    /* ReceivedUnexpectedFrame */
+                    /* an unexpected frame was received */
+                    /* This may indicate the presence of multiple tokens */
+                    /* or a device that didn't see activity after passing */
+                    /* a token (how lame!). */
+                    /* Synchronize with the network. */
+                    /* This action drops the token. */
+                    mstp_port->master_state = MSTP_MASTER_STATE_IDLE;
+                }
+                mstp_port->ReceivedValidFrame = false;
+                transition_now = true;
             }
-            break;
-        case MSTP_MASTER_STATE_DONE_WITH_TOKEN:
-            /* The DONE_WITH_TOKEN state either sends another data frame,  */
-            /* passes the token, or initiates a Poll For Master cycle. */
-            /* SendAnotherFrame */
-            if (mstp_port->FrameCount < mstp_port->Nmax_info_frames) {
-                /* then this node may send another information frame  */
-                /* before passing the token.  */
+        }
+        break;
+
+    case MSTP_MASTER_STATE_DONE_WITH_TOKEN:
+        /* The DONE_WITH_TOKEN state either sends another data frame,  */
+        /* passes the token, or initiates a Poll For Master cycle. */
+        /* SendAnotherFrame */
+        if (mstp_port->FrameCount < mstp_port->Nmax_info_frames) {
+            /* then this node may send another information frame  */
+            /* before passing the token.  */
+            mstp_port->master_state = MSTP_MASTER_STATE_USE_TOKEN;
+            transition_now = true;
+        }
+        else if ((mstp_port->SoleMaster == false) &&
+            (mstp_port->Next_Station == mstp_port->This_Station)) {
+            /* NextStationUnknown - added in Addendum 135-2008v-1 */
+            /*  then the next station to which the token
+               should be sent is unknown - so PollForMaster */
+            mstp_port->Poll_Station = next_this_station;
+            MSTP_Create_And_Send_Frame(
+                mstp_port,
+                FRAME_TYPE_POLL_FOR_MASTER, mstp_port->Poll_Station,
+                mstp_port->This_Station, NULL, 0);
+            mstp_port->RetryCount = 0;
+            mstp_port->master_state = MSTP_MASTER_STATE_POLL_FOR_MASTER;
+        }
+        else if (mstp_port->TokenCount < (Npoll - 1)) {
+            /* Npoll changed in Errata SSPC-135-2004 */
+            if ((mstp_port->SoleMaster == true) &&
+                (mstp_port->Next_Station != next_this_station)) {
+                /* SoleMaster */
+                /* there are no other known master nodes to */
+                /* which the token may be sent (true master-slave operation).  */
+                mstp_port->FrameCount = 0;
+                mstp_port->TokenCount++;
                 mstp_port->master_state = MSTP_MASTER_STATE_USE_TOKEN;
                 transition_now = true;
-            } else if ((mstp_port->SoleMaster == false) &&
-                (mstp_port->Next_Station == mstp_port->This_Station)) {
-                /* NextStationUnknown - added in Addendum 135-2008v-1 */
-                /*  then the next station to which the token
-                   should be sent is unknown - so PollForMaster */
-                mstp_port->Poll_Station = next_this_station;
-                MSTP_Create_And_Send_Frame(mstp_port,
-                    FRAME_TYPE_POLL_FOR_MASTER, mstp_port->Poll_Station,
-                    mstp_port->This_Station, NULL, 0);
-                mstp_port->RetryCount = 0;
-                mstp_port->master_state = MSTP_MASTER_STATE_POLL_FOR_MASTER;
-            } else if (mstp_port->TokenCount < (Npoll - 1)) {
+            }
+            else {
+                /* SendToken */
                 /* Npoll changed in Errata SSPC-135-2004 */
-                if ((mstp_port->SoleMaster == true) &&
-                    (mstp_port->Next_Station != next_this_station)) {
-                    /* SoleMaster */
-                    /* there are no other known master nodes to */
-                    /* which the token may be sent (true master-slave operation).  */
-                    mstp_port->FrameCount = 0;
-                    mstp_port->TokenCount++;
-                    mstp_port->master_state = MSTP_MASTER_STATE_USE_TOKEN;
-                    transition_now = true;
-                } else {
-                    /* SendToken */
-                    /* Npoll changed in Errata SSPC-135-2004 */
-                    /* The comparison of NS and TS+1 eliminates the Poll For Master  */
-                    /* if there are no addresses between TS and NS, since there is no  */
-                    /* address at which a new master node may be found in that case. */
-                    mstp_port->TokenCount++;
-                    /* transmit a Token frame to NS */
-                    MSTP_Create_And_Send_Frame(mstp_port, FRAME_TYPE_TOKEN,
-                        mstp_port->Next_Station, mstp_port->This_Station, NULL,
-                        0);
-                    mstp_port->RetryCount = 0;
-                    mstp_port->EventCount = 0;
-                    mstp_port->master_state = MSTP_MASTER_STATE_PASS_TOKEN;
-                }
-            } else if (next_poll_station == mstp_port->Next_Station) {
-                if (mstp_port->SoleMaster == true) {
-                    /* SoleMasterRestartMaintenancePFM */
-                    mstp_port->Poll_Station = next_next_station;
-                    MSTP_Create_And_Send_Frame(mstp_port,
-                        FRAME_TYPE_POLL_FOR_MASTER, mstp_port->Poll_Station,
-                        mstp_port->This_Station, NULL, 0);
-                    /* no known successor node */
-                    mstp_port->Next_Station = mstp_port->This_Station;
-                    mstp_port->RetryCount = 0;
-                    /* changed in Errata SSPC-135-2004 */
-                    mstp_port->TokenCount = 1;
-                    /* mstp_port->EventCount = 0; removed in Addendum 135-2004d-8 */
-                    /* find a new successor to TS */
-                    mstp_port->master_state =
-                        MSTP_MASTER_STATE_POLL_FOR_MASTER;
-                } else {
-                    /* ResetMaintenancePFM */
-                    mstp_port->Poll_Station = mstp_port->This_Station;
-                    /* transmit a Token frame to NS */
-                    MSTP_Create_And_Send_Frame(mstp_port, FRAME_TYPE_TOKEN,
-                        mstp_port->Next_Station, mstp_port->This_Station, NULL,
-                        0);
-                    mstp_port->RetryCount = 0;
-                    /* changed in Errata SSPC-135-2004 */
-                    mstp_port->TokenCount = 1;
-                    mstp_port->EventCount = 0;
-                    mstp_port->master_state = MSTP_MASTER_STATE_PASS_TOKEN;
-                }
-            } else {
-                /* SendMaintenancePFM */
-                mstp_port->Poll_Station = next_poll_station;
-                MSTP_Create_And_Send_Frame(mstp_port,
-                    FRAME_TYPE_POLL_FOR_MASTER, mstp_port->Poll_Station,
+                /* The comparison of NS and TS+1 eliminates the Poll For Master  */
+                /* if there are no addresses between TS and NS, since there is no  */
+                /* address at which a new master node may be found in that case. */
+                mstp_port->TokenCount++;
+                /* transmit a Token frame to NS */
+                MSTP_Create_And_Send_Frame(
+                    mstp_port,
+                    FRAME_TYPE_TOKEN,
+                    mstp_port->Next_Station,
                     mstp_port->This_Station, NULL, 0);
                 mstp_port->RetryCount = 0;
+                mstp_port->EventCount = 0;
+                mstp_port->master_state = MSTP_MASTER_STATE_PASS_TOKEN;
+            }
+        }
+        else if (next_poll_station == mstp_port->Next_Station) {
+            if (mstp_port->SoleMaster == true) {
+                /* SoleMasterRestartMaintenancePFM */
+                mstp_port->Poll_Station = next_next_station;
+                MSTP_Create_And_Send_Frame(
+                    mstp_port,
+                    FRAME_TYPE_POLL_FOR_MASTER, mstp_port->Poll_Station,
+                    mstp_port->This_Station, NULL, 0);
+                /* no known successor node */
+                mstp_port->Next_Station = mstp_port->This_Station;
+                mstp_port->RetryCount = 0;
+                /* changed in Errata SSPC-135-2004 */
+                mstp_port->TokenCount = 1;
+                /* mstp_port->EventCount = 0; removed in Addendum 135-2004d-8 */
+                /* find a new successor to TS */
                 mstp_port->master_state = MSTP_MASTER_STATE_POLL_FOR_MASTER;
             }
-            break;
-        case MSTP_MASTER_STATE_PASS_TOKEN:
-            /* The PASS_TOKEN state listens for a successor to begin using */
-            /* the token that this node has just attempted to pass. */
-            if (mstp_port->SilenceTimer((void *) mstp_port) <= Tusage_timeout) {
-                if (mstp_port->EventCount > Nmin_octets) {
-                    /* SawTokenUser */
-                    /* Assume that a frame has been sent by the new token user.  */
-                    /* Enter the IDLE state to process the frame. */
-                    mstp_port->master_state = MSTP_MASTER_STATE_IDLE;
-                    transition_now = true;
-                }
-            } else {
-                if (mstp_port->RetryCount < Nretry_token) {
-                    /* RetrySendToken */
-                    mstp_port->RetryCount++;
-                    /* Transmit a Token frame to NS */
-                    MSTP_Create_And_Send_Frame(mstp_port, FRAME_TYPE_TOKEN,
-                        mstp_port->Next_Station, mstp_port->This_Station, NULL,
-                        0);
-                    mstp_port->EventCount = 0;
-                    /* re-enter the current state to listen for NS  */
-                    /* to begin using the token. */
-                } else {
-                    /* FindNewSuccessor */
-                    /* Assume that NS has failed.  */
-                    /* note: if NS=TS-1, this node could send PFM to self! */
-                    mstp_port->Poll_Station = next_next_station;
-                    /* Transmit a Poll For Master frame to PS. */
-                    MSTP_Create_And_Send_Frame(mstp_port,
-                        FRAME_TYPE_POLL_FOR_MASTER, mstp_port->Poll_Station,
-                        mstp_port->This_Station, NULL, 0);
-                    /* no known successor node */
-                    mstp_port->Next_Station = mstp_port->This_Station;
-                    mstp_port->RetryCount = 0;
-                    mstp_port->TokenCount = 0;
-                    /* mstp_port->EventCount = 0; removed in Addendum 135-2004d-8 */
-                    /* find a new successor to TS */
-                    mstp_port->master_state =
-                        MSTP_MASTER_STATE_POLL_FOR_MASTER;
-                }
+            else {
+                /* ResetMaintenancePFM */
+                mstp_port->Poll_Station = mstp_port->This_Station;
+                /* transmit a Token frame to NS */
+                MSTP_Create_And_Send_Frame(
+                    mstp_port, 
+                    FRAME_TYPE_TOKEN,
+                    mstp_port->Next_Station,
+                    mstp_port->This_Station, NULL, 0);
+                mstp_port->RetryCount = 0;
+                /* changed in Errata SSPC-135-2004 */
+                mstp_port->TokenCount = 1;
+                mstp_port->EventCount = 0;
+                mstp_port->master_state = MSTP_MASTER_STATE_PASS_TOKEN;
             }
-            break;
-        case MSTP_MASTER_STATE_NO_TOKEN:
-            /* The NO_TOKEN state is entered if mstp_port->SilenceTimer() becomes greater  */
-            /* than Tno_token, indicating that there has been no network activity */
-            /* for that period of time. The timeout is continued to determine  */
-            /* whether or not this node may create a token. */
-            my_timeout = Tno_token + (Tslot * mstp_port->This_Station);
-            if (mstp_port->SilenceTimer((void *) mstp_port) < my_timeout) {
+        }
+        else {
+            /* SendMaintenancePFM */
+            mstp_port->Poll_Station = next_poll_station;
+            MSTP_Create_And_Send_Frame(
+                mstp_port,
+                FRAME_TYPE_POLL_FOR_MASTER, mstp_port->Poll_Station,
+                mstp_port->This_Station, NULL, 0);
+            mstp_port->RetryCount = 0;
+            mstp_port->master_state = MSTP_MASTER_STATE_POLL_FOR_MASTER;
+        }
+        break;
+
+    case MSTP_MASTER_STATE_PASS_TOKEN:
+        /* The PASS_TOKEN state listens for a successor to begin using */
+        /* the token that this node has just attempted to pass. */
+        if (SilenceTimer(mstp_port) <= Tusage_timeout) {
+            // todo1 ekh earlier code had >= here. Review
+            if (mstp_port->EventCount > Nmin_octets) {
+                /* SawTokenUser */
+                /* Assume that a frame has been sent by the new token user.  */
+                /* Enter the IDLE state to process the frame. */
+                mstp_port->master_state = MSTP_MASTER_STATE_IDLE;
+                transition_now = true;
+            }
+        }
+        else {
+            if (mstp_port->RetryCount < Nretry_token) {
+                /* RetrySendToken */
+                mstp_port->RetryCount++;
+                /* Transmit a Token frame to NS */
+                MSTP_Create_And_Send_Frame(
+                    mstp_port,
+                    FRAME_TYPE_TOKEN,
+                    mstp_port->Next_Station,
+                    mstp_port->This_Station, NULL, 0);
+                mstp_port->EventCount = 0;
+                /* re-enter the current state to listen for NS  */
+                /* to begin using the token. */
+            }
+            else {
+                /* FindNewSuccessor */
+                /* Assume that NS has failed.  */
+                /* note: if NS=TS-1, this node could send PFM to self! */
+                mstp_port->Poll_Station = next_next_station;
+                /* Transmit a Poll For Master frame to PS. */
+                MSTP_Create_And_Send_Frame(
+                    mstp_port,
+                    FRAME_TYPE_POLL_FOR_MASTER, mstp_port->Poll_Station,
+                    mstp_port->This_Station, NULL, 0);
+                /* no known successor node */
+                mstp_port->Next_Station = mstp_port->This_Station;
+                mstp_port->RetryCount = 0;
+                mstp_port->TokenCount = 0;
+                /* mstp_port->EventCount = 0; removed in Addendum 135-2004d-8 */
+                /* find a new successor to TS */
+                mstp_port->master_state = MSTP_MASTER_STATE_POLL_FOR_MASTER;
+            }
+        }
+        break;
+
+    case MSTP_MASTER_STATE_NO_TOKEN:
+        /* The NO_TOKEN state is entered if mstp_port->SilenceTimer() becomes greater  */
+        /* than Tno_token, indicating that there has been no network activity */
+        /* for that period of time. The timeout is continued to determine  */
+        /* whether or not this node may create a token. */
+        my_timeout = Tno_token + (Tslot * mstp_port->This_Station);
+        if (SilenceTimer(mstp_port) < my_timeout) {
+            // todo1 ekh earlier code had >= here. Review
+            if (mstp_port->EventCount > Nmin_octets) {
+                /* SawFrame */
+                /* Some other node exists at a lower address.  */
+                /* Enter the IDLE state to receive and process the incoming frame. */
+                mstp_port->master_state = MSTP_MASTER_STATE_IDLE;
+                transition_now = true;
+            }
+        }
+        else {
+            ns_timeout = Tno_token + (Tslot * (mstp_port->This_Station + 1));
+            mm_timeout = Tno_token + (Tslot * (mstp_port->Nmax_master + 1));
+            if ((SilenceTimer(mstp_port) < ns_timeout) || 
+                (SilenceTimer(mstp_port) > mm_timeout)) {
+                /* GenerateToken */
+                /* Assume that this node is the lowest numerical address  */
+                /* on the network and is empowered to create a token.  */
+                mstp_port->Poll_Station = next_this_station;
+                /* Transmit a Poll For Master frame to PS. */
+                MSTP_Create_And_Send_Frame(
+                    mstp_port,
+                    FRAME_TYPE_POLL_FOR_MASTER, mstp_port->Poll_Station,
+                    mstp_port->This_Station, NULL, 0);
+                /* indicate that the next station is unknown */
+                mstp_port->Next_Station = mstp_port->This_Station;
+                mstp_port->RetryCount = 0;
+                mstp_port->TokenCount = 0;
+                /* mstp_port->EventCount = 0;
+                   removed Addendum 135-2004d-8 */
+                   /* enter the POLL_FOR_MASTER state
+                      to find a new successor to TS. */
+                mstp_port->master_state = MSTP_MASTER_STATE_POLL_FOR_MASTER;
+            }
+            else {
+                /* We missed our time slot!
+                   We should never get here unless
+                   OS timer resolution is poor or we were busy */
                 if (mstp_port->EventCount > Nmin_octets) {
                     /* SawFrame */
                     /* Some other node exists at a lower address.  */
-                    /* Enter the IDLE state to receive and process the incoming frame. */
+                    /* Enter the IDLE state to receive and
+                       process the incoming frame. */
                     mstp_port->master_state = MSTP_MASTER_STATE_IDLE;
                     transition_now = true;
                 }
-            } else {
-                ns_timeout =
-                    Tno_token + (Tslot * (mstp_port->This_Station + 1));
-                mm_timeout =
-                    Tno_token + (Tslot * (mstp_port->Nmax_master + 1));
-                if ((mstp_port->SilenceTimer((void *) mstp_port) < ns_timeout)
-                    || (mstp_port->SilenceTimer((void *) mstp_port) >
-                        mm_timeout)) {
-                    /* GenerateToken */
-                    /* Assume that this node is the lowest numerical address  */
-                    /* on the network and is empowered to create a token.  */
-                    mstp_port->Poll_Station = next_this_station;
-                    /* Transmit a Poll For Master frame to PS. */
-                    MSTP_Create_And_Send_Frame(mstp_port,
-                        FRAME_TYPE_POLL_FOR_MASTER, mstp_port->Poll_Station,
+            }
+        }
+        break;
+
+    case MSTP_MASTER_STATE_POLL_FOR_MASTER:
+        /* In the POLL_FOR_MASTER state, the node listens for a reply to */
+        /* a previously sent Poll For Master frame in order to find  */
+        /* a successor node. */
+        if (mstp_port->ReceivedValidFrame == true) {
+            if ((mstp_port->DestinationAddress == mstp_port->This_Station)
+                && (mstp_port->FrameType == FRAME_TYPE_REPLY_TO_POLL_FOR_MASTER)) {
+                /* ReceivedReplyToPFM */
+                mstp_port->SoleMaster = false;
+                mstp_port->Next_Station = mstp_port->SourceAddress;
+                mstp_port->EventCount = 0;
+                /* Transmit a Token frame to NS */
+                MSTP_Create_And_Send_Frame(
+                    mstp_port,
+                    FRAME_TYPE_TOKEN,
+                    mstp_port->Next_Station,
+                    mstp_port->This_Station, NULL, 0);
+                mstp_port->Poll_Station = mstp_port->This_Station;
+                mstp_port->TokenCount = 0;
+                mstp_port->RetryCount = 0;
+                mstp_port->master_state = MSTP_MASTER_STATE_PASS_TOKEN;
+            }
+            else {
+                /* ReceivedUnexpectedFrame */
+                /* An unexpected frame was received.  */
+                /* This may indicate the presence of multiple tokens. */
+                /* enter the IDLE state to synchronize with the network.  */
+                /* This action drops the token. */
+                mstp_port->master_state = MSTP_MASTER_STATE_IDLE;
+                transition_now = true;
+            }
+            mstp_port->ReceivedValidFrame = false;
+        }
+        else if ((SilenceTimer(mstp_port) > Tusage_timeout) ||
+            (mstp_port->ReceivedInvalidFrame == true)) {
+            if (mstp_port->SoleMaster == true) {
+                /* SoleMaster */
+                /* There was no valid reply to the periodic poll  */
+                /* by the sole known master for other masters. */
+                mstp_port->FrameCount = 0;
+                /* mstp_port->TokenCount++; removed in 2004 */
+                mstp_port->master_state = MSTP_MASTER_STATE_USE_TOKEN;
+                transition_now = true;
+            }
+            else {
+                if (mstp_port->Next_Station != mstp_port->This_Station) {
+                    /* DoneWithPFM */
+                    /* There was no valid reply to the maintenance  */
+                    /* poll for a master at address PS.  */
+                    mstp_port->EventCount = 0;
+                    /* transmit a Token frame to NS */
+                    MSTP_Create_And_Send_Frame(
+                        mstp_port,
+                        FRAME_TYPE_TOKEN,
+                        mstp_port->Next_Station,
                         mstp_port->This_Station, NULL, 0);
-                    /* indicate that the next station is unknown */
-                    mstp_port->Next_Station = mstp_port->This_Station;
                     mstp_port->RetryCount = 0;
-                    mstp_port->TokenCount = 0;
-                    /* mstp_port->EventCount = 0;
-                       removed Addendum 135-2004d-8 */
-                    /* enter the POLL_FOR_MASTER state
-                       to find a new successor to TS. */
-                    mstp_port->master_state =
-                        MSTP_MASTER_STATE_POLL_FOR_MASTER;
-                } else {
-                    /* We missed our time slot!
-                       We should never get here unless
-                       OS timer resolution is poor or we were busy */
-                    if (mstp_port->EventCount > Nmin_octets) {
-                        /* SawFrame */
-                        /* Some other node exists at a lower address.  */
-                        /* Enter the IDLE state to receive and
-                           process the incoming frame. */
-                        mstp_port->master_state = MSTP_MASTER_STATE_IDLE;
+                    mstp_port->master_state = MSTP_MASTER_STATE_PASS_TOKEN;
+                }
+                else {
+                    if (next_poll_station != mstp_port->This_Station) {
+                        /* SendNextPFM */
+                        mstp_port->Poll_Station = next_poll_station;
+                        /* Transmit a Poll For Master frame to PS. */
+                        MSTP_Create_And_Send_Frame(
+                            mstp_port,
+                            FRAME_TYPE_POLL_FOR_MASTER,
+                            mstp_port->Poll_Station,
+                            mstp_port->This_Station, NULL, 0);
+                        mstp_port->RetryCount = 0;
+                        /* Re-enter the current state. */
+                    }
+                    else {
+                        /* DeclareSoleMaster */
+                        /* to indicate that this station is the only master */
+                        mstp_port->SoleMaster = true;
+                        mstp_port->FrameCount = 0;
+                        mstp_port->master_state = MSTP_MASTER_STATE_USE_TOKEN;
                         transition_now = true;
                     }
                 }
             }
-            break;
-        case MSTP_MASTER_STATE_POLL_FOR_MASTER:
-            /* In the POLL_FOR_MASTER state, the node listens for a reply to */
-            /* a previously sent Poll For Master frame in order to find  */
-            /* a successor node. */
-            if (mstp_port->ReceivedValidFrame == true) {
-                if ((mstp_port->DestinationAddress == mstp_port->This_Station)
-                    && (mstp_port->FrameType ==
-                        FRAME_TYPE_REPLY_TO_POLL_FOR_MASTER)) {
-                    /* ReceivedReplyToPFM */
-                    mstp_port->SoleMaster = false;
-                    mstp_port->Next_Station = mstp_port->SourceAddress;
-                    mstp_port->EventCount = 0;
-                    /* Transmit a Token frame to NS */
-                    MSTP_Create_And_Send_Frame(mstp_port, FRAME_TYPE_TOKEN,
-                        mstp_port->Next_Station, mstp_port->This_Station, NULL,
-                        0);
-                    mstp_port->Poll_Station = mstp_port->This_Station;
-                    mstp_port->TokenCount = 0;
-                    mstp_port->RetryCount = 0;
-                    mstp_port->master_state = MSTP_MASTER_STATE_PASS_TOKEN;
-                } else {
-                    /* ReceivedUnexpectedFrame */
-                    /* An unexpected frame was received.  */
-                    /* This may indicate the presence of multiple tokens. */
-                    /* enter the IDLE state to synchronize with the network.  */
-                    /* This action drops the token. */
-                    mstp_port->master_state = MSTP_MASTER_STATE_IDLE;
-                    transition_now = true;
-                }
-                mstp_port->ReceivedValidFrame = false;
-            } else if ((mstp_port->SilenceTimer((void *) mstp_port) >
-                    Tusage_timeout) ||
-                (mstp_port->ReceivedInvalidFrame == true)) {
-                if (mstp_port->SoleMaster == true) {
-                    /* SoleMaster */
-                    /* There was no valid reply to the periodic poll  */
-                    /* by the sole known master for other masters. */
-                    mstp_port->FrameCount = 0;
-                    /* mstp_port->TokenCount++; removed in 2004 */
-                    mstp_port->master_state = MSTP_MASTER_STATE_USE_TOKEN;
-                    transition_now = true;
-                } else {
-                    if (mstp_port->Next_Station != mstp_port->This_Station) {
-                        /* DoneWithPFM */
-                        /* There was no valid reply to the maintenance  */
-                        /* poll for a master at address PS.  */
-                        mstp_port->EventCount = 0;
-                        /* transmit a Token frame to NS */
-                        MSTP_Create_And_Send_Frame(mstp_port, FRAME_TYPE_TOKEN,
-                            mstp_port->Next_Station, mstp_port->This_Station,
-                            NULL, 0);
-                        mstp_port->RetryCount = 0;
-                        mstp_port->master_state = MSTP_MASTER_STATE_PASS_TOKEN;
-                    } else {
-                        if (next_poll_station != mstp_port->This_Station) {
-                            /* SendNextPFM */
-                            mstp_port->Poll_Station = next_poll_station;
-                            /* Transmit a Poll For Master frame to PS. */
-                            MSTP_Create_And_Send_Frame(mstp_port,
-                                FRAME_TYPE_POLL_FOR_MASTER,
-                                mstp_port->Poll_Station,
-                                mstp_port->This_Station, NULL, 0);
-                            mstp_port->RetryCount = 0;
-                            /* Re-enter the current state. */
-                        } else {
-                            /* DeclareSoleMaster */
-                            /* to indicate that this station is the only master */
-                            mstp_port->SoleMaster = true;
-                            mstp_port->FrameCount = 0;
-                            mstp_port->master_state =
-                                MSTP_MASTER_STATE_USE_TOKEN;
-                            transition_now = true;
-                        }
-                    }
-                }
-                mstp_port->ReceivedInvalidFrame = false;
-            }
-            break;
-        case MSTP_MASTER_STATE_ANSWER_DATA_REQUEST:
-            /* The ANSWER_DATA_REQUEST state is entered when a  */
-            /* BACnet Data Expecting Reply, a Test_Request, or  */
-            /* a proprietary frame that expects a reply is received. */
-            /* FIXME: MSTP_Get_Reply waits for a matching reply, but
-               if the next queued message doesn't match, then we
-               sit here for Treply_delay doing nothing */
-            length = (unsigned) MSTP_Get_Reply(mstp_port, 0);
-            if (length > 0) {
-                /* Reply */
-                /* If a reply is available from the higher layers  */
-                /* within Treply_delay after the reception of the  */
-                /* final octet of the requesting frame  */
-                /* (the mechanism used to determine this is a local matter), */
-                /* then call MSTP_Create_And_Send_Frame to transmit the reply frame  */
-                /* and enter the IDLE state to wait for the next frame. */
-                RS485_Send_Frame(mstp_port,
-                    (uint8_t *) & mstp_port->OutputBuffer[0],
-                    (uint16_t) length);
-                mstp_port->master_state = MSTP_MASTER_STATE_IDLE;
-                /* clear our flag we were holding for comparison */
-                mstp_port->ReceivedValidFrame = false;
-            } else if (mstp_port->SilenceTimer((void *) mstp_port) >
-                Treply_delay) {
-                /* DeferredReply */
-                /* If no reply will be available from the higher layers */
-                /* within Treply_delay after the reception of the */
-                /* final octet of the requesting frame (the mechanism */
-                /* used to determine this is a local matter), */
-                /* then an immediate reply is not possible. */
-                /* Any reply shall wait until this node receives the token. */
-                /* Call MSTP_Create_And_Send_Frame to transmit a Reply Postponed frame, */
-                /* and enter the IDLE state. */
-                MSTP_Create_And_Send_Frame(mstp_port,
-                    FRAME_TYPE_REPLY_POSTPONED, mstp_port->SourceAddress,
-                    mstp_port->This_Station, NULL, 0);
-                mstp_port->master_state = MSTP_MASTER_STATE_IDLE;
-                /* clear our flag we were holding for comparison */
-                mstp_port->ReceivedValidFrame = false;
-            }
-            break;
-        default:
+            mstp_port->ReceivedInvalidFrame = false;
+        }
+        break;
+
+    case MSTP_MASTER_STATE_ANSWER_DATA_REQUEST:
+        /* The ANSWER_DATA_REQUEST state is entered when a  */
+        /* BACnet Data Expecting Reply, a Test_Request, or  */
+        /* a proprietary frame that expects a reply is received. */
+        /* FIXME: MSTP_Get_Reply waits for a matching reply, but
+           if the next queued message doesn't match, then we
+           sit here for Treply_delay doing nothing */
+        length = (unsigned)MSTP_Get_Reply(mstp_port, 0);
+        if (length > 0) {
+            /* Reply */
+            /* If a reply is available from the higher layers  */
+            /* within Treply_delay after the reception of the  */
+            /* final octet of the requesting frame  */
+            /* (the mechanism used to determine this is a local matter), */
+            /* then call MSTP_Create_And_Send_Frame to transmit the reply frame  */
+            /* and enter the IDLE state to wait for the next frame. */
+            RS485_Send_Frame(mstp_port,
+                (uint8_t *)& mstp_port->OutputBuffer[0],
+                (uint16_t)length);
             mstp_port->master_state = MSTP_MASTER_STATE_IDLE;
-            break;
-    }
-    if (mstp_port->master_state != master_state) {
-        /* change of state detected - so print the details for debugging */
-        printf_master
-            ("MSTP: TS=%02X[%02X] NS=%02X[%02X] PS=%02X[%02X] EC=%u TC=%u ST=%u %s\n",
-            mstp_port->This_Station, next_this_station,
-            mstp_port->Next_Station, next_next_station,
-            mstp_port->Poll_Station, next_poll_station, mstp_port->EventCount,
-            mstp_port->TokenCount, mstp_port->SilenceTimer((void *) mstp_port),
-            mstptext_master_state(mstp_port->master_state));
+            /* clear our flag we were holding for comparison */
+            mstp_port->ReceivedValidFrame = false;
+        }
+        else if (SilenceTimer(mstp_port) > Treply_delay) {
+            /* DeferredReply */
+            /* If no reply will be available from the higher layers */
+            /* within Treply_delay after the reception of the */
+            /* final octet of the requesting frame (the mechanism */
+            /* used to determine this is a local matter), */
+            /* then an immediate reply is not possible. */
+            /* Any reply shall wait until this node receives the token. */
+            /* Call MSTP_Create_And_Send_Frame to transmit a Reply Postponed frame, */
+            /* and enter the IDLE state. */
+            MSTP_Create_And_Send_Frame(
+                mstp_port,
+                FRAME_TYPE_REPLY_POSTPONED,
+                mstp_port->SourceAddress,
+                mstp_port->This_Station, NULL, 0);
+
+            mstp_port->master_state = MSTP_MASTER_STATE_IDLE;
+            /* clear our flag we were holding for comparison */
+            mstp_port->ReceivedValidFrame = false;
+        }
+        break;
+
+    default:
+        mstp_port->master_state = MSTP_MASTER_STATE_IDLE;
+        break;
     }
 
     return transition_now;
 }
 
-void MSTP_Slave_Node_FSM(
-    volatile struct mstp_port_struct_t *mstp_port)
-{
-    unsigned length = 0;
-
-    mstp_port->master_state = MSTP_MASTER_STATE_IDLE;
-    if (mstp_port->ReceivedInvalidFrame == true) {
-        /* ReceivedInvalidFrame */
-        /* invalid frame was received */
-        mstp_port->ReceivedInvalidFrame = false;
-    } else if (mstp_port->ReceivedValidFrame) {
-        switch (mstp_port->FrameType) {
-            case FRAME_TYPE_BACNET_DATA_EXPECTING_REPLY:
-                if (mstp_port->DestinationAddress != MSTP_BROADCAST_ADDRESS) {
-                    /* The ANSWER_DATA_REQUEST state is entered when a  */
-                    /* BACnet Data Expecting Reply, a Test_Request, or  */
-                    /* a proprietary frame that expects a reply is received. */
-                    length = (unsigned) MSTP_Get_Reply(mstp_port, 0);
-                    if (length > 0) {
-                        /* Reply */
-                        /* If a reply is available from the higher layers  */
-                        /* within Treply_delay after the reception of the  */
-                        /* final octet of the requesting frame  */
-                        /* (the mechanism used to determine this is a local matter), */
-                        /* then call MSTP_Create_And_Send_Frame to transmit the reply frame  */
-                        /* and enter the IDLE state to wait for the next frame. */
-                        RS485_Send_Frame(mstp_port,
-                            (uint8_t *) & mstp_port->OutputBuffer[0],
-                            (uint16_t) length);
-                        /* clear our flag we were holding for comparison */
-                        mstp_port->ReceivedValidFrame = false;
-                    } else if (mstp_port->SilenceTimer((void *) mstp_port) >
-                        Treply_delay) {
-                        /* If no reply will be available from the higher layers
-                           within Treply_delay after the reception of the final octet
-                           of the requesting frame (the mechanism used to determine
-                           this is a local matter), then no reply is possible. */
-                        /* clear our flag we were holding for comparison */
-                        mstp_port->ReceivedValidFrame = false;
-                    }
-                } else {
-                    mstp_port->ReceivedValidFrame = false;
-                }
-                break;
-            case FRAME_TYPE_TEST_REQUEST:
-                mstp_port->ReceivedValidFrame = false;
-                MSTP_Create_And_Send_Frame(mstp_port, FRAME_TYPE_TEST_RESPONSE,
-                    mstp_port->SourceAddress, mstp_port->This_Station,
-                    &mstp_port->InputBuffer[0], mstp_port->DataLength);
-                break;
-            case FRAME_TYPE_TOKEN:
-            case FRAME_TYPE_POLL_FOR_MASTER:
-            case FRAME_TYPE_TEST_RESPONSE:
-            case FRAME_TYPE_BACNET_DATA_NOT_EXPECTING_REPLY:
-            default:
-                mstp_port->ReceivedValidFrame = false;
-                break;
-        }
-    }
-}
 
 /* note: This_Station assumed to be set with the MAC address */
 /* note: Nmax_info_frames assumed to be set (default=1) */
@@ -1226,7 +1225,7 @@ void MSTP_Init(
         mstp_port->Nmax_master = DEFAULT_MAX_MASTER;
         /* FIXME: point to functions */
         mstp_port->SilenceTimer = Timer_Silence;
-        mstp_port = >SilenceTimerReset = Timer_Silence_Reset;
+        mstp_port = > SilenceTimerReset = Timer_Silence_Reset;
 #endif
         mstp_port->receive_state = MSTP_RECEIVE_STATE_IDLE;
         mstp_port->master_state = MSTP_MASTER_STATE_INITIALIZE;
@@ -1247,7 +1246,7 @@ void MSTP_Init(
         mstp_port->ReceivedValidFrame = false;
         mstp_port->ReceivedValidFrameNotForUs = false;
         mstp_port->RetryCount = 0;
-        mstp_port->SilenceTimerReset((void *) mstp_port);
+//        mstp_port->SilenceTimerReset((void *)mstp_port);
         mstp_port->SoleMaster = false;
         mstp_port->SourceAddress = 0;
         mstp_port->TokenCount = 0;
@@ -1268,9 +1267,9 @@ void RS485_Send_Frame(
     uint8_t * buffer,   /* frame to send (up to 501 bytes of data) */
     uint16_t nbytes)
 {       /* number of bytes of data (up to 501) */
-    (void) mstp_port;
-    (void) buffer;
-    (void) nbytes;
+    (void)mstp_port;
+    (void)buffer;
+    (void)nbytes;
 }
 
 #define RING_BUFFER_DATA_SIZE 1
@@ -1284,17 +1283,17 @@ static void Load_Input_Buffer(
     static bool initialized = false;    /* tracks our init */
     if (!initialized) {
         initialized = true;
-        Ringbuf_Init(&Test_Buffer, (char *) Test_Buffer_Data,
+        Ringbuf_Init(&Test_Buffer, (char *)Test_Buffer_Data,
             RING_BUFFER_DATA_SIZE, RING_BUFFER_SIZE);
     }
     /* empty any the existing data */
     while (!Ringbuf_Empty(&Test_Buffer)) {
-        (void) Ringbuf_Pop(&Test_Buffer, NULL);
+        (void)Ringbuf_Pop(&Test_Buffer, NULL);
     }
 
     if (buffer) {
         while (len) {
-            (void) Ringbuf_Put(&Test_Buffer, (char *) buffer);
+            (void)Ringbuf_Put(&Test_Buffer, (char *)buffer);
             len--;
             buffer++;
         }
@@ -1312,7 +1311,7 @@ void RS485_Check_UART_Data(
             mstp_port->DataRegister = *data;
             mstp_port->DataAvailable = true;
         }
-        (void) Ringbuf_Pop(&Test_Buffer, NULL);
+        (void)Ringbuf_Pop(&Test_Buffer, NULL);
     }
 }
 
@@ -1694,7 +1693,7 @@ void testReceiveNodeFSM(
     memset(data, 0, sizeof(data));
     len =
         MSTP_Create_Frame(buffer, sizeof(buffer), FRAME_TYPE_PROPRIETARY_MIN,
-        my_mac, my_mac, data, sizeof(data));
+            my_mac, my_mac, data, sizeof(data));
     ct_test(pTest, len > 0);
     Load_Input_Buffer(buffer, len);
     RS485_Check_UART_Data(&mstp_port);
@@ -1744,7 +1743,7 @@ int main(
     assert(rc);
     ct_setStream(pTest, stdout);
     ct_run(pTest);
-    (void) ct_report(pTest);
+    (void)ct_report(pTest);
     ct_destroy(pTest);
     return 0;
 }

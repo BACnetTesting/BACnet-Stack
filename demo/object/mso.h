@@ -79,6 +79,7 @@
 
     bool Multistate_Output_Out_Of_Service(
         uint32_t instance);
+        
     void Multistate_Output_Out_Of_Service_Set(
         uint32_t instance,
         bool value);

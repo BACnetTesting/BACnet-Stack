@@ -20,22 +20,22 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -340,7 +340,7 @@ static bool dlmstp_compare_data_expecting_reply(
     request.address.mac[0] = src_address;
     request.address.mac_len = 1;
     offset =
-        (uint16_t) npdu_decode(&request_pdu[0], NULL, &request.address,
+        (uint16_t) npci_decode(&request_pdu[0], NULL, &request.address,
         &request.npci_data);
     if (request.npci_data.network_layer_message) {
         return false;
@@ -358,7 +358,7 @@ static bool dlmstp_compare_data_expecting_reply(
     /* decode the reply data */
     bacnet_address_copy(&reply.address, dest_address);
     offset =
-        (uint16_t) npdu_decode(&reply_pdu[0], &reply.address, NULL,
+        (uint16_t) npci_decode(&reply_pdu[0], &reply.address, NULL,
         &reply.npci_data);
     if (reply.npci_data.network_layer_message) {
         return false;
@@ -620,8 +620,8 @@ bool dlmstp_init(
     MSTP_Port.InputBufferSize = sizeof(RxBuffer);
     MSTP_Port.OutputBuffer = &TxBuffer[0];
     MSTP_Port.OutputBufferSize = sizeof(TxBuffer);
-    MSTP_Port.SilenceTimer = Timer_Silence;
-    MSTP_Port.SilenceTimerReset = Timer_Silence_Reset;
+    //MSTP_Port.SilenceTimer = Timer_Silence;
+    //MSTP_Port.SilenceTimerReset = Timer_Silence_Reset;
     MSTP_Init(&MSTP_Port);
 #if 0
     uint8_t data;

@@ -1,11 +1,11 @@
 #Makefile to build test case
-CC      = gcc
+#CC      = gcc
 SRC_DIR = ../../src
 TEST_DIR = ../../test
 INCLUDES = -I../../include -I$(TEST_DIR) -I.
 DEFINES = -DBIG_ENDIAN=0 -DTEST -DBACAPP_ALL -DTEST_ANALOG_OUTPUT
 
-CFLAGS  = -Wall $(INCLUDES) $(DEFINES) -g
+CFLAGS  = -Wall $(INCLUDES) $(DEFINES) -g -std=gnu11
 
 SRCS = ao.c \
 	$(SRC_DIR)/bacdcode.c \
@@ -31,6 +31,7 @@ ${TARGET}: ${OBJS}
 
 .c.o:
 	${CC} -c ${CFLAGS} $*.c -o $@
+	echo ${CC} -c ${CFLAGS} $*.c -o $@
 
 depend:
 	rm -f .depend

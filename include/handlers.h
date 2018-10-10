@@ -20,43 +20,42 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef HANDLERS_H
 #define HANDLERS_H
 
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include "bacdef.h"
+//#include <stddef.h>
+//#include <stdint.h>
+//#include <stdio.h>
+//#include "bacdef.h"
 #include "apdu.h"
-#include "bacapp.h"
-#include "ptransfer.h"
-#include "npdu.h"
-#include "rd.h"
-#include "rp.h"
+//#include "bacapp.h"
+//#include "rd.h"
+//#include "rp.h"
 #include "rpm.h"
 #include "wp.h"
-#include "readrange.h"
+//#include "readrange.h"
 #include "getevent.h"
 #include "get_alarm_sum.h"
 #include "alarm_ack.h"
-
-
+#include "ptransfer.h"
+#include "npdu.h"
 void handler_unrecognized_service(
 	uint8_t * service_request,
 	uint16_t service_len,
@@ -69,20 +68,24 @@ void npdu_handler(
 	uint16_t pdu_len);      /* length PDU  */
 
 void npdu_handler_cleanup(void);
+
 void npdu_handler_init(
 	uint16_t bip_net,
 	uint16_t mstp_net);
+
 void npdu_router_handler(
 	uint16_t snet,
 	BACNET_ADDRESS * src,
 	uint8_t * pdu,
 	uint16_t pdu_len);
+
 int npdu_router_send_pdu(
 	uint16_t dnet,
 	BACNET_ADDRESS * dest,
 	BACNET_NPCI_DATA * npci_data,
 	uint8_t * pdu,
 	unsigned int pdu_len);
+
 void npdu_router_get_my_address(
 	uint16_t dnet,
 	BACNET_ADDRESS * my_address);
@@ -93,25 +96,29 @@ void routing_npdu_handler(
 	uint8_t * pdu,
 	uint16_t pdu_len);
 
-void handler_who_is(
-	uint8_t * service_request,
-	uint16_t service_len,
-	BACNET_ADDRESS * src);
+// responding with a broadcast is bad manners, so we will deprecate this function
+//void handler_who_is(
+//    DEVICE_OBJECT_DATA *pDev,
+//    uint8_t * service_request,
+//    uint16_t service_len,
+//    BACNET_ROUTE *src);
 
 void handler_who_is_unicast(
 	uint8_t * service_request,
 	uint16_t service_len,
 	BACNET_ADDRESS * src);
 
-void handler_who_is_bcast_for_routing(
-	uint8_t * service_request,
-	uint16_t service_len,
-	BACNET_ADDRESS * src);
+//void handler_who_is_bcast_for_routing(
+//    DEVICE_OBJECT_DATA *pDev,
+//	uint8_t * service_request,
+//	uint16_t service_len,
+//    BACNET_ROUTE * src);
 
-void handler_who_is_unicast_for_routing(
-	uint8_t * service_request,
-	uint16_t service_len,
-	BACNET_ADDRESS * src);
+//void handler_who_is_unicast_for_routing(
+//    DEVICE_OBJECT_DATA *pDev,
+//	uint8_t * service_request,
+//	uint16_t service_len,
+//    BACNET_ROUTE * src);
 
 void handler_who_has(
 	uint8_t * service_request,
@@ -146,14 +153,14 @@ void handler_read_property_ack(
 	BACNET_CONFIRMED_SERVICE_ACK_DATA * service_data);
 
 void handler_write_property(
-	uint8_t * service_request,
-	uint16_t service_len,
+    uint8_t * service_request,
+    uint16_t service_len,
 	BACNET_ADDRESS * src,
 	BACNET_CONFIRMED_SERVICE_DATA * service_data);
 
 void handler_write_property_multiple(
-	uint8_t * service_request,
-	uint16_t service_len,
+    uint8_t * service_request,
+    uint16_t service_len,
 	BACNET_ADDRESS * src,
 	BACNET_CONFIRMED_SERVICE_DATA * service_data);
 
@@ -183,24 +190,25 @@ void handler_atomic_read_file_ack(
 	BACNET_CONFIRMED_SERVICE_ACK_DATA * service_data);
 
 void handler_atomic_write_file(
-	uint8_t * service_request,
-	uint16_t service_len,
+    uint8_t * service_request,
+    uint16_t service_len,
 	BACNET_ADDRESS * src,
 	BACNET_CONFIRMED_SERVICE_DATA * service_data);
 
 void handler_reinitialize_device(
-	uint8_t * service_request,
-	uint16_t service_len,
+    uint8_t * service_request,
+    uint16_t service_len,
 	BACNET_ADDRESS * src,
 	BACNET_CONFIRMED_SERVICE_DATA * service_data);
 
 void handler_device_communication_control(
-	uint8_t * service_request,
-	uint16_t service_len,
+    uint8_t * service_request,
+    uint16_t service_len,
 	BACNET_ADDRESS * src,
 	BACNET_CONFIRMED_SERVICE_DATA * service_data);
 void handler_dcc_password_set(
-	char *new_password);
+    char *new_password);
+
 char *handler_dcc_password(void);
 
 void handler_i_have(
@@ -217,79 +225,101 @@ void handler_timesync_utc(
 	uint8_t * service_request,
 	uint16_t service_len,
 	BACNET_ADDRESS * src);
+
 /* time sync master features */
 int handler_timesync_encode_recipients(
-	uint8_t * apdu,
-	int max_apdu);
+    uint8_t * apdu,
+    int max_apdu);
+
 void handler_timesync_task(BACNET_DATE_TIME *bdatetime);
+
 void handler_timesync_init(void);
+
 bool handler_timesync_recipient_write(
-	BACNET_WRITE_PROPERTY_DATA * wp_data);
+    BACNET_WRITE_PROPERTY_DATA * wp_data);
+
 uint32_t handler_timesync_interval(void);
+
 bool handler_timesync_interval_set(uint32_t minutes);
+
 uint32_t handler_timesync_interval_offset(void);
+
 bool handler_timesync_interval_offset_set(uint32_t minutes);
+
 bool handler_timesync_interval_align(void);
+
 bool handler_timesync_interval_align_set(bool flag);
+
 bool handler_timesync_recipient_address_set(
-	unsigned index,
+    unsigned index,
 	BACNET_ADDRESS * address);
 
 void handler_read_property_multiple(
-	uint8_t * service_request,
-	uint16_t service_len,
+    uint8_t * service_request,
+    uint16_t service_len,
 	BACNET_ADDRESS * src,
 	BACNET_CONFIRMED_SERVICE_DATA * service_data);
 
 void handler_read_property_multiple_ack(
-	uint8_t * service_request,
-	uint16_t service_len,
+    uint8_t * service_request,
+    uint16_t service_len,
 	BACNET_ADDRESS * src,
 	BACNET_CONFIRMED_SERVICE_ACK_DATA * service_data);
 
 /* Decode the received RPM data and make a linked list of the results. */
 int rpm_ack_decode_service_request(
-	uint8_t * apdu,
-	int apdu_len,
-	BACNET_READ_ACCESS_DATA * read_access_data);
+    uint8_t * apdu,
+    int apdu_len,
+    BACNET_READ_ACCESS_DATA * read_access_data);
+
 /* print the RP Ack data to stdout */
 
 void rp_ack_print_data(
-	BACNET_READ_PROPERTY_DATA * data);
+    BACNET_READ_PROPERTY_DATA * data);
 
 /* print the GE Ack data to stdout */
+#if (INTRINSIC_REPORTING_B == 1)
 void ge_ack_print_data(BACNET_GET_EVENT_INFORMATION_DATA * data, uint32_t device_id);
+#endif 
+
 /* print the RPM Ack data to stdout */
 void rpm_ack_print_data(
-	BACNET_READ_ACCESS_DATA * rpm_data);
+    BACNET_READ_ACCESS_DATA * rpm_data);
 
 #if ( BACNET_SVC_COV_B == 1 )
 void handler_cov_subscribe(
-	uint8_t * service_request,
-	uint16_t service_len,
+    uint8_t * service_request,
+    uint16_t service_len,
 	BACNET_ADDRESS * src,
 	BACNET_CONFIRMED_SERVICE_DATA * service_data);
+    
 bool handler_cov_fsm(
 	void);
+    
 void handler_cov_task(
 	void);
+
 void handler_cov_timer_seconds(
 	uint32_t elapsed_seconds);
+
 void handler_cov_init(
 	void);
+
 int handler_cov_encode_subscriptions(
-	uint8_t * apdu,
-	int max_apdu);
+    uint8_t * apdu,
+    int max_apdu);
 
 void handler_ucov_notification(
-	uint8_t * service_request,
-	uint16_t service_len,
+    uint8_t * service_request,
+    uint16_t service_len,
 	BACNET_ADDRESS * src);
+    
 void handler_ccov_notification(
 	uint8_t * service_request,
 	uint16_t service_len,
 	BACNET_ADDRESS * src,
 	BACNET_CONFIRMED_SERVICE_DATA * service_data);
+
 #endif
 
 void handler_lso(
@@ -299,18 +329,18 @@ void handler_lso(
 	BACNET_CONFIRMED_SERVICE_DATA * service_data);
 
 void handler_alarm_ack(
-	uint8_t * service_request,
-	uint16_t service_len,
+    uint8_t * service_request,
+    uint16_t service_len,
 	BACNET_ADDRESS * src,
-	BACNET_CONFIRMED_SERVICE_DATA * service_data);
+    BACNET_CONFIRMED_SERVICE_DATA * service_data);
 
 void handler_alarm_ack_set(
-	BACNET_OBJECT_TYPE object_type,
-	alarm_ack_function pFunction);
+    BACNET_OBJECT_TYPE object_type,
+    alarm_ack_function pFunction);
 
 void handler_conf_private_trans(
-	uint8_t * service_request,
-	uint16_t service_len,
+    uint8_t * service_request,
+    uint16_t service_len,
 	BACNET_ADDRESS * src,
 	BACNET_CONFIRMED_SERVICE_DATA * service_data);
 
@@ -321,8 +351,8 @@ void handler_conf_private_trans_ack(
 	BACNET_CONFIRMED_SERVICE_ACK_DATA * service_data);
 
 void handler_unconfirmed_private_transfer(
-	uint8_t * service_request,
-	uint16_t service_len,
+    uint8_t * service_request,
+    uint16_t service_len,
 	BACNET_ADDRESS * src);
 
 void private_transfer_print_data(
@@ -335,36 +365,36 @@ void handler_read_range(
 	BACNET_CONFIRMED_SERVICE_DATA * service_data);
 
 void handler_read_range_ack(
-	uint8_t * service_request,
-	uint16_t service_len,
+    uint8_t * service_request,
+    uint16_t service_len,
 	BACNET_ADDRESS * src,
 	BACNET_CONFIRMED_SERVICE_ACK_DATA * service_data);
 
 void handler_get_event_information_set(
-	BACNET_OBJECT_TYPE object_type,
-	get_event_info_function pFunction);
-
+    BACNET_OBJECT_TYPE object_type,
+    get_event_info_function pFunction);
+        
 #if ( BACNET_USE_EVENT_HANDLING == 1 )
 void handler_get_event_information(
-	uint8_t * service_request,
-	uint16_t service_len,
+    uint8_t * service_request,
+    uint16_t service_len,
 	BACNET_ADDRESS * src,
 	BACNET_CONFIRMED_SERVICE_DATA * service_data);
 #endif
 
 void handler_get_alarm_summary_set(
-	BACNET_OBJECT_TYPE object_type,
-	get_alarm_summary_function pFunction);
+    BACNET_OBJECT_TYPE object_type,
+    get_alarm_summary_function pFunction);
 
 void handler_get_alarm_summary(
-	uint8_t * service_request,
-	uint16_t service_len,
+    uint8_t * service_request,
+    uint16_t service_len,
 	BACNET_ADDRESS * src,
 	BACNET_CONFIRMED_SERVICE_DATA * service_data);
 
 void get_alarm_summary_ack_handler(
-	uint8_t * service_request,
-	uint16_t service_len,
+    uint8_t * service_request,
+    uint16_t service_len,
 	BACNET_ADDRESS * src,
 	BACNET_CONFIRMED_SERVICE_ACK_DATA * service_data);
 
@@ -376,6 +406,6 @@ void get_event_ack_handler(
 
 
 /** @defgroup MISCHNDLR Miscellaneous Handler Utilities
-* Various utilities and functions to support the Handlers.
-*/
+ * Various utilities and functions to support the Handlers.
+ */
 #endif

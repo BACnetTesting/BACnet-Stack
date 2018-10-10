@@ -26,27 +26,28 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-*/
 #include <stddef.h>
 #include <stdint.h>
 #include <errno.h>
 #include <string.h>
 #include "config.h"
-#include "txbuf.h"
 #include "bacdef.h"
 #include "bacdcode.h"
 #include "address.h"
@@ -61,16 +62,21 @@
 #include "handlers.h"
 #include "sbuf.h"
 #include "client.h"
+#include "txbuf.h"
 
 /** @file s_wpm.c  Send Write Property Multiple request. */
 
 /** Sends a Write Property Multiple request.
+ * @param pdu [out] Buffer to build the outgoing message into
+ * @param max_pdu [in] Length of the pdu buffer.
  * @param device_id [in] ID of the destination device
  * @param write_access_data [in] Ptr to structure with the linked list of
  *        objects and properties to be written.
  * @return invoke id of outgoing message, or 0 if device is not bound or no tsm available
  */
-uint8_t Send_Write_Property_Multiple_Request_Data(
+uint8_t Send_Write_Property_Multiple_Request(
+    uint8_t * pdu,
+    size_t max_pdu,
     uint32_t device_id,
     BACNET_WRITE_ACCESS_DATA * write_access_data)
 {
@@ -83,28 +89,26 @@ uint8_t Send_Write_Property_Multiple_Request_Data(
     int pdu_len = 0;
     int bytes_sent = 0;
     BACNET_NPCI_DATA npci_data;
-    
-    /* if we are forbidden to send, don't send! */
-    if (!dcc_communication_enabled())
-        return 0;
 
+    /* if we are forbidden to send, don't send! */
+    if (!dcc_communication_enabled()) {
+        return 0;
+    }
     /* is the device bound? */
     status = address_get_by_device(device_id, &max_apdu, &dest);
     /* is there a tsm available? */
-    if (status)
+    if (status) {
         invoke_id = tsm_next_free_invokeID();
+    }
     if (invoke_id) {
         /* encode the NPDU portion of the packet */
         datalink_get_my_address(&my_address);
         npdu_setup_npci_data(&npci_data, true, MESSAGE_PRIORITY_NORMAL);
-        pdu_len =
-            npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest, &my_address,
-            &npci_data);
-
+        pdu_len = npdu_encode_pdu(&pdu[0], &dest, &my_address, &npci_data);
+        /* encode the APDU portion of the packet */
         len =
-            wpm_encode_apdu(&Handler_Transmit_Buffer[pdu_len], max_apdu,
+            wpm_encode_apdu(&pdu[pdu_len], max_pdu - pdu_len,
             invoke_id, write_access_data);
-
         pdu_len += len;
 
         /* will it fit in the sender?
@@ -117,18 +121,20 @@ uint8_t Send_Write_Property_Multiple_Request_Data(
                 &npci_data, &Handler_Transmit_Buffer[0], (uint16_t) pdu_len);
             bytes_sent =
                 datalink_send_pdu(&dest, &npci_data,
-                &Handler_Transmit_Buffer[0], pdu_len);
+                &pdu[0], pdu_len);
 #if PRINT_ENABLED
-            if (bytes_sent <= 0)
-                fprintf(stderr, "Failed to Send WriteProperty Request (%s)!\n",
+            if (bytes_sent <= 0) {
+                fprintf(stderr,
+                    "Failed to Send WritePropertyMultiple Request (%s)!\n",
                     strerror(errno));
+            }
 #endif
         } else {
             tsm_free_invoke_id(invoke_id);
             invoke_id = 0;
 #if PRINT_ENABLED
             fprintf(stderr,
-                "Failed to Send WriteProperty Request "
+                "Failed to Send WritePropertyMultiple Request "
                 "(exceeds destination maximum APDU)!\n");
 #endif
         }

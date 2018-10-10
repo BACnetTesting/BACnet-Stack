@@ -29,22 +29,23 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-  */
 #include <stdint.h>
 #include "bacenum.h"
 #include "bacdcode.h"
@@ -205,15 +206,15 @@ int cov_notify_decode_service_request(
     unsigned apdu_len,
     BACNET_COV_DATA * data)
 {
-    int len = 0;        /* return value */
-    int app_len = 0;
-    uint8_t tag_number = 0;
-    uint32_t len_value = 0;
-    uint32_t decoded_value = 0; /* for decoding */
+    int len = 0 ;								/* return value */
+    int app_len ;
+    uint8_t tag_number ;
+    uint32_t len_value ;
+    uint32_t decoded_value ;					/* for decoding */
     BACNET_OBJECT_TYPE decoded_type ;			/* for decoding */
-    uint32_t property = 0;      /* for decoding */
-    BACNET_PROPERTY_VALUE *value = NULL;        /* value in list */
-	BACNET_APPLICATION_DATA_VALUE *app_data = NULL;
+    uint32_t property ;							/* for decoding */
+    BACNET_PROPERTY_VALUE *value ;				/* value in list */
+    BACNET_APPLICATION_DATA_VALUE *app_data ;
 
     if (apdu_len && data) {
         /* tag 0 - subscriberProcessIdentifier */
@@ -420,9 +421,9 @@ int cov_subscribe_decode_service_request(
     BACNET_SUBSCRIBE_COV_DATA * data)
 {
     int len = 0;        /* return value */
-    uint8_t tag_number = 0;
-    uint32_t len_value = 0;
-    uint32_t decoded_value = 0; /* for decoding */
+    uint8_t tag_number ;
+    uint32_t len_value ;
+    uint32_t decoded_value ; /* for decoding */
     BACNET_OBJECT_TYPE decoded_type ;  /* for decoding */
     
     if (apdu_len && data) {
@@ -572,11 +573,11 @@ int cov_subscribe_property_decode_service_request(
     BACNET_SUBSCRIBE_COV_DATA * data)
 {
     int len = 0;        /* return value */
-    uint8_t tag_number = 0;
-    uint32_t len_value = 0;
-    uint32_t decoded_value = 0; /* for decoding */
+    uint8_t tag_number;
+    uint32_t len_value;
+    uint32_t decoded_value ; /* for decoding */
     BACNET_OBJECT_TYPE decoded_type ;  /* for decoding */
-    uint32_t property = 0;      /* for decoding */
+    uint32_t property ;      /* for decoding */
 
     if (apdu_len && data) {
         /* tag 0 - subscriberProcessIdentifier */
@@ -877,7 +878,7 @@ void testUCOVNotifyData(
     Test * pTest,
     BACNET_COV_DATA * data)
 {
-    uint8_t apdu[480] = { 0 };
+    uint8_t apdu[480] = { 0 }; // todo1 a problem here...?
     int len = 0;
     int apdu_len = 0;
     BACNET_COV_DATA test_data;

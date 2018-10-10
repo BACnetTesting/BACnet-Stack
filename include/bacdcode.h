@@ -20,21 +20,23 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-*********************************************************************/
 #ifndef BACDCODE_H
 #define BACDCODE_H
 
@@ -46,7 +48,7 @@
 #include "bacstr.h"
 #include "bacint.h"
 #include "bacreal.h"
-#include "bits.h"
+#include "bacbits.h"
 
 
 /* from clause 20.2.1 General Rules for Encoding BACnet Tags */
@@ -62,44 +64,55 @@ int encode_tag(
 int encode_opening_tag(
     uint8_t * apdu,
     uint8_t tag_number);
+    
 int encode_closing_tag(
     uint8_t * apdu,
     uint8_t tag_number);
+    
 int decode_tag_number(
-    uint8_t * apdu,
+    const uint8_t * apdu,
     uint8_t * tag_number);
+    
 int decode_tag_number_safe(
     uint8_t * apdu,
     uint32_t apdu_len_remaining,
     uint8_t * tag_number);
+    
 int decode_tag_number_and_value(
-    uint8_t * apdu,
+    const uint8_t * apdu,
     uint8_t * tag_number,
     uint32_t * value);
+    
 int decode_tag_number_and_value_safe(
     uint8_t * apdu,
     uint32_t apdu_len_remaining,
     uint8_t * tag_number,
     uint32_t * value);
+    
 /* returns true if the tag is an opening tag and matches */
 bool decode_is_opening_tag_number(
     uint8_t * apdu,
     uint8_t tag_number);
+    
 /* returns true if the tag is a closing tag and matches */
 bool decode_is_closing_tag_number(
     uint8_t * apdu,
     uint8_t tag_number);
+    
 /* returns true if the tag is context specific and matches */
 bool decode_is_context_tag(
     uint8_t * apdu,
     uint8_t tag_number);
+    
 bool decode_is_context_tag_with_length(
     uint8_t * apdu,
     uint8_t tag_number,
     int *tag_length);
+    
 /* returns true if the tag is an opening tag */
 bool decode_is_opening_tag(
     uint8_t * apdu);
+    
 /* returns true if the tag is a closing tag */
 bool decode_is_closing_tag(
     uint8_t * apdu);
@@ -107,6 +120,7 @@ bool decode_is_closing_tag(
 /* from clause 20.2.2 Encoding of a Null Value */
 int encode_application_null(
     uint8_t * apdu);
+
 int encode_context_null(
     uint8_t * apdu,
     uint8_t tag_number);
@@ -115,12 +129,15 @@ int encode_context_null(
 int encode_application_boolean(
     uint8_t * apdu,
     bool boolean_value);
+
 bool decode_boolean(
     uint32_t len_value);
+
 int encode_context_boolean(
     uint8_t * apdu,
     uint8_t tag_number,
     bool boolean_value);
+
 bool decode_context_boolean(
     uint8_t * apdu);
 
@@ -140,13 +157,16 @@ int decode_context_bitstring(
     uint8_t * apdu,
     uint8_t tag_number,
     BACNET_BIT_STRING * bit_string);
+
 /* returns the number of apdu bytes consumed */
 int encode_bitstring(
     uint8_t * apdu,
     BACNET_BIT_STRING * bit_string);
+
 int encode_application_bitstring(
     uint8_t * apdu,
     BACNET_BIT_STRING * bit_string);
+
 int encode_context_bitstring(
     uint8_t * apdu,
     uint8_t tag_number,
@@ -158,6 +178,7 @@ int encode_context_bitstring(
 int encode_application_real(
     uint8_t * apdu,
     float value);
+
 int encode_context_real(
     uint8_t * apdu,
     uint8_t tag_number,
@@ -217,17 +238,21 @@ int encode_application_object_id(
 int encode_octet_string(
     uint8_t * apdu,
     BACNET_OCTET_STRING * octet_string);
+
 int encode_application_octet_string(
     uint8_t * apdu,
     BACNET_OCTET_STRING * octet_string);
+
 int encode_context_octet_string(
     uint8_t * apdu,
     uint8_t tag_number,
     BACNET_OCTET_STRING * octet_string);
+
 int decode_octet_string(
     uint8_t * apdu,
     uint32_t len_value,
     BACNET_OCTET_STRING * octet_string);
+
 int decode_context_octet_string(
     uint8_t * apdu,
     uint8_t tag_number,
@@ -243,20 +268,25 @@ uint32_t encode_bacnet_character_string_safe(
     uint8_t encoding,
     char *pString,
     uint32_t length);
+
 int encode_bacnet_character_string(
     uint8_t * apdu,
     BACNET_CHARACTER_STRING * char_string);
+
 int encode_application_character_string(
     uint8_t * apdu,
     BACNET_CHARACTER_STRING * char_string);
+
 int encode_context_character_string(
     uint8_t * apdu,
     uint8_t tag_number,
     BACNET_CHARACTER_STRING * char_string);
+
 int decode_character_string(
     uint8_t * apdu,
     uint32_t len_value,
     BACNET_CHARACTER_STRING * char_string);
+
 int decode_context_character_string(
     uint8_t * apdu,
     uint8_t tag_number,
@@ -269,17 +299,21 @@ int decode_context_character_string(
 int encode_bacnet_unsigned(
     uint8_t * apdu,
     uint32_t value);
+    
 int encode_context_unsigned(
     uint8_t * apdu,
     uint8_t tag_number,
     uint32_t value);
+    
 int encode_application_unsigned(
     uint8_t * apdu,
     uint32_t value);
+
 int decode_unsigned(
-    uint8_t * apdu,
-    uint32_t len_value,
+    const uint8_t * apdu,
+    const uint32_t len_value,
     uint32_t * value);
+
 int decode_context_unsigned(
     uint8_t * apdu,
     uint8_t tag_number,
@@ -291,17 +325,21 @@ int decode_context_unsigned(
 int encode_bacnet_signed(
     uint8_t * apdu,
     int32_t value);
+
 int encode_application_signed(
     uint8_t * apdu,
     int32_t value);
+
 int encode_context_signed(
     uint8_t * apdu,
     uint8_t tag_number,
     int32_t value);
+
 int decode_signed(
     uint8_t * apdu,
     uint32_t len_value,
     int32_t * value);
+
 int decode_context_signed(
     uint8_t * apdu,
     uint8_t tag_number,
@@ -315,16 +353,20 @@ int decode_enumerated(
     uint8_t * apdu,
     uint32_t len_value,
     uint32_t * value);
+
 int decode_context_enumerated(
     uint8_t * apdu,
     uint8_t tag_value,
     uint32_t * value);
+
 int encode_bacnet_enumerated(
     uint8_t * apdu,
     uint32_t value);
+
 int encode_application_enumerated(
     uint8_t * apdu,
     uint32_t value);
+
 int encode_context_enumerated(
     uint8_t * apdu,
     uint8_t tag_number,
@@ -336,23 +378,29 @@ int encode_context_enumerated(
 int encode_bacnet_time(
     uint8_t * apdu,
     BACNET_TIME * btime);
+
 int encode_application_time(
     uint8_t * apdu,
     BACNET_TIME * btime);
+
 int decode_bacnet_time(
     uint8_t * apdu,
     BACNET_TIME * btime);
+
 int decode_bacnet_time_safe(
     uint8_t * apdu,
     uint32_t len_value,
     BACNET_TIME * btime);
+
 int encode_context_time(
     uint8_t * apdu,
     uint8_t tag_number,
     BACNET_TIME * btime);
+
 int decode_application_time(
     uint8_t * apdu,
     BACNET_TIME * btime);
+
 int decode_context_bacnet_time(
     uint8_t * apdu,
     uint8_t tag_number,
@@ -371,23 +419,29 @@ int decode_context_bacnet_time(
 int encode_bacnet_date(
     uint8_t * apdu,
     BACNET_DATE * bdate);
+
 int encode_application_date(
     uint8_t * apdu,
     BACNET_DATE * bdate);
+
 int encode_context_date(
     uint8_t * apdu,
     uint8_t tag_number,
     BACNET_DATE * bdate);
+
 int decode_date(
     uint8_t * apdu,
     BACNET_DATE * bdate);
+
 int decode_date_safe(
     uint8_t * apdu,
     uint32_t len_value,
     BACNET_DATE * bdate);
+
 int decode_application_date(
     uint8_t * apdu,
     BACNET_DATE * bdate);
+
 int decode_context_date(
     uint8_t * apdu,
     uint8_t tag_number,
@@ -399,8 +453,10 @@ int decode_context_date(
 uint8_t encode_max_segs_max_apdu(
     int max_segs,
     int max_apdu);
+
 int decode_max_segs(
     uint8_t octet);
+
 int decode_max_apdu(
     uint8_t octet);
 
@@ -413,13 +469,16 @@ int encode_simple_ack(
 int encode_bacnet_address(
     uint8_t * apdu,
     BACNET_ADDRESS * destination);
+
 int decode_bacnet_address(
     uint8_t * apdu,
     BACNET_ADDRESS * destination);
+
 int encode_context_bacnet_address(
     uint8_t * apdu,
     uint8_t tag_number,
     BACNET_ADDRESS * destination);
+
 int decode_context_bacnet_address(
     uint8_t * apdu,
     uint8_t tag_number,

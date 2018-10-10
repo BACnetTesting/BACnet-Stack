@@ -44,13 +44,4 @@ typedef UINT uint ;
 #define SemaWait(a)     WaitForSingleObject(a, INFINITE)
 #define SemaFree(a)     ReleaseMutex(a);
 
-#else
-
-#include "RTOS.h"
-
-#define SemaDefine(a)   OS_RSEMA a 
-#define SemaInit(a)     OS_CREATERSEMA(&a)
-#define SemaWait(a)     OS_Use(&a)
-#define SemaFree(a)     OS_Unuse(&a)
-
 #endif

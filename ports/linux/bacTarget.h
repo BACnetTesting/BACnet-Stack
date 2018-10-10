@@ -32,12 +32,17 @@
 
 #pragma once
 
+// todo 2 - move to osLayer.h
+
+#include <semaphore.h>
+#include <pthread.h>
+
 // todo2
 
-#define SemaDefine(a)
-#define SemaInit(a)
-#define SemaWait(a)
-#define SemaFree(a)
+#define SemaDefine(a) sem_t a
+#define SemaInit(a)   sem_init( &a, 0, 0);
+#define SemaWait(a)   sem_wait( &a );
+#define SemaFree(a)   sem_destroy( &a );
 
 #define LockDefine(mutexName)               pthread_mutex_t mutexName
 #define LockExtern(mutexName)               extern pthread_mutex_t mutexName

@@ -20,21 +20,23 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-*********************************************************************/
 #ifndef GETEVENT_H
 #define GETEVENT_H
 
@@ -66,10 +68,10 @@ typedef int (
     BACNET_GET_EVENT_INFORMATION_DATA * getevent_data);
 
 
-    int getevent_encode_apdu(
-        uint8_t * apdu,
-        uint8_t invoke_id,
-        BACNET_OBJECT_ID * lastReceivedObjectIdentifier);
+int getevent_encode_apdu(
+    uint8_t * apdu,
+    uint8_t invoke_id,
+    BACNET_OBJECT_ID * lastReceivedObjectIdentifier);
 
     int getevent_decode_service_request(
         uint8_t * apdu,
@@ -91,11 +93,11 @@ typedef int (
         size_t max_apdu,
         bool moreEvents);
 
-    int getevent_ack_decode_service_request(
-        uint8_t * apdu,
-        int apdu_len,   /* total length of the apdu */
-        BACNET_GET_EVENT_INFORMATION_DATA * get_event_data,
-        bool * moreEvents);
+int getevent_ack_decode_service_request(
+    uint8_t * apdu,
+    int apdu_len,   /* total length of the apdu */
+    BACNET_GET_EVENT_INFORMATION_DATA * get_event_data,
+    bool * moreEvents);
 
 #ifdef TEST
 #include "ctest.h"
@@ -112,8 +114,8 @@ typedef int (
         BACNET_GET_EVENT_INFORMATION_DATA * get_event_data,
         bool * moreEvents);
 
-    void testGetEventInformationAck(
-        Test * pTest);
+void testGetEventInformationAck(
+    Test * pTest);
 
     void testGetEventInformation(
         Test * pTest);

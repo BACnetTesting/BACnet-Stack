@@ -26,7 +26,6 @@
 // #include "portThread.h"
 // #include "net.h"
 // #include "bip.h"
-// #include "datalink.h"
 // #include "CEDebug.h"
 // #include "tsm.h"
 // #include "handlers.h"
@@ -45,13 +44,15 @@
 // #include "dlmstp.h"
 // #include "bacaddr.h"
 
-// #include "bacnetObject.h"
-// #include "ai.h"
-#include <stdint.h>
-#include <stdbool.h>
-#include "ringbuf.h"
+// #include "datalink.h"
+//#include "ai.h"
+//#include <stdint.h>
+//#include <stdbool.h>
+//#include "ringbuf.h"
+#include "bitsRouter.h"
+#include "ipcBACnetSide.h"
 
-volatile uint8_t *buffer;
+// volatile uint8_t *buffer;
 
 int main()
 {

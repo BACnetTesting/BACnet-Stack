@@ -29,22 +29,23 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-  */
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
@@ -329,7 +330,6 @@ void testBACnetLightingCommand(
     Test * pTest,
     BACNET_LIGHTING_COMMAND *data)
 {
-    bool status = false;
     BACNET_LIGHTING_COMMAND test_data;
     int len, apdu_len;
     uint8_t apdu[MAX_APDU] = {0};
@@ -346,7 +346,7 @@ void testBACnetLightingCommand(
     apdu_len = lighting_command_decode(apdu, sizeof(apdu), &test_data);
     ct_test(pTest, len > 0);
     ct_test(pTest, apdu_len > 0);
-    status = lighting_command_same(&test_data, data);
+    lighting_command_same(&test_data, data);
 }
 
 void testBACnetLightingCommandAll(

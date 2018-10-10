@@ -5,6 +5,8 @@
 *.o
 *.obj
 *.pdb
+*.log
+*.user
 bacabort
 bacarf
 bacawf

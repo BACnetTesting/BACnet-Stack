@@ -1,7 +1,7 @@
 /**************************************************************************
 *
 * Copyright (C) 2016 BACnet Interoperability Testing Services, Inc.
-* 
+*
 *       <info@bac-test.com>
 *
 * Permission is hereby granted, to whom a copy of this software and
@@ -26,7 +26,6 @@
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
 *********************************************************************/
-
 
 #include <stdlib.h>
 

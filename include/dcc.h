@@ -20,21 +20,23 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-*********************************************************************/
 #ifndef DCC_H
 #define DCC_H
 
@@ -43,27 +45,32 @@
 #include "bacenum.h"
 #include "bacstr.h"
 
-
 /* return the status */
-    BACNET_COMMUNICATION_ENABLE_DISABLE dcc_enable_status(
-        void);
-    bool dcc_communication_enabled(
-        void);
-    bool dcc_communication_disabled(
-        void);
-    bool dcc_communication_initiation_disabled(
-        void);
+BACNET_COMMUNICATION_ENABLE_DISABLE dcc_enable_status(
+    void);
+
+bool dcc_communication_enabled(
+    void);
+
+bool dcc_communication_disabled(
+    void);
+
+bool dcc_communication_initiation_disabled(
+    void);
+
 /* return the time */
-    uint32_t dcc_duration_seconds(
-        void);
+uint32_t dcc_duration_seconds(
+    void);
+
 /* called every second or so.  If more than one second,
   then seconds should be the number of seconds to tick away */
-    void dcc_timer_seconds(
-        uint32_t seconds);
+void dcc_timer_seconds(
+    uint32_t seconds);
+        
 /* setup the communication values */
-    bool dcc_set_status_duration(
-        BACNET_COMMUNICATION_ENABLE_DISABLE status,
-        uint16_t minutes);
+bool dcc_set_status_duration(
+    BACNET_COMMUNICATION_ENABLE_DISABLE status,
+    uint16_t minutes);
 
 /* encode service */
 int dcc_encode_apdu(

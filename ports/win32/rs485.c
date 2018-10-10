@@ -30,22 +30,23 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-  */
 
 /** @file win32/rs485.c  Provides Windows-specific functions for RS-485 */
 
@@ -69,6 +70,22 @@
 #include <windows.h>
 #include "rs485.h"
 #include "fifo.h"
+#include "osLayer.h"
+#include "bitsDebug.h"
+
+//uint32_t SilenceTimer(
+//    volatile struct mstp_port_struct_t *mstp_port)
+//{
+//    panic();
+//    // return bits_multiTimer_elapsed_milliseconds(mstp_port->silenceTimerHandle);
+//}
+//
+//void SilenceTimerReset(
+//    volatile struct mstp_port_struct_t *mstp_port)
+//{
+//    panic();
+//   // bits_multiTimer_reset(mstp_port->silenceTimerHandle);
+//}
 
 /* details from Serial Communications in Win32 at MSDN */
 
@@ -465,18 +482,20 @@ void RS485_Send_Frame(
             turnaround_time = 2;
         else
             turnaround_time = 2;
-        while (mstp_port->SilenceTimer(NULL) < turnaround_time) {
-            /* do nothing - wait for timer to increment */
-        };
+        // todo `
+        //while (SilenceTimer(mstp_port) < turnaround_time) {
+        //    /* do nothing - wait for timer to increment */
+        //};
     }
     WriteFile(RS485_Handle, buffer, nbytes, &dwWritten, NULL);
 
     /* per MSTP spec, reset SilenceTimer after each byte is sent */
     if (mstp_port) {
-        mstp_port->SilenceTimerReset(NULL);
+        // todo 1
+//        SilenceTimerReset(mstp_port);
     }
-
 }
+
 
 /* called by timer, interrupt(?) or other thread */
 void RS485_Check_UART_Data(

@@ -20,30 +20,32 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
 *
-*********************************************************************/
-#include <stdbool.h>
-#include <stdint.h>
-#include "bacdef.h"
-#include "bacdcode.h"
-#include "bacint.h"
-#include "bacenum.h"
-#include "bits.h"
-#include "npdu.h"
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
+//#include <stdbool.h>
+#include <stdio.h>
+//#include <stdint.h>
+// #include "bacdef.h"
+//#include "bacdcode.h"
+//#include "bacint.h"
+//#include "bacenum.h"
+//#include "bits.h"
+//#include "npdu.h"
 #include "apdu.h"
 #include "handlers.h"
 #include "client.h"
@@ -88,7 +90,7 @@ void npdu_handler(
 
     /* only handle the version that we know how to handle */
     if (pdu[0] == BACNET_PROTOCOL_VERSION) {
-        apdu_offset = npdu_decode(&pdu[0], &dest, src, &npci_data);
+        apdu_offset = npci_decode(&pdu[0], &dest, src, &npci_data);
         if (npci_data.network_layer_message) {
             /*FIXME: network layer message received!  Handle it! */
 #if PRINT_ENABLED

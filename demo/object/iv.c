@@ -29,6 +29,13 @@
  * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ *
+ *   Additional changes, Ed Hague <edward@bac-test.com>
+ *
+ *   2018.06.23 -   Fixed IV default Object_Name property. Was Analog Value, 
+ *                  but we are wanting Integer Value
+ *
  */
 
 #include <stdbool.h>

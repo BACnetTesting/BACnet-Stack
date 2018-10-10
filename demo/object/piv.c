@@ -40,7 +40,6 @@
 #include "handlers.h"
 #include "piv.h"
 
-
 #ifndef MAX_POSITIVEINTEGER_VALUES
 #define MAX_POSITIVEINTEGER_VALUES 4
 #endif
@@ -369,7 +368,8 @@ bool PositiveInteger_Value_Write_Property(BACNET_WRITE_PROPERTY_DATA * wp_data)
 }
 
 
-void PositiveInteger_Value_Intrinsic_Reporting(uint32_t object_instance)
+void PositiveInteger_Value_Intrinsic_Reporting(
+    uint32_t object_instance)
 {
 }
 

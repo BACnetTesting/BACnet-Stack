@@ -21,7 +21,22 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef BI_H
 #define BI_H
 
@@ -33,92 +48,108 @@
 #include "wp.h"
 
 
-    void Binary_Input_Property_Lists(
-        const BACNET_PROPERTY_ID **pRequired,
-        const BACNET_PROPERTY_ID **pOptional,
-        const BACNET_PROPERTY_ID **pProprietary);
+void Binary_Input_Property_Lists(
+    const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary);
 
-    bool Binary_Input_Valid_Instance(
-        uint32_t object_instance);
-    unsigned Binary_Input_Count(
-        void);
-    uint32_t Binary_Input_Index_To_Instance(
-        unsigned index);
-    unsigned Binary_Input_Instance_To_Index(
-        uint32_t instance);
-    bool Binary_Input_Object_Instance_Add(
-        uint32_t instance);
+bool Binary_Input_Valid_Instance(
+    uint32_t object_instance);
 
-    bool Binary_Input_Object_Name(
-        uint32_t object_instance,
-        BACNET_CHARACTER_STRING * object_name);
-    bool Binary_Input_Name_Set(
-        uint32_t object_instance,
-        char *new_name);
+unsigned Binary_Input_Count(
+    void);
 
-    BACNET_BINARY_PV Binary_Input_Present_Value(
-        uint32_t object_instance);
-    bool Binary_Input_Present_Value_Set(
-        uint32_t object_instance,
-        BACNET_BINARY_PV value);
+uint32_t Binary_Input_Index_To_Instance(
+    unsigned index);
 
-    char *Binary_Input_Description(
-        uint32_t instance);
-    bool Binary_Input_Description_Set(
-        uint32_t instance,
-        char *new_name);
+unsigned Binary_Input_Instance_To_Index(
+    uint32_t instance);
 
-    BACNET_RELIABILITY Binary_Input_Reliability(
-        uint32_t object_instance);
-    bool Binary_Input_Reliability_Set(
-        uint32_t object_instance,
-        BACNET_RELIABILITY value);
+bool Binary_Input_Object_Instance_Add(
+    uint32_t instance);
 
-    char *Binary_Input_Inactive_Text(
-        uint32_t instance);
-    bool Binary_Input_Inactive_Text_Set(
-        uint32_t instance,
-        char *new_name);
-    char *Binary_Input_Active_Text(
-        uint32_t instance);
-    bool Binary_Input_Active_Text_Set(
-        uint32_t instance,
-        char *new_name);
+bool Binary_Input_Object_Name(
+    uint32_t object_instance,
+    BACNET_CHARACTER_STRING * object_name);
 
-    BACNET_POLARITY Binary_Input_Polarity(
-        uint32_t object_instance);
-    bool Binary_Input_Polarity_Set(
-        uint32_t object_instance,
-        BACNET_POLARITY polarity);
+bool Binary_Input_Name_Set(
+    uint32_t object_instance,
+    char *new_name);
 
-    bool Binary_Input_Out_Of_Service(
-        uint32_t object_instance);
-    void Binary_Input_Out_Of_Service_Set(
-        uint32_t object_instance,
-        bool value);
+BACNET_BINARY_PV Binary_Input_Present_Value(
+    uint32_t object_instance);
+bool Binary_Input_Present_Value_Set(
+    uint32_t object_instance,
+    BACNET_BINARY_PV value);
 
-    bool Binary_Input_Encode_Value_List(
-        uint32_t object_instance,
-        BACNET_PROPERTY_VALUE * value_list);
-    bool Binary_Input_Change_Of_Value(
-        uint32_t instance);
-    void Binary_Input_Change_Of_Value_Clear(
-        uint32_t instance);
+char *Binary_Input_Description(
+    uint32_t instance);
 
-    int Binary_Input_Read_Property(
-        BACNET_READ_PROPERTY_DATA * rpdata);
+bool Binary_Input_Description_Set(
+    uint32_t instance,
+    char *new_name);
 
-    bool Binary_Input_Write_Property(
-        BACNET_WRITE_PROPERTY_DATA * wp_data);
+BACNET_RELIABILITY Binary_Input_Reliability(
+    uint32_t object_instance);
+bool Binary_Input_Reliability_Set(
+    uint32_t object_instance,
+    BACNET_RELIABILITY value);
 
-    bool Binary_Input_Create(
-        uint32_t object_instance);
-    bool Binary_Input_Delete(
-        uint32_t object_instance);
-    void Binary_Input_Cleanup(
-        void);
-    void Binary_Input_Init(
-        void);
+char *Binary_Input_Inactive_Text(
+    uint32_t instance);
+
+bool Binary_Input_Inactive_Text_Set(
+    uint32_t instance,
+    char *new_name);
+
+char *Binary_Input_Active_Text(
+    uint32_t instance);
+
+bool Binary_Input_Active_Text_Set(
+    uint32_t instance,
+    char *new_name);
+
+BACNET_POLARITY Binary_Input_Polarity(
+    uint32_t object_instance);
+
+bool Binary_Input_Polarity_Set(
+    uint32_t object_instance,
+    BACNET_POLARITY polarity);
+
+bool Binary_Input_Out_Of_Service(
+    uint32_t object_instance);
+
+void Binary_Input_Out_Of_Service_Set(
+    uint32_t object_instance,
+    bool value);
+
+bool Binary_Input_Encode_Value_List(
+    uint32_t object_instance,
+    BACNET_PROPERTY_VALUE * value_list);
+
+bool Binary_Input_Change_Of_Value(
+    uint32_t instance);
+
+void Binary_Input_Change_Of_Value_Clear(
+    uint32_t instance);
+
+int Binary_Input_Read_Property(
+    BACNET_READ_PROPERTY_DATA * rpdata);
+
+bool Binary_Input_Write_Property(
+    BACNET_WRITE_PROPERTY_DATA * wp_data);
+
+bool Binary_Input_Create(
+    uint32_t object_instance);
+
+bool Binary_Input_Delete(
+    uint32_t object_instance);
+
+void Binary_Input_Cleanup(
+    void);
+
+void Binary_Input_Init(
+    void);
 
 #ifdef TEST
 #include "ctest.h"

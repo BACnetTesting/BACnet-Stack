@@ -58,13 +58,14 @@ static int OpenDatabase(void)
         if (rc != SQLITE_OK)
         {
             log_lev_printf(LLEV::Release, "Can't create persistence database %s: \"%s\"", persistDbName, sqlite3_errmsg(db));
-            return false;
+            return SQLITE_ERROR ;
         }
     }
     return rc;
 }
 
 
+static const char *rpcColNamePortID = "PortID";
 static const char *rpcColNameAdapter = "Adapter";
 static const char *rpcColNameBACnetPort = "Port";
 static const char *rpcColNamePortType = "PortType";
@@ -79,10 +80,14 @@ static int32_t RouterPortCallback(void *NotUsed, int argc, char **argv, char **a
     char *portType = NULL;
     char *endpoint = NULL;
     char *homeDeviceIDstr = NULL;
-    int networkNumber ;
-    int bacnetPort ;
+    int networkNumber = 0xDEFB ;
+    int bacnetPort = 0xDEFA ;
+    static int portId = 3;
     bool ok;
     SOCKADDR_IN ipep;
+
+    // set a default in case database does not contain one
+    portId++;
 
     // scan the column names, picking up the values
     for (i = 0; i < argc; i++)
@@ -94,6 +99,9 @@ static int32_t RouterPortCallback(void *NotUsed, int argc, char **argv, char **a
         else if (isMatchCaseInsensitive(azColName[i], rpcColNameNN))
         {
             networkNumber = atoi(argv[i]);
+        }
+        else if (isMatchCaseInsensitive(azColName[i], rpcColNamePortID)) {
+            portId = atoi(argv[i]);
         }
         else if (isMatchCaseInsensitive(azColName[i], rpcColNamePortType))
         {
@@ -127,7 +135,7 @@ static int32_t RouterPortCallback(void *NotUsed, int argc, char **argv, char **a
 			panic();
 			return 1;
 		}
-        break; 
+        break;
 
     case PF_BBMD:
         log_printf("BACnet BBMD Port     %d, Network Number %d", bacnetPort, networkNumber);
@@ -161,13 +169,6 @@ static int32_t RouterPortCallback(void *NotUsed, int argc, char **argv, char **a
 		}
         break;
 
-    case PF_APP:
-        ok = InitRouterportApp(networkNumber);          // Network Number to 'associate' with.
-		if (!ok) {
-			panic();
-			return 1;
-		}
-        break;
 
     case PF_MSTP:
     case PF_FD:
@@ -290,7 +291,6 @@ void LoadRouterPortConfigs(void)
     sqlite3_close(db);
 
     // must be done at the end since we don't know what order the ports are going to be created in.
-    AlignApplicationWithPort();
 }
 
 

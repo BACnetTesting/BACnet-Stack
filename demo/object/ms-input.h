@@ -21,7 +21,20 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
+* Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+* Dec 1, 2017   BITS    Modifications to this file have been made and documented
+*                       in compliance to Steve Karg's original licensing.
+*
+* This file contains changes made by BACnet Interoperability Testing
+* Services, Inc. These changes are subject to the permissions,
+* warranty terms and limitations above.
+*     For more information: info@bac-test.com
+*     For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
 *********************************************************************/
+
 #ifndef MS_INPUT_H
 #define MS_INPUT_H
 
@@ -32,7 +45,6 @@
 #include "rp.h"
 #include "wp.h"
 
-
 void Multistate_Input_Property_Lists(
     const BACNET_PROPERTY_ID **pRequired,
     const BACNET_PROPERTY_ID **pOptional,
@@ -40,8 +52,10 @@ void Multistate_Input_Property_Lists(
 
 bool Multistate_Input_Valid_Instance(
     uint32_t object_instance);
+
 unsigned Multistate_Input_Count(
     void);
+
 uint32_t Multistate_Input_Index_To_Instance(
     unsigned index);
 unsigned Multistate_Input_Instance_To_Index(
@@ -80,6 +94,7 @@ bool Multistate_Input_Encode_Value_List(
 
 bool Multistate_Input_Out_Of_Service(
     uint32_t object_instance);
+
 void Multistate_Input_Out_Of_Service_Set(
     uint32_t object_instance,
     bool value);

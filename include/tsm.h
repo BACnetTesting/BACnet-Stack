@@ -20,21 +20,23 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-*********************************************************************/
 #ifndef TSM_H
 #define TSM_H
 
@@ -85,6 +87,7 @@ typedef struct BACnet_TSM_Data {
     uint8_t InvokeID;
     /* state that the TSM is in */
     BACNET_TSM_STATE state;
+
     /* the address we sent it to */
     BACNET_ADDRESS dest;
     /* the network layer info */
@@ -94,29 +97,33 @@ typedef struct BACnet_TSM_Data {
     unsigned apdu_len;
 } BACNET_TSM_DATA;
 
-typedef void (
+typedef void(
     *tsm_timeout_function) (
-    uint8_t invoke_id);
+        uint8_t invoke_id);
 
+void tsm_set_timeout_handler(
+    tsm_timeout_function pFunction);
 
+bool tsm_transaction_available(
+    void);
+        
+uint8_t tsm_transaction_idle_count(
+    void);
+        
+void tsm_timer_milliseconds(
+    uint16_t milliseconds);
 
-    void tsm_set_timeout_handler(
-        tsm_timeout_function pFunction);
-
-    bool tsm_transaction_available(
-        void);
-    uint8_t tsm_transaction_idle_count(
-        void);
-    void tsm_timer_milliseconds(
-        uint16_t milliseconds);
 /* free the invoke ID when the reply comes back */
-    void tsm_free_invoke_id(
-        uint8_t invokeID);
+void tsm_free_invoke_id(
+    uint8_t invokeID);
+
 /* use these in tandem */
-    uint8_t tsm_next_free_invokeID(
-        void);
+uint8_t tsm_next_free_invokeID(
+    void);
+
     void tsm_invokeID_set(
         uint8_t invokeID);
+
 /* returns the same invoke ID that was given */
     void tsm_set_confirmed_unsegmented_transaction(
         uint8_t invokeID,
@@ -124,6 +131,7 @@ typedef void (
         BACNET_NPCI_DATA * ndpu_data,
         uint8_t * apdu,
         uint16_t apdu_len);
+        
 /* returns true if transaction is found */
     bool tsm_get_transaction_pdu(
         uint8_t invokeID,
@@ -134,6 +142,7 @@ typedef void (
 
     bool tsm_invoke_id_free(
         uint8_t invokeID);
+
     bool tsm_invoke_id_failed(
         uint8_t invokeID);
 

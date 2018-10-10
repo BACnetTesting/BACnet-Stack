@@ -21,24 +21,29 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
- -------------------------------------------
-
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-*********************************************************************/
 #ifndef AV_H
 #define AV_H
+
+#include "config.h"
+
+#if (BACNET_USE_OBJECT_ANALOG_VALUE == 1 )
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -46,54 +51,50 @@
 #include "rp.h"
 #include "wp.h"
 
-#if defined(INTRINSIC_REPORTING)
+#if (INTRINSIC_REPORTING_B == 1)
 #include "nc.h"
-#include "getevent.h"
 #include "alarm_ack.h"
+#include "getevent.h"
 #include "get_alarm_sum.h"
 #endif
 
 #include "BACnetObjectAnalog.h"
 
-class AnalogValueObject : public BACnetAnalogObject
-{
-public:
+typedef struct analog_value_descr {
 
-    void Init(void);
+    BACNET_OBJECT   common;
 
-    // Constructor with initialization list, being the preferred method
-    AnalogValueObject(uint32_t instance, BACNET_ENGINEERING_UNITS units, std::string &name, std::string &description) :
-        BACnetAnalogObject(instance, name, description)
-    {
-        Init();
-        this->Units = units;
-    }
-
-#if ( BACNET_SVC_COV_AV_B == 1 )
+    BACNET_EVENT_STATE Event_State;
+    BACNET_RELIABILITY Reliability;
+    
+    bool Out_Of_Service;
+    uint16_t Units;
+    float Present_Value;
+    
+#if ( BACNET_SVC_COV_B == 1 )
     float Prior_Value;
     float COV_Increment;
     bool Changed;
-#endif // BACNET_SVC_COV
+#endif
 
-    // all the items below are in base class
-    //#if (INTRINSIC_REPORTING == 1)
-    //    uint32_t Time_Delay;
-    //    uint32_t Notification_Class;
-    //    float High_Limit;
-    //    float Low_Limit;
-    //    float Deadband;
-    //    unsigned Limit_Enable:2;
-    //    unsigned Event_Enable:3;
-    //    BACNET_NOTIFY_TYPE Notify_Type ;
-    //    ACKED_INFO Acked_Transitions[MAX_BACNET_EVENT_TRANSITION];
-    //    BACNET_DATE_TIME Event_Time_Stamps[MAX_BACNET_EVENT_TRANSITION];
-    //    /* time to generate event notification */
-    //    uint32_t Remaining_Time_Delay;
-    //    /* AckNotification informations */
-    //    ACK_NOTIFICATION Ack_notify_data;
-    //#endif // INTRINSIC_REPORTING
+#if (INTRINSIC_REPORTING_B == 1)
+    uint32_t Time_Delay;
+    uint32_t Notification_Class;
+    float High_Limit;
+    float Low_Limit;
+    float Deadband;
+    unsigned Limit_Enable : 2;
+    unsigned Event_Enable : 3;
+    BACNET_NOTIFY_TYPE Notify_Type;
+    ACKED_INFO Acked_Transitions[MAX_BACNET_EVENT_TRANSITION];
+    BACNET_DATE_TIME Event_Time_Stamps[MAX_BACNET_EVENT_TRANSITION];
+    /* time to generate event notification */
+    uint32_t Remaining_Time_Delay;
+    /* AckNotification informations */
+    ACK_NOTIFICATION Ack_notify_data;
+#endif
 
-};
+} ANALOG_VALUE_DESCR;
 
 
 void Analog_Value_Property_Lists(
@@ -110,6 +111,7 @@ unsigned Analog_Value_Count(
 uint32_t Analog_Value_Index_To_Instance(
     unsigned index);
 
+// Returns -1 is Instance not found, by design.
 unsigned Analog_Value_Instance_To_Index(
     uint32_t object_instance);
 
@@ -144,18 +146,22 @@ int Analog_Value_Read_Property(
 bool Analog_Value_Write_Property(
     BACNET_WRITE_PROPERTY_DATA * wp_data);
 
-bool Analog_Value_Present_Value_Set(
-    AnalogValueObject *currentObject,
-    float value,
-    uint8_t priority);
-float Analog_Value_Present_Value(
-    uint32_t object_instance);
+// static
+//bool Analog_Value_Present_Value_Set(
+//    ANALOG_VALUE_DESCR *currentObject,
+//    float value,
+//    uint8_t priority);
 
-void Analog_Value_Out_Of_Service_Set(
-    const uint32_t object_instance,
-    const bool oos_flag);
+// static
+//float Analog_Value_Present_Value(
+//    uint32_t object_instance);
 
-#if ( BACNET_SVC_COV == 1 )
+// static
+//void Analog_Value_Out_Of_Service_Set(
+//    const uint32_t object_instance,
+//    const bool oos_flag);
+
+#if ( BACNET_SVC_COV_B == 1 )
 bool Analog_Value_Change_Of_Value(
     uint32_t instance);
 
@@ -195,19 +201,20 @@ bool Analog_Value_Units_Set(
     uint32_t instance,
     uint16_t unit);
 
-bool Analog_Value_Out_Of_Service(
-    uint32_t instance);
+//bool Analog_Value_Out_Of_Service(
+//    uint32_t instance);
 
-void Analog_Value_Out_Of_Service_Set(
-    uint32_t instance,
-    bool oos_flag);
+// duplicate
+//void Analog_Value_Out_Of_Service_Set(
+//    uint32_t instance,
+//    bool oos_flag);
 
-/* note: header of Intrinsic_Reporting function is required
-   even when INTRINSIC_REPORTING is not defined */
+/* note: header of INTRINSIC_REPORTING_Bfunction is required
+   even when INTRINSIC_REPORTING_B is not defined */
 void Analog_Value_Intrinsic_Reporting(
     uint32_t object_instance);
 
-#if defined(INTRINSIC_REPORTING)
+#if (INTRINSIC_REPORTING_B == 1)
 int Analog_Value_Event_Information(
     unsigned objectIndex,
     BACNET_GET_EVENT_INFORMATION_DATA * getevent_data);
@@ -222,10 +229,10 @@ int Analog_Value_Alarm_Summary(
 #endif
 
 bool Analog_Value_Create(
-    const uint32_t instanceBase,
-    const std::string& nameRoot,
+    const uint32_t instance,
+    const char *name,
     const BACNET_ENGINEERING_UNITS units);
-    
+
 void Analog_Value_Update(
 	const uint32_t instance,
 	const double value );
@@ -246,5 +253,7 @@ void Analog_Value_Init(
 void testAnalog_Value(
     Test * pTest);
 #endif
+
+#endif  // use_av
 
 #endif /* AV_H */

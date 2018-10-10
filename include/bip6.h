@@ -9,23 +9,23 @@
 * described in Annex J.
 * The functions described here fulfill the roles defined generically at the
 * DataLink level by serving as the implementation of the function templates.
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-
-
-Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-July 1, 2017    BITS    Modifications to this file have been made in compliance
-to original licensing.
-
-This file contains changes made by BACnet Interoperability Testing
-Services, Inc. These changes are subject to the permissions,
-warranty terms and limitations above.
-For more information: info@bac-test.com
-For access to source code:  info@bac-test.com
-or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-*/
 #ifndef BIP6_H
 #define BIP6_H
 
@@ -52,13 +52,16 @@ or      www.github.com/bacnettesting/bacnet-stack
         void);
     void bip6_get_broadcast_address(
         BACNET_ADDRESS * my_address);
+
     void bip6_get_my_address(
         BACNET_ADDRESS * my_address);
+
     int bip6_send_pdu(
         BACNET_ADDRESS * dest,
         BACNET_NPCI_DATA * npci_data,
         uint8_t * pdu,
         unsigned pdu_len);
+
     uint16_t bip6_receive(
         BACNET_ADDRESS * src,
         uint8_t * pdu,

@@ -20,21 +20,23 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-*********************************************************************/
 #ifndef DLMSTP_H
 #define DLMSTP_H
 
@@ -49,6 +51,18 @@
 #define MAX_HEADER (2+1+1+1+2+1+2)
 #define MAX_MPDU (MAX_HEADER+MAX_PDU)
 
+/*
+12.11.18 Max_APDU_Length_Accepted
+
+This property, of type Unsigned, is the maximum number of octets that may be contained in a single, indivisible application
+layer protocol data unit. The value of this property shall be greater than or equal to 50. The value of this property is also
+constrained by the underlying data link technology and shall be less than or equal to the largest APDU_Length of the enabled
+Network Port objects used to represent the underlying data links. See Clauses 6 through 11, Annex J, Annex O, and Annex U.
+If the value of this property is not encodable in the 'Max APDU Length Accepted' parameter of a ConfirmedRequest-PDU,
+then the value encoded shall be the highest encodable value less than the value of this property. In such cases, a responding
+device may ignore the encoded value in favor of the value of this property, if it is known.
+*/
+
 typedef struct dlmstp_packet {
     bool ready; /* true if ready to be sent or received */
     BACNET_ADDRESS address;     /* source address */
@@ -60,10 +74,11 @@ typedef struct dlmstp_packet {
 
     bool dlmstp_init(
         char *ifname);
-    void dlmstp_reset(
-        void);
-    void dlmstp_cleanup(
-        void);
+void dlmstp_reset(
+    void);
+    
+void dlmstp_cleanup(
+    void);
 
     /* returns number of bytes sent on success, negative on failure */
     int dlmstp_send_pdu(

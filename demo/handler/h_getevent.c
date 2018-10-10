@@ -20,22 +20,23 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -52,9 +53,14 @@
 #include "event.h"
 #include "getevent.h"
 #include "handlers.h"
+#include "debug.h"
+#include "bitsDebug.h"
 
 /** @file h_getevent.c  Handles Get Event Information request. */
 
+#if (INTRINSIC_REPORTING_B == 1)
+
+// todo2 - this is a HUGE array to cycle through each time. Reconsider the approach soon.
 static get_event_info_function Get_Event_Info[MAX_BACNET_OBJECT_TYPE];
 
 
@@ -66,19 +72,19 @@ void ge_ack_print_data(
 {
     BACNET_GET_EVENT_INFORMATION_DATA *act_data = data;
     const char* state_strs[] = {"NO", "FA", "ON", "HL", "LL"};
-	printf("DeviceID\tType\tInstance\teventState\n");
-	    printf("--------------- ------- --------------- ---------------\n");
-	    int count = 0;
-	    while (act_data) {
-        	    printf("%u\t\t%u\t%u\t\t%s\n",
-                	   device_id,
-	                   act_data->objectIdentifier.type,
-        	           act_data->objectIdentifier.instance,
-	                   state_strs[data->eventState]
-        	           );
-	            act_data = act_data->next;
-            count++;
-        }
+    printf("DeviceID\tType\tInstance\teventState\n");
+    printf("--------------- ------- --------------- ---------------\n");
+    unsigned count = 0;
+    while (act_data) {
+        printf("%u\t\t%u\t%u\t\t%s\n",
+               device_id,
+               act_data->objectIdentifier.type,
+               act_data->objectIdentifier.instance,
+               state_strs[data->eventState]
+              );
+        act_data = act_data->next;
+        count++;
+    }
     printf("\n%u\t Total\n",count);
 }
 
@@ -120,17 +126,15 @@ void handler_get_event_information(
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
         npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
-        &npci_data);
+                        &npci_data);
     if (service_data->segmented_message) {
         /* we don't support segmentation - send an abort */
         len =
             abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-            service_data->invoke_id, ABORT_REASON_SEGMENTATION_NOT_SUPPORTED,
-            true);
-#if PRINT_ENABLED
-        fprintf(stderr,
-                "GetEventInformation: " "Segmented message. Sending Abort!\n");
-#endif
+                              service_data->invoke_id, ABORT_REASON_SEGMENTATION_NOT_SUPPORTED,
+                              true);
+        dbTraffic(DBD_ALL, DB_BTC_ERROR,
+            "GetEventInformation: " "Segmented message. Sending Abort!\n");
         goto GET_EVENT_ABORT;
     }
 
@@ -141,11 +145,9 @@ void handler_get_event_information(
         /* bad decoding - send an abort */
         len =
             abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-            service_data->invoke_id, ABORT_REASON_OTHER, true);
-#if PRINT_ENABLED
-        fprintf(stderr,
-                "GetEventInformation: Bad Encoding.  Sending Abort!\n");
-#endif
+                              service_data->invoke_id, ABORT_REASON_OTHER, true);
+        dbTraffic(DBD_ALL, DB_BTC_ERROR,
+            "GetEventInformation: Bad Encoding.  Sending Abort!\n");
         goto GET_EVENT_ABORT;
     }
     len =
@@ -216,33 +218,28 @@ void handler_get_event_information(
         error = true;
         goto GET_EVENT_ERROR;
     }
-#if PRINT_ENABLED
-    fprintf(stderr, "Got a GetEventInformation request: Sending Ack!\n");
-#endif
+    dbTraffic(DBD_ALL, DB_BTC_ERROR, "Got a GetEventInformation request: Sending Ack!\n");
 GET_EVENT_ERROR:
     if (error) {
         pdu_len =
             npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
-            &npci_data);
+                            &npci_data);
 
         if (len == -2) {
             /* BACnet APDU too small to fit data, so proper response is Abort */
             len =
                 abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-                service_data->invoke_id,
-                ABORT_REASON_SEGMENTATION_NOT_SUPPORTED, true);
-#if PRINT_ENABLED
-            fprintf(stderr,
+                                  service_data->invoke_id,
+                                  ABORT_REASON_SEGMENTATION_NOT_SUPPORTED, true);
+            dbTraffic(DBD_ALL, DB_BTC_ERROR,
                 "GetEventInformation: " "Reply too big to fit into APDU!\n");
-#endif
-        } else {
+        }
+        else {
             len =
                 bacerror_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-                service_data->invoke_id, SERVICE_CONFIRMED_READ_PROPERTY,
-                error_class, error_code);
-#if PRINT_ENABLED
-            fprintf(stderr, "GetEventInformation: Sending Error!\n");
-#endif
+                                     service_data->invoke_id, SERVICE_CONFIRMED_READ_PROPERTY,
+                                     error_class, error_code);
+            dbTraffic(DBD_ALL, DB_BTC_ERROR, "GetEventInformation: Sending Error!\n");
         }
     }
 GET_EVENT_ABORT:
@@ -256,3 +253,4 @@ GET_EVENT_ABORT:
 #endif
 
 }
+#endif // INTRINSIC_REPORTING_B

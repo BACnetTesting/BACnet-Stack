@@ -20,20 +20,23 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-*********************************************************************/
 #ifndef BVLC_H
 #define BVLC_H
 
@@ -47,25 +50,29 @@
 
 struct sockaddr_in;     /* Defined elsewhere, needed here. */
 
+       // belongs in bbmd.h
+//#if defined(BBMD_ENABLED) && BBMD_ENABLED
+//    void bvlc_maintenance_timer(
+//        time_t seconds);
+//#else
+//#define bvlc_maintenance_timer(x)
+//#endif
 
+/* todo 2 - Feedback Karg
+    B/IP devices **shall** be capable of **resolving Internet host names to IP addresses via the use of the Domain Name Service** (see RFC
+    1123) in the case where a DNS resolver is available.
+*/
 
-#if defined(BBMD_ENABLED) && BBMD_ENABLED
-    void bvlc_maintenance_timer(
-        time_t seconds);
-#else
-#define bvlc_maintenance_timer(x)
-#endif
-
-    typedef struct {
-        /* true if valid entry - false if not */
-        bool valid;
-        /* BACnet/IP address */
-        struct in_addr dest_address;        /* in network format */
-        /* BACnet/IP port number - not always 47808=BAC0h */
-        uint16_t dest_port; /* in network format */
-        /* Broadcast Distribution Mask */
-        struct in_addr broadcast_mask;      /* in tework format */
-    } BBMD_TABLE_ENTRY;
+//typedef struct {
+//    /* true if valid entry - false if not */
+//    bool valid;
+//    /* BACnet/IP address */
+//    struct in_addr dest_address;        /* in network format */
+//    /* BACnet/IP port number - not always 47808=BAC0h */
+//    uint16_t dest_port;                 /* in network format */
+//    /* Broadcast Distribution Mask */
+//    struct in_addr broadcast_mask;      /* in network format */
+//} BBMD_TABLE_ENTRY;
 
     uint16_t bvlc_receive(
         BACNET_ADDRESS * src,   /* returns the source address */
@@ -85,23 +92,27 @@ struct sockaddr_in;     /* Defined elsewhere, needed here. */
         uint16_t mtu_len);
 
 #if defined(BBMD_CLIENT_ENABLED) && BBMD_CLIENT_ENABLED
-    int bvlc_encode_write_bdt_init(
-        uint8_t * pdu,
-        unsigned entries);
-    int bvlc_encode_read_fdt(
-        uint8_t * pdu);
-    int bvlc_encode_delete_fdt_entry(
-        uint8_t * pdu,
-        uint32_t address,       /* in network byte order */
-        uint16_t port); /* in network byte order */
-    int bvlc_encode_original_unicast_npdu(
-        uint8_t * pdu,
-        uint8_t * npdu,
-        unsigned npdu_length);
-    int bvlc_encode_original_broadcast_npdu(
-        uint8_t * pdu,
-        uint8_t * npdu,
-        unsigned npdu_length);
+int bvlc_encode_write_bdt_init(
+    uint8_t * pdu,
+    unsigned entries);
+
+int bvlc_encode_read_fdt(
+    uint8_t * pdu);
+
+int bvlc_encode_delete_fdt_entry(
+    uint8_t * pdu,
+    uint32_t address,       /* in network byte order */
+    uint16_t port); /* in network byte order */
+
+int bvlc_encode_original_unicast_npdu(
+    uint8_t * pdu,
+    uint8_t * npdu,
+    unsigned npdu_length);
+
+int bvlc_encode_original_broadcast_npdu(
+    uint8_t * pdu,
+    uint8_t * npdu,
+    unsigned npdu_length);
 #endif
     int bvlc_encode_read_bdt(
         uint8_t * pdu);
@@ -115,11 +126,11 @@ struct sockaddr_in;     /* Defined elsewhere, needed here. */
         uint16_t bbmd_port,     /* in network byte order */
         uint16_t time_to_live_seconds);
 
-    /* Note any BVLC_RESULT code, or NAK the BVLL message in the unsupported cases. */
-    int bvlc_for_non_bbmd(
-        struct sockaddr_in *sout,
-        uint8_t * npdu,
-        uint16_t received_bytes);
+/* Note any BVLC_RESULT code, or NAK the BVLL message in the unsupported cases. */
+int bvlc_for_non_bbmd(
+    struct sockaddr_in *sout,
+    uint8_t * npdu,
+    uint16_t received_bytes);
 
 /* Returns the last BVLL Result we received, either as the result of a BBMD
  * request we sent, or (if not a BBMD or Client), from trying to register
@@ -140,19 +151,37 @@ BACNET_BVLC_FUNCTION bvlc_get_function_code(
  * BACnet packet is not being handled when the BBMD table is modified.
  */
 
-    /* Get handle to broadcast distribution table. Returns the number of
-     * valid entries in the table. */
-    int bvlc_get_bdt_local(
-         const BBMD_TABLE_ENTRY** table);
+/* Get handle to broadcast distribution table. Returns the number of
+ * valid entries in the table. */
+//#if defined(BBMD_ENABLED) && (BBMD_ENABLED == 1)
+//int bvlc_get_bdt_local(
+//    const BBMD_TABLE_ENTRY** table);
+//
+///* Invalidate all entries in the broadcast distribution table */
+//void bbmd_clear_bdt_local(PORT_SUPPORT *portParams);
+//void bbmd_clear_fdt_local(PORT_SUPPORT *portParams);    // todo3 - I dont think karg had this, add to BTC?
+//
+///* Add new entry to broadcast distribution table. Returns true if the new
+// * entry was added successfully */
+//bool bvlc_add_bdt_entry_local(
+//    PORT_SUPPORT *portParams,
+//    BBMD_TABLE_ENTRY* entry);
+//#endif
 
-    /* Invalidate all entries in the broadcast distribution table */
-    void bvlc_clear_bdt_local(void);
+    /* Backup broadcast distribution table to a file.
+     * Filename is the BBMD_BACKUP_FILE constant
+     */
+     
+#ifdef BDT_BACKUP
+    void bvlc_bdt_backup_local(
+        void);
 
-    /* Add new entry to broadcast distribution table. Returns true if the new
-     * entry was added successfully */
-    bool bvlc_add_bdt_entry_local(
-        BBMD_TABLE_ENTRY* entry);
-
+    /* Restore broadcast distribution from a file.
+     * Filename is the BBMD_BACKUP_FILE constant
+     */
+    void bvlc_bdt_restore_local(
+        void);
+#endif
 
 /* NAT handling
  * If the communication between BBMDs goes through a NAT enabled internet
@@ -173,6 +202,6 @@ BACNET_BVLC_FUNCTION bvlc_get_function_code(
 
 /* Disable NAT handling of BBMD.
  */
-void bvlc_disable_nat(void);
+// void bvlc_disable_nat(void);
 
 #endif /* */

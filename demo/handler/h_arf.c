@@ -20,22 +20,23 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -56,6 +57,7 @@
 #endif
 #include "handlers.h"
 #include "debug.h"
+#include "bitsDebug.h"
 
 /** @file h_arf.c  Handles Atomic Read File request. */
 
@@ -128,7 +130,7 @@ void handler_atomic_read_file(
     BACNET_ERROR_CODE error_code = ERROR_CODE_UNKNOWN_OBJECT;
 
 
-    dbTraffic(DB_UNEXPECTED_ERROR, "Received Atomic-Read-File Request!\n");
+    dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "Received Atomic-Read-File Request!\n");
     /* encode the NPDU portion of the packet */
     datalink_get_my_address(&my_address);
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
@@ -140,7 +142,7 @@ void handler_atomic_read_file(
             abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, ABORT_REASON_SEGMENTATION_NOT_SUPPORTED,
             true);
-        dbTraffic(DB_UNEXPECTED_ERROR, "ARF: Segmented Message. Sending Abort!\n");
+        dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "ARF: Segmented Message. Sending Abort!\n");
         goto ARF_ABORT;
     }
     len = arf_decode_service_request(service_request, service_len, &data);
@@ -149,7 +151,7 @@ void handler_atomic_read_file(
         len =
             abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, ABORT_REASON_OTHER, true);
-        dbTraffic(DB_UNEXPECTED_ERROR, "Bad Encoding. Sending Abort!\n");
+        dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "Bad Encoding. Sending Abort!\n");
         goto ARF_ABORT;
     }
     if (data.object_type == OBJECT_FILE) {
@@ -172,7 +174,7 @@ void handler_atomic_read_file(
                     abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
                     service_data->invoke_id,
                     ABORT_REASON_SEGMENTATION_NOT_SUPPORTED, true);
-                dbTraffic(DB_UNEXPECTED_ERROR, "Too Big To Send (%d >= %d). Sending Abort!\n",
+                dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "Too Big To Send (%d >= %d). Sending Abort!\n",
                     data.type.stream.requestedOctetCount,
                     (int)octetstring_capacity(&data.fileData[0]));
             }
@@ -183,7 +185,7 @@ void handler_atomic_read_file(
                 error_code = ERROR_CODE_INVALID_FILE_START_POSITION;
                 error = true;
             } else if (bacfile_read_stream_data(&data)) {
-                dbTraffic(DB_UNEXPECTED_ERROR, "ARF: fileStartRecord %d, %u RecordCount.\n",
+                dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "ARF: fileStartRecord %d, %u RecordCount.\n",
                     data.type.record.fileStartRecord,
                     data.type.record.RecordCount);
                 len =
@@ -198,7 +200,7 @@ void handler_atomic_read_file(
             error = true;
             error_class = ERROR_CLASS_SERVICES;
             error_code = ERROR_CODE_INVALID_FILE_ACCESS_METHOD;
-            dbTraffic(DB_UNEXPECTED_ERROR, "Record Access Requested. Sending Error!\n");
+            dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "Record Access Requested. Sending Error!\n");
         }
     } else {
         error = true;

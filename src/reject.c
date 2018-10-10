@@ -29,22 +29,23 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-  */
 #include <stdint.h>
 #include "bacenum.h"
 #include "bacdcode.h"
@@ -111,16 +112,10 @@ int reject_encode_apdu(
     uint8_t invoke_id,
     BACNET_REJECT_REASON reject_reason)
 {
-    int apdu_len = 0;   /* total length of the apdu, return value */
-
-    if (apdu) {
-        apdu[0] = PDU_TYPE_REJECT;
-        apdu[1] = invoke_id;
-        apdu[2] = reject_reason;
-        apdu_len = 3;
-    }
-
-    return apdu_len;
+    apdu[0] = PDU_TYPE_REJECT;
+    apdu[1] = invoke_id;
+    apdu[2] = (uint8_t) reject_reason;
+    return 3;
 }
 
 #if !BACNET_SVC_SERVER
@@ -134,10 +129,12 @@ int reject_decode_service_request(
     int len = 0;
 
     if (apdu_len) {
-        if (invoke_id)
+        if (invoke_id) {
             *invoke_id = apdu[0];
-        if (reject_reason)
+        }
+        if (reject_reason) {
             *reject_reason = (BACNET_REJECT_REASON) apdu[1];
+        }
     }
 
     return len;
@@ -158,12 +155,14 @@ int reject_decode_apdu(
 {
     int len = 0;
 
-    if (!apdu)
+    if (!apdu) {
         return -1;
+    }
     /* optional checking - most likely was already done prior to this call */
     if (apdu_len) {
-        if (apdu[0] != PDU_TYPE_REJECT)
+        if (apdu[0] != PDU_TYPE_REJECT) {
             return -1;
+        }
         if (apdu_len > 1) {
             len =
                 reject_decode_service_request(&apdu[1], apdu_len - 1,

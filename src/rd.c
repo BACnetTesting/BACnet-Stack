@@ -29,22 +29,23 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-  */
 #include <stdint.h>
 #include "bacenum.h"
 #include "bacdcode.h"
@@ -103,7 +104,7 @@ int rd_decode_service_request(
             return -1;
         len +=
             decode_tag_number_and_value(&apdu[len], &tag_number,
-            &len_value_type);
+                                        &len_value_type);
         len += decode_enumerated(&apdu[len], len_value_type, &value);
         if (state)
             *state = (BACNET_REINITIALIZED_STATE) value;
@@ -113,7 +114,7 @@ int rd_decode_service_request(
                 return -1;
             len +=
                 decode_tag_number_and_value(&apdu[len], &tag_number,
-                &len_value_type);
+                                            &len_value_type);
             len +=
                 decode_character_string(&apdu[len], len_value_type, password);
         }
@@ -151,7 +152,7 @@ int rd_decode_apdu(
     if (apdu_len > offset) {
         len =
             rd_decode_service_request(&apdu[offset], apdu_len - offset, state,
-            password);
+                                      password);
     }
 
     return len;
@@ -178,7 +179,7 @@ void test_ReinitializeDevice(
 
     len =
         rd_decode_apdu(&apdu[0], apdu_len, &test_invoke_id, &test_state,
-        &test_password);
+                       &test_password);
     ct_test(pTest, len != -1);
     ct_test(pTest, test_invoke_id == invoke_id);
     ct_test(pTest, test_state == state);

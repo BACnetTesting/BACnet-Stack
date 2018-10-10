@@ -151,8 +151,8 @@
         uint32_t instance,
         float value);
 
-    /* note: header of Intrinsic_Reporting function is required
-       even when INTRINSIC_REPORTING is not defined */
+    /* note: header of INTRINSIC_REPORTING_Bfunction is required
+       even when INTRINSIC_REPORTING_B is not defined */
     void Command_Intrinsic_Reporting(
         uint32_t object_instance);
 

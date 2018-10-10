@@ -20,27 +20,51 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-*********************************************************************/
 #ifndef COV_H
 #define COV_H
 
 #include <stdint.h>
 #include <stdbool.h>
 #include "bacapp.h"
+
+typedef struct BACnet_COV_Address {
+    bool valid : 1;
+    BACNET_ADDRESS dest;
+} BACNET_COV_ADDRESS;
+
+/* note: This COV service only monitors the properties
+of an object that have been specified in the standard.  */
+typedef struct BACnet_COV_Subscription_Flags {
+    bool valid : 1;
+    bool issueConfirmedNotifications : 1; /* optional */
+    bool send_requested : 1;
+} BACNET_COV_SUBSCRIPTION_FLAGS;
+
+typedef struct {
+    BACNET_COV_SUBSCRIPTION_FLAGS flag;
+    int8_t dest_index;      // Has to be signed, tested for < 0 in places
+    uint8_t invokeID;   /* for confirmed COV */
+    uint32_t subscriberProcessIdentifier;
+    uint32_t lifetime;  /* optional */
+    BACNET_OBJECT_ID monitoredObjectIdentifier;
+} BACNET_COV_SUBSCRIPTION ;
 
 typedef struct BACnet_COV_Data {
     uint32_t subscriberProcessIdentifier;

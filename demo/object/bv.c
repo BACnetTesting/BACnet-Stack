@@ -21,7 +21,21 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -42,17 +56,22 @@
 
 #include "bv.h"
 #include "bitsDebug.h"
+#include "llist.h"
+#include "emm.h"
+#include "BACnetObject.h"
 
+LLIST_HDR BV_Descriptor_List;
 
 /* These three arrays are used by the ReadPropertyMultiple handler */
+
 static const BACNET_PROPERTY_ID Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
+    PROP_OUT_OF_SERVICE,
     PROP_PRESENT_VALUE,
     PROP_STATUS_FLAGS,
     PROP_EVENT_STATE,
-    PROP_OUT_OF_SERVICE,
     MAX_BACNET_PROPERTY_ID
 };
 
@@ -61,6 +80,27 @@ static const BACNET_PROPERTY_ID Properties_Optional[] = {
     PROP_PRIORITY_ARRAY,
     PROP_RELINQUISH_DEFAULT,
     PROP_RELIABILITY,
+
+#if ( BACNET_SVC_COV_B == 1 )
+    PROP_COV_INCREMENT,
+#endif
+
+#if (INTRINSIC_REPORTING_B == 1)
+    PROP_TIME_DELAY,
+    PROP_NOTIFICATION_CLASS,
+    //todo2 - what about event_detection_enable?
+    PROP_HIGH_LIMIT,
+    PROP_LOW_LIMIT,
+    PROP_DEADBAND,
+    PROP_LIMIT_ENABLE,
+    PROP_EVENT_ENABLE,
+    PROP_ACKED_TRANSITIONS,
+    PROP_NOTIFY_TYPE,
+    PROP_EVENT_TIME_STAMPS,
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
+    PROP_EVENT_DETECTION_ENABLE,
+#endif
+#endif
     MAX_BACNET_PROPERTY_ID
 };
 
@@ -68,21 +108,44 @@ static const BACNET_PROPERTY_ID Properties_Proprietary[] = {
     MAX_BACNET_PROPERTY_ID
 };
 
-std::vector<BACnetObject *> binaryValues;
-
 
 bool Binary_Value_Create(
     const uint32_t instance,
-    const std::string& nameRoot)
+    const char *name)
 {
-    std::string name = nameRoot;
+    BINARY_VALUE_DESCR *currentObject = (BINARY_VALUE_DESCR *)emm_scalloc('a', sizeof(BINARY_VALUE_DESCR));
+    if (currentObject == NULL) {
+        panic();
+        return false;
+    }
+    if (!ll_Enqueue(&BV_Descriptor_List, currentObject)) {
+        panic();
+        return false;
+    }
 
-    BinaryValueObject *newObject = new BinaryValueObject(
-        instance,
-        name,
-        name);
+    Generic_Object_Init(&currentObject->common, instance, name);
 
-    binaryValues.push_back(newObject);
+    currentObject->Present_Value = BINARY_ACTIVE;
+    currentObject->Out_Of_Service = false;
+    currentObject->Reliability = RELIABILITY_NO_FAULT_DETECTED;
+
+#if ( BACNET_SVC_COV_B == 1 )
+    currentObject->Prior_Value = BINARY_ACTIVE;
+    currentObject->Changed = false;
+#endif
+
+#if (INTRINSIC_REPORTING_B == 1)
+    currentObject->Event_State = EVENT_STATE_NORMAL;
+    /* notification class not connected */
+    currentObject->Notification_Class = BACNET_MAX_INSTANCE;
+    /* initialize Event time stamps using wildcards
+    and set Acked_transitions */
+    for (int j = 0; j < MAX_BACNET_EVENT_TRANSITION; j++) {
+        datetime_wildcard_set(&currentObject->Event_Time_Stamps[j]);
+        currentObject->Acked_Transitions[j].bIsAcked = true;
+    }
+#endif
+
     return true;
 }
 
@@ -103,178 +166,188 @@ void Binary_Value_Property_Lists(
 }
 
 
-// once per device
+// Gets called once for each device
+
 void Binary_Value_Init(
     void)
 {
+    // unsigned i;
+#if (INTRINSIC_REPORTING_B2 == 1)
+    unsigned j;
+#endif
+
+    ll_Init(&BV_Descriptor_List, 100);
+
+#if (INTRINSIC_REPORTING_B2 == 1)
+
+    /* Set handler for GetEventInformation function */
+    handler_get_event_information_set(OBJECT_ANALOG_INPUT,
+        Analog_Input_Event_Information);
+
+    /* Set handler for AcknowledgeAlarm function */
+    handler_alarm_ack_set(OBJECT_ANALOG_INPUT,
+        Analog_Input_Alarm_Ack);
+
+    /* Set handler for GetAlarmSummary Service */
+	// Deprecated since Rev 13   
+	/* Set handler for GetAlarmSummary Service */
+    //handler_get_alarm_summary_set(OBJECT_ANALOG_INPUT,
+    //    Analog_Input_Alarm_Summary);
+
+#endif
+
 }
 
 
-void BinaryValueObject::Init(void)
-{
-    //    unsigned i;
-}
-    
-
-/* we simply have 0-n object instances.  Yours might be */
-/* more complex, and then you need validate that the */
-/* given instance exists */
 bool Binary_Value_Valid_Instance(
     uint32_t object_instance)
 {
-    return BACnetObject::Valid_Instance(&binaryValues, object_instance);
+    if (Generic_Instance_To_Object(&BV_Descriptor_List, object_instance) != NULL) return true;
+    return false;
 }
 
 
-/* we simply have 0-n object instances.  Yours might be */
-/* more complex, and then count how many you have */
 unsigned Binary_Value_Count(
     void)
 {
-    return binaryValues.size();
+    return BV_Descriptor_List.count;
 }
 
-/* we simply have 0-n object instances.  Yours might be */
-/* more complex, and then you need to return the instance */
-/* that correlates to the correct index */
+
 uint32_t Binary_Value_Index_To_Instance(
     unsigned index)
 {
-    // todo1 - can we catch out-of-bounds?
-    return  binaryValues[index]->instance;
+    return Generic_Index_To_Instance(&BV_Descriptor_List, index);
 }
 
 
-/* we simply have 0-n object instances.  Yours might be */
-/* more complex, and then you need to return the index */
-/* that correlates to the correct instance number */
-int Binary_Value_Instance_To_Index(
+// This is a shitty function to have - use Generic_Instance_To_Object() for those functions that wanted this.. *
+// int Binary_Value_Instance_To_Index(
+//    uint32_t object_instance)
+//{
+//    unsigned index = MAX_ANALOG_INPUTS;
+//
+//    if (object_instance < MAX_ANALOG_INPUTS)
+//        index = object_instance;
+//
+//    return index;
+//}
+
+
+static inline bool IsOutOfService(BINARY_VALUE_DESCR *currentObject)
+{
+    return currentObject->Out_Of_Service;
+}
+
+
+static inline bool IsInAlarm(BINARY_VALUE_DESCR *currentObject)
+{
+    return currentObject->Event_State != EVENT_STATE_NORMAL;
+}
+
+
+BINARY_VALUE_DESCR *Binary_Value_Instance_To_Object(
     uint32_t object_instance)
 {
-    for (size_t i = 0; i < binaryValues.size(); i++) {
-        if (object_instance == binaryValues[i]->instance) {
-            return i;
-        }
-    }
-    // don't panic here, it is valid in some circumstances (e.g. Who-Has) to NOT find the index
-    return -1;
-}
-
-
-BinaryValueObject *Binary_Value_Instance_To_Object(
-    uint32_t object_instance)
-{
-    return static_cast<BinaryValueObject *> (BACnetObject::Instance_To_Object(&binaryValues, object_instance));
-}
-
-
-void Binary_Value_Update (
-		const uint32_t instance,
-		const bool value )
-{
-	BinaryValueObject *bacnetObject = Binary_Value_Instance_To_Object ( instance ) ;
-	if ( bacnetObject == NULL )
-	{
-		panic();
-		return;
-	}
-	bacnetObject->Present_Value = ( value ) ? BINARY_ACTIVE : BINARY_INACTIVE ;
+    return (BINARY_VALUE_DESCR *)Generic_Instance_To_Object(&BV_Descriptor_List, object_instance);
 }
 
 
 BACNET_BINARY_PV Binary_Value_Present_Value(
-    BinaryValueObject *currentObject)
+    BINARY_VALUE_DESCR *currentObject)
 {
     return currentObject->Present_Value;
-
-#if 0
-    // todo, fix the priority array access
-    BACNET_BINARY_PV value = RELINQUISH_DEFAULT_BINARY;
-    unsigned index = 0;
-    unsigned i = 0;
-
-    index = Binary_Value_Instance_To_Index(object_instance);
-    if (index < MAX_BINARY_VALUES) {
-        for (i = 0; i < BACNET_MAX_PRIORITY; i++) {
-            if (Binary_Value_Level[index][i] != BINARY_NULL) {
-                value = Binary_Value_Level[index][i];
-                break;
-            }
-        }
-    }
-
-    return value;
-#endif
 }
+
+
+void Binary_Value_Update(
+    const uint32_t instance,
+    const bool value)
+{
+    BINARY_VALUE_DESCR *bacnetObject = Binary_Value_Instance_To_Object(instance);
+    if (bacnetObject == NULL) {
+        panic();
+        return;
+    }
+    bacnetObject->Present_Value = (value) ? BINARY_ACTIVE : BINARY_INACTIVE;
+}
+
+
+#if ( BACNET_SVC_COV_B == 1 )
+static void Binary_Value_COV_Detect_PV_Change(
+    BINARY_VALUE_DESCR *currentObject,
+    bool value)
+{
+    if (value != currentObject->Prior_Value) {
+        currentObject->Prior_Value = value;
+        // must be careful to never un-set changed here
+        currentObject->Changed = true;
+    }
+}
+#endif
 
 
 // todo 3 move to the generic module
-BACNET_BINARY_PV SweepToPresentValue(BinaryValueObject *currentObject)
+static void SweepToPresentValue(BINARY_VALUE_DESCR *currentObject)
 {
-    BACNET_BINARY_PV tvalue = RELINQUISH_DEFAULT_BINARY ;
-
-    for (int i = 0; i < BACNET_MAX_PRIORITY; i++) {
-        if ( currentObject->prioritySet[i]) {
-            tvalue = currentObject->priorityValues[i];
+    BACNET_BINARY_PV tvalue = RELINQUISH_DEFAULT_BINARY;
+    int i;
+    for (i = 0; i < BACNET_MAX_PRIORITY; i++) {
+        if (currentObject->priorityArrayFlags[i]) {
+            tvalue = currentObject->priorityArrayValues[i];
             break;
         }
     }
-
-    return tvalue;
+    currentObject->Present_Value = tvalue;
 }
 
 
-bool Binary_Value_Present_Value_Set(
-    BinaryValueObject *currentObject,
-    BACnet_Write_Property_Data *wp_data,
-    BACNET_APPLICATION_DATA_VALUE *value )
+static bool Binary_Value_Present_Value_Set(
+    BINARY_VALUE_DESCR *currentObject,
+    BACNET_WRITE_PROPERTY_DATA *wp_data,
+    BACNET_APPLICATION_DATA_VALUE *value)
 {
     uint8_t priority = wp_data->priority;
-    // float currentPV = currentObject->Present_Value;
 
     /*  BTC todo - 19.2.3 When a write to a commandable property occurs at any priority, the specified value or relinquish (NULL) is always written to
         the appropriate slot in the priority table, regardless of any minimum on or off times.
         Actually: NOT ALLOWED to write NULL to 6
         */
 
-    if (value->tag == BACNET_APPLICATION_TAG_ENUMERATED) {
+        // BTC todo - Karg allowed a write of NULL to present value, priority 6. 
+        // btc todo - try write priority 17
+    if (priority == 6 || priority > BACNET_MAX_PRIORITY) {
         /* Command priority 6 is reserved for use by Minimum On/Off
         algorithm and may not be used for other purposes in any
         object. */
-        if (priority && (priority <= BACNET_MAX_PRIORITY) &&
-            (priority != 6 /* reserved */)) {
+        wp_data->error_class = ERROR_CLASS_PROPERTY;
+        wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
+        return false;
+    }
 
-            // new as of 2016.09.20 
-            currentObject->priorityValues[priority - 1] = (BACNET_BINARY_PV) value->type.Enumerated;
-            currentObject->prioritySet[priority - 1] = true;
-            SweepToPresentValue( currentObject );
-        } else if (priority == 6) {
-            /* Command priority 6 is reserved for use by Minimum On/Off
-            algorithm and may not be used for other purposes in any
-            object. */
-            wp_data->error_class = ERROR_CLASS_PROPERTY;
-            wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
-        } else {
+    if (value->tag == BACNET_APPLICATION_TAG_ENUMERATED) {
+        // new as of 2016.09.20 
+        // todo 4 - use bit arrays to save space?
+        currentObject->priorityArrayValues[priority - 1] = (BACNET_BINARY_PV)value->type.Enumerated;
+        currentObject->priorityArrayFlags[priority - 1] = true;
+        SweepToPresentValue(currentObject);
+        if (value->type.Enumerated > 1) {
             wp_data->error_class = ERROR_CLASS_PROPERTY;
             wp_data->error_code = ERROR_CODE_VALUE_OUT_OF_RANGE;
+            return false ;
         }
-    } else {
+    }
+    else if (value->tag == BACNET_APPLICATION_TAG_NULL) {
         // This is the relinquish case (If the value is a NULL )
-        bool status =
-            WPValidateArgType( value, BACNET_APPLICATION_TAG_NULL,
-                               &wp_data->error_class, &wp_data->error_code);
-        if (status) {
-            if (priority && (priority <= BACNET_MAX_PRIORITY)) {
-                // We are writing a NULL to the priority array...
-                currentObject->prioritySet[priority-1] = false;
-                SweepToPresentValue(currentObject);
-                // todo1 transfer to application layer here
-            } else {
-                wp_data->error_class = ERROR_CLASS_PROPERTY;
-                wp_data->error_code = ERROR_CODE_VALUE_OUT_OF_RANGE;
-                return false;
-            }
-        }
+        // We are writing a NULL to the priority array...
+        currentObject->priorityArrayFlags[priority - 1] = false;
+        SweepToPresentValue(currentObject);
+        // todo1 transfer to application layer here
+    }
+    else {
+        wp_data->error_class = ERROR_CLASS_PROPERTY;
+        wp_data->error_code = ERROR_CODE_INVALID_DATA_TYPE;
+        return false;
     }
     return true;
 }
@@ -285,42 +358,167 @@ bool Binary_Value_Present_Value_Relinquish(
     unsigned priority)
 {
 
-    return true ;
+    return true;
 }
 
 
-/* note: the object name must be unique within this device */
+static inline bool Binary_Value_Reliability_Set(
+    BINARY_VALUE_DESCR *currentObject,
+    uint32_t reliability)
+{
+    if (currentObject->Out_Of_Service) {
+        // the BACnet way
+        currentObject->reliabilityShadowValue = (BACNET_RELIABILITY)reliability;
+        return true;
+    }
+    // writes, when not OOS, are not allowed
+    return false;
+}
+
+
+static BACNET_RELIABILITY Binary_Value_Reliability(
+    BINARY_VALUE_DESCR *currentObject)
+{
+    if (IsOutOfService(currentObject)) {
+        // the BACnet way
+        return currentObject->reliabilityShadowValue;
+    }
+
+    // so in this embodiment, nobody gets to set reliability, we expect the Application to do so (along with PV)
+    return currentObject->Reliability;
+}
+
+
+static bool isInFault(
+    BINARY_VALUE_DESCR *currentObject)
+{
+    return (Binary_Value_Reliability(currentObject) != RELIABILITY_NO_FAULT_DETECTED);
+}
+
+
 bool Binary_Value_Object_Name(
     uint32_t object_instance,
     BACNET_CHARACTER_STRING * object_name)
 {
-    int index;
+    return Generic_Instance_To_Object_Name(&BV_Descriptor_List, object_instance, object_name);
+}
+
+
+#if ( BACNET_SVC_COV_B == 1 )
+
+// This function reports to the BACnet stack if there has/has not been a change to the Present Value or status flags
+// therefore, unfortunately, we have to derive the pointers from the object_instance each time.
+bool Binary_Value_Change_Of_Value(
+    const uint32_t object_instance)
+{
+    BINARY_VALUE_DESCR *currentObject = Binary_Value_Instance_To_Object(object_instance);
+    if (currentObject == NULL) return false;
+
+    // COVs are generated by a) application logic  b) BACnet operation
+    // and apply to changes in a) Present_Value, b) Status Flags (all of OOS, Flt, AL, Ovr) !
+
+    // and anticipating that someone else may trigger ->changed, and also accommodating the fact we are in a loop....
+
+    // I would like to believe that we can do some of this homework event-based, and although
+    // there is already some logic done elsewhere (when BACnet makes changes, Intrinsic Alarms)
+    // we can hope one day the App layer doing the evaluation for e.g. PV, Fault etc.
+    if (currentObject->Changed) return true;
+
+
+    // Also, there may be MANY subscriptions watching this object, so be sure that the 
+    // ->changed flag persists once set, until explicitly cleared by xxx_Change_Of_Value_Clear()
+
+    // did the application layer change OOS behind our back?
+    bool currentOOS = currentObject->Out_Of_Service ;
+    if ((bool)currentObject->prior_OOS != currentOOS) {
+        currentObject->prior_OOS = currentOOS;
+        currentObject->Changed = true;
+    }
+
+    // todo 2 - consider Ov and Flt flags here too!
+
+    if (!currentOOS) {
+        // Has the Application code changed the PV behind our back?
+        BACNET_BINARY_PV tempPV = Binary_Value_Present_Value(currentObject);
+        Binary_Value_COV_Detect_PV_Change(currentObject, tempPV);
+    }
+
+    return currentObject->Changed;
+}
+
+
+void Binary_Value_Change_Of_Value_Clear(
+    uint32_t object_instance)
+{
+    BINARY_VALUE_DESCR *currentObject = Binary_Value_Instance_To_Object(object_instance);
+    if (currentObject == NULL) return;
+    currentObject->Changed = false;
+}
+
+
+/* returns true if value has changed */
+bool Binary_Value_Encode_Value_List(
+    uint32_t object_instance,
+    BACNET_PROPERTY_VALUE * value_list)
+{
     bool status = false;
 
-    index = Binary_Value_Instance_To_Index(object_instance);
-    if (index >= 0) {
-        characterstring_init_ansi(object_name, static_cast<BinaryValueObject *>(binaryValues[index])->name.c_str());
+    BINARY_VALUE_DESCR *currentObject = Binary_Value_Instance_To_Object(object_instance);
+    if (currentObject == NULL) {
+        return false;
     }
+
+    if (value_list) {
+        value_list->propertyIdentifier = PROP_PRESENT_VALUE;
+        value_list->propertyArrayIndex = BACNET_ARRAY_ALL;
+        value_list->value.context_specific = false;
+        value_list->value.tag = BACNET_APPLICATION_TAG_ENUMERATED;
+        value_list->value.type.Enumerated =
+            Binary_Value_Present_Value(currentObject);
+        value_list->value.next = NULL;
+        value_list->priority = BACNET_NO_PRIORITY;
+        value_list = value_list->next;
+    }
+    if (value_list) {
+        value_list->propertyIdentifier = PROP_STATUS_FLAGS;
+        value_list->propertyArrayIndex = BACNET_ARRAY_ALL;
+        value_list->value.context_specific = false;
+        value_list->value.tag = BACNET_APPLICATION_TAG_BIT_STRING;
+        value_list->value.next = NULL;
+        bitstring_init(&value_list->value.type.Bit_String);
+        bitstring_set_bit(&value_list->value.type.Bit_String,
+            STATUS_FLAG_IN_ALARM, IsInAlarm(currentObject));
+        bitstring_set_bit(&value_list->value.type.Bit_String,
+            STATUS_FLAG_FAULT, isInFault(currentObject));
+        bitstring_set_bit(&value_list->value.type.Bit_String,
+            STATUS_FLAG_OVERRIDDEN, false);
+        bitstring_set_bit(&value_list->value.type.Bit_String,
+            STATUS_FLAG_OUT_OF_SERVICE, currentObject->Out_Of_Service );
+        value_list->value.next = NULL;
+        value_list->priority = BACNET_NO_PRIORITY;
+        value_list->next = NULL;
+    }
+    status = Binary_Value_Change_Of_Value(object_instance);
 
     return status;
 }
+#endif // ( BACNET_SVC_COV_B == 1 )
 
 
-bool Binary_Value_Out_Of_Service(
-    BACnetObject *currentObject)
+static void Binary_Value_Out_Of_Service_Set(
+    BINARY_VALUE_DESCR *currentObject,
+    const bool oos_flag)
 {
-    return currentObject->Out_Of_Service;
+    // Is there actually a change? If not, then we don't have to do anything.
+    if (currentObject->Out_Of_Service == oos_flag) return;
+
+#if ( BACNET_SVC_COV_B == 1 )
+    currentObject->Changed = true;
+#endif
+
+    currentObject->Out_Of_Service = oos_flag;
 }
 
-void Binary_Value_Out_Of_Service_Set(
-    BinaryValueObject *currentObject,
-    const bool value)
-{
-    if (currentObject->Out_Of_Service != value) {
-        currentObject->Changed = true;
-    }
-    currentObject->Out_Of_Service = value;
-}
 
 /* return apdu length, or BACNET_STATUS_ERROR on error */
 int Binary_Value_Read_Property(
@@ -329,31 +527,35 @@ int Binary_Value_Read_Property(
     int apdu_len = 0;   /* return value */
     BACNET_BIT_STRING bit_string;
     BACNET_CHARACTER_STRING char_string;
-    BinaryValueObject *currentObject;
-    uint8_t *apdu = NULL;
+    BINARY_VALUE_DESCR *currentObject;
+    uint8_t *apdu;
 
-    // todo1 const BACNET_PROPERTY_ID *pRequired = NULL, *pOptional = NULL, *pProprietary = NULL;
+#if (INTRINSIC_REPORTING_B == 1)
+    unsigned int i = 0;
+    int len = 0;
+#endif
+
+    const BACNET_PROPERTY_ID *pRequired = NULL, *pOptional = NULL, *pProprietary = NULL;
 
     if ((rpdata == NULL) || (rpdata->application_data == NULL) ||
         (rpdata->application_data_len == 0)) {
-        return 0;
+        return BACNET_STATUS_ERROR;
     }
 
     currentObject = Binary_Value_Instance_To_Object(rpdata->object_instance);
     if (currentObject == NULL) {
-        // todo1 panic();
         return BACNET_STATUS_ERROR;
     }
 
     apdu = rpdata->application_data;
     switch (rpdata->object_property) {
+
     case PROP_OBJECT_IDENTIFIER:
         apdu_len =
             encode_application_object_id(&apdu[0], OBJECT_BINARY_VALUE,
                 rpdata->object_instance);
         break;
-        /* note: Name and Description don't have to be the same.
-           You could make Description writable and different */
+
     case PROP_OBJECT_NAME:
     case PROP_DESCRIPTION:
         Binary_Value_Object_Name(rpdata->object_instance, &char_string);
@@ -374,18 +576,38 @@ int Binary_Value_Read_Property(
 
     case PROP_STATUS_FLAGS:
         bitstring_init(&bit_string);
+#if (INTRINSIC_REPORTING_B == 1)
+        bitstring_set_bit(&bit_string, STATUS_FLAG_IN_ALARM,
+            currentObject->Event_State ? true : false);
+#else
         bitstring_set_bit(&bit_string, STATUS_FLAG_IN_ALARM, false);
+#endif
         bitstring_set_bit(&bit_string, STATUS_FLAG_FAULT, false);
         bitstring_set_bit(&bit_string, STATUS_FLAG_OVERRIDDEN, false);
         bitstring_set_bit(&bit_string, STATUS_FLAG_OUT_OF_SERVICE,
-            Binary_Value_Out_Of_Service(currentObject));
+            currentObject->Out_Of_Service);
         apdu_len = encode_application_bitstring(&apdu[0], &bit_string);
         break;
 
     case PROP_EVENT_STATE:
+#if ( INTRINSIC_REPORTING_B == 1 )
+        apdu_len =
+            encode_application_enumerated(&apdu[0],
+                currentObject->Event_State);
+#else
         apdu_len =
             encode_application_enumerated(&apdu[0], EVENT_STATE_NORMAL);
+#endif
         break;
+
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
+#if ( INTRINSIC_REPORTING_B == 1 )
+    case PROP_EVENT_DETECTION_ENABLE:
+        apdu_len =
+            encode_application_enumerated(&apdu[0], true);
+        break;
+#endif
+#endif
 
     case PROP_RELIABILITY:
         apdu_len =
@@ -394,8 +616,9 @@ int Binary_Value_Read_Property(
         break;
 
     case PROP_OUT_OF_SERVICE:
-        apdu_len = encode_application_boolean(&apdu[0],
-            Binary_Value_Out_Of_Service(currentObject));
+        apdu_len =
+            encode_application_boolean(&apdu[0],
+                currentObject->Out_Of_Service);
         break;
 #if 0
     case PROP_PRIORITY_ARRAY:
@@ -451,11 +674,21 @@ int Binary_Value_Read_Property(
             }
         }
         break;
+
     case PROP_RELINQUISH_DEFAULT:
         present_value = RELINQUISH_DEFAULT;
         apdu_len = encode_application_enumerated(&apdu[0], present_value);
         break;
 #endif
+
+    case PROP_PROPERTY_LIST:
+        Binary_Value_Property_Lists(&pRequired, &pOptional, &pProprietary);
+        apdu_len = property_list_encode(
+            rpdata,
+            pRequired,
+            pOptional,
+            pProprietary);
+        break;
 
     default:
         rpdata->error_class = ERROR_CLASS_PROPERTY;
@@ -463,8 +696,14 @@ int Binary_Value_Read_Property(
         apdu_len = BACNET_STATUS_ERROR;
         break;
     }
+
     /*  only array properties can have array options */
-    if ((apdu_len >= 0) && (rpdata->object_property != PROP_PRIORITY_ARRAY) &&
+    if ((apdu_len >= 0) &&
+        (rpdata->object_property != PROP_PROPERTY_LIST) &&
+        (rpdata->object_property != PROP_PRIORITY_ARRAY) &&
+#if (INTRINSIC_REPORTING_B == 1)
+        (rpdata->object_property != PROP_EVENT_TIME_STAMPS) &&
+#endif
         (rpdata->array_index != BACNET_ARRAY_ALL)) {
         rpdata->error_class = ERROR_CLASS_PROPERTY;
         rpdata->error_code = ERROR_CODE_PROPERTY_IS_NOT_AN_ARRAY;
@@ -474,21 +713,21 @@ int Binary_Value_Read_Property(
     return apdu_len;
 }
 
+
 /* returns true if successful */
 bool Binary_Value_Write_Property(
     BACNET_WRITE_PROPERTY_DATA * wp_data)
 {
     bool status = false;        /* return value */
-    int len = 0;
-    // uint8_t priority;
-    // uint32_t level;
+    int len;
     BACNET_APPLICATION_DATA_VALUE value;
-    BinaryValueObject *currentObject;
+    BINARY_VALUE_DESCR *currentObject;
 
-    /* decode the some of the request */
+    /* decode some of the request */
     len =
         bacapp_decode_application_data(wp_data->application_data,
             wp_data->application_data_len, &value);
+
     /* FIXME: len < application_data_len: more data? */
     if (len < 0) {
         /* error while decoding - a value larger than we can handle */
@@ -499,7 +738,8 @@ bool Binary_Value_Write_Property(
 
     /*  only array properties can have array options */
     if ((wp_data->array_index != BACNET_ARRAY_ALL) &&
-#if (INTRINSIC_REPORTING_BV_B == 1)
+        (wp_data->object_property != PROP_PRIORITY_ARRAY) &&
+#if (INTRINSIC_REPORTING_B == 1)
         (wp_data->object_property != PROP_EVENT_TIME_STAMPS) &&
 #endif
         (wp_data->object_property != PROP_PROPERTY_LIST)) {
@@ -517,63 +757,36 @@ bool Binary_Value_Write_Property(
     switch (wp_data->object_property) {
 
     case PROP_PRESENT_VALUE:
-        if (value.tag == BACNET_APPLICATION_TAG_ENUMERATED) {
-                /* Command priority 6 is reserved for use by Minimum On/Off
-                   algorithm and may not be used for other purposes in any
-                   object. */
-                status =
-                    Binary_Value_Present_Value_Set( 
-                        currentObject,
-                        wp_data, 
-                        &value );
-
-                if (wp_data->priority == 6) {
-                    /* Command priority 6 is reserved for use by Minimum On/Off
-                       algorithm and may not be used for other purposes in any
-                       object. */
-                    wp_data->error_class = ERROR_CLASS_PROPERTY;
-                    wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
-                } else if (!status) {
-                    wp_data->error_class = ERROR_CLASS_PROPERTY;
-                    wp_data->error_code = ERROR_CODE_VALUE_OUT_OF_RANGE;
-                }
-            } else {
-                status =
-                    WPValidateArgType(&value, BACNET_APPLICATION_TAG_NULL,
-                    &wp_data->error_class, &wp_data->error_code);
-                if (status) {
-                    status =
-                        Binary_Value_Present_Value_Relinquish
-                        (wp_data->object_instance, wp_data->priority);
-                    if (!status) {
-                        wp_data->error_class = ERROR_CLASS_PROPERTY;
-                        wp_data->error_code = ERROR_CODE_VALUE_OUT_OF_RANGE;
-                    }
-                }
-            }
-            break;
+        status = Binary_Value_Present_Value_Set(currentObject, wp_data, &value);
+        break;
 
     case PROP_OUT_OF_SERVICE:
         status =
             WPValidateArgType(&value, BACNET_APPLICATION_TAG_BOOLEAN,
                 &wp_data->error_class, &wp_data->error_code);
         if (status) {
-            Binary_Value_Out_Of_Service_Set(currentObject,
+            Binary_Value_Out_Of_Service_Set(
+                currentObject,
                 value.type.Boolean);
         }
         break;
+
+    case PROP_ACTIVE_TEXT:
+    case PROP_DESCRIPTION:
+    case PROP_INACTIVE_TEXT:
     case PROP_OBJECT_IDENTIFIER:
     case PROP_OBJECT_NAME:
-    case PROP_DESCRIPTION:
     case PROP_OBJECT_TYPE:
     case PROP_STATUS_FLAGS:
     case PROP_EVENT_STATE:
+    case PROP_RELIABILITY:
     case PROP_PRIORITY_ARRAY:
     case PROP_RELINQUISH_DEFAULT:
     case PROP_PROPERTY_LIST:
         wp_data->error_class = ERROR_CLASS_PROPERTY;
         wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
         break;
+
     default:
         wp_data->error_class = ERROR_CLASS_PROPERTY;
         wp_data->error_code = ERROR_CODE_UNKNOWN_PROPERTY;
@@ -610,8 +823,8 @@ void testBinary_Value(
     int len = 0;
     uint32_t len_value = 0;
     uint8_t tag_number = 0;
-    uint16_t decoded_type = 0;
     uint32_t decoded_instance = 0;
+    uint16_t decoded_type = 0;
     BACNET_READ_PROPERTY_DATA rpdata;
 
     Binary_Value_Init();
@@ -645,7 +858,7 @@ int main(
 
     ct_setStream(pTest, stdout);
     ct_run(pTest);
-    (void) ct_report(pTest);
+    (void)ct_report(pTest);
     ct_destroy(pTest);
 
     return 0;

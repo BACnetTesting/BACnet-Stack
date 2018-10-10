@@ -30,16 +30,22 @@
 #pragma once
 
 #include <stdio.h>
+#include <stdint.h>
 
 #include <WinSock2.h>       // For HANDLE (used by mutexs)
 #include <process.h>
 
 typedef unsigned uint;
 
-typedef int bitsThreadVar;
-// #define bitsCreateThread(threadVar, threadFunc, argListPtr)   _beginthread( threadFunc, 0, (void *) argListPtr)
-#define bitsDetachThread(threadVar)
-#define bitsThreadFunction(threadFuncName,argList)  void (threadFuncName) ( void *argList )
+// typedef int bitsThreadVar;
+void *bitsCreateThread(void (*threadFunc)(void *arg), void *argListPtr);
+    
+    // #define bitsCreateThread(threadVar,
+                                         // threadFunc, argListPtr)
+                                         // _beginthread( threadFunc, 0, (void
+                                         // *) argListPtr)
+// #define bitsDetachThread(threadVar)
+// #define bitsThreadFunction(threadFuncName,argList)  void (threadFuncName) ( void *argList )
 
 // Be aware: mutexs in windows have thread affinity (they can be locked recursively in same thread), linux mutexs do not
 // I should have used CreateSemaphore() Stack Overflow: http://goo.gl/h96Wh9  to avoid this difference...
@@ -49,6 +55,12 @@ typedef int bitsThreadVar;
 // https://msdn.microsoft.com/en-us/library/windows/desktop/ms682530(v=vs.85).aspx
 
 typedef HANDLE bits_mutex_t ;
+
+// todo 0 - consolidate
+#define SemaDefine(a)   HANDLE a 
+#define SemaInit(a)     a = CreateMutex(NULL, FALSE, NULL)
+#define SemaWait(a)     WaitForSingleObject(a, INFINITE)
+#define SemaFree(a)     ReleaseMutex(a);
 
 // Note, the convoluted * defeferencing is to allow the calls to closely match the linux mutex locks... keep it that way
 #define bits_mutex_init(mutexName)        *mutexName = CreateMutex(NULL, FALSE, NULL)
@@ -61,4 +73,28 @@ int sys_bits_mutex_lock(bits_mutex_t *mutexName, int ms );
 //void sys_bits_mutex_trylock(bits_mutex_t *mutexName);
 //void sys_bits_mutex_unlock(bits_mutex_t *mutexName);
 
-void *bitsCreateThread( bitsThreadVar threadId, void *(*threadFunc) (void *arg ), void *argListPtr);
+// void *bitsCreateThread( bitsThreadVar threadId, void *(*threadFunc) (void *arg ), void *argListPtr);
+
+typedef uint8_t TimerHandle ;
+
+// A very basic timer of time elapsed since previous time
+
+uint32_t bits_sysTimer_get_time(
+                                void ) ;
+
+uint32_t bits_sysTimer_elapsed_milliseconds(
+                                            uint32_t prevTime ) ;
+
+
+// "Count up" timers that allow multiple instances
+TimerHandle bits_multiTimer_init(
+                                 void);
+
+uint32_t bits_multiTimer_elapsed_milliseconds(
+                                              TimerHandle handle );
+
+void bits_multiTimer_reset(
+                           TimerHandle handle );
+
+int osKBhit(void);
+int osGetch(void);

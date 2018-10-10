@@ -2,7 +2,7 @@
 
 This "BACnet Reference Stack" is based on Steve Karg's original work on SourceForge.
 
-It has been pummelled, fixed and upgraded to support various more advanced applications, as well as 
+It has been pummelled, fixed and upgraded to support various more advanced applications, as well as
 matching the coding style and testing requirements of BACnet Interoperability Testing Services, Inc.
 
 We only support a subset of the demonstrations and ports that the original stack provided, and where
@@ -25,7 +25,7 @@ suits your application the best and start there.
 ## Branch name
 ### Description
 
-Shadow of Steve Kargs stack
+###Shadow of Steve Kargs stack
     Straight copy of Steve's latest release from https://sourceforge.net/projects/bacnet/
 
 ###Compile MSVC
@@ -38,57 +38,63 @@ Shadow of Steve Kargs stack
         * Individual MVS project files contain more specific project settings
 
 ###Global Renames
-	(This is not really a useful branch, use "Compile MSVC C++ branch as your starting point for BITS codebase")
-	BITS copyright message
-	NPDU -> NPCI
+    (This is not really a useful branch, use "Compile MSVC C++ branch as your starting point for BITS codebase")
+    BITS copyright message
+    NPDU -> NPCI
 
 ###Syntax Fixups
-	(This is not really a useful branch, use "Compile MSVC C++ branch as your starting point for BITS codebase")
-	Remove 'return'
-	Remove unnecessary initializations
-	{ }
+    (This is not really a useful branch, use "Compile MSVC C++ branch as your starting point for BITS codebase")
+    Remove 'return'
+    Remove unnecessary initializations
+    { }
 
 ###Compile C++
-	Only uses C++ features for better type checking during compiles
-	One can switch between projects within solution to run different examples
+    Only uses C++ features for better type checking during compiles
+    One can switch between projects within solution to run different examples
 
 ###Feature Creep
-	Intent:
-		Uses C++ Objects (only for BACnet Objects)
-		This is the last 'single datalink, non routing, non virtual device' configuration.
-	Removing
-		All references to UCI
-		Removing unsupported platforms
-		Removing 'old' printf tracing and debugging
-	Adding:
-		Better user menus on examples
-		Finer grained debug #defines (dbTraffic()) etc.
+    Intent:
+        Uses C++ Objects (only for BACnet Objects)
+        This is the last 'single datalink, non routing, non virtual device' configuration.
+    Removing
+        All references to UCI
+        Removing unsupported platforms
+        Removing 'old' printf tracing and debugging
+    Adding:
+        Better user menus on examples
+        Finer grained debug #defines (dbTraffic()) etc.
         BITS utilities and 'helpers'
         BTA support
-		Dynamic object creation
-		Common function calls
-		Breaking out datalink into module
-		Datalink, BACnet 'main' run in threads
+        Dynamic object creation
+        Common function calls
+        Breaking out datalink into module
+        Datalink, BACnet 'main' run in threads
 
-				------
-				Status: 2017.10.01 Runs vs2017 - server, x64 debug
+                ------
+                Status: 2017.10.01 Runs vs2017 - server, x64 debug
 
 ###MultipleDatalinks
-	Added dlcb, removed Tx buffers
+    Added dlcb, removed Tx buffers
     Note: This has a VERY NARROW use-case. A server device with a serial port and an Ethernet port, and the plugged in port 'goes live'
     All other dual-port applications have to be router applications..
     If the intent is to choose at STARTUP then Steve Karg's original dlenv-commandline approach could be adapted.
 
-		------
-		Status: 2017.09.30 Does not compile, just using as a "Hg merge" stepping-stone to "Full Routing"
+        ------
+        Status: 2017.09.30 Does not compile, just using as a "Hg merge" stepping-stone to "Full Routing"
+
+###ST (Discovery)
+    Discovery board implemented with multiple datalinks so RS485 or Ethernet can be utilized (either-or, NOT Routing!)
 
 Virtual Devices
-	-- obsolete - there cannot be a concept of virtual devices without full routing.... Virtual Devices
-	-- and the step between full routing (and one Application Entity) and full routing and one application entity and other virtual entities is so small we are not going to even bother. Roll it all up into "Full Routing" phase just before this one.
+    -- obsolete - there cannot be a concept of virtual devices without full routing.... Virtual Devices
+    -- and the step between full routing (and one Application Entity) and full routing and one application entity and other virtual entities is so small we are not going to even bother. Roll it all up into "Full Routing" phase just before this one.
 
-###Full Routing
+###Full Routing (this is deprecated for now - see Full Routing C++)
+    Perhaps we will backfill a pure "C" profile of full routing one day
+
+###Full Routing C++
     And _this_ is where the action happens. Virtual devices, multiple datalinks, routing.
-
+    Note, the projects server, readprom, readpropm, whois etc are NOT SUPPORTED in this phase! Only "bitsRouter" and bits/utils (etc) are...
 
 # Compiling and sanity test under Ubuntu
 

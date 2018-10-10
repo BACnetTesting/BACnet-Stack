@@ -22,7 +22,10 @@ BACNET_LIB_TARGET = $(BACNET_LIB_DIR)/lib$(BACNET_LIB_NAME).a
 # Compiler Setup
 INCLUDE1 = -I$(BACNET_PORT_DIR) -I$(BACNET_OBJECT) -I$(BACNET_HANDLER)
 INCLUDE2 = -I$(BACNET_INCLUDE)
-INCLUDES = $(INCLUDE1) $(INCLUDE2) -I../../bits -I../../bits/util
+INCLUDES = $(INCLUDE1) $(INCLUDE2) \
+	-I../../bits \
+	-I../../bits/util
+
 BACNET_LIB := -L$(BACNET_LIB_DIR),-l$(BACNET_LIB_NAME)
 
 # build for UCI
@@ -55,14 +58,14 @@ DEBUGGING = -g -DDEBUG_ENABLED=1
 endif
 
 # put all the flags together
-CFLAGS := -Wall -std=c++11 $(DEBUGGING) $(OPTIMIZATION) $(INCLUDES) $(DEFINES)
+CFLAGS := -Wall $(DEBUGGING) $(OPTIMIZATION) $(INCLUDES) $(DEFINES)
 LFLAGS := -Wl,$(BACNET_LIB),$(SYSTEM_LIB)
 
 .EXPORT_ALL_VARIABLES:
 
 #SUBDIRS = readprop writeprop readfile writefile reinit server dcc \
 #	whohas whois iam ucov scov timesync epics readpropm readrange \
-#	uptransfer getevent uevent abort error
+#	writepropm uptransfer getevent uevent abort error
 SUBDIRS = server
 
 ifeq (${BACDL_DEFINE},-DBACDL_BIP=1)
@@ -113,3 +116,5 @@ error:
 #router-ipv6:
 #	$(MAKE) -b -C router-ipv6
 
+writepropm:
+	$(MAKE) -b -C writepropm

@@ -21,12 +21,27 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
 #ifndef NC_H
 #define NC_H
 
 #include "event.h"
+#include "listmanip.h"
 
 #define NC_RESCAN_RECIPIENTS_SECS   60
 
@@ -41,7 +56,7 @@
     } NC_RECIPIENT_TYPE;
 
 
-#if defined(INTRINSIC_REPORTING)
+#if (INTRINSIC_REPORTING_B == 1)
 /* BACnetRecipient structure */
 /*
 
@@ -135,5 +150,14 @@ typedef struct Ack_Notification {
 
     void Notification_Class_find_recipient(
         void);
-#endif /* defined(INTRINSIC_REPORTING) */
+        
+#if ( BACNET_SVC_LIST_MANIPULATION_B == 1 )
+	bool Notification_Class_Add_List_Element(
+		BACNET_LIST_MANIPULATION_DATA * lmdata);
+
+	bool Notification_Class_Remove_List_Element(
+		BACNET_LIST_MANIPULATION_DATA * lmdata);
+#endif
+
+#endif /* (INTRINSIC_REPORTING_B == 1) */
 #endif /* NC_H */

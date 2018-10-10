@@ -29,22 +29,23 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-  */
 #include <stdint.h>
 #include "bacenum.h"
 #include "bacdcode.h"
@@ -81,15 +82,15 @@ int whois_encode_apdu(
 
 /* decode the service request only */
 int whois_decode_service_request(
-    uint8_t * apdu,
-    unsigned apdu_len,
+    const uint8_t * apdu,
+    const uint16_t apdu_len,
     int32_t * pLow_limit,
     int32_t * pHigh_limit)
 {
-    unsigned int len = 0;
-    uint8_t tag_number = 0;
-    uint32_t len_value = 0;
-    uint32_t decoded_value = 0;
+    int len = 0;
+    uint8_t tag_number ;
+    uint32_t len_value ;
+    uint32_t decoded_value ;
 
     /* optional limits - must be used as a pair */
     if (apdu_len) {
@@ -127,7 +128,8 @@ int whois_decode_service_request(
         } else {
             return BACNET_STATUS_ERROR;
         }
-    } else {
+    } 
+    else {
         if (pLow_limit) {
             *pLow_limit = -1;
         }
@@ -137,7 +139,7 @@ int whois_decode_service_request(
         len = 0;
     }
 
-    return (int)len;
+    return len;
 }
 
 #ifdef TEST
@@ -167,7 +169,7 @@ int whois_decode_apdu(
         }
         len =
             whois_decode_service_request(&apdu[2], apdu_len - 2, pLow_limit,
-            pHigh_limit);
+                                         pHigh_limit);
     }
 
     return len;
@@ -191,22 +193,22 @@ void testWhoIs(
 
     len =
         whois_decode_apdu(&apdu[0], apdu_len, &test_low_limit,
-        &test_high_limit);
+                          &test_high_limit);
     ct_test(pTest, len != BACNET_STATUS_ERROR);
     ct_test(pTest, test_low_limit == low_limit);
     ct_test(pTest, test_high_limit == high_limit);
 
     /* normal who-is with limits - complete range */
     for (low_limit = 0; low_limit <= BACNET_MAX_INSTANCE;
-        low_limit += (BACNET_MAX_INSTANCE / 4)) {
+         low_limit += (BACNET_MAX_INSTANCE / 4)) {
         for (high_limit = 0; high_limit <= BACNET_MAX_INSTANCE;
-            high_limit += (BACNET_MAX_INSTANCE / 4)) {
+             high_limit += (BACNET_MAX_INSTANCE / 4)) {
             len = whois_encode_apdu(&apdu[0], low_limit, high_limit);
             apdu_len = len;
             ct_test(pTest, len > 0);
             len =
                 whois_decode_apdu(&apdu[0], apdu_len, &test_low_limit,
-                &test_high_limit);
+                                  &test_high_limit);
             ct_test(pTest, len != BACNET_STATUS_ERROR);
             ct_test(pTest, test_low_limit == low_limit);
             ct_test(pTest, test_high_limit == high_limit);
@@ -226,7 +228,7 @@ void testWhoIs(
     apdu_len = len;
     len =
         whois_decode_apdu(&apdu[0], apdu_len, &test_low_limit,
-        &test_high_limit);
+                          &test_high_limit);
     ct_test(pTest, len != BACNET_STATUS_ERROR);
     ct_test(pTest, test_low_limit == low_limit);
     ct_test(pTest, test_high_limit == high_limit);

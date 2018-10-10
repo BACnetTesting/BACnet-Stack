@@ -28,33 +28,46 @@
 
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+#define MX_RS485_PORTS    3
 
-    void RS485_Initialize(
-        void);
+typedef struct {
+  uint8_t   hwPortId;
+} RS485_PORT_INFO ;
 
-    void RS485_Transmitter_Enable(
-        bool enable);
 
-    void RS485_Send_Data(
-        uint8_t * buffer,       /* data to send */
-        uint16_t nbytes);       /* number of bytes of data */
+void RS485_Initialize(
+                     volatile RS485_PORT_INFO  *portInfo,
+                     uint32_t baud);
 
-    bool RS485_ReceiveError(
-        void);
-    bool RS485_DataAvailable(
-        uint8_t * data);
+void RS485_Send_Frame(
+                      volatile RS485_PORT_INFO *portInfo,
+                      uint8_t * buffer,       /* data to send */
+                      uint16_t nbytes);       /* number of bytes of data */
 
-    void RS485_Turnaround_Delay(
-        void);
-    uint32_t RS485_Get_Baud_Rate(
-        void);
-    bool RS485_Set_Baud_Rate(
-        uint32_t baud);
+bool RS485_ReceiveError(
+                        volatile RS485_PORT_INFO  *portInfo);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+bool RS485_StillTransmitting(
+                        volatile RS485_PORT_INFO  *portInfo);
+
+// optimizing as much as possible, these functions are VERY busy
+unsigned int RS485_isDataAvailable(
+                         volatile RS485_PORT_INFO  *portInfo);
+
+bool RS485_getDataAvailable(
+                         volatile RS485_PORT_INFO  *portInfo,
+                         volatile uint8_t * data);
+
+#if 0
+void RS485_Turnaround_Delay(
+                            volatile RS485_PORT_INFO  *portInfo);
+#endif
+
+uint32_t RS485_Get_Baud_Rate(
+                             volatile RS485_PORT_INFO  *portInfo);
+
+bool RS485_Set_Baud_Rate(
+                         volatile RS485_PORT_INFO  *portInfo,
+                         uint32_t baud);
+
 #endif

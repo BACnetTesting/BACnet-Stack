@@ -20,29 +20,30 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
 *
-*********************************************************************/
-#include <stddef.h>
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
+//#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include "config.h"
 #include "txbuf.h"
 #include "bacdef.h"
-#include "bacdcode.h"
+// #include "bacdcode.h"
 #include "iam.h"
 #include "address.h"
 #include "handlers.h"
@@ -63,14 +64,15 @@ void handler_i_am_add(
 {
     int len = 0;
     uint32_t device_id = 0;
-    unsigned max_apdu = 0;
+    uint16_t max_apdu ;
     int segmentation = 0;
     uint16_t vendor_id = 0;
 
     (void) service_len;
     len =
         iam_decode_service_request(service_request, &device_id, &max_apdu,
-        &segmentation, &vendor_id);
+                                   &segmentation, &vendor_id);
+
 #if PRINT_ENABLED
     fprintf(stderr, "Received I-Am Request");
 #endif
@@ -98,23 +100,22 @@ void handler_i_am_add(
  * @param src [in] The BACNET_ADDRESS of the message's source.
  */
 void handler_i_am_bind(
-    uint8_t * service_request,
+    uint8_t *service_request,
     uint16_t service_len,
     BACNET_ADDRESS * src)
 {
     int len = 0;
     uint32_t device_id = 0;
-    unsigned max_apdu = 0;
+    uint16_t max_apdu ;
     int segmentation = 0;
     uint16_t vendor_id = 0;
 
     (void) service_len;
     len =
         iam_decode_service_request(service_request, &device_id, &max_apdu,
-        &segmentation, &vendor_id);
+                                   &segmentation, &vendor_id);
     if (len > 0) {
         /* only add address if requested to bind */
         address_add_binding(device_id, max_apdu, src);
     }
-
 }

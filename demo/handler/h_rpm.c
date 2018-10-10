@@ -21,35 +21,34 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-#include <stddef.h>
+//#include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-#include "config.h"
-#include "txbuf.h"
+//#include <stdio.h>
+//#include <string.h>
+//#include <errno.h>
+//#include "config.h"
 #include "memcopy.h"
-#include "bacdef.h"
-#include "bacdcode.h"
+//#include "bacdef.h"
+//#include "bacdcode.h"
 #include "apdu.h"
-#include "npdu.h"
+//#include "npdu.h"
 #include "abort.h"
 #include "reject.h"
 #include "bacerror.h"
@@ -57,7 +56,10 @@
 #include "handlers.h"
 /* device object has custom handler for all objects */
 #include "device.h"
-#include "proplist.h"
+// #include "proplist.h"
+#include "datalink.h"
+#include "txbuf.h"
+#include "bitsDebug.h"
 
 /** @file h_rpm.c  Handles Read Property Multiple requests. */
 
@@ -77,18 +79,22 @@ static BACNET_PROPERTY_ID RPM_Object_Property(
     if (special_property == PROP_ALL) {
         if (index < required) {
             property = pPropertyList->Required.pList[index];
-        } else if (index < (required + optional)) {
+        }
+        else if (index < (required + optional)) {
             index -= required;
             property = pPropertyList->Optional.pList[index];
-        } else if (index < (required + optional + proprietary)) {
+        }
+        else if (index < (required + optional + proprietary)) {
             index -= (required + optional);
             property = pPropertyList->Proprietary.pList[index];
         }
-    } else if (special_property == PROP_REQUIRED) {
+    }
+    else if (special_property == PROP_REQUIRED) {
         if (index < required) {
             property = pPropertyList->Required.pList[index];
         }
-    } else if (special_property == PROP_OPTIONAL) {
+    }
+    else if (special_property == PROP_OPTIONAL) {
         if (index < optional) {
             property = pPropertyList->Optional.pList[index];
         }
@@ -107,9 +113,11 @@ static unsigned RPM_Object_Property_Count(
         count =
             pPropertyList->Required.count + pPropertyList->Optional.count +
             pPropertyList->Proprietary.count;
-    } else if (special_property == PROP_REQUIRED) {
+    }
+    else if (special_property == PROP_REQUIRED) {
         count = pPropertyList->Required.count;
-    } else if (special_property == PROP_OPTIONAL) {
+    }
+    else if (special_property == PROP_OPTIONAL) {
         count = pPropertyList->Optional.count;
     }
 
@@ -124,21 +132,21 @@ static int RPM_Encode_Property(
     uint16_t max_apdu,
     BACNET_RPM_DATA * rpmdata)
 {
-    int len = 0;
-    size_t copy_len = 0;
-    int apdu_len = 0;
+    int len;
+    size_t copy_len ;
+    int apdu_len ;
     BACNET_READ_PROPERTY_DATA rpdata;
 
     len =
         rpm_ack_encode_apdu_object_property(&Temp_Buf[0],
-        rpmdata->object_property, rpmdata->array_index);
+            rpmdata->object_property, rpmdata->array_index);
     copy_len = memcopy(&apdu[0], &Temp_Buf[0], offset, len, max_apdu);
     if (copy_len == 0) {
         rpmdata->error_code = ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
         return BACNET_STATUS_ABORT;
     }
-    apdu_len += len;
-    len = 0;
+    apdu_len = len;
+
     rpdata.error_class = ERROR_CLASS_OBJECT;
     rpdata.error_code = ERROR_CODE_UNKNOWN_OBJECT;
     rpdata.object_type = rpmdata->object_type;
@@ -147,6 +155,7 @@ static int RPM_Encode_Property(
     rpdata.array_index = rpmdata->array_index;
     rpdata.application_data = &Temp_Buf[0];
     rpdata.application_data_len = sizeof(Temp_Buf);
+
     len = Device_Read_Property(&rpdata);
     if (len < 0) {
         if ((len == BACNET_STATUS_ABORT) || (len == BACNET_STATUS_REJECT)) {
@@ -157,7 +166,7 @@ static int RPM_Encode_Property(
         /* error was returned - encode that for the response */
         len =
             rpm_ack_encode_apdu_object_property_error(&Temp_Buf[0],
-            rpdata.error_class, rpdata.error_code);
+                rpdata.error_class, rpdata.error_code);
         copy_len =
             memcopy(&apdu[0], &Temp_Buf[0], offset + apdu_len, len, max_apdu);
 
@@ -165,12 +174,14 @@ static int RPM_Encode_Property(
             rpmdata->error_code = ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
             return BACNET_STATUS_ABORT;
         }
-    } else if ((offset + apdu_len + 1 + len + 1) < max_apdu) {
+    }
+    else if ((offset + apdu_len + 1 + len + 1) < max_apdu) {
         /* enough room to fit the property value and tags */
         len =
             rpm_ack_encode_apdu_object_property_value(&apdu[offset + apdu_len],
-            &Temp_Buf[0], len);
-    } else {
+                &Temp_Buf[0], len);
+    }
+    else {
         /* not enough room - abort! */
         rpmdata->error_code = ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
         return BACNET_STATUS_ABORT;
@@ -210,7 +221,7 @@ void handler_read_property_multiple(
     uint16_t decode_len = 0;
     int pdu_len = 0;
     BACNET_NPCI_DATA npci_data;
-    int bytes_sent;
+//    int bytes_sent;
     BACNET_ADDRESS my_address;
     BACNET_RPM_DATA rpmdata;
     int apdu_len = 0;
@@ -242,15 +253,15 @@ void handler_read_property_multiple(
         /* Start by looking for an object ID */
         len =
             rpm_decode_object_id(&service_request[decode_len],
-            service_len - decode_len, &rpmdata);
+                service_len - decode_len, &rpmdata);
+        // ekh 2015.03.13 I am sure the next line should be >, not >= !!  // todo2 (BTC), karg?
         if (len >= 0) {
             /* Got one so skip to next stage */
             decode_len += len;
-        } else {
+        }
+        else {
             /* bad encoding - skip to error/reject/abort handling */
-#if PRINT_ENABLED
-            fprintf(stderr, "RPM: Bad Encoding.\n");
-#endif
+            dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "RPM: Bad Encoding.\n");
             error = len;
             goto RPM_FAILURE;
         }
@@ -267,9 +278,7 @@ void handler_read_property_multiple(
             memcopy(&Handler_Transmit_Buffer[npdu_len], &Temp_Buf[0], apdu_len,
             len, MAX_APDU);
         if (copy_len == 0) {
-#if PRINT_ENABLED
-            fprintf(stderr, "RPM: Response too big!\r\n");
-#endif
+            dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "RPM: Response too big!\r\n");
             rpmdata.error_code = ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
             error = BACNET_STATUS_ABORT;
             goto RPM_FAILURE;
@@ -281,12 +290,10 @@ void handler_read_property_multiple(
             /* Fetch a property */
             len =
                 rpm_decode_object_property(&service_request[decode_len],
-                service_len - decode_len, &rpmdata);
+                    service_len - decode_len, &rpmdata);
             if (len < 0) {
                 /* bad encoding - skip to error/reject/abort handling */
-#if PRINT_ENABLED
-                fprintf(stderr, "RPM: Bad Encoding.\n");
-#endif
+                dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "RPM: Bad Encoding.\n");
                 error = len;
                 goto RPM_FAILURE;
             }
@@ -305,15 +312,13 @@ void handler_read_property_multiple(
                        Encode error for this object property response */
                     len =
                         rpm_ack_encode_apdu_object_property(&Temp_Buf[0],
-                        rpmdata.object_property, rpmdata.array_index);
+                            rpmdata.object_property, rpmdata.array_index);
                     copy_len =
                         memcopy(&Handler_Transmit_Buffer[npdu_len],
                         &Temp_Buf[0], apdu_len, len, MAX_APDU);
                     if (copy_len == 0) {
-#if PRINT_ENABLED
-                        fprintf(stderr,
+                        dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR,
                             "RPM: Too full to encode property!\r\n");
-#endif
                         rpmdata.error_code =
                             ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
                         error = BACNET_STATUS_ABORT;
@@ -322,28 +327,27 @@ void handler_read_property_multiple(
                     apdu_len += len;
                     len =
                         rpm_ack_encode_apdu_object_property_error(&Temp_Buf[0],
-                        ERROR_CLASS_PROPERTY,
-                        ERROR_CODE_PROPERTY_IS_NOT_AN_ARRAY);
+                            ERROR_CLASS_PROPERTY,
+                            ERROR_CODE_PROPERTY_IS_NOT_AN_ARRAY);
                     copy_len =
                         memcopy(&Handler_Transmit_Buffer[npdu_len],
                         &Temp_Buf[0], apdu_len, len, MAX_APDU);
                     if (copy_len == 0) {
-#if PRINT_ENABLED
-                        fprintf(stderr, "RPM: Too full to encode error!\r\n");
-#endif
+                        dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "RPM: Too full to encode error!\r\n");
                         rpmdata.error_code =
                             ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
                         error = BACNET_STATUS_ABORT;
                         goto RPM_FAILURE;
                     }
                     apdu_len += len;
-                } else {
+                }
+                else {
                     special_object_property = rpmdata.object_property;
                     Device_Objects_Property_List(rpmdata.object_type,
                         rpmdata.object_instance, &property_list);
                     property_count =
                         RPM_Object_Property_Count(&property_list,
-                        special_object_property);
+                            special_object_property);
                     if (property_count == 0) {
                         /* this only happens with the OPTIONAL property */
                         /* 135-2016bl-2. Clarify ReadPropertyMultiple
@@ -351,40 +355,40 @@ void handler_read_property_multiple(
                         /* If no optional properties are supported then
                            an empty 'List of Results' shall be returned
                            for the specified property.*/
-                    } else {
+                    } 
+                    else {
                         for (index = 0; index < property_count; index++) {
                             rpmdata.object_property =
                                 RPM_Object_Property(&property_list,
-                                special_object_property, index);
+                                    special_object_property, index);
                             len =
                                 RPM_Encode_Property(&Handler_Transmit_Buffer
                                 [npdu_len], (uint16_t) apdu_len, MAX_APDU,
                                 &rpmdata);
                             if (len > 0) {
                                 apdu_len += len;
-                            } else {
-#if PRINT_ENABLED
-                                fprintf(stderr,
+                            }
+                            else {
+                                dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR,
                                     "RPM: Too full for property!\r\n");
-#endif
                                 error = len;
                                 goto RPM_FAILURE;
                             }
                         }
                     }
                 }
-            } else {
+            }
+            else {
                 /* handle an individual property */
                 len =
                     RPM_Encode_Property(&Handler_Transmit_Buffer[npdu_len],
                     (uint16_t) apdu_len, MAX_APDU, &rpmdata);
                 if (len > 0) {
                     apdu_len += len;
-                } else {
-#if PRINT_ENABLED
-                    fprintf(stderr,
+                }
+                else {
+                    dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR,
                         "RPM: Too full for individual property!\r\n");
-#endif
                     error = len;
                     goto RPM_FAILURE;
                 }
@@ -397,14 +401,13 @@ void handler_read_property_multiple(
                     memcopy(&Handler_Transmit_Buffer[npdu_len], &Temp_Buf[0],
                     apdu_len, len, MAX_APDU);
                 if (copy_len == 0) {
-#if PRINT_ENABLED
-                    fprintf(stderr, "RPM: Too full to encode object end!\r\n");
-#endif
+                    dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "RPM: Too full to encode object end!\r\n");
                     rpmdata.error_code =
                         ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
                     error = BACNET_STATUS_ABORT;
                     goto RPM_FAILURE;
-                } else {
+                }
+                else {
                     apdu_len += copy_len;
                 }
                 break;  /* finished with this property list */
@@ -420,48 +423,36 @@ void handler_read_property_multiple(
         /* too big for the sender - send an abort */
         rpmdata.error_code = ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
         error = BACNET_STATUS_ABORT;
-#if PRINT_ENABLED
-        fprintf(stderr, "RPM: Message too large.  Sending Abort!\n");
-#endif
+        dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "RPM: Message too large.  Sending Abort!\n");
         goto RPM_FAILURE;
     }
 
-  RPM_FAILURE:
+RPM_FAILURE:
     if (error) {
         if (error == BACNET_STATUS_ABORT) {
             apdu_len =
                 abort_encode_apdu(&Handler_Transmit_Buffer[npdu_len],
                 service_data->invoke_id,
                 abort_convert_error_code(rpmdata.error_code), true);
-#if PRINT_ENABLED
-            fprintf(stderr, "RPM: Sending Abort!\n");
-#endif
-        } else if (error == BACNET_STATUS_ERROR) {
+            dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "RPM: Sending Abort!\n");
+        }
+        else if (error == BACNET_STATUS_ERROR) {
             apdu_len =
                 bacerror_encode_apdu(&Handler_Transmit_Buffer[npdu_len],
                 service_data->invoke_id, SERVICE_CONFIRMED_READ_PROP_MULTIPLE,
                 rpmdata.error_class, rpmdata.error_code);
-#if PRINT_ENABLED
-            fprintf(stderr, "RPM: Sending Error!\n");
-#endif
-        } else if (error == BACNET_STATUS_REJECT) {
+            dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "RPM: Sending Error!\n");
+        }
+        else if (error == BACNET_STATUS_REJECT) {
             apdu_len =
                 reject_encode_apdu(&Handler_Transmit_Buffer[npdu_len],
                 service_data->invoke_id,
                 reject_convert_error_code(rpmdata.error_code));
-#if PRINT_ENABLED
-            fprintf(stderr, "RPM: Sending Reject!\n");
-#endif
+            dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "RPM: Sending Reject!\n");
         }
     }
 
     pdu_len = apdu_len + npdu_len;
-    bytes_sent =
-        datalink_send_pdu(src, &npci_data, &Handler_Transmit_Buffer[0],
+    datalink_send_pdu(src, &npci_data, &Handler_Transmit_Buffer[0],
         pdu_len);
-    if (bytes_sent <= 0) {
-#if PRINT_ENABLED
-        fprintf(stderr, "RPM: Failed to send PDU (%s)!\n", strerror(errno));
-#endif
-    }
 }

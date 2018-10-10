@@ -29,22 +29,23 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-  */
 #include <stdint.h>
 #include "bacenum.h"
 #include "bacerror.h"
@@ -56,7 +57,7 @@
 
 /** @file rpm.c  Encode/Decode Read Property Multiple and RPM ACKs  */
 
-#if BACNET_SVC_RPM_A
+#if ( BACNET_SVC_RPM_A == 1 )
 /* encode the initial portion of the service */
 int rpm_encode_apdu_init(
     uint8_t * apdu,
@@ -458,8 +459,7 @@ int rpm_ack_decode_object_id(
         if (!decode_is_context_tag(&apdu[len++], 0))
             return -1;
         len += decode_object_id(&apdu[len], &type, object_instance);
-        if (object_type)
-            *object_type = (BACNET_OBJECT_TYPE) type;
+        *object_type = (BACNET_OBJECT_TYPE) type;
         /* Tag 1: listOfResults */
         if (!decode_is_opening_tag_number(&apdu[len], 1))
             return -1;
@@ -508,8 +508,7 @@ int rpm_ack_decode_object_property(
         if (tag_number != 2)
             return -1;
         len += decode_enumerated(&apdu[len], len_value_type, &property);
-        if (object_property)
-            *object_property = (BACNET_PROPERTY_ID) property;
+        *object_property = (BACNET_PROPERTY_ID) property;
         /* Tag 3: Optional propertyArrayIndex */
         if ((len < apdu_len) && IS_CONTEXT_SPECIFIC(apdu[len]) &&
             (!IS_CLOSING_TAG(apdu[len]))) {

@@ -21,29 +21,37 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
+*****************************************************************************************
+*
 *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
 *
 *   July 1, 2017    BITS    Modifications to this file have been made in compliance
-*                           to original licensing.
+*                           with original licensing.
 *
 *   This file contains changes made by BACnet Interoperability Testing
 *   Services, Inc. These changes are subject to the permissions,
 *   warranty terms and limitations above.
-*       For more information: info@bac-test.com
-*       For access to source code:  info@bac-test.com
-*               or      www.github.com/bacnettesting/bacnet-stack
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
 *
-*********************************************************************/
+****************************************************************************************/
+
 
 /* command line tool that sends a BACnet service, and displays the reply */
-#include <stddef.h>
-#include <stdint.h>
+//#include <stddef.h>
+//#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <time.h>       /* for time */
 #include <errno.h>
 #include "bactext.h"
+
+#if defined(BACDL_BIP) && BBMD_ENABLED
+#include "bbmd.h"
+#endif
+
 #include "iam.h"
 #include "address.h"
 #include "config.h"
@@ -64,6 +72,7 @@
 #endif
 #include "dlenv.h"
 #include "net.h"
+
 
 /* buffer used for receive */
 static uint8_t Rx_Buf[MAX_MPDU] = { 0 };
@@ -156,12 +165,12 @@ void my_i_am_handler(
     uint16_t service_len,
     BACNET_ADDRESS * src)
 {
-    int len = 0;
-    uint32_t device_id = 0;
-    unsigned max_apdu = 0;
-    int segmentation = 0;
-    uint16_t vendor_id = 0;
-    unsigned i = 0;
+    int len ;
+    uint32_t device_id ;
+    uint16_t max_apdu ;
+    int segmentation ;
+    uint16_t vendor_id ;
+    int i ;
 
     (void) service_len;
     len =

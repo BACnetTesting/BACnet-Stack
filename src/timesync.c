@@ -29,22 +29,23 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
-  */
 #include <stdint.h>
 #include "bacenum.h"
 #include "bacdcode.h"
@@ -255,7 +256,7 @@ int timesync_decode_timesync_recipients(
     int tag_len = 0;
     uint8_t tag_number = 0;
     uint32_t len_value_type = 0;
-    uint32_t unsigned_value = 0;
+    uint32_t unsigned_value ;
     BACNET_OCTET_STRING octet_string;
     BACNET_RECIPIENT_LIST *pRecipient;
 
@@ -301,11 +302,11 @@ int timesync_decode_timesync_recipients(
             if (octetstring_length(&octet_string) == 0) {
                 /* -- A string of length 0 indicates a broadcast */
             } else if (pRecipient->type.address.net) {
-                pRecipient->type.address.len =
+                pRecipient->type.address.len = (uint8_t)
                     octetstring_copy_value(&pRecipient->type.address.adr[0],
                     sizeof(pRecipient->type.address.adr), &octet_string);
             } else {
-                pRecipient->type.address.mac_len =
+                pRecipient->type.address.mac_len = (uint8_t)
                     octetstring_copy_value(&pRecipient->type.address.mac[0],
                     sizeof(pRecipient->type.address.mac), &octet_string);
             }

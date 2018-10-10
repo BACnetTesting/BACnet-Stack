@@ -40,6 +40,21 @@
     <Filter Include="Source Files\bits\logging">
       <UniqueIdentifier>{2d1b12d8-9390-4f1b-aa97-7de64db180d2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\bits\config">
+      <UniqueIdentifier>{5deaebf7-64a5-4976-8a9f-422b0d1464d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\bits\config\xml">
+      <UniqueIdentifier>{7e4389b1-2e68-4ca7-a140-70a6c452cd8d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\bits\config\csv">
+      <UniqueIdentifier>{b5f89d50-912f-424b-9e2d-d841b0e1a340}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\bits\osLayer">
+      <UniqueIdentifier>{f38ead0b-48a8-43fd-a511-546db705f24d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\bits\osLayer\win">
+      <UniqueIdentifier>{c99e873b-2eba-4bbb-b8a6-296d3d54ec8c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\demo\handler\h_cov.c">
@@ -519,9 +534,6 @@
     <ClCompile Include="..\..\demo\handler\h_bbmd6.c">
       <Filter>Source Files\demo\hander</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\demo\handler\h_routed_npdu.c">
-      <Filter>Source Files\demo\hander</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\bits\util\bitsDebug.c">
       <Filter>Source Files\bits\util</Filter>
     </ClCompile>
@@ -542,6 +554,33 @@
     </ClCompile>
     <ClCompile Include="..\..\bits\util\misc.c">
       <Filter>Source Files\bits\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\bits\util\BACnetObject.c">
+      <Filter>Source Files\bits\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\bits\util\llist.c">
+      <Filter>Source Files\bits\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\bits\util\menuDiags.c">
+      <Filter>Source Files\bits\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\bits\config\csv\readConfigCSVbbmd.c">
+      <Filter>Source Files\bits\config\csv</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\bits\util\BACnetToString.c">
+      <Filter>Source Files\bits\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\bits\util\commandLine.c">
+      <Filter>Source Files\bits\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\calendar.c">
+      <Filter>Source Files\demo\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\bits\osLayer\win\osLayer.c">
+      <Filter>Source Files\bits\osLayer\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\demo\object\netport.c">
+      <Filter>Source Files\demo\object</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -860,5 +899,20 @@
     <ClInclude Include="..\..\bits\util\llist.h">
       <Filter>Source Files\bits\util</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\ports\win32\net.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ports\win32\rs485.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ports\win32\timer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bits\osLayer\win\osLayer.h">
+      <Filter>Source Files\bits\osLayer\win</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\README.md" />
   </ItemGroup>
 </Project>

@@ -1,60 +1,59 @@
 /**************************************************************************
-*
-* Copyright (C) 2016 BACnet Interoperability Testing Services, Inc.
-* 
-*       <info@bac-test.com>
-*
-* Permission is hereby granted, to whom a copy of this software and
-* associated documentation files (the "Software") is provided by BACnet
-* Interoperability Testing Services, Inc., to deal in the Software
-* without restriction, including without limitation the rights to use,
-* copy, modify, merge, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included
-* in all copies or substantial portions of the Software.
-*
-* The software is provided on a non-exclusive basis.
-*
-* The permission is provided in perpetuity.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*
+
+Copyright (C) 2018 BACnet Interoperability Testing Services, Inc.
+
+This program is free software : you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with this program.If not, see <http://www.gnu.org/licenses/>.
+
+    For more information : info@bac-test.com
+        For access to source code :
+                info@bac-test.com
+                    or
+                www.github.com/bacnettesting/bacnet-stack
+
 *********************************************************************/
 
 #if defined ( _MSC_VER  )
-#include <windows.h>
+// #include <windows.h>
 #include <memory.h>
 #include <assert.h>
 #endif
 
 #include "llist.h"
-#include "bacTarget.h"
+#include "osLayer.h"
+#include "bitsDebug.h"
 
 static SemaDefine(llistMutex);
 
-void ll_Init(LLIST_HDR *llhdr, uint8_t max)
-    {
+void ll_Init(LLIST_HDR *llhdr, const uint max)
+{
     SemaInit(llistMutex);
     memset(llhdr, 0, sizeof(LLIST_HDR));
     llhdr->max = max;
-    }
+}
 
 
-int ll_GetCount(LLIST_HDR *llhdr)
-    {
-    // OK not to use semaphore here dur to 8-bit, but be careful not to change!
-    return llhdr->count;
-    }
+uint ll_GetCount(LLIST_HDR *llhdr)
+{
+    SemaWait(llistMutex);
+    uint r = llhdr->count;
+    SemaFree(llistMutex);
+    return r;
+}
 
 
 bool ll_Enqueue(LLIST_HDR *llhdr, void *newitem)
-    {
+{
     SemaWait(llistMutex);
 
     if (llhdr->count >= llhdr->max) {
@@ -78,11 +77,11 @@ bool ll_Enqueue(LLIST_HDR *llhdr, void *newitem)
     llhdr->count++;
     SemaFree(llistMutex);
     return true;
-    }
+}
 
 
 void* ll_Dequeue(LLIST_HDR *llhdr)
-    {
+{
     SemaWait(llistMutex);
     LLIST_LB *firstblk = llhdr->first;
 
@@ -105,14 +104,15 @@ void* ll_Dequeue(LLIST_HDR *llhdr)
     llhdr->count--;
     SemaFree(llistMutex);
     return firstblk;
-    }
+}
 
 
 // note, this is not a generic remove, it depends on the header prior pointer. Intended for use by ll_pluck.
 // also, there are not mutexes aound the operations.. because ll_pluck already sets those.
 
 static void ll_Remove(LLIST_HDR *llhdr, LLIST_LB *toRemove)
-    {
+{
+    SemaWait(llistMutex);
     if (llhdr->prior == NULL) {
         // we know we are removing the first block.
         llhdr->first = toRemove->next;
@@ -122,24 +122,26 @@ static void ll_Remove(LLIST_HDR *llhdr, LLIST_LB *toRemove)
         llhdr->prior->next = toRemove->next;
     }
     llhdr->count--;
-    }
+    SemaFree(llistMutex);
+}
 
 
-void* ll_Pluck(LLIST_HDR *llhdr, void *matchitem, bool(match)(void *listitem, void *matchitem)){
+void* ll_Pluck(LLIST_HDR *llhdr, void *matchitem, bool(match)(void *listitem, void *matchitem))
+{
     SemaWait(llistMutex);
 
     llhdr->prior = NULL;
 
-    if (llhdr->count == 0){
+    if (llhdr->count == 0) {
         // dont throw a panic, this will happen often while watching a queue for an item to arrive
         SemaFree(llistMutex);
         return NULL;
     }
 
     LLIST_LB *examineblk = llhdr->first;
-    do{
+    do {
         // does this item match?
-        if (match(examineblk, matchitem)){
+        if (match(examineblk, matchitem)) {
             // we have one, remove from list and return
             ll_Remove(llhdr, examineblk);
             SemaFree(llistMutex);
@@ -154,6 +156,33 @@ void* ll_Pluck(LLIST_HDR *llhdr, void *matchitem, bool(match)(void *listitem, vo
     return examineblk;
 }
 
+
+void* ll_GetPtr(LLIST_HDR *llhdr, const uint index)
+{
+    SemaWait(llistMutex);
+
+    if (llhdr->count == 0 || index >= llhdr->count ) {
+        SemaFree(llistMutex);
+        panic();
+        return NULL;
+    }
+
+    uint count = 0;
+    LLIST_LB *examineblk = llhdr->first;
+    do {
+        if ( count == index ) {
+            SemaFree(llistMutex);
+            return examineblk;
+        }
+        examineblk = examineblk->next;
+        count++;
+    } while ( count < llhdr->count );
+    
+    panic();
+    SemaFree(llistMutex);
+    return NULL ;
+}
+
 #if 0
 typedef struct
 {
@@ -162,25 +191,28 @@ typedef struct
 }
 teststruct;
 
-void *makets( int count ){
-    teststruct *ts = (teststruct *) malloc(sizeof(teststruct));
+void *makets(int count)
+{
+    teststruct *ts = (teststruct *)malloc(sizeof(teststruct));
     ts->data = count;
     return ts;
 }
 
-bool compareFunc(void *llitem, void *compareitem){
+bool compareFunc(void *llitem, void *compareitem)
+{
     teststruct *tsa = (teststruct *)llitem;
     teststruct *tsb = (teststruct *)compareitem;
 
     return (tsa->data == tsb->data);
 }
 
-void TestLL(void){
+void TestLL(void)
+{
     bool rc;
     teststruct *ts;
 
 
-    LLIST_HDR *hdr = (LLIST_HDR *) malloc(sizeof(LLIST_HDR));
+    LLIST_HDR *hdr = (LLIST_HDR *)malloc(sizeof(LLIST_HDR));
 
     ll_Init(hdr, 3);
 
@@ -196,17 +228,17 @@ void TestLL(void){
 
     assert(hdr->count == 3);
 
-    ts = (teststruct *) ll_Dequeue(hdr);
+    ts = (teststruct *)ll_Dequeue(hdr);
     assert(ts->data == 1);
     assert(hdr->count == 2);
-    ts = (teststruct *) ll_Dequeue(hdr);
+    ts = (teststruct *)ll_Dequeue(hdr);
     assert(ts->data == 2);
     assert(hdr->count == 1);
-    ts = (teststruct *) ll_Dequeue(hdr);
+    ts = (teststruct *)ll_Dequeue(hdr);
     assert(ts->data == 3);
     assert(hdr->count == 0);
-    ts = (teststruct *) ll_Dequeue(hdr);
-    assert(ts == NULL );
+    ts = (teststruct *)ll_Dequeue(hdr);
+    assert(ts == NULL);
     assert(hdr->count == 0);
 
 
@@ -222,8 +254,8 @@ void TestLL(void){
 
     assert(hdr->count == 3);
 
-    teststruct *test = (teststruct *) makets(2);
-    ts = (teststruct *)ll_Pluck(hdr, test, compareFunc );
+    teststruct *test = (teststruct *)makets(2);
+    ts = (teststruct *)ll_Pluck(hdr, test, compareFunc);
 
     assert(ts->data == 2);
     assert(hdr->count == 2);

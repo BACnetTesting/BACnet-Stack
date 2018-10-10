@@ -76,7 +76,7 @@
         bool oos_flag);
 
     /* note: header of Intrinsic_Reporting function is required
-       even when INTRINSIC_REPORTING is not defined */
+       even when INTRINSIC_REPORTING_B is not defined */
     void PositiveInteger_Value_Intrinsic_Reporting(uint32_t object_instance);
 
     void PositiveInteger_Value_Init(void);

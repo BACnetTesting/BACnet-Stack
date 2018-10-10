@@ -3,7 +3,7 @@
 *  Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
 *
 *   July 1, 2017    BITS    Modifications to this file have been made in compliance
-*                           to original licensing.
+*                           with original licensing.
 *
 *   This file contains changes made by BACnet Interoperability Testing
 *   Services, Inc. These changes are subject to the permissions,
@@ -41,8 +41,8 @@
 #include "msgqueue.h"
 #include "datalink.h"
 
-bool InitRouterport(PF_TYPE type,  uint16_t networkNumber, uint16_t nwoPort ) ;
-bool InitRouterportWithNAT(PF_TYPE type, uint16_t networkNumber, uint16_t nwoPort, SOCKADDR_IN *globalIPEP );
+bool InitRouterport(BPT_TYPE type,  uint16_t networkNumber, uint16_t nwoPort ) ;
+bool InitRouterportWithNAT(BPT_TYPE type, uint16_t networkNumber, uint16_t nwoPort, SOCKADDR_IN *globalIPEP );
 bool InitRouterportForeignDevice(uint16_t networkNumber, SOCKADDR_IN *fdIPEP, uint16_t ttl );
 
 bool AlignApplicationWithPort(uint16_t networkNumberOfRouterPort);

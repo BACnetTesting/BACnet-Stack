@@ -21,23 +21,34 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
+*****************************************************************************************
+*
 *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
 *
 *   July 1, 2017    BITS    Modifications to this file have been made in compliance
-*                           to original licensing.
+*                           with original licensing.
 *
 *   This file contains changes made by BACnet Interoperability Testing
 *   Services, Inc. These changes are subject to the permissions,
 *   warranty terms and limitations above.
-*       For more information: info@bac-test.com
-*       For access to source code:  info@bac-test.com
-*               or      www.github.com/bacnettesting/bacnet-stack
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
 *
-*********************************************************************/
+****************************************************************************************/
 
-
+#ifdef _MSC_VER
+//#include <conio.h>
+#include <direct.h>         // for cwd
+#endif
 
 #include "config.h"
+
+#if defined(BBMD_ENABLED) && (BBMD_ENABLED == 1)
+#include "bbmd.h"
+// todo2 #include "readConfigCSVbbmd.h"
+#endif
+
 //#include "server.h"
 #include "address.h"
 //#include "bacdef.h"
@@ -49,8 +60,9 @@
 //#include "apdu.h"
 #include "iam.h"
 #include "tsm.h"
+
+
 #include "device.h"
-//#include "bacfile.h"
 #include "datalink.h"
 // #include "dcc.h"
 #include "filename.h"
@@ -62,16 +74,22 @@
 ///* include the device object */
 //#include "device.h"
 //#include "trendlog.h"
-//#if defined(INTRINSIC_REPORTING)
+//#if (INTRINSIC_REPORTING_B == 1)
 //#include "nc.h"
-//#endif /* defined(INTRINSIC_REPORTING) */
+//#endif /* (INTRINSIC_REPORTING_B == 1) */
 //#if defined(BACFILE)
 //#include "bacfile.h"
 //#endif /* defined(BACFILE) */
+
 #include "ai.h"
+#include "ao.h"
 #include "av.h"
 #include "bv.h"
+#include "calendar.h"
+#include "schedule.h"
+
 #include "dcc.h"
+#include "btaDebug.h"
 #include "bitsUtil.h"
 
 
@@ -83,8 +101,10 @@ static void Init_Service_Handlers(
 {
     Device_Init(NULL);
     /* we need to handle who-is to support dynamic device binding */
-    apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_WHO_IS, handler_who_is);
-    apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_WHO_HAS, handler_who_has);
+    apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_WHO_IS,
+        handler_who_is_unicast);
+    apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_WHO_HAS, 
+        handler_who_has);
 
 #if 0
     /* 	BACnet Testing Observed Incident oi00107
@@ -100,8 +120,8 @@ static void Init_Service_Handlers(
     apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_I_AM, handler_i_am_bind);
 #endif
 
-    /* set the handler for all the services we don't implement */
-    /* It is required to send the proper reject message... */
+    /* set the handler for all the services we don't implement
+       It is required to send the proper reject message... */
     apdu_set_unrecognized_service_handler_handler(
         handler_unrecognized_service);
 
@@ -113,37 +133,40 @@ static void Init_Service_Handlers(
         handler_read_property_multiple);
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_WRITE_PROPERTY,
         handler_write_property);
-#if defined (BAC_WPM)
+
+#if defined (BACNET_SVC_WPM_B)
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE,
         handler_write_property_multiple);
 #endif
-#if ( BACNET_SVC_RR_B)
+
+#if ( BACNET_SVC_RR_B == 1 )
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_READ_RANGE,
         handler_read_range);
 #endif
 
-#if (BACFILE)
+#if (BACFILE == 1)
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_ATOMIC_READ_FILE,
         handler_atomic_read_file);
+
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_ATOMIC_WRITE_FILE,
         handler_atomic_write_file);
 #endif
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_REINITIALIZE_DEVICE,
         handler_reinitialize_device);
 
-#if ( BACTIME )
+#if ( BACNET_SVC_TIME == 1 )
     apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_UTC_TIME_SYNCHRONIZATION,
         handler_timesync_utc);
     apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_TIME_SYNCHRONIZATION,
         handler_timesync);
 #endif
 
-#if ( BACNET_SVC_COV_B == 1 ) // Feedback karg
+#if ( BACNET_SVC_COV_B == 1 )
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_SUBSCRIBE_COV,
         handler_cov_subscribe);
 #endif
 
-#if ( BACNET_SVC_COV_A == 1 ) // Feedback karg
+#if ( BACNET_SVC_COV_A == 1 )
     apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_COV_NOTIFICATION,
         handler_ucov_notification);
 #endif
@@ -157,22 +180,26 @@ static void Init_Service_Handlers(
         handler_unconfirmed_private_transfer);
 #endif
 
-#if (INTRINSIC_REPORTING==1)
+#if (INTRINSIC_REPORTING_B==1)
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_ACKNOWLEDGE_ALARM,
         handler_alarm_ack);
 
-    apdu_set_confirmed_handler(SERVICE_CONFIRMED_GET_EVENT_INFORMATION,
-        handler_get_event_information);
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_GET_ALARM_SUMMARY,
         handler_get_alarm_summary);
-#endif // defined(INTRINSIC_REPORTING)
+#endif // (INTRINSIC_REPORTING_B == 1)
 
-#if defined(BACNET_TIME_MASTER)
+#if ( BACNET_USE_EVENT_HANDLING == 1 )
+    apdu_set_confirmed_handler(SERVICE_CONFIRMED_GET_EVENT_INFORMATION,
+        handler_get_event_information);
+#endif
+
+#if (BACNET_TIME_MASTER == 1)
     handler_timesync_init();
 #endif
     // apdu_set_confirmed_handler(SERVICE_CONFIRMED_ADD_LIST_ELEMENT, handler_add_list_element);
     // apdu_set_confirmed_handler(SERVICE_CONFIRMED_REMOVE_LIST_ELEMENT, handler_remove_list_element);
 }
+
 
 static void print_usage(const char *filename)
 {
@@ -220,13 +247,30 @@ int main(
     //uint32_t elapsed_milliseconds;
     //uint32_t address_binding_tmr = 0;
     //uint32_t recipient_scan_tmr;
-//#if defined(BACNET_TIME_MASTER)
+//#if (BACNET_TIME_MASTER == 1)
     //BACNET_DATE_TIME bdatetime;
 //#endif
+#ifdef _MSC_VER
+    char cwd[MAX_PATH];
+    _getcwd(cwd, MAX_PATH);
+#else 
+    char *cwd = getcwd(NULL, 0);
+#endif
+
+    printf("Running [%s] 1\n", argv[0]);
+    printf("In dir  [%s]\n", cwd);
+
+#ifndef _MSC_VER
+    free(cwd);
+#endif
+
 
     int argi;
+    const char *filename;
 
-    const char *filename = filename_remove_path(argv[0]);
+    SendBTAstartMessage("BBRS Feature Creep - Server Demo Starting");
+
+    filename = filename_remove_path(argv[0]);
     for (argi = 1; argi < argc; argi++) {
         if (strcmp(argv[argi], "--help") == 0) {
             print_usage(filename);
@@ -242,6 +286,10 @@ int main(
             return 0;
         }
     }
+
+#if defined(BBMD_ENABLED) && (BBMD_ENABLED == 1)
+    // todo2 ParseBBMDfile("..\\BBMDsettings.txt");
+#endif
 
     /* allow the device ID to be set */
     if (argc > 1) {
@@ -266,24 +314,41 @@ int main(
 
     Init_Service_Handlers();
 
-    bits::InitBACnet();
+    InitBACnet();
 
-
+#if ( BACNET_USE_OBJECT_ANALOG_INPUT == 1)
     // Create some Objects, dynamically
-    Analog_Input_Create(1, "Ana Input 1", UNITS_DEGREES_CELSIUS, 0.0 );
-    Analog_Input_Create(2, "Ana Input 1", UNITS_DEGREES_CELSIUS, 0.0 );
+    Analog_Input_Create(1, "Ana Input 1"); // , UNITS_DEGREES_CELSIUS, 0.0 );
+    Analog_Input_Create(2, "Ana Input 2"); // , UNITS_DEGREES_CELSIUS, 0.0 );
+#endif
+
+    // todo1 etc
+    Analog_Output_Create(1, "Ana Output 1"); // , UNITS_DEGREES_CELSIUS, 0.0 );
 
     Analog_Value_Create(1, "Ana Value 1", UNITS_PERCENT_RELATIVE_HUMIDITY );
 
     Binary_Value_Create(1, "Bin Value 1");
 
+    Calendar_Create(1, "Calendar 1");
+    Calendar_Create(2, "Calendar 2");
+    Calendar_Create(3, "Calendar 3");
+
+    Schedule_Create(1, "Schedule 1");
+    Schedule_Create(2, "Schedule 2");
+    Schedule_Create(3, "Schedule 3");
+
     /* broadcast an I-Am on startup */
     Send_I_Am(&Handler_Transmit_Buffer[0]);
+
+
     /* loop forever */
-    for (;;) {
-    	msSleep ( 100  ) ;
+    bool busy = true;
+    while (busy) {
+
+        busy &= doUserMenu();
 
     	// do application stuff
+        busy &= TickBACnet();
 
 //        /* input */
 //        current_seconds = time(NULL);
@@ -304,6 +369,7 @@ int main(
 //            bvlc_maintenance_timer(elapsed_seconds);
 //#endif
 //            dlenv_maintenance_timer(elapsed_seconds);
+
 //#if 0 // todo3
 //            Load_Control_State_Machine_Handler();
 //#endif
@@ -311,31 +377,36 @@ int main(
 //#if ( BACNET_SVC_COV_B == 1 )
 //            handler_cov_timer_seconds(elapsed_seconds);
 //#endif
+
+#if ( BACNET_CLIENT == 1 ) || ( BACNET_SVC_COV_B == 1 )
 //            tsm_timer_milliseconds(elapsed_milliseconds);
+#endif
 //
 //#if 0 // todo3
 //            trend_log_timer(elapsed_seconds);
 //#endif
 //
-//#if (INTRINSIC_REPORTING == 1)
+//#if (INTRINSIC_REPORTING_B == 1)
 //            Device_local_reporting();
 //#endif
 //
-//#if defined(BACNET_TIME_MASTER)
+//#if (BACNET_TIME_MASTER == 1)
 //            Device_getCurrentDateTime(&bdatetime);
 //            handler_timesync_task(&bdatetime);
 //#endif
 //        }
+
 //#if ( BACNET_SVC_COV_B == 1 )
 //        handler_cov_task();
 //#endif
+
 //        /* scan cache address */
 //        address_binding_tmr += elapsed_seconds;
 //        if (address_binding_tmr >= 60) {
 //            address_cache_timer(address_binding_tmr);
 //            address_binding_tmr = 0;
 //        }
-//#if (INTRINSIC_REPORTING == 1 )
+//#if (INTRINSIC_REPORTING_B == 1 )
 //        /* try to find addresses of recipients */
 //        recipient_scan_tmr += elapsed_seconds;
 //        if (recipient_scan_tmr >= NC_RESCAN_RECIPIENTS_SECS) {
@@ -343,10 +414,16 @@ int main(
 //            recipient_scan_tmr = 0;
 //        }
 //#endif
-//        /* output */
-//
-//        /* blink LEDs, Turn on or off outputs, etc */
+        /* output */
+
+        /* blink LEDs, Turn on or off outputs, etc */
+        
+        msSleep(10);
     }
+
+#if defined ( _MSC_VER  )
+#pragma warning( disable : 4702)    // unreachable code
+#endif
 
     return 0;
 }

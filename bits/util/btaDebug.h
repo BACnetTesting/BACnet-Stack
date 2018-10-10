@@ -1,25 +1,29 @@
-/**************************************************************************
-
-Copyright (C) 2018 BACnet Interoperability Testing Services, Inc.
-
-This program is free software : you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
-GNU Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public License
-along with this program.If not, see <http://www.gnu.org/licenses/>.
-
-For more information : info@bac-test.com
-For access to source code : info@bac-test.com
-or www.github.com/bacnettesting/bacnet-stack
-
-*********************************************************************/
+/****************************************************************************************
+*
+* Copyright (C) 2016 BACnet Interoperability Testing Services, Inc.
+*
+*   This program is free software : you can redistribute it and/or modify
+*   it under the terms of the GNU Lesser General Public License as published by
+*   the Free Software Foundation, either version 3 of the License, or
+*   (at your option) any later version.
+*
+*   This program is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+*   GNU Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public License
+*   along with this program.If not, see <http://www.gnu.org/licenses/>.
+*
+*   For more information : info@bac-test.com
+*
+*   For access to source code :
+*
+*       info@bac-test.com
+*           or
+*       www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
 #pragma once
 
@@ -39,26 +43,17 @@ or www.github.com/bacnettesting/bacnet-stack
 #define MX_BTA_BUFFER   1200     // good enough for MSTP
 #define BX_DATAOFFSET   22
 
-// declared down below
-//void SendBTApanic(const char *message, ... );
-//void SendBTAmessage(const char *message);
-//void SendBTAstartMessage(const char *message);
-//void SendBTApacketRx(int port_id, BACNET_MAC_ADDRESS *srcPhyMac, BACNET_MAC_ADDRESS *destPhyMac, uint8_t *pdu, int len);
-//void SendBTApacketTx(int port_id, BACNET_MAC_ADDRESS *srcPhyMac, BACNET_MAC_ADDRESS *destPhyMac, const uint8_t *pdu, int len);
-//void SendBTApayload(uint8_t *payload, int sendlength) ;
-//void SendBTAprintf( const char *fmt, ...);
-//void SendBTAvprintf(const char *fmt, va_list ap );
-
 typedef enum {
-    BTApt_BACstd = 0x20,
+
+    BTApt_BACstd = 0x20,            // Changing to hex for helping when viewing Wireshark captures
     BTApt_TextMsg,
     BTApt_StartMsg = 0x26,
-    BTApt_PanicMsg = 0x27,            // also 39
-    BTApt_MSTPcritStat = 40,       // 40
-    BTApt_MSTPframe,               // 41
+    BTApt_PanicMsg = 0x27,          // 39    0x27
+    BTApt_MSTPcritStat = 40,        // 40    0x28
+    BTApt_MSTPframe,                // 41
     BTApt_MSTPtransition,
     BTApt_MSTPstateMachines,
-    BTApt_MemoryAllocStat,         // 44
+    BTApt_MemoryAllocStat,          // 44
     BTApt_Hexdump = 47,
     
     /*
@@ -76,6 +71,7 @@ typedef enum {
     MSTPtransition,                 // 42
     MSTPstateMachine,               // 43
     MemoryAllocStat,                // 44
+    */
 
     BTA_HaveYouSeenApp = 60,        // 60
     BTA_HaveYouSeenNet,
@@ -84,7 +80,7 @@ typedef enum {
     BTA_IhaveNotSeen,
     BTA_WhoIs,
     BTA_IAm,
-    ClientAlive,
+    ClientAlive,                    // 67  
     BTT_ActAsRouterToNetwork,
     BTT_Ack,
     BTT_SendNetworkMessage,         // 70
@@ -95,7 +91,6 @@ typedef enum {
     TextMsgWarning,
     TextMsgInfo,
     SimplestPing = 77,              // 77
-*/ 
 
 } BTApt;
 
@@ -111,11 +106,13 @@ void SendBTApacketRx(const int port_id, const BACNET_MAC_ADDRESS *srcPhyMac, con
 void SendBTApacketTx(const int port_id, const BACNET_MAC_ADDRESS *srcPhyMac, const BACNET_MAC_ADDRESS *destPhyMac, const uint8_t *pdu, const int len);
 void SendBTApayload(uint8_t *payload, const int sendlength);
 void SendBTAmemoryStats(void);
+// not static, cos used by emm.c
 void PrepareBTAheader(const BTApt fc, uint8_t *buffer ) ;
+void BTAinit(void);
 bool BTAready(void);
 
 int encodeUInt16(uint8_t *buf, const uint16_t port);
-int encodeUInt32(uint8_t *buf, const uint32_t val);
+// int encodeUInt32(uint8_t *buf, const uint32_t val);
 
 #else
 

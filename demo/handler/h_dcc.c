@@ -20,30 +20,31 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-####COPYRIGHTEND####
 *
-*********************************************************************/
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-#include "config.h"
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
+//#include <stddef.h>
+//#include <stdint.h>
+//#include <stdio.h>
+//#include <string.h>
+//#include <errno.h>
+//#include "config.h"
 #include "txbuf.h"
-#include "bacdef.h"
+//#include "bacdef.h"
 #include "bacdcode.h"
 #include "bacerror.h"
 #include "apdu.h"
@@ -51,8 +52,10 @@
 #include "abort.h"
 #include "reject.h"
 #include "dcc.h"
-#include "handlers.h"
-#include "device.h"
+// #include "handlers.h"
+// #include "device.h"
+#include "bitsDebug.h"
+#include "datalink.h"
 
 /** @file h_dcc.c  Handles Device Communication Control request. */
 
@@ -129,53 +132,43 @@ void handler_device_communication_control(
     pdu_len =
         npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
         &npci_data);
-#if PRINT_ENABLED
-    fprintf(stderr, "DeviceCommunicationControl!\n");
-#endif
+    dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "DeviceCommunicationControl!\n");
     if (service_data->segmented_message) {
         len =
             abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, ABORT_REASON_SEGMENTATION_NOT_SUPPORTED,
             true);
-#if PRINT_ENABLED
-        fprintf(stderr,
+        dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR,
             "DeviceCommunicationControl: "
             "Sending Abort - segmented message.\n");
-#endif
         goto DCC_ABORT;
     }
     /* decode the service request only */
     len =
         dcc_decode_service_request(service_request, service_len, &timeDuration,
         &state, &password);
-#if PRINT_ENABLED
     if (len > 0)
-        fprintf(stderr,
+        dbTraffic(DBD_ALL, DB_ERROR,
             "DeviceCommunicationControl: " "timeout=%u state=%u password=%s\n",
             (unsigned) timeDuration, (unsigned) state,
             characterstring_value(&password));
-#endif
     /* bad decoding or something we didn't understand - send an abort */
     if (len < 0) {
         len =
             abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, ABORT_REASON_OTHER, true);
-#if PRINT_ENABLED
-        fprintf(stderr,
+        dbTraffic(DBD_ALL, DB_ERROR,
             "DeviceCommunicationControl: "
             "Sending Abort - could not decode.\n");
-#endif
         goto DCC_ABORT;
     }
     if (state >= MAX_BACNET_COMMUNICATION_ENABLE_DISABLE) {
         len =
             reject_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, REJECT_REASON_UNDEFINED_ENUMERATION);
-#if PRINT_ENABLED
-        fprintf(stderr,
+        dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR,
             "DeviceCommunicationControl: "
             "Sending Reject - undefined enumeration\n");
-#endif
     } else {
 #if BAC_ROUTING
         /* Check to see if the current Device supports this service. */
@@ -192,10 +185,8 @@ void handler_device_communication_control(
                 encode_simple_ack(&Handler_Transmit_Buffer[pdu_len],
                 service_data->invoke_id,
                 SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL);
-#if PRINT_ENABLED
-            fprintf(stderr,
+            dbTraffic(DBD_ALL, DB_INFO,
                 "DeviceCommunicationControl: " "Sending Simple Ack!\n");
-#endif
             dcc_set_status_duration(state, timeDuration);
         } else {
             len =
@@ -203,11 +194,9 @@ void handler_device_communication_control(
                 service_data->invoke_id,
                 SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL,
                 ERROR_CLASS_SECURITY, ERROR_CODE_PASSWORD_FAILURE);
-#if PRINT_ENABLED
-            fprintf(stderr,
+            dbTraffic(DBD_ALL, DB_ERROR,
                 "DeviceCommunicationControl: "
                 "Sending Error - password failure.\n");
-#endif
         }
     }
   DCC_ABORT:

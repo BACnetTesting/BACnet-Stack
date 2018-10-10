@@ -31,6 +31,7 @@
 #include "bacerror.h"
 #include "rp.h"
 #include "wp.h"
+#include "lighting.h"
 
 
     void Lighting_Output_Property_Lists(

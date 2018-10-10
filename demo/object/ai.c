@@ -21,31 +21,32 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
- -------------------------------------------
-
-    Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
-
-    July 1, 2017    BITS    Modifications to this file have been made in compliance
-                            to original licensing.
-
-    This file contains changes made by BACnet Interoperability Testing
-    Services, Inc. These changes are subject to the permissions,
-    warranty terms and limitations above.
-    For more information: info@bac-test.com
-    For access to source code:  info@bac-test.com
-            or      www.github.com/bacnettesting/bacnet-stack
-
-*********************************************************************/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+*  2018.07.04 EKH Diffed in hints from Binary Value for future reference
+*
+****************************************************************************************/
 
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>		// for rand()
 
 #include "config.h"     /* the custom stuff */
 
-#if (BACNET_USE_OBJECT_ANALOG_INPUT == 1 )
+#if (BACNET_USE_OBJECT_ANALOG_INPUT == 1)
 
 #include "bacdef.h"
 #include "bacdcode.h"
@@ -56,16 +57,22 @@
 #include "timestamp.h"
 #include "ai.h"
 #include "bitsDebug.h"
+#include "llist.h"
+#include "emm.h"
+
+// ANALOG_INPUT_DESCR AI_Descr[MAX_ANALOG_INPUTS];
+LLIST_HDR AI_Descriptor_List;
 
 /* These three arrays are used by the ReadPropertyMultiple handler */
+
 static const BACNET_PROPERTY_ID Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
+    PROP_OUT_OF_SERVICE,
     PROP_PRESENT_VALUE,
     PROP_STATUS_FLAGS,
     PROP_EVENT_STATE,
-    PROP_OUT_OF_SERVICE,
     PROP_UNITS,
     MAX_BACNET_PROPERTY_ID
 };
@@ -74,11 +81,11 @@ static const BACNET_PROPERTY_ID Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_RELIABILITY,
 
-#if ( BACNET_SVC_COV_AI_B == 1 )
+#if (BACNET_SVC_COV_B == 1)
     PROP_COV_INCREMENT,
 #endif
 
-#if (INTRINSIC_REPORTING_AI_B == 1)
+#if (INTRINSIC_REPORTING_B == 1)
     PROP_TIME_DELAY,
     PROP_NOTIFICATION_CLASS,
     //todo2 - what about event_detection_enable?
@@ -90,6 +97,9 @@ static const BACNET_PROPERTY_ID Properties_Optional[] = {
     PROP_ACKED_TRANSITIONS,
     PROP_NOTIFY_TYPE,
     PROP_EVENT_TIME_STAMPS,
+#if (BACNET_PROTOCOL_REVISION >= 13)
+    PROP_EVENT_DETECTION_ENABLE,
+#endif
 #endif
     MAX_BACNET_PROPERTY_ID
 };
@@ -101,30 +111,6 @@ static const BACNET_PROPERTY_ID Properties_Proprietary[] = {
     //9999,
     MAX_BACNET_PROPERTY_ID
 };
-
-std::vector<BACnetObject *> analogInputs;
-
-
-bool Analog_Input_Create(
-    const uint32_t instance,
-    const std::string& nameRoot,
-    const BACNET_ENGINEERING_UNITS units,
-    const double initialValue )
-{
-    std::string name = nameRoot;
-
-    AnalogInputObject *newObject = new AnalogInputObject(
-        instance,
-        units,
-        name,
-        name);
-
-    newObject->Present_Value = (float) initialValue ;
-
-    analogInputs.push_back(newObject);
-    return true;
-}
-
 
 void Analog_Input_Property_Lists(
     const BACNET_PROPERTY_ID **pRequired,
@@ -142,131 +128,161 @@ void Analog_Input_Property_Lists(
 }
 
 
-// once per device
-void Analog_Input_Init(void)
+// Gets called once for each device
+// This only gets called once on startup, and has to initialize for ALL virtual devices. Todo 2 - rename to differentiate!
+void Analog_Input_Init(
+    void)
 {
-#if (INTRINSIC_REPORTING_AI_B == 1)
+    ll_Init(&AI_Descriptor_List, 100);
+
+#if (INTRINSIC_REPORTING_B == 1)
+
     /* Set handler for GetEventInformation function */
-    handler_get_event_information_set(OBJECT_ANALOG_INPUT,
+    handler_get_event_information_set(
+        OBJECT_ANALOG_INPUT,
         Analog_Input_Event_Information);
+
     /* Set handler for AcknowledgeAlarm function */
-    handler_alarm_ack_set(OBJECT_ANALOG_INPUT, Analog_Input_Alarm_Ack);
+    handler_alarm_ack_set(
+        OBJECT_ANALOG_INPUT,
+        Analog_Input_Alarm_Ack);
+
     /* Set handler for GetAlarmSummary Service */
-    handler_get_alarm_summary_set(OBJECT_ANALOG_INPUT,
-        Analog_Input_Alarm_Summary);
+    // Deprecated since Rev 13   
+    /* Set handler for GetAlarmSummary Service */
+    //handler_get_alarm_summary_set(OBJECT_ANALOG_INPUT,
+    //    Analog_Input_Alarm_Summary);
+
 #endif
 }
 
 
-void AnalogInputObject::Init(void)
+bool Analog_Input_Create(
+    const uint32_t instance,
+    const char *name)
 {
-#if (INTRINSIC_REPORTING_AI_B == 1)
-    unsigned j;
+    ANALOG_INPUT_DESCR *currentObject = (ANALOG_INPUT_DESCR *)emm_scalloc('a', sizeof(ANALOG_INPUT_DESCR));
+    if (currentObject == NULL) {
+        panic();
+        return false;
+    }
+    if (!ll_Enqueue(&AI_Descriptor_List, currentObject)) {
+        panic();
+        return false;
+    }
+
+    Generic_Object_Init(&currentObject->common, instance, name);
+
+    currentObject->Present_Value = 0.0f;
+    currentObject->Out_Of_Service = false;
+    currentObject->Units = UNITS_PERCENT;
+    currentObject->Reliability = RELIABILITY_NO_FAULT_DETECTED;
+
+#if ( BACNET_SVC_COV_B == 1 )
+    currentObject->Prior_Value = 0.0f;
+    currentObject->COV_Increment = 1.0f;
+    currentObject->Changed = false;
 #endif
 
-    Present_Value = NAN;
-    Out_Of_Service = false;
-    Units = UNITS_PERCENT;
-    Reliability = RELIABILITY_NO_FAULT_DETECTED;
-
-#if ( BACNET_SVC_COV_AI_B == 1 )
-    Prior_Value = 0.0f;
-    COV_Increment = 1.0f;
-    Changed = false;
-#endif
-
-#if (INTRINSIC_REPORTING_AI_B == 1)
-    Event_State = EVENT_STATE_NORMAL;
+#if (INTRINSIC_REPORTING_B == 1)
+    // todo 2 there is commonality here too that needs consolidation, optimization
+    currentObject->Event_State = EVENT_STATE_NORMAL;
     /* notification class not connected */
-    Notification_Class = BACNET_MAX_INSTANCE;
+    currentObject->Notification_Class = BACNET_MAX_INSTANCE;
 
-    Time_Delay = 0;
-    High_Limit = 100.0;
-    Low_Limit = 0.0;
-    Deadband = 1.0;
-    Limit_Enable = 0;
-    Event_Enable = 0;
-    Notify_Type = NOTIFY_ALARM;
+    currentObject->Time_Delay = 0;
+    currentObject->High_Limit = 100.0;
+    currentObject->Low_Limit = 0.0;
+    currentObject->Deadband = 1.0;
+    currentObject->Limit_Enable = 0;
+    currentObject->Event_Enable = 0;
+    currentObject->Notify_Type = NOTIFY_ALARM;
     /* time to generate event notification */
-    Remaining_Time_Delay = 0;
+    currentObject->Remaining_Time_Delay = 0;
     /* AckNotification informations */
-    Ack_notify_data.bSendAckNotify = false;
-    Ack_notify_data.EventState = EVENT_STATE_NORMAL;
+    currentObject->Ack_notify_data.bSendAckNotify = false;
+    currentObject->Ack_notify_data.EventState = EVENT_STATE_NORMAL;
 
     /* initialize Event time stamps using wildcards
        and set Acked_transitions */
-    for (j = 0; j < MAX_BACNET_EVENT_TRANSITION; j++) {
-        datetime_wildcard_set(&Event_Time_Stamps[j]);
-        Acked_Transitions[j].bIsAcked = true;
+    for (int j = 0; j < MAX_BACNET_EVENT_TRANSITION; j++) {
+        datetime_wildcard_set(&currentObject->Event_Time_Stamps[j]);
+        currentObject->Acked_Transitions[j].bIsAcked = true;
     }
-
 #endif
+
+    return true;
 }
 
-/* we simply have 0-n object instances.  Yours might be */
-/* more complex, and then you need validate that the */
-/* given instance exists */
+
 bool Analog_Input_Valid_Instance(
     uint32_t object_instance)
 {
-    return BACnetObject::Valid_Instance(&analogInputs, object_instance);
+    if (Generic_Instance_To_Object(&AI_Descriptor_List, object_instance) != NULL) return true;
+    return false;
 }
 
 
-/* we simply have 0-n object instances.  Yours might be */
-/* more complex, and then count how many you have */
 unsigned Analog_Input_Count(
     void)
 {
-    return analogInputs.size();
+    return AI_Descriptor_List.count;
 }
 
-/* we simply have 0-n object instances.  Yours might be */
-/* more complex, and then you need to return the instance */
-/* that correlates to the correct index */
+
+// This is used by the Device Object Function Table. Must have this signature.
 uint32_t Analog_Input_Index_To_Instance(
     unsigned index)
 {
     // todo1 - can we catch out-of-bounds?
-    return  analogInputs[index]->instance;
+    return Generic_Index_To_Instance(&AI_Descriptor_List, index);
 }
 
 
-/* we simply have 0-n object instances.  Yours might be */
-/* more complex, and then you need to return the index */
-/* that correlates to the correct instance number */
-unsigned Analog_Input_Instance_To_Index(
+// This is a shitty function to have - use Generic_Instance_To_Object() for those functions that wanted this.. *
+//unsigned Analog_Input_Instance_To_Index(
+//    uint32_t object_instance)
+//{
+//    unsigned index = MAX_ANALOG_INPUTS;
+//
+//    if (object_instance < MAX_ANALOG_INPUTS)
+//        index = object_instance;
+//
+//    return index;
+//}
+
+
+static inline bool IsOutOfService(ANALOG_INPUT_DESCR *currentObject)
+{
+    return currentObject->Out_Of_Service;
+}
+
+
+static inline bool IsInAlarm(ANALOG_INPUT_DESCR *currentObject)
+{
+    return currentObject->Event_State != EVENT_STATE_NORMAL;
+}
+
+
+ANALOG_INPUT_DESCR *Analog_Input_Instance_To_Object(
     uint32_t object_instance)
 {
-    for (size_t i = 0; i < analogInputs.size(); i++) {
-        if (object_instance == analogInputs[i]->instance) {
-            return i;
-        }
-    }
-    return -1;
+    return (ANALOG_INPUT_DESCR *)Generic_Instance_To_Object(&AI_Descriptor_List, object_instance);
 }
 
 
-AnalogInputObject *Analog_Input_Instance_To_Object(
-    uint32_t object_instance)
+static float Analog_Input_Present_Value(
+    ANALOG_INPUT_DESCR *currentObject)
 {
-    return static_cast<AnalogInputObject *> (BACnetObject::Instance_To_Object(&analogInputs, object_instance));
+    // double rando = ((double) rand() / (double) RAND_MAX ) * 0.2 ;
+
+    return currentObject->Present_Value;
 }
 
 
-float Analog_Input_Present_Value(
-    AnalogInputObject *currentObject)
-{
-    // for Antonio's demo, randomize Present Value a little.
-
-    double rando = ((double) rand() / (double) RAND_MAX ) * 0.2 ;
-
-    return (float) ( currentObject->Present_Value * 0.8 + currentObject->Present_Value * rando );
-}
-
-
-#if ( BACNET_SVC_COV_AI_B == 1 )
-static void Analog_Input_COV_Detect(AnalogInputObject *currentObject,
+#if ( BACNET_SVC_COV_B == 1 )
+static void Analog_Input_COV_Detect_PV_Change(
+    ANALOG_INPUT_DESCR *currentObject,
     float value)
 {
     float cov_delta;
@@ -284,8 +300,9 @@ static void Analog_Input_COV_Detect(AnalogInputObject *currentObject,
 }
 #endif
 
+
 void Analog_Input_Present_Value_Set(
-    AnalogInputObject *currentObject,
+    ANALOG_INPUT_DESCR *currentObject,
     float value)
 {
 #if ( BACNET_SVC_COV_AI_B == 1 )
@@ -295,72 +312,103 @@ void Analog_Input_Present_Value_Set(
 }
 
 
+
+static inline bool Analog_Input_Reliability_Set(
+    ANALOG_INPUT_DESCR *currentObject,
+    uint32_t reliability)
+{
+    if (currentObject->Out_Of_Service) {
+        // the BACnet way
+        currentObject->reliabilityShadowValue = (BACNET_RELIABILITY)reliability;
+        return true;
+    }
+    // writes, when not OOS, are not allowed
+    return false;
+}
+
+
+static BACNET_RELIABILITY Analog_Input_Reliability(
+    ANALOG_INPUT_DESCR *currentObject)
+{
+    if (IsOutOfService(currentObject)) {
+        // the BACnet way
+        return currentObject->reliabilityShadowValue;
+    }
+
+    // so in this embodiment, nobody gets to set reliability, we expect the Application to do so (along with PV)
+    return currentObject->Reliability;
+}
+
+
+static bool isInFault(
+    ANALOG_INPUT_DESCR *currentObject)
+{
+    return (Analog_Input_Reliability(currentObject) != RELIABILITY_NO_FAULT_DETECTED);
+}
+
+
+// Signature used by device mux
+/* note: the object name must be unique within this device */
 bool Analog_Input_Object_Name(
     uint32_t object_instance,
     BACNET_CHARACTER_STRING * object_name)
 {
-    int index;
-    bool status = false;
+    return Generic_Instance_To_Object_Name(&AI_Descriptor_List, object_instance, object_name);
+}
 
-    index = Analog_Input_Instance_To_Index(object_instance);
-    if (index >= 0) {
-        characterstring_init_ansi(object_name, static_cast<AnalogInputObject *>(analogInputs[index])->name.c_str());
+
+void Analog_Input_Update(
+    const uint32_t instance,
+    const double value)
+{
+    ANALOG_INPUT_DESCR *bacnetObject = Analog_Input_Instance_To_Object(instance);
+    if (bacnetObject == NULL) {
+        panic();
+        return;
     }
-
-    return status;
+    bacnetObject->Present_Value = value;
 }
 
 
-void Analog_Input_Update (
-		const uint32_t instance,
-		const double value )
+double Analog_Input_Present_Value_from_Instance(
+    const uint32_t instance)
 {
-	AnalogInputObject *bacnetObject = Analog_Input_Instance_To_Object ( instance ) ;
-	if ( bacnetObject == NULL )
-	{
-		panic();
-		return;
-	}
-	bacnetObject->Present_Value = value ;
-}
-
-
-double Analog_Input_Present_Value_from_Instance ( const uint32_t instance )
-{
-	AnalogInputObject *currentObject = Analog_Input_Instance_To_Object(instance);
+    ANALOG_INPUT_DESCR *currentObject = Analog_Input_Instance_To_Object(instance);
     if (currentObject == NULL) {
         panic();
-        return 0.0 ;
+        return 0.0;
     }
-    return currentObject->Present_Value ;
+    return currentObject->Present_Value;
 }
 
 
-#if ( BACNET_SVC_COV_AI_B == 1 )
+#if ( BACNET_SVC_COV_B == 1 )
 
+// This function reports to the BACnet stack if there has/has not been a change to the Present Value or status flags
+// therefore, unfortunately, we have to derive the pointers from the object_instance each time.
 bool Analog_Input_Change_Of_Value(
-    uint32_t object_instance)
+    const uint32_t object_instance)
 {
-    unsigned index;
+    // unsigned index;
     bool changed = false;
 
-    index = Analog_Input_Instance_To_Index(object_instance);
-    if (index < ux_analogInputs) {
-        changed = AI_Descr[index].Changed;
+    ANALOG_INPUT_DESCR *currentObject = Analog_Input_Instance_To_Object(object_instance);
+    if (currentObject == NULL) {
+        panic();
+        return false;
     }
-
-    return changed;
+    return currentObject->Changed;
 }
 
 void Analog_Input_Change_Of_Value_Clear(
-    uint32_t object_instance)
+    const uint32_t instance)
 {
-    unsigned index;
-
-    index = Analog_Input_Instance_To_Index(object_instance);
-    if (index < ux_analogInputs) {
-        AI_Descr[index].Changed = false;
+    ANALOG_INPUT_DESCR *currentObject = Analog_Input_Instance_To_Object(instance);
+    if (currentObject == NULL) {
+        panic();
+        return;
     }
+    currentObject->Changed = false;
 }
 
 /**
@@ -377,14 +425,20 @@ bool Analog_Input_Encode_Value_List(
 {
     bool status = false;
 
+    ANALOG_INPUT_DESCR *currentObject = Analog_Input_Instance_To_Object(object_instance);
+    if (currentObject == NULL) {
+        panic();
+        return false;
+    }
+
     if (value_list) {
         value_list->propertyIdentifier = PROP_PRESENT_VALUE;
         value_list->propertyArrayIndex = BACNET_ARRAY_ALL;
         value_list->value.context_specific = false;
         value_list->value.tag = BACNET_APPLICATION_TAG_REAL;
         value_list->value.type.Real =
-            Analog_Input_Present_Value(object_instance);
-        value_list->value.next = NULL;
+            Analog_Input_Present_Value(currentObject);
+        value_list->value.next = NULL;			/* 2014.09.03 - edward@bac-test.com - added this, lack was causing exceptions under MSVC emulation */
         value_list->priority = BACNET_NO_PRIORITY;
         value_list = value_list->next;
     }
@@ -393,70 +447,76 @@ bool Analog_Input_Encode_Value_List(
         value_list->propertyArrayIndex = BACNET_ARRAY_ALL;
         value_list->value.context_specific = false;
         value_list->value.tag = BACNET_APPLICATION_TAG_BIT_STRING;
+        value_list->value.next = NULL;			/* 2014.09.03 - edward@bac-test.com - added this, lack was causing exceptions under MSVC emulation */
         bitstring_init(&value_list->value.type.Bit_String);
         bitstring_set_bit(&value_list->value.type.Bit_String,
-            STATUS_FLAG_IN_ALARM, false);
+            STATUS_FLAG_IN_ALARM, IsInAlarm(currentObject));
         bitstring_set_bit(&value_list->value.type.Bit_String,
-            STATUS_FLAG_FAULT, false);
+            STATUS_FLAG_FAULT, isInFault(currentObject));
         bitstring_set_bit(&value_list->value.type.Bit_String,
             STATUS_FLAG_OVERRIDDEN, false);
-        if (Analog_Input_Out_Of_Service(object_instance)) {
-            bitstring_set_bit(&value_list->value.type.Bit_String,
-                STATUS_FLAG_OUT_OF_SERVICE, true);
-        }
-        else {
-            bitstring_set_bit(&value_list->value.type.Bit_String,
-                STATUS_FLAG_OUT_OF_SERVICE, false);
-        }
+        bitstring_set_bit(&value_list->value.type.Bit_String,
+            STATUS_FLAG_OUT_OF_SERVICE, currentObject->Out_Of_Service);
+        value_list->value.next = NULL;
         value_list->priority = BACNET_NO_PRIORITY;
-        value_list->next = NULL;
+        value_list->next = NULL;   /* 2014.09.03 - edward@bac-test.com - added this, lack was causing exceptions under MSVC emulation */
+                                   // todo, push back to Karg
     }
-    status = Analog_Input_Change_Of_Value(object_instance);
+    status = currentObject->Changed;
 
     return status;
 }
 
-float Analog_Input_COV_Increment(
-    uint32_t object_instance)
-{
-    int index;
-    float value = 0;
 
-    index = Analog_Input_Instance_To_Index(object_instance);
-    if (index >= 0) {
-        value = AI_Descr[index].COV_Increment;
-    }
-    else {
-        panic();
-    }
+// Not used anywhere, even in Karg Stack
+//float Analog_Input_COV_Increment(
+//    ANALOG_INPUT_DESCR *currentObject )
+//{
+//    int index;
+//    float value = 0;
+//
+//    index = Analog_Input_Instance_To_Index(object_instance);
+//    if (index >= 0) {
+//        value = AI_Descr[index].COV_Increment;
+//    }
+//    else {
+//        panic();
+//    }
+//
+//    return value;
+//}
 
-    return value;
-}
 
 void Analog_Input_COV_Increment_Set(
-    uint32_t object_instance,
+    ANALOG_INPUT_DESCR *currentObject,
     float value)
 {
     unsigned index = 0;
 
-    index = Analog_Input_Instance_To_Index(object_instance);
-    if (index < ux_analogInputs) {
-        AI_Descr[index].COV_Increment = value;
-        Analog_Input_COV_Detect(index, AI_Descr[index].Present_Value);
-    }
+    panic();
+    //index = Analog_Input_Instance_To_Index(object_instance);
+    //if (index < MAX_ANALOG_INPUTS) {
+    //    AI_Descr[index].COV_Increment = value;
+    //    Analog_Input_COV_Detect(index, AI_Descr[index].Present_Value);
+    //}
 }
 #endif // ( BACNET_SVC_COV_B == 1 )
 
 
 static void Analog_Input_Out_Of_Service_Set(
-    BACnetObject *currentObject,
-    const bool value)
+    ANALOG_INPUT_DESCR *currentObject,
+    const bool oos_flag)
 {
-    if (currentObject->Out_Of_Service != value) {
-        currentObject->Changed = true;
-    }
-    currentObject->Out_Of_Service = value;
+    // Is there actually a change? If not, then we don't have to do anything.
+    if (currentObject->Out_Of_Service == oos_flag) return;
+
+#if ( BACNET_SVC_COV_B == 1 )
+    currentObject->Changed = true;
+#endif
+
+    currentObject->Out_Of_Service = oos_flag;
 }
+
 
 /* return apdu length, or BACNET_STATUS_ERROR on error */
 int Analog_Input_Read_Property(
@@ -465,10 +525,10 @@ int Analog_Input_Read_Property(
     int apdu_len = 0;   /* return value */
     BACNET_BIT_STRING bit_string;
     BACNET_CHARACTER_STRING char_string;
-    AnalogInputObject *currentObject;
-    uint8_t *apdu ;
-    
-#if (INTRINSIC_REPORTING_AI_B == 1)
+    ANALOG_INPUT_DESCR *currentObject;
+    uint8_t *apdu;
+
+#if (INTRINSIC_REPORTING_B == 1)
     unsigned int i = 0;
     int len = 0;
 #endif
@@ -477,7 +537,7 @@ int Analog_Input_Read_Property(
 
     if ((rpdata == NULL) || (rpdata->application_data == NULL) ||
         (rpdata->application_data_len == 0)) {
-        return 0;
+        return BACNET_STATUS_ERROR;
     }
 
     currentObject = Analog_Input_Instance_To_Object(rpdata->object_instance);
@@ -488,33 +548,40 @@ int Analog_Input_Read_Property(
 
     apdu = rpdata->application_data;
     switch (rpdata->object_property) {
+
     case PROP_OBJECT_IDENTIFIER:
         apdu_len =
-            encode_application_object_id(&apdu[0], OBJECT_ANALOG_INPUT,
+            encode_application_object_id(&apdu[0],
+                OBJECT_ANALOG_INPUT,
                 rpdata->object_instance);
         break;
 
     case PROP_OBJECT_NAME:
     case PROP_DESCRIPTION:
-        Analog_Input_Object_Name(rpdata->object_instance, &char_string);
+        Analog_Input_Object_Name(
+            rpdata->object_instance,
+            &char_string);
         apdu_len =
             encode_application_character_string(&apdu[0], &char_string);
         break;
 
     case PROP_OBJECT_TYPE:
         apdu_len =
-            encode_application_enumerated(&apdu[0], OBJECT_ANALOG_INPUT);
+            encode_application_enumerated(
+                &apdu[0],
+                OBJECT_ANALOG_INPUT);
         break;
 
     case PROP_PRESENT_VALUE:
         apdu_len =
-            encode_application_real(&apdu[0],
+            encode_application_real(
+                &apdu[0],
                 Analog_Input_Present_Value(currentObject));
         break;
 
     case PROP_STATUS_FLAGS:
         bitstring_init(&bit_string);
-#if (INTRINSIC_REPORTING_AI_B == 1)
+#if (INTRINSIC_REPORTING_B == 1)
         bitstring_set_bit(&bit_string, STATUS_FLAG_IN_ALARM,
             currentObject->Event_State ? true : false);
 #else
@@ -529,7 +596,7 @@ int Analog_Input_Read_Property(
         break;
 
     case PROP_EVENT_STATE:
-#if ( INTRINSIC_REPORTING_AI_B == 1 )
+#if ( INTRINSIC_REPORTING_B == 1 )
         apdu_len =
             encode_application_enumerated(&apdu[0],
                 currentObject->Event_State);
@@ -540,13 +607,11 @@ int Analog_Input_Read_Property(
         break;
 
 #if ( BACNET_PROTOCOL_REVISION >= 14 )
+#if ( INTRINSIC_REPORTING_B == 1 )
     case PROP_EVENT_DETECTION_ENABLE:
-#if ( INTRINSIC_REPORTING_AI_B == 1 )
         apdu_len =
             encode_application_enumerated(&apdu[0], true);
-#else
-        apdu_len =
-            encode_application_enumerated(&apdu[0], false);
+        break;
 #endif
 #endif
 
@@ -567,14 +632,14 @@ int Analog_Input_Read_Property(
             encode_application_enumerated(&apdu[0], currentObject->Units);
         break;
 
-#if ( BACNET_SVC_COV_AI_B == 1 )
+#if ( BACNET_SVC_COV_B == 1 )
     case PROP_COV_INCREMENT:
         apdu_len = encode_application_real(&apdu[0],
             currentObject->COV_Increment);
         break;
 #endif // ( BACNET_SVC_COV_B == 1 )
 
-#if (INTRINSIC_REPORTING_AI_B == 1)
+#if (INTRINSIC_REPORTING_B == 1)
     case PROP_TIME_DELAY:
         apdu_len =
             encode_application_unsigned(&apdu[0], currentObject->Time_Delay);
@@ -602,11 +667,9 @@ int Analog_Input_Read_Property(
     case PROP_LIMIT_ENABLE:
         bitstring_init(&bit_string);
         bitstring_set_bit(&bit_string, 0,
-            (currentObject->
-                Limit_Enable & EVENT_LOW_LIMIT_ENABLE) ? true : false);
+            (currentObject->Limit_Enable & EVENT_LOW_LIMIT_ENABLE) ? true : false);
         bitstring_set_bit(&bit_string, 1,
-            (currentObject->
-                Limit_Enable & EVENT_HIGH_LIMIT_ENABLE) ? true : false);
+            (currentObject->Limit_Enable & EVENT_HIGH_LIMIT_ENABLE) ? true : false);
 
         apdu_len = encode_application_bitstring(&apdu[0], &bit_string);
         break;
@@ -614,14 +677,11 @@ int Analog_Input_Read_Property(
     case PROP_EVENT_ENABLE:
         bitstring_init(&bit_string);
         bitstring_set_bit(&bit_string, TRANSITION_TO_OFFNORMAL,
-            (currentObject->
-                Event_Enable & EVENT_ENABLE_TO_OFFNORMAL) ? true : false);
+            (currentObject->Event_Enable & EVENT_ENABLE_TO_OFFNORMAL) ? true : false);
         bitstring_set_bit(&bit_string, TRANSITION_TO_FAULT,
-            (currentObject->
-                Event_Enable & EVENT_ENABLE_TO_FAULT) ? true : false);
+            (currentObject->Event_Enable & EVENT_ENABLE_TO_FAULT) ? true : false);
         bitstring_set_bit(&bit_string, TRANSITION_TO_NORMAL,
-            (currentObject->
-                Event_Enable & EVENT_ENABLE_TO_NORMAL) ? true : false);
+            (currentObject->Event_Enable & EVENT_ENABLE_TO_NORMAL) ? true : false);
 
         apdu_len = encode_application_bitstring(&apdu[0], &bit_string);
         break;
@@ -646,6 +706,8 @@ int Analog_Input_Read_Property(
         break;
 
     case PROP_EVENT_TIME_STAMPS:
+        panictodo(1);   // disallow '0' values, redundant code.
+
         /* Array element zero is the number of elements in the array */
         if (rpdata->array_index == 0)
             apdu_len =
@@ -654,6 +716,7 @@ int Analog_Input_Read_Property(
         /* if no index was specified, then try to encode the entire list */
         /* into one packet. */
         else if (rpdata->array_index == BACNET_ARRAY_ALL) {
+            int i, len;
             for (i = 0; i < MAX_BACNET_EVENT_TRANSITION; i++) {
                 len =
                     encode_opening_tag(&apdu[apdu_len],
@@ -669,8 +732,9 @@ int Analog_Input_Read_Property(
                         TIME_STAMP_DATETIME);
 
                 /* add it if we have room */
-                if ((apdu_len + len) < MAX_APDU)
+                if ((apdu_len + len) < MAX_APDU) {
                     apdu_len += len;
+                }
                 else {
                     rpdata->error_code =
                         ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
@@ -684,10 +748,10 @@ int Analog_Input_Read_Property(
                 encode_opening_tag(&apdu[apdu_len], TIME_STAMP_DATETIME);
             apdu_len +=
                 encode_application_date(&apdu[apdu_len],
-                    &currentObject->Event_Time_Stamps[rpdata->array_index].date);
+                    &currentObject->Event_Time_Stamps[rpdata->array_index - 1].date);
             apdu_len +=
                 encode_application_time(&apdu[apdu_len],
-                    &currentObject->Event_Time_Stamps[rpdata->array_index].time);
+                    &currentObject->Event_Time_Stamps[rpdata->array_index - 1].time);
             apdu_len +=
                 encode_closing_tag(&apdu[apdu_len], TIME_STAMP_DATETIME);
         }
@@ -697,7 +761,8 @@ int Analog_Input_Read_Property(
             apdu_len = BACNET_STATUS_ERROR;
         }
         break;
-#endif
+
+#endif  // ( INTRINSIC_REPORTING_B == 1 )
 
     case PROP_PROPERTY_LIST:
         Analog_Input_Property_Lists(&pRequired, &pOptional, &pProprietary);
@@ -714,10 +779,12 @@ int Analog_Input_Read_Property(
         apdu_len = BACNET_STATUS_ERROR;
         break;
     }
+
     /*  only array properties can have array options */
-    if ((apdu_len >= 0) && (rpdata->object_property != PROP_PRIORITY_ARRAY) &&
-        (rpdata->object_property != PROP_PROPERTY_LIST) &&
-#if (INTRINSIC_REPORTING_AI_B == 1)
+    if ((apdu_len >= 0) &&
+        (rpdata->object_property != PROP_PROPERTY_LIST) && // todo other project that passed btc did not
+                                // have this. check it out
+#if (INTRINSIC_REPORTING_B == 1)
         (rpdata->object_property != PROP_EVENT_TIME_STAMPS) &&
 #endif
         (rpdata->array_index != BACNET_ARRAY_ALL)) {
@@ -729,19 +796,21 @@ int Analog_Input_Read_Property(
     return apdu_len;
 }
 
+
 /* returns true if successful */
 bool Analog_Input_Write_Property(
     BACNET_WRITE_PROPERTY_DATA * wp_data)
 {
     bool status = false;        /* return value */
-    int len = 0;
+    int len;
     BACNET_APPLICATION_DATA_VALUE value;
-    AnalogInputObject *currentObject;
+    ANALOG_INPUT_DESCR *currentObject;
 
-    /* decode the some of the request */
+    /* decode some of the request */
     len =
         bacapp_decode_application_data(wp_data->application_data,
             wp_data->application_data_len, &value);
+
     /* FIXME: len < application_data_len: more data? */
     if (len < 0) {
         /* error while decoding - a value larger than we can handle */
@@ -752,7 +821,7 @@ bool Analog_Input_Write_Property(
 
     /*  only array properties can have array options */
     if ((wp_data->array_index != BACNET_ARRAY_ALL) &&
-#if (INTRINSIC_REPORTING_AI_B == 1)
+#if (INTRINSIC_REPORTING_B == 1)
         (wp_data->object_property != PROP_EVENT_TIME_STAMPS) &&
 #endif
         (wp_data->object_property != PROP_PROPERTY_LIST)) {
@@ -763,13 +832,14 @@ bool Analog_Input_Write_Property(
 
     currentObject = Analog_Input_Instance_To_Object(wp_data->object_instance);
     if (currentObject == NULL) {
-        // todo1 panic();
+        wp_data->error_code = ERROR_CODE_NO_OBJECTS_OF_SPECIFIED_TYPE;
         return false;
     }
 
     switch (wp_data->object_property) {
 
     case PROP_PRESENT_VALUE:
+        // todo1 - take a look at how BinaryValue does this.
         status =
             WPValidateArgType(&value, BACNET_APPLICATION_TAG_REAL,
                 &wp_data->error_class, &wp_data->error_code);
@@ -807,7 +877,7 @@ bool Analog_Input_Write_Property(
         }
         break;
 
-#if ( BACNET_SVC_COV_AI_B == 1 )
+#if ( BACNET_SVC_COV_B == 1 )
     case PROP_COV_INCREMENT:
         status =
             WPValidateArgType(&value, BACNET_APPLICATION_TAG_REAL,
@@ -815,7 +885,7 @@ bool Analog_Input_Write_Property(
         if (status) {
             if (value.type.Real >= 0.0) {
                 Analog_Input_COV_Increment_Set(
-                    wp_data->object_instance,
+                    currentObject,
                     value.type.Real);
             }
             else {
@@ -827,7 +897,7 @@ bool Analog_Input_Write_Property(
         break;
 #endif // ( BACNET_SVC_COV_B == 1 )
 
-#if (INTRINSIC_REPORTING_AI_B == 1)
+#if (INTRINSIC_REPORTING_B == 1)
     case PROP_TIME_DELAY:
         status =
             WPValidateArgType(&value, BACNET_APPLICATION_TAG_UNSIGNED_INT,
@@ -932,7 +1002,7 @@ bool Analog_Input_Write_Property(
             }
         }
         break;
-#endif // ( INTRINSIC_REPORTING == 1 )
+#endif // ( INTRINSIC_REPORTING_B == 1 )
 
     case PROP_OBJECT_IDENTIFIER:
     case PROP_OBJECT_NAME:
@@ -941,7 +1011,7 @@ bool Analog_Input_Write_Property(
     case PROP_STATUS_FLAGS:
     case PROP_EVENT_STATE:
     case PROP_RELIABILITY:
-#if (INTRINSIC_REPORTING_AI_B == 1)
+#if (INTRINSIC_REPORTING_B == 1)
     case PROP_ACKED_TRANSITIONS:
     case PROP_EVENT_TIME_STAMPS:
 #if ( BACNET_PROTOCOL_REVISION >= 14 )
@@ -952,8 +1022,7 @@ bool Analog_Input_Write_Property(
         wp_data->error_class = ERROR_CLASS_PROPERTY;
         wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
         break;
-    case PROP_RELINQUISH_DEFAULT:
-    case PROP_PRIORITY_ARRAY:
+
     default:
         wp_data->error_class = ERROR_CLASS_PROPERTY;
         wp_data->error_code = ERROR_CODE_UNKNOWN_PROPERTY;
@@ -964,13 +1033,13 @@ bool Analog_Input_Write_Property(
 }
 
 
+#if (INTRINSIC_REPORTING_B == 1)
 void Analog_Input_Intrinsic_Reporting(
     uint32_t object_instance)
 {
-#if (INTRINSIC_REPORTING_AI_B == 1)
     BACNET_EVENT_NOTIFICATION_DATA event_data;
     BACNET_CHARACTER_STRING msgText;
-    AnalogInputObject *currentObject;
+    ANALOG_INPUT_DESCR *currentObject;
     BACNET_EVENT_STATE FromState;
     BACNET_EVENT_STATE ToState;
     float ExceededLimit = 0.0f;
@@ -978,16 +1047,35 @@ void Analog_Input_Intrinsic_Reporting(
     bool SendNotify = false;
 
 
-    currentObject = static_cast<AnalogInputObject *> (BACnetObject::Instance_To_Object(&analogInputs, object_instance));
+    currentObject = Analog_Input_Instance_To_Object(object_instance);
     if (currentObject == NULL) {
         panic();
-    }
-    else {
         return;
     }
 
-    /* check limits */
+    /*
+        13.2.2.1 Event-State-Detection State Machine
+
+        If the Event_Detection_Enable property is FALSE, then this state machine is not evaluated. In this case, no transitions shall
+        occur, Event_State shall be set to NORMAL, and Event_Time_Stamps, Event_Message_Texts and Acked_Transitions shall
+        be set to their respective initial conditions.
+    */
+
+
+    // todo 1
+    /* Have to remove this limit_enable check, else we cannot process e.g. 13.3.6 (e) condition */
+
+    // (and (c))
+    /* If pCurrentState is HIGH_LIMIT, and the HighLimitEnable flag of pLimitEnable is FALSE, then indicate a
+        transition to the NORMAL event state */
+
+        /* check limits */
+            // todo, watch out, the logic below assumes both flags false, deal with the case where only one is false!
     if (!currentObject->Limit_Enable) {
+        /* 13.3.6 (c) If pCurrentState is HIGH_LIMIT, and the HighLimitEnable flag of pLimitEnable is FALSE, then indicate a
+        transition to the NORMAL event state. (etc) */
+        // todo3 - BTC, we should examing both flags here.. Karg's logic is not complete here.
+        currentObject->Event_State = EVENT_STATE_NORMAL;
         return;    /* limits are not configured */
     }
 
@@ -998,10 +1086,6 @@ void Analog_Input_Intrinsic_Reporting(
         ToState = currentObject->Ack_notify_data.EventState;
         FromState = currentObject->Ack_notify_data.EventState;  // not actually used, just to eliminate warnings
 
-#if PRINT_ENABLED
-        fprintf(stderr, "Send Acknotification for (%s,%d).\n",
-            bactext_object_type_name(OBJECT_ANALOG_INPUT), object_instance);
-#endif /* PRINT_ENABLED */
 
         characterstring_init_ansi(&msgText, "AckNotification");
 
@@ -1118,164 +1202,187 @@ void Analog_Input_Intrinsic_Reporting(
                Need to fill only the basic parameters of this type of event.
                Other parameters will be filled in common function. */
 
+               // todo1 soooooo much in common between AI and AV here...  consolidate?
+
             switch (ToState) {
             case EVENT_STATE_HIGH_LIMIT:
-                ExceededLimit = currentObject->High_Limit;
-                characterstring_init_ansi(&msgText, "Goes to high limit");
+                Device_getCurrentDateTime(&currentObject->Event_Time_Stamps[TRANSITION_TO_OFFNORMAL]);
+                if ((currentObject->Event_Enable & EVENT_ENABLE_TO_OFFNORMAL) == EVENT_ENABLE_TO_OFFNORMAL) {
+                    ExceededLimit = currentObject->High_Limit;
+                    characterstring_init_ansi(&msgText, "Goes to high limit");
+                    SendNotify = true;
+                }
                 break;
 
             case EVENT_STATE_LOW_LIMIT:
-                ExceededLimit = currentObject->Low_Limit;
-                characterstring_init_ansi(&msgText, "Goes to low limit");
+                Device_getCurrentDateTime(&currentObject->Event_Time_Stamps[TRANSITION_TO_OFFNORMAL]);
+                if ((currentObject->Event_Enable & EVENT_ENABLE_TO_OFFNORMAL) == EVENT_ENABLE_TO_OFFNORMAL) {
+                    ExceededLimit = currentObject->Low_Limit;
+                    characterstring_init_ansi(&msgText, "Goes to low limit");
+                    SendNotify = true;
+                }
                 break;
 
             case EVENT_STATE_NORMAL:
-                if (FromState == EVENT_STATE_HIGH_LIMIT) {
-                    ExceededLimit = currentObject->High_Limit;
-                    characterstring_init_ansi(&msgText,
-                        "Back to normal state from high limit");
-                }
-                else {
-                    ExceededLimit = currentObject->Low_Limit;
-                    characterstring_init_ansi(&msgText,
-                        "Back to normal state from low limit");
-                }
-                break;
+                Device_getCurrentDateTime(&currentObject->Event_Time_Stamps[TRANSITION_TO_NORMAL]);
+                if ((currentObject->Event_Enable & EVENT_ENABLE_TO_NORMAL) == EVENT_ENABLE_TO_NORMAL) {
+                    if (FromState == EVENT_STATE_HIGH_LIMIT) {
+                        ExceededLimit = currentObject->High_Limit;
+                        characterstring_init_ansi(&msgText,
+                            "Back to normal state from high limit");
+                    }
+                    else {
+                        ExceededLimit = currentObject->Low_Limit;
+                        characterstring_init_ansi(&msgText,
+                            "Back to normal state from low limit");
+                    }
+                    break;
 
             default:
+                panic();
                 ExceededLimit = 0;
                 break;
-            }   /* switch (ToState) */
+                }   /* switch (ToState) */
 
-#if PRINT_ENABLED
-            fprintf(stderr, "Event_State for (%s,%d) goes from %s to %s.\n",
-                bactext_object_type_name(OBJECT_ANALOG_INPUT), object_instance,
-                bactext_event_state_name(FromState),
-                bactext_event_state_name(ToState));
-#endif /* PRINT_ENABLED */
+                dbTraffic(DBD_ALL, DB_BTC_ERROR, "Event_State for (%s,%d) goes from %s to %s.",
+                    bactext_object_type_name(OBJECT_ANALOG_INPUT), object_instance,
+                    bactext_event_state_name(FromState),
+                    bactext_event_state_name(ToState));
+
+                /* Notify Type */
+                event_data.notifyType = currentObject->Notify_Type;
+
+                /* Send EventNotification. */
+                // see logic above SendNotify = true;
+            }
+        }
+
+
+        if (SendNotify) {
+            /* Event Object Identifier */
+            event_data.eventObjectIdentifier.type = OBJECT_ANALOG_INPUT;
+            event_data.eventObjectIdentifier.instance = object_instance;
+
+            // This logic has been moved to the proper place above. todo 3 remove comments when reviewed and tested.
+            ///* Time Stamp */
+            //event_data.timeStamp.tag = TIME_STAMP_DATETIME;
+            //Device_getCurrentDateTime(&event_data.timeStamp.value.dateTime);
+
+            //if (event_data.notifyType != NOTIFY_ACK_NOTIFICATION) {
+            //    /* fill Event_Time_Stamps */
+            //    switch (ToState) {
+            //    case EVENT_STATE_HIGH_LIMIT:
+            //    case EVENT_STATE_LOW_LIMIT:
+            //            CurrentAI->Event_Time_Stamps[TRANSITION_TO_OFFNORMAL] =
+            //            event_data.timeStamp.value.dateTime;
+            //        break;
+
+            //    case EVENT_STATE_FAULT:
+            //            CurrentAI->Event_Time_Stamps[TRANSITION_TO_FAULT] =
+            //            event_data.timeStamp.value.dateTime;
+            //        break;
+
+            //    case EVENT_STATE_NORMAL:
+            //            CurrentAI->Event_Time_Stamps[TRANSITION_TO_NORMAL] =
+            //            event_data.timeStamp.value.dateTime;
+            //        break;
+
+            //    case EVENT_STATE_OFFNORMAL:
+            //        panic();
+            //        break;
+            //    }
+            //}
+
+            /* Notification Class */
+            event_data.notificationClass = currentObject->Notification_Class;
+
+            // todo2  - there is no check of the event_enable T,T,T flags! we are sending events even if they are not enabled!
+
+            /* Event Type */
+            event_data.eventType = EVENT_OUT_OF_RANGE;
+
+            /* Message Text */
+            event_data.messageText = &msgText;
 
             /* Notify Type */
-            event_data.notifyType = currentObject->Notify_Type;
+            /* filled before */
 
-            /* Send EventNotification. */
-            SendNotify = true;
-        }
-    }
-
-
-    if (SendNotify) {
-        /* Event Object Identifier */
-        event_data.eventObjectIdentifier.type = OBJECT_ANALOG_INPUT;
-        event_data.eventObjectIdentifier.instance = object_instance;
-
-        /* Time Stamp */
-        event_data.timeStamp.tag = TIME_STAMP_DATETIME;
-        Device_getCurrentDateTime(&event_data.timeStamp.value.dateTime);
-
-        if (event_data.notifyType != NOTIFY_ACK_NOTIFICATION) {
-            /* fill Event_Time_Stamps */
-            switch (ToState) {
-            case EVENT_STATE_HIGH_LIMIT:
-            case EVENT_STATE_LOW_LIMIT:
-                currentObject->Event_Time_Stamps[TRANSITION_TO_OFFNORMAL] =
-                    event_data.timeStamp.value.dateTime;
-                break;
-
-            case EVENT_STATE_FAULT:
-                currentObject->Event_Time_Stamps[TRANSITION_TO_FAULT] =
-                    event_data.timeStamp.value.dateTime;
-                break;
-
-            case EVENT_STATE_NORMAL:
-                currentObject->Event_Time_Stamps[TRANSITION_TO_NORMAL] =
-                    event_data.timeStamp.value.dateTime;
-                break;
+            /* From State */
+            if (event_data.notifyType != NOTIFY_ACK_NOTIFICATION) {
+                event_data.fromState = FromState;
             }
-        }
 
-        /* Notification Class */
-        event_data.notificationClass = currentObject->Notification_Class;
+            /* To State */
+            event_data.toState = currentObject->Event_State;
 
-        /* Event Type */
-        event_data.eventType = EVENT_OUT_OF_RANGE;
+            /* Event Values */
+            if (event_data.notifyType != NOTIFY_ACK_NOTIFICATION) {
+                /* Value that exceeded a limit. */
+                event_data.notificationParams.outOfRange.exceedingValue =
+                    PresentVal;
+                /* Status_Flags of the referenced object. */
+                bitstring_init(&event_data.notificationParams.outOfRange.
+                    statusFlags);
+                bitstring_set_bit(&event_data.notificationParams.outOfRange.
+                    statusFlags, STATUS_FLAG_IN_ALARM,
+                    currentObject->Event_State ? true : false);
+                bitstring_set_bit(&event_data.notificationParams.outOfRange.
+                    statusFlags, STATUS_FLAG_FAULT, false);
+                bitstring_set_bit(&event_data.notificationParams.outOfRange.
+                    statusFlags, STATUS_FLAG_OVERRIDDEN, false);
+                bitstring_set_bit(&event_data.notificationParams.outOfRange.
+                    statusFlags, STATUS_FLAG_OUT_OF_SERVICE,
+                    currentObject->Out_Of_Service);
+                /* Deadband used for limit checking. */
+                event_data.notificationParams.outOfRange.deadband =
+                    currentObject->Deadband;
+                /* Limit that was exceeded. */
+                event_data.notificationParams.outOfRange.exceededLimit =
+                    ExceededLimit;
+            }
 
-        /* Message Text */
-        event_data.messageText = &msgText;
+            /* add data from notification class */
+            Notification_Class_common_reporting_function(&event_data);
 
-        /* Notify Type */
-        /* filled before */
+            /* Ack required */
+            if ((event_data.notifyType != NOTIFY_ACK_NOTIFICATION) &&
+                (event_data.ackRequired == true)) {
+                switch (event_data.toState) {
+                case EVENT_STATE_OFFNORMAL:
+                case EVENT_STATE_HIGH_LIMIT:
+                case EVENT_STATE_LOW_LIMIT:
+                    currentObject->Acked_Transitions[TRANSITION_TO_OFFNORMAL].
+                        bIsAcked = false;
+                    currentObject->Acked_Transitions[TRANSITION_TO_OFFNORMAL].
+                        Time_Stamp = event_data.timeStamp.value.dateTime;
+                    break;
 
-        /* From State */
-        if (event_data.notifyType != NOTIFY_ACK_NOTIFICATION) {
-            event_data.fromState = FromState;
-        }
+                case EVENT_STATE_FAULT:                                         // todo3 - we don't have a fault condition. Review.
+                    currentObject->Acked_Transitions[TRANSITION_TO_FAULT].
+                        bIsAcked = false;
+                    currentObject->Acked_Transitions[TRANSITION_TO_FAULT].
+                        Time_Stamp = event_data.timeStamp.value.dateTime;
+                    break;
 
-        /* To State */
-        event_data.toState = currentObject->Event_State;
+                case EVENT_STATE_NORMAL:
+                    currentObject->Acked_Transitions[TRANSITION_TO_NORMAL].
+                        bIsAcked = false;
+                    currentObject->Acked_Transitions[TRANSITION_TO_NORMAL].
+                        Time_Stamp = event_data.timeStamp.value.dateTime;
+                    break;
 
-        /* Event Values */
-        if (event_data.notifyType != NOTIFY_ACK_NOTIFICATION) {
-            /* Value that exceeded a limit. */
-            event_data.notificationParams.outOfRange.exceedingValue =
-                PresentVal;
-            /* Status_Flags of the referenced object. */
-            bitstring_init(&event_data.notificationParams.outOfRange.
-                statusFlags);
-            bitstring_set_bit(&event_data.notificationParams.outOfRange.
-                statusFlags, STATUS_FLAG_IN_ALARM,
-                currentObject->Event_State ? true : false);
-            bitstring_set_bit(&event_data.notificationParams.outOfRange.
-                statusFlags, STATUS_FLAG_FAULT, false);
-            bitstring_set_bit(&event_data.notificationParams.outOfRange.
-                statusFlags, STATUS_FLAG_OVERRIDDEN, false);
-            bitstring_set_bit(&event_data.notificationParams.outOfRange.
-                statusFlags, STATUS_FLAG_OUT_OF_SERVICE,
-                currentObject->Out_Of_Service);
-            /* Deadband used for limit checking. */
-            event_data.notificationParams.outOfRange.deadband =
-                currentObject->Deadband;
-            /* Limit that was exceeded. */
-            event_data.notificationParams.outOfRange.exceededLimit =
-                ExceededLimit;
-        }
-
-        /* add data from notification class */
-        Notification_Class_common_reporting_function(&event_data);
-
-        /* Ack required */
-        if ((event_data.notifyType != NOTIFY_ACK_NOTIFICATION) &&
-            (event_data.ackRequired == true)) {
-            switch (event_data.toState) {
-            case EVENT_STATE_OFFNORMAL:
-            case EVENT_STATE_HIGH_LIMIT:
-            case EVENT_STATE_LOW_LIMIT:
-                currentObject->Acked_Transitions[TRANSITION_TO_OFFNORMAL].
-                    bIsAcked = false;
-                currentObject->Acked_Transitions[TRANSITION_TO_OFFNORMAL].
-                    Time_Stamp = event_data.timeStamp.value.dateTime;
-                break;
-
-            case EVENT_STATE_FAULT:
-                currentObject->Acked_Transitions[TRANSITION_TO_FAULT].
-                    bIsAcked = false;
-                currentObject->Acked_Transitions[TRANSITION_TO_FAULT].
-                    Time_Stamp = event_data.timeStamp.value.dateTime;
-                break;
-
-            case EVENT_STATE_NORMAL:
-                currentObject->Acked_Transitions[TRANSITION_TO_NORMAL].
-                    bIsAcked = false;
-                currentObject->Acked_Transitions[TRANSITION_TO_NORMAL].
-                    Time_Stamp = event_data.timeStamp.value.dateTime;
-                break;
+                default:
+                    panic();
+                    // note: we are not supporting FAULT state (requires reliability flag. not sure if we want that at this time.) todo2
+                }
             }
         }
     }
-#endif /* defined(INTRINSIC_REPORTING) */
 }
+#endif /* defined(INTRINSIC_REPORTING) */
 
 
-#if (INTRINSIC_REPORTING_AI_B == 1)
+#if (INTRINSIC_REPORTING_B == 1)
 int Analog_Input_Event_Information(
     unsigned index,
     BACNET_GET_EVENT_INFORMATION_DATA * getevent_data)
@@ -1284,8 +1391,7 @@ int Analog_Input_Event_Information(
     bool IsActiveEvent;
     int i;
 
-    if (index >= analogInputs.size()) return -1;  // So there is no exception below
-    AnalogInputObject *currentObject = static_cast<AnalogInputObject *> (analogInputs.at(index));
+    ANALOG_INPUT_DESCR *currentObject = (ANALOG_INPUT_DESCR *)Generic_Index_To_Object(&AI_Descriptor_List, index);
     if (currentObject == NULL) return -1;
 
     /* check index */
@@ -1305,7 +1411,7 @@ int Analog_Input_Event_Information(
     if ((IsActiveEvent) || (IsNotAckedTransitions)) {
         /* Object Identifier */
         getevent_data->objectIdentifier.type = OBJECT_ANALOG_INPUT;
-        getevent_data->objectIdentifier.instance = currentObject->instance; // currentInstance;
+        getevent_data->objectIdentifier.instance = currentObject->common.objectInstance;
 
         /* Event State */
         getevent_data->eventState = currentObject->Event_State;
@@ -1350,16 +1456,34 @@ int Analog_Input_Event_Information(
 }
 
 
+/* return +1 if alarm was acknowledged
+   return -1 if any error occurred
+   return -2 abort */
 int Analog_Input_Alarm_Ack(
-    BACNET_ALARM_ACK_DATA * alarmack_data,
-    BACNET_ERROR_CODE * error_code)
+    BACNET_ALARM_ACK_DATA *alarmack_data,
+    BACNET_ERROR_CLASS *error_class,
+    BACNET_ERROR_CODE *error_code)
 {
-    unsigned int object_index;
+    //     unsigned int object_index;
 
-    AnalogInputObject *currentObject = static_cast<AnalogInputObject *> (BACnetObject::Instance_To_Object(&analogInputs,
-        alarmack_data->eventObjectIdentifier.instance));
+    ANALOG_INPUT_DESCR *currentObject = Analog_Input_Instance_To_Object(alarmack_data->eventObjectIdentifier.instance);
     if (currentObject == NULL) {
+        *error_class = ERROR_CLASS_OBJECT;
         *error_code = ERROR_CODE_UNKNOWN_OBJECT;
+        panic();
+        return -1;
+    }
+
+    if (currentObject == NULL) {
+        panic();
+        return -1;
+    }
+
+    // preset default for rest
+    *error_class = ERROR_CLASS_SERVICES;
+
+    if (alarmack_data->eventStateAcked != currentObject->Event_State) {
+        *error_code = ERROR_CODE_INVALID_EVENT_STATE;
         return -1;
     }
 
@@ -1367,75 +1491,79 @@ int Analog_Input_Alarm_Ack(
     case EVENT_STATE_OFFNORMAL:
     case EVENT_STATE_HIGH_LIMIT:
     case EVENT_STATE_LOW_LIMIT:
-        if (currentObject->Acked_Transitions[TRANSITION_TO_OFFNORMAL].
-            bIsAcked == false) {
-            if (alarmack_data->eventTimeStamp.tag != TIME_STAMP_DATETIME) {
-                *error_code = ERROR_CODE_INVALID_TIME_STAMP;
-                return -1;
-            }
-            if (datetime_compare(&currentObject->
-                Acked_Transitions[TRANSITION_TO_OFFNORMAL].Time_Stamp,
-                &alarmack_data->eventTimeStamp.value.dateTime) > 0) {
-                *error_code = ERROR_CODE_INVALID_TIME_STAMP;
-                return -1;
-            }
-
-            /* FIXME: Send ack notification */
-            currentObject->Acked_Transitions[TRANSITION_TO_OFFNORMAL].
-                bIsAcked = true;
-        }
-        else {
-            *error_code = ERROR_CODE_INVALID_EVENT_STATE;
+        // 2017.05.03 - EKH: I took this check out since it is legitimate to have multiple
+        // acks for any given alarm.. in fact BTL failed us for responding with the original ERROR_CODE_INVALID_EVENT_STATE.
+        // I did replace this with the check "alarmack_data->eventStateAcked != currentObject->Event_State" for anticipated
+        // other upcoming BTL tests
+        //if (currentObject->Acked_Transitions[TRANSITION_TO_OFFNORMAL].
+        //    bIsAcked == false) {
+        if (alarmack_data->eventTimeStamp.tag != TIME_STAMP_DATETIME) {
+            *error_code = ERROR_CODE_INVALID_TIME_STAMP;
             return -1;
         }
+        if (datetime_compare(&currentObject->
+            Acked_Transitions[TRANSITION_TO_OFFNORMAL].Time_Stamp,
+            &alarmack_data->eventTimeStamp.value.dateTime) > 0) {
+            *error_code = ERROR_CODE_INVALID_TIME_STAMP;
+            return -1;
+        }
+
+        /* FIXME: Send ack notification */
+        currentObject->Acked_Transitions[TRANSITION_TO_OFFNORMAL].
+            bIsAcked = true;
+        //}
+        //else {
+            //*error_code = ERROR_CODE_INVALID_EVENT_STATE;
+            //return -1;
+        //}
         break;
 
     case EVENT_STATE_FAULT:
-        if (currentObject->Acked_Transitions[TRANSITION_TO_FAULT].bIsAcked ==
-            false) {
-            if (alarmack_data->eventTimeStamp.tag != TIME_STAMP_DATETIME) {
-                *error_code = ERROR_CODE_INVALID_TIME_STAMP;
-                return -1;
-            }
-            if (datetime_compare(&currentObject->
-                Acked_Transitions[TRANSITION_TO_FAULT].Time_Stamp,
-                &alarmack_data->eventTimeStamp.value.dateTime) > 0) {
-                *error_code = ERROR_CODE_INVALID_TIME_STAMP;
-                return -1;
-            }
-
-            /* FIXME: Send ack notification */
-            currentObject->Acked_Transitions[TRANSITION_TO_FAULT].bIsAcked =
-                true;
-        }
-        else {
-            *error_code = ERROR_CODE_INVALID_EVENT_STATE;
+        //if (currentObject->Acked_Transitions[TRANSITION_TO_FAULT].bIsAcked ==
+        //    false) {
+        if (alarmack_data->eventTimeStamp.tag != TIME_STAMP_DATETIME) {
+            *error_code = ERROR_CODE_INVALID_TIME_STAMP;
             return -1;
         }
+        if (datetime_compare(&currentObject->
+            Acked_Transitions[TRANSITION_TO_FAULT].Time_Stamp,
+            &alarmack_data->eventTimeStamp.value.dateTime) > 0) {
+            *error_code = ERROR_CODE_INVALID_TIME_STAMP;
+            return -1;
+        }
+
+        /* FIXME: Send ack notification */
+        currentObject->Acked_Transitions[TRANSITION_TO_FAULT].bIsAcked =
+            true;
+        //}
+        //else {
+        //    *error_code = ERROR_CODE_INVALID_EVENT_STATE;
+        //    return -1;
+        //}
         break;
 
     case EVENT_STATE_NORMAL:
-        if (currentObject->Acked_Transitions[TRANSITION_TO_NORMAL].bIsAcked ==
-            false) {
-            if (alarmack_data->eventTimeStamp.tag != TIME_STAMP_DATETIME) {
-                *error_code = ERROR_CODE_INVALID_TIME_STAMP;
-                return -1;
-            }
-            if (datetime_compare(&currentObject->
-                Acked_Transitions[TRANSITION_TO_NORMAL].Time_Stamp,
-                &alarmack_data->eventTimeStamp.value.dateTime) > 0) {
-                *error_code = ERROR_CODE_INVALID_TIME_STAMP;
-                return -1;
-            }
-
-            /* FIXME: Send ack notification */
-            currentObject->Acked_Transitions[TRANSITION_TO_NORMAL].bIsAcked =
-                true;
-        }
-        else {
-            *error_code = ERROR_CODE_INVALID_EVENT_STATE;
+        //if (currentObject->Acked_Transitions[TRANSITION_TO_NORMAL].bIsAcked ==
+        //    false) {
+        if (alarmack_data->eventTimeStamp.tag != TIME_STAMP_DATETIME) {
+            *error_code = ERROR_CODE_INVALID_TIME_STAMP;
             return -1;
         }
+        if (datetime_compare(&currentObject->
+            Acked_Transitions[TRANSITION_TO_NORMAL].Time_Stamp,
+            &alarmack_data->eventTimeStamp.value.dateTime) > 0) {
+            *error_code = ERROR_CODE_INVALID_TIME_STAMP;
+            return -1;
+        }
+
+        /* FIXME: Send ack notification */
+        currentObject->Acked_Transitions[TRANSITION_TO_NORMAL].bIsAcked =
+            true;
+        //}
+        //else {
+        //    *error_code = ERROR_CODE_INVALID_EVENT_STATE;
+        //    return -1;
+        //}
         break;
 
     default:
@@ -1448,6 +1576,9 @@ int Analog_Input_Alarm_Ack(
 }
 
 
+#if 0
+// deprecated since rev 13 
+// BTC-todo 2 - does not mean we dont have to test it!
 int Analog_Input_Alarm_Summary(
     unsigned index,
     BACNET_GET_ALARM_SUMMARY_DATA * getalarm_data)
@@ -1489,7 +1620,9 @@ int Analog_Input_Alarm_Summary(
     else
         return -1;      /* end of list  */
 }
-#endif /* defined(INTRINSIC_REPORTING) */
+#endif // 0
+
+#endif /* (INTRINSIC_REPORTING_B == 1) */
 
 
 #ifdef TEST
@@ -1544,7 +1677,6 @@ void testAnalogInput(
     len = decode_object_id(&apdu[len], &decoded_type, &decoded_instance);
     ct_test(pTest, decoded_type == rpdata.object_type);
     ct_test(pTest, decoded_instance == rpdata.object_instance);
-
 }
 
 #ifdef TEST_ANALOG_INPUT

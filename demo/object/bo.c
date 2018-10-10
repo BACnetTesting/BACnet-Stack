@@ -21,17 +21,31 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-/* Binary Output Objects - customize for your use */
-
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include "bacdef.h"
-#include "bacdcode.h"
-#include "bacenum.h"
-#include "bacapp.h"
+//#include <stdbool.h>
+//#include <stdint.h>
+//#include <stdio.h>
+//
+//#include "platform.h"
+//#include "bacdef.h"
+//#include "bacdcode.h"
+//#include "bacenum.h"
+//#include "bactext.h"
 #include "config.h"     /* the custom stuff */
 #if (BACNET_USE_OBJECT_BINARY_OUTPUT == 1 )
 #include "rp.h"
@@ -91,8 +105,10 @@ void Binary_Output_Property_Lists(
         *pOptional = Binary_Output_Properties_Optional;
     if (pProprietary)
         *pProprietary = Binary_Output_Properties_Proprietary;
-
 }
+
+
+// Gets called once for each device
 
 void Binary_Output_Init(
     void)
@@ -113,9 +129,6 @@ void Binary_Output_Init(
 
 }
 
-/* we simply have 0-n object instances.  Yours might be */
-/* more complex, and then you need validate that the */
-/* given instance exists */
 bool Binary_Output_Valid_Instance(
     uint32_t object_instance)
 {
@@ -124,6 +137,7 @@ bool Binary_Output_Valid_Instance(
 
     return false;
 }
+
 
 /* we simply have 0-n object instances.  Yours might be */
 /* more complex, and then count how many you have */
@@ -155,6 +169,7 @@ unsigned Binary_Output_Instance_To_Index(
 
     return index;
 }
+
 
 BACNET_BINARY_PV Binary_Output_Present_Value(
     uint32_t object_instance)
@@ -207,7 +222,8 @@ bool Binary_Output_Object_Name(
     return status;
 }
 
-/* return apdu len, or BACNET_STATUS_ERROR on error */
+
+/* return apdu length, or BACNET_STATUS_ERROR on error */
 int Binary_Output_Read_Property(
     BACNET_READ_PROPERTY_DATA * rpdata)
 {
@@ -226,127 +242,142 @@ int Binary_Output_Read_Property(
         (rpdata->application_data_len == 0)) {
         return 0;
     }
+
     apdu = rpdata->application_data;
     switch (rpdata->object_property) {
-        case PROP_OBJECT_IDENTIFIER:
-            apdu_len =
+
+    case PROP_OBJECT_IDENTIFIER:
+        apdu_len =
                 encode_application_object_id(&apdu[0], OBJECT_BINARY_OUTPUT,
                 rpdata->object_instance);
-            break;
-            /* note: Name and Description don't have to be the same.
-               You could make Description writable and different */
-        case PROP_OBJECT_NAME:
-        case PROP_DESCRIPTION:
-            Binary_Output_Object_Name(rpdata->object_instance, &char_string);
+        break;
+
+    case PROP_OBJECT_NAME:
+    case PROP_DESCRIPTION:
+        Binary_Output_Object_Name(rpdata->object_instance, &char_string);
+        apdu_len =
+            encode_application_character_string(&apdu[0], &char_string);
+        break;
+
+    case PROP_OBJECT_TYPE:
+        apdu_len =
+            encode_application_enumerated(&apdu[0], OBJECT_BINARY_OUTPUT);
+        break;
+
+    case PROP_PRESENT_VALUE:
+        present_value =
+            Binary_Output_Present_Value(rpdata->object_instance);
+        apdu_len = encode_application_enumerated(&apdu[0], present_value);
+        break;
+
+    case PROP_STATUS_FLAGS:
+        bitstring_init(&bit_string);
+        bitstring_set_bit(&bit_string, STATUS_FLAG_IN_ALARM, false);
+        bitstring_set_bit(&bit_string, STATUS_FLAG_FAULT, false);
+        bitstring_set_bit(&bit_string, STATUS_FLAG_OVERRIDDEN, false);
+        bitstring_set_bit(&bit_string, STATUS_FLAG_OUT_OF_SERVICE, false);
+        apdu_len = encode_application_bitstring(&apdu[0], &bit_string);
+        break;
+
+    case PROP_EVENT_STATE:
+        /* note: see the details in the standard on how to use this */
+        apdu_len =
+            encode_application_enumerated(&apdu[0], EVENT_STATE_NORMAL);
+        break;
+
+    case PROP_OUT_OF_SERVICE:
+        object_index =
+            Binary_Output_Instance_To_Index(rpdata->object_instance);
+        state = Out_Of_Service[object_index];
+        apdu_len = encode_application_boolean(&apdu[0], state);
+        break;
+
+    case PROP_POLARITY:
+        apdu_len = encode_application_enumerated(&apdu[0], polarity);
+        break;
+
+    case PROP_PRIORITY_ARRAY:
+        /* Array element zero is the number of elements in the array */
+        if (rpdata->array_index == 0)
             apdu_len =
-                encode_application_character_string(&apdu[0], &char_string);
-            break;
-        case PROP_OBJECT_TYPE:
-            apdu_len =
-                encode_application_enumerated(&apdu[0], OBJECT_BINARY_OUTPUT);
-            break;
-        case PROP_PRESENT_VALUE:
-            present_value =
-                Binary_Output_Present_Value(rpdata->object_instance);
-            apdu_len = encode_application_enumerated(&apdu[0], present_value);
-            break;
-        case PROP_STATUS_FLAGS:
-            /* note: see the details in the standard on how to use these */
-            bitstring_init(&bit_string);
-            bitstring_set_bit(&bit_string, STATUS_FLAG_IN_ALARM, false);
-            bitstring_set_bit(&bit_string, STATUS_FLAG_FAULT, false);
-            bitstring_set_bit(&bit_string, STATUS_FLAG_OVERRIDDEN, false);
-            bitstring_set_bit(&bit_string, STATUS_FLAG_OUT_OF_SERVICE, false);
-            apdu_len = encode_application_bitstring(&apdu[0], &bit_string);
-            break;
-        case PROP_EVENT_STATE:
-            /* note: see the details in the standard on how to use this */
-            apdu_len =
-                encode_application_enumerated(&apdu[0], EVENT_STATE_NORMAL);
-            break;
-        case PROP_OUT_OF_SERVICE:
+                encode_application_unsigned(&apdu[0], BACNET_MAX_PRIORITY);
+        /* if no index was specified, then try to encode the entire list */
+        /* into one packet. */
+        else if (rpdata->array_index == BACNET_ARRAY_ALL) {
             object_index =
                 Binary_Output_Instance_To_Index(rpdata->object_instance);
-            state = Out_Of_Service[object_index];
-            apdu_len = encode_application_boolean(&apdu[0], state);
-            break;
-        case PROP_POLARITY:
-            apdu_len = encode_application_enumerated(&apdu[0], polarity);
-            break;
-        case PROP_PRIORITY_ARRAY:
-            /* Array element zero is the number of elements in the array */
-            if (rpdata->array_index == 0)
-                apdu_len =
-                    encode_application_unsigned(&apdu[0], BACNET_MAX_PRIORITY);
-            /* if no index was specified, then try to encode the entire list */
-            /* into one packet. */
-            else if (rpdata->array_index == BACNET_ARRAY_ALL) {
-                object_index =
-                    Binary_Output_Instance_To_Index(rpdata->object_instance);
-                for (i = 0; i < BACNET_MAX_PRIORITY; i++) {
-                    /* FIXME: check if we have room before adding it to APDU */
-                    if (Binary_Output_Level[object_index][i] == BINARY_NULL)
-                        len = encode_application_null(&apdu[apdu_len]);
-                    else {
-                        present_value = Binary_Output_Level[object_index][i];
-                        len =
-                            encode_application_enumerated(&apdu[apdu_len],
+            for (i = 0; i < BACNET_MAX_PRIORITY; i++) {
+                /* FIXME: check if we have room before adding it to APDU */
+                if (Binary_Output_Level[object_index][i] == BINARY_NULL)
+                    len = encode_application_null(&apdu[apdu_len]);
+                else {
+                    present_value = Binary_Output_Level[object_index][i];
+                    len =
+                        encode_application_enumerated(&apdu[apdu_len],
                             present_value);
-                    }
-                    /* add it if we have room */
-                    if ((apdu_len + len) < MAX_APDU)
-                        apdu_len += len;
-                    else {
-                        rpdata->error_code =
-                            ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
-                        apdu_len = BACNET_STATUS_ABORT;
-                        break;
-                    }
                 }
-            } else {
-                object_index =
-                    Binary_Output_Instance_To_Index(rpdata->object_instance);
-                if (rpdata->array_index <= BACNET_MAX_PRIORITY) {
-                    if (Binary_Output_Level[object_index][rpdata->array_index -
-                            1] == BINARY_NULL)
-                        apdu_len = encode_application_null(&apdu[apdu_len]);
-                    else {
-                        present_value = Binary_Output_Level[object_index]
-                            [rpdata->array_index - 1];
-                        apdu_len =
-                            encode_application_enumerated(&apdu[apdu_len],
-                            present_value);
-                    }
-                } else {
-                    rpdata->error_class = ERROR_CLASS_PROPERTY;
-                    rpdata->error_code = ERROR_CODE_INVALID_ARRAY_INDEX;
-                    apdu_len = BACNET_STATUS_ERROR;
+                /* add it if we have room */
+                if ((apdu_len + len) < MAX_APDU)
+                    apdu_len += len;
+                else {
+                    rpdata->error_code =
+                        ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
+                    apdu_len = BACNET_STATUS_ABORT;
+                    break;
                 }
             }
-
-            break;
-        case PROP_RELINQUISH_DEFAULT:
-            present_value = RELINQUISH_DEFAULT_BINARY;
-            apdu_len = encode_application_enumerated(&apdu[0], present_value);
-            break;
-        case PROP_ACTIVE_TEXT:
-            characterstring_init_ansi(&char_string, "on");
-            apdu_len =
-                encode_application_character_string(&apdu[0], &char_string);
-            break;
-        case PROP_INACTIVE_TEXT:
-            characterstring_init_ansi(&char_string, "off");
-            apdu_len =
-                encode_application_character_string(&apdu[0], &char_string);
-            break;
-        default:
+        }
+        else {
+            object_index =
+                Binary_Output_Instance_To_Index(rpdata->object_instance);
+            if (rpdata->array_index <= BACNET_MAX_PRIORITY) {
+                if (Binary_Output_Level[object_index][rpdata->array_index -
+                        1] == BINARY_NULL)
+                    apdu_len = encode_application_null(&apdu[apdu_len]);
+                else {
+                    present_value = Binary_Output_Level[object_index]
+                        [rpdata->array_index - 1];
+                    apdu_len =
+                        encode_application_enumerated(&apdu[apdu_len],
+                            present_value);
+                }
+        }
+        else {
             rpdata->error_class = ERROR_CLASS_PROPERTY;
-            rpdata->error_code = ERROR_CODE_UNKNOWN_PROPERTY;
+            rpdata->error_code = ERROR_CODE_INVALID_ARRAY_INDEX;
             apdu_len = BACNET_STATUS_ERROR;
-            break;
+            }
+        }
+        break;
+
+    case PROP_RELINQUISH_DEFAULT:
+        present_value = RELINQUISH_DEFAULT_BINARY;
+        apdu_len = encode_application_enumerated(&apdu[0], present_value);
+        break;
+
+    case PROP_ACTIVE_TEXT:
+        characterstring_init_ansi(&char_string, "on");
+        apdu_len =
+            encode_application_character_string(&apdu[0], &char_string);
+        break;
+
+    case PROP_INACTIVE_TEXT:
+        characterstring_init_ansi(&char_string, "off");
+        apdu_len =
+            encode_application_character_string(&apdu[0], &char_string);
+        break;
+
+    default:
+        rpdata->error_class = ERROR_CLASS_PROPERTY;
+        rpdata->error_code = ERROR_CODE_UNKNOWN_PROPERTY;
+        apdu_len = BACNET_STATUS_ERROR;
+        break;
     }
+
     /*  only array properties can have array options */
-    if ((apdu_len >= 0) && (rpdata->object_property != PROP_PRIORITY_ARRAY) &&
+    if ((apdu_len >= 0) &&
+        (rpdata->object_property != PROP_PRIORITY_ARRAY) &&
+        // btc todo1 - BTC missed this? (rpdata->object_property != PROP_PROPERTY_LIST) &&
         (rpdata->array_index != BACNET_ARRAY_ALL)) {
         rpdata->error_class = ERROR_CLASS_PROPERTY;
         rpdata->error_code = ERROR_CODE_PROPERTY_IS_NOT_AN_ARRAY;
@@ -355,6 +386,7 @@ int Binary_Output_Read_Property(
 
     return apdu_len;
 }
+
 
 /* returns true if successful */
 bool Binary_Output_Write_Property(
@@ -367,10 +399,11 @@ bool Binary_Output_Write_Property(
     int len = 0;
     BACNET_APPLICATION_DATA_VALUE value;
 
-    /* decode the some of the request */
+    /* decode some of the request */
     len =
         bacapp_decode_application_data(wp_data->application_data,
-        wp_data->application_data_len, &value);
+            wp_data->application_data_len, &value);
+            
     /* FIXME: len < application_data_len: more data? */
     if (len < 0) {
         /* error while decoding - a value larger than we can handle */
@@ -378,101 +411,112 @@ bool Binary_Output_Write_Property(
         wp_data->error_code = ERROR_CODE_VALUE_OUT_OF_RANGE;
         return false;
     }
-    if ((wp_data->object_property != PROP_PRIORITY_ARRAY) &&
-        (wp_data->array_index != BACNET_ARRAY_ALL)) {
-        /*  only array properties can have array options */
+
+    /*  only array properties can have array options */
+    if ((wp_data->array_index != BACNET_ARRAY_ALL) &&
+        (wp_data->object_property != PROP_PRIORITY_ARRAY) &&
+#if (INTRINSIC_REPORTING_B == 1)
+        (wp_data->object_property != PROP_EVENT_TIME_STAMPS) &&
+#endif
+        (wp_data->object_property != PROP_PROPERTY_LIST)) {
         wp_data->error_class = ERROR_CLASS_PROPERTY;
         wp_data->error_code = ERROR_CODE_PROPERTY_IS_NOT_AN_ARRAY;
         return false;
     }
     switch (wp_data->object_property) {
-        case PROP_PRESENT_VALUE:
-            if (value.tag == BACNET_APPLICATION_TAG_ENUMERATED) {
-                priority = wp_data->priority;
+
+    case PROP_PRESENT_VALUE:
+        if (value.tag == BACNET_APPLICATION_TAG_ENUMERATED) {
+            priority = wp_data->priority;
+            /* Command priority 6 is reserved for use by Minimum On/Off
+               algorithm and may not be used for other purposes in any
+               object. */
+            if (priority && (priority <= BACNET_MAX_PRIORITY) &&
+                (priority != 6 /* reserved */ ) &&
+                (value.type.Enumerated <= MAX_BINARY_PV)) {
+                level = (BACNET_BINARY_PV) value.type.Enumerated;
+                object_index =
+                    Binary_Output_Instance_To_Index
+                    (wp_data->object_instance);
+                priority--;
+                Binary_Output_Level[object_index][priority] = level;
+                /* Note: you could set the physical output here if we
+                   are the highest priority.
+                   However, if Out of Service is TRUE, then don't set the
+                   physical output.  This comment may apply to the
+                   main loop (i.e. check out of service before changing output) */
+                status = true;
+            } else if (priority == 6) {
                 /* Command priority 6 is reserved for use by Minimum On/Off
                    algorithm and may not be used for other purposes in any
                    object. */
-                if (priority && (priority <= BACNET_MAX_PRIORITY) &&
-                    (priority != 6 /* reserved */ ) &&
-                    (value.type.Enumerated <= MAX_BINARY_PV)) {
-                    level = (BACNET_BINARY_PV) value.type.Enumerated;
-                    object_index =
-                        Binary_Output_Instance_To_Index
-                        (wp_data->object_instance);
+                wp_data->error_class = ERROR_CLASS_PROPERTY;
+                wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
+            } else {
+                wp_data->error_class = ERROR_CLASS_PROPERTY;
+                wp_data->error_code = ERROR_CODE_VALUE_OUT_OF_RANGE;
+            }
+        } else {
+            status =
+                WPValidateArgType(&value, BACNET_APPLICATION_TAG_NULL,
+                &wp_data->error_class, &wp_data->error_code);
+            if (status) {
+                level = BINARY_NULL;
+                object_index =
+                    Binary_Output_Instance_To_Index
+                    (wp_data->object_instance);
+                priority = wp_data->priority;
+                if (priority && (priority <= BACNET_MAX_PRIORITY)) {
                     priority--;
                     Binary_Output_Level[object_index][priority] = level;
-                    /* Note: you could set the physical output here if we
-                       are the highest priority.
+                    /* Note: you could set the physical output here to the next
+                       highest priority, or to the relinquish default if no
+                       priorities are set.
                        However, if Out of Service is TRUE, then don't set the
                        physical output.  This comment may apply to the
                        main loop (i.e. check out of service before changing output) */
-                    status = true;
-                } else if (priority == 6) {
-                    /* Command priority 6 is reserved for use by Minimum On/Off
-                       algorithm and may not be used for other purposes in any
-                       object. */
-                    wp_data->error_class = ERROR_CLASS_PROPERTY;
-                    wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
                 } else {
+                    status = false;
                     wp_data->error_class = ERROR_CLASS_PROPERTY;
                     wp_data->error_code = ERROR_CODE_VALUE_OUT_OF_RANGE;
                 }
-            } else {
-                status =
-                    WPValidateArgType(&value, BACNET_APPLICATION_TAG_NULL,
-                    &wp_data->error_class, &wp_data->error_code);
-                if (status) {
-                    level = BINARY_NULL;
-                    object_index =
-                        Binary_Output_Instance_To_Index
-                        (wp_data->object_instance);
-                    priority = wp_data->priority;
-                    if (priority && (priority <= BACNET_MAX_PRIORITY)) {
-                        priority--;
-                        Binary_Output_Level[object_index][priority] = level;
-                        /* Note: you could set the physical output here to the next
-                           highest priority, or to the relinquish default if no
-                           priorities are set.
-                           However, if Out of Service is TRUE, then don't set the
-                           physical output.  This comment may apply to the
-                           main loop (i.e. check out of service before changing output) */
-                    } else {
-                        status = false;
-                        wp_data->error_class = ERROR_CLASS_PROPERTY;
-                        wp_data->error_code = ERROR_CODE_VALUE_OUT_OF_RANGE;
-                    }
-                }
             }
-            break;
-        case PROP_OUT_OF_SERVICE:
-            status =
-                WPValidateArgType(&value, BACNET_APPLICATION_TAG_BOOLEAN,
+        }
+        break;
+
+    case PROP_OUT_OF_SERVICE:
+        status =
+            WPValidateArgType(&value, BACNET_APPLICATION_TAG_BOOLEAN,
                 &wp_data->error_class, &wp_data->error_code);
-            if (status) {
-                object_index =
-                    Binary_Output_Instance_To_Index(wp_data->object_instance);
-                Out_Of_Service[object_index] =
-                    value.type.Boolean;
-            }
-            break;
-        case PROP_OBJECT_IDENTIFIER:
-        case PROP_OBJECT_NAME:
-        case PROP_OBJECT_TYPE:
-        case PROP_STATUS_FLAGS:
-        case PROP_RELIABILITY:
-        case PROP_EVENT_STATE:
-        case PROP_POLARITY:
-        case PROP_PRIORITY_ARRAY:
-        case PROP_RELINQUISH_DEFAULT:
-        case PROP_ACTIVE_TEXT:
-        case PROP_INACTIVE_TEXT:
-            wp_data->error_class = ERROR_CLASS_PROPERTY;
-            wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
-            break;
-        default:
-            wp_data->error_class = ERROR_CLASS_PROPERTY;
-            wp_data->error_code = ERROR_CODE_UNKNOWN_PROPERTY;
-            break;
+        if (status) {
+            object_index =
+                Binary_Output_Instance_To_Index(wp_data->object_instance);
+            Out_Of_Service[object_index] =
+                value.type.Boolean;
+        }
+        break;
+
+    case PROP_ACTIVE_TEXT:
+    case PROP_DESCRIPTION:
+    case PROP_INACTIVE_TEXT:
+    case PROP_OBJECT_IDENTIFIER:
+    case PROP_OBJECT_NAME:
+    case PROP_OBJECT_TYPE:
+    case PROP_STATUS_FLAGS:
+    case PROP_RELIABILITY:
+    case PROP_EVENT_STATE:
+    case PROP_POLARITY:
+    case PROP_PRIORITY_ARRAY:
+    case PROP_RELINQUISH_DEFAULT:
+    case PROP_PROPERTY_LIST:
+        wp_data->error_class = ERROR_CLASS_PROPERTY;
+        wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
+        break;
+
+    default:
+        wp_data->error_class = ERROR_CLASS_PROPERTY;
+        wp_data->error_code = ERROR_CODE_UNKNOWN_PROPERTY;
+        break;
     }
 
     return status;

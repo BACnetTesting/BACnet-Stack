@@ -1,25 +1,29 @@
-/**************************************************************************
-
-Copyright (C) 2018 BACnet Interoperability Testing Services, Inc.
-
-This program is free software : you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
-GNU Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public License
-along with this program.If not, see <http://www.gnu.org/licenses/>.
-
-For more information : info@bac-test.com
-For access to source code : info@bac-test.com
-or www.github.com/bacnettesting/bacnet-stack
-
-*********************************************************************/
+/****************************************************************************************
+*
+*   Copyright (C) 2018 BACnet Interoperability Testing Services, Inc.
+*
+*   This program is free software : you can redistribute it and/or modify
+*   it under the terms of the GNU Lesser General Public License as published by
+*   the Free Software Foundation, either version 3 of the License, or
+*   (at your option) any later version.
+*
+*   This program is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+*   GNU Lesser General Public License for more details.
+*
+*   You should have received a copy of the GNU Lesser General Public License
+*   along with this program.If not, see <http://www.gnu.org/licenses/>.
+*
+*   For more information : info@bac-test.com
+*
+*   For access to source code :
+*
+*       info@bac-test.com
+*           or
+*       www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
 /*
     ESE  -   Embedded System Error reporting
@@ -61,6 +65,9 @@ void ese_enqueue_uint8( uint8_t value)
     sys_err_buffer[eseHead++] = value;
     if (eseHead >= MX_ESE) eseHead = 0;
 #endif
+    
+    // and if we want to flash something....
+    // FlashErr_enqueue(value);
 }
 
 void ese_enqueue( ESE value )
@@ -80,7 +87,7 @@ void ese_enqueue_once(ESE value)
     uint8_t i = eseTail;
     while (i != eseHead)
         {
-        if (sys_err_buffer[i++] == (uint8_t) value + 0x80 ) return;
+        if (sys_err_buffer[i++] == (uint8_t) value ) return;
         if (i >= MX_ESE) i = 0;
         }
     ese_enqueue(value);

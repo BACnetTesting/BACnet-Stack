@@ -30,12 +30,30 @@
  * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include "bacdef.h"
+
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
+
 #include "bacdcode.h"
 #include "bacenum.h"
 #include "bacapp.h"
@@ -82,13 +100,15 @@ static const BACNET_PROPERTY_ID Channel_Properties_Required[] = {
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
     PROP_PRESENT_VALUE,
-    PROP_LAST_PRIORITY,
-    PROP_WRITE_STATUS,
     PROP_STATUS_FLAGS,
     PROP_OUT_OF_SERVICE,
     PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES,
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
+    PROP_LAST_PRIORITY,
+    PROP_WRITE_STATUS,
     PROP_CHANNEL_NUMBER,
     PROP_CONTROL_GROUPS,
+#endif
     MAX_BACNET_PROPERTY_ID
 };
 
@@ -241,7 +261,7 @@ unsigned Channel_Last_Priority(uint32_t object_instance)
  */
 BACNET_WRITE_STATUS Channel_Write_Status(uint32_t object_instance)
 {
-    unsigned index = 0;
+    unsigned index ;
     BACNET_WRITE_STATUS priority = BACNET_WRITE_STATUS_IDLE ;
 
     index = Channel_Instance_To_Index(object_instance);
@@ -1175,6 +1195,7 @@ bool Channel_Write_Member_Value(
                     wp_data->application_data_len = apdu_len;
                     status = true;
                 }
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
             } else if ((wp_data->object_property == PROP_LIGHTING_COMMAND) &&
                 (wp_data->array_index == BACNET_ARRAY_ALL)) {
                 apdu_len = Channel_Coerce_Data_Encode(
@@ -1186,7 +1207,8 @@ bool Channel_Write_Member_Value(
                     wp_data->application_data_len = apdu_len;
                     status = true;
                 }
-            }
+#endif
+			}
         }
     }
 
@@ -1406,6 +1428,7 @@ int Channel_Read_Property(BACNET_READ_PROPERTY_DATA * rpdata)
                 apdu_len = encode_application_null(&apdu[0]);
             }
             break;
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
         case PROP_LAST_PRIORITY:
             unsigned_value = Channel_Last_Priority(rpdata->object_instance);
             apdu_len =
@@ -1418,6 +1441,7 @@ int Channel_Read_Property(BACNET_READ_PROPERTY_DATA * rpdata)
             apdu_len =
                 encode_application_enumerated(&apdu[0], unsigned_value);
             break;
+#endif
         case PROP_STATUS_FLAGS:
             bitstring_init(&bit_string);
             bitstring_set_bit(&bit_string, STATUS_FLAG_IN_ALARM, false);
@@ -1592,6 +1616,7 @@ bool Channel_Write_Property(BACNET_WRITE_PROPERTY_DATA * wp_data)
             wp_data->error_class = ERROR_CLASS_PROPERTY;
             wp_data->error_code = ERROR_CODE_OPTIONAL_FUNCTIONALITY_NOT_SUPPORTED;
             break;
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
         case PROP_CHANNEL_NUMBER:
             status =
                 WPValidateArgType(&value, BACNET_APPLICATION_TAG_UNSIGNED_INT,
@@ -1661,11 +1686,14 @@ bool Channel_Write_Property(BACNET_WRITE_PROPERTY_DATA * wp_data)
                 wp_data->error_code = ERROR_CODE_INVALID_DATA_TYPE;
             }
             break;
+#endif
         case PROP_OBJECT_IDENTIFIER:
         case PROP_OBJECT_NAME:
         case PROP_OBJECT_TYPE:
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
         case PROP_LAST_PRIORITY:
         case PROP_WRITE_STATUS:
+#endif
         case PROP_STATUS_FLAGS:
             wp_data->error_class = ERROR_CLASS_PROPERTY;
             wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
@@ -1708,3 +1736,5 @@ void Channel_Init(void)
     }
 
 }
+
+#endif // BACNET_PROTOCOL_REVISION >= 14
