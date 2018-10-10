@@ -405,6 +405,9 @@
     <ClInclude Include="..\..\include\whois.h" />
     <ClInclude Include="..\..\include\wp.h" />
     <ClInclude Include="..\..\include\wpm.h" />
+    <ClInclude Include="..\..\ports\win32\net.h" />
+    <ClInclude Include="..\..\ports\win32\rs485.h" />
+    <ClInclude Include="..\..\ports\win32\timer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

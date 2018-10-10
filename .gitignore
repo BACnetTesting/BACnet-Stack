@@ -1,7 +1,7 @@
-*.idb 
-*.tlog 
-*.db 
-*.opendb 
+*.idb
+*.tlog
+*.db
+*.opendb
 *.o
 *.obj
 *.pdb
@@ -44,3 +44,4 @@ libbacnet.a
 /*.vpw
 /*.vpwhist
 /*.vtg
+*.dsp

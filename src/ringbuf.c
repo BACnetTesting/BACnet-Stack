@@ -181,7 +181,7 @@ volatile uint8_t *Ringbuf_Peek(RING_BUFFER const *b)
 }
 
 /**
-* DESCRIPTION: Copy the data from the front of the list, and removes it
+* Looks at the data from the next element of the list without removing it
 *
 * @param  b - pointer to RING_BUFFER structure
 * @param  data_element - find the next element from this one

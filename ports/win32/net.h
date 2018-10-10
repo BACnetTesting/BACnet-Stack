@@ -29,11 +29,11 @@
 #define WIN32_LEAN_AND_MEAN
 #define STRICT 1
 /* Windows XP minimum */
-#if (_WIN32_WINNT < 0x501)
-//  #undef _WIN32_WINNT
-//  #define _WIN32_WINNT 0x501
-//  #undef NTDDI_VERSION
-//  #define NTDDI_VERSION _NTDDI_VERSION_FROM_WIN32_WINNT(_WIN32_WINNT)
+#if (_WIN32_WINNT < _WIN32_WINNT_WINXP)
+  #undef _WIN32_WINNT
+  #define _WIN32_WINNT _WIN32_WINNT_WINXP
+  #undef NTDDI_VERSION
+  #define NTDDI_VERSION NTDDI_WINXP
 #endif
 
 
@@ -42,31 +42,34 @@
  (!defined(USE_CLASSADDR) || (USE_CLASSADDR == 0))
 #include <iphlpapi.h>
 #endif
-// #include <windows.h>
+#include <windows.h>
 #include <winsock2.h>
-//#include <ws2tcpip.h>
-//#ifndef IPPROTO_IPV6
+#include <ws2tcpip.h>
+#ifndef IPPROTO_IPV6
    // If the version of winsock does not by default include IPV6 then
    // use the tech preview if it is avaliable.
-//   #include <tpipv6.h>
-//#endif
-//#include <stdlib.h>
-//#include <stdio.h>
-//#ifdef __MINGW32__
-//#include <ws2spi.h>
-//#else
-//#include <wspiapi.h>
-//#endif
+
+	// 2018.05.07 - EKH: Can someone explain where to get this file?
+	// Is it even still required?
+	// #include <tpipv6.h>
+#endif
+#include <stdlib.h>
+#include <stdio.h>
+#ifdef __MINGW32__
+#include <ws2spi.h>
+#else
+#include <wspiapi.h>
+#endif
 
 #include <sys/timeb.h>
 
-//#ifdef _MSC_VER
-//#define inline __inline
-//#endif
+#ifdef _MSC_VER
+#define inline __inline
+#endif
 
-//#ifdef __BORLANDC__
-//#define inline __inline
-//#endif
+#ifdef __BORLANDC__
+#define inline __inline
+#endif
 
 #define close closesocket
 

@@ -23,17 +23,23 @@
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
 *********************************************************************/
+
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
+
 #define WIN32_LEAN_AND_MEAN
 #define STRICT 1
 #include <windows.h>
+#include <timeapi.h>
+
 #include "net.h"
 #include <MMSystem.h>
 #include "timer.h"
+
+#pragma comment(lib, "Winmm.lib")           // for timeGetTime()
 
 /* Offset between Windows epoch 1/1/1601 and
    Unix epoch 1/1/1970 in 100 nanosec units */

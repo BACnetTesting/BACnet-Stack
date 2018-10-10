@@ -440,7 +440,7 @@ typedef enum {
     PROP_BBMD_ACCEPT_FD_REGISTRATIONS = 413,
     PROP_BBMD_BROADCAST_DISTRIBUTION_TABLE = 414,
     PROP_BBMD_FOREIGN_DEVICE_TABLE = 415,
-	PROP_CHANGES_PENDING = 416,
+    PROP_CHANGES_PENDING = 416,
     PROP_COMMAND = 417,
     PROP_FD_BBMD_ADDRESS = 418,
     PROP_FD_SUBSCRIPTION_LIFETIME = 419,
@@ -2130,10 +2130,12 @@ typedef enum {
     PORT_TYPE_BIP = 5,
     PORT_TYPE_ZIGBEE = 6,
     PORT_TYPE_VIRTUAL = 7,
-    PORT_TYPE_NON_BACNET = 8
-        /* Enumerated values 0-63 are reserved for definition by ASHRAE.
-           Enumerated values 64-255 may be used by others subject to the
-           procedures and constraints described in Clause 23. */
+    PORT_TYPE_NON_BACNET = 8,
+    PORT_TYPE_BIP6 = 9,
+    /* Enumerated values 0-63 are reserved for definition by ASHRAE.
+       Enumerated values 64-255 may be used by others subject to the
+       procedures and constraints described in Clause 23. */
+    PORT_TYPE_MAX = 255
 } BACNET_PORT_TYPE;
 
 /* BACnetNetworkNumberQuality ::= ENUMERATED */
@@ -2154,9 +2156,9 @@ typedef enum {
     PORT_COMMAND_RESTART_AUTONEGOTIATION = 5,
     PORT_COMMAND_DISCONNECT = 6,
     PORT_COMMAND_RESTART_PORT = 7
-        /* Enumerated values 0-127 are reserved for definition by ASHRAE.
-           Enumerated values 128-255 may be used by others subject to the
-           procedures and constraints described in Clause 23. */
+    /* Enumerated values 0-127 are reserved for definition by ASHRAE.
+       Enumerated values 128-255 may be used by others subject to the
+       procedures and constraints described in Clause 23. */
 } BACNET_PORT_COMMAND;
 
 typedef enum {
@@ -2230,9 +2232,9 @@ typedef enum {
     ACCESS_CREDENTIAL_DISABLE_MANUAL = 2,
     ACCESS_CREDENTIAL_DISABLE_LOCKOUT = 3,
     ACCESS_CREDENTIAL_DISABLE_MAX = 4
-    /* Enumerated values 0-63 are reserved for definition by ASHRAE.
-       Enumerated values 64-65535 may be used by others subject to
-       the procedures and constraints described in Clause 23. */
+        /* Enumerated values 0-63 are reserved for definition by ASHRAE.
+           Enumerated values 64-65535 may be used by others subject to
+           the procedures and constraints described in Clause 23. */
 } BACNET_ACCESS_CREDENTIAL_DISABLE;
 
 typedef enum {
@@ -2247,9 +2249,9 @@ typedef enum {
     CREDENTIAL_DISABLED_INACTIVITY = 8,
     CREDENTIAL_DISABLED_MANUAL = 9,
     CREDENTIAL_DISABLED_MAX = 10
-    /* Enumerated values 0-63 are reserved for definition by ASHRAE.
-       Enumerated values 64-65535 may be used by others subject to
-       the procedures and constraints described in Clause 23. */
+        /* Enumerated values 0-63 are reserved for definition by ASHRAE.
+           Enumerated values 64-65535 may be used by others subject to
+           the procedures and constraints described in Clause 23. */
 } BACNET_ACCESS_CREDENTIAL_DISABLE_REASON;
 
 typedef enum {
@@ -2260,9 +2262,9 @@ typedef enum {
     AUTHENTICATION_DISABLED_DAMAGED = 4,
     AUTHENTICATION_DISABLED_DESTROYED = 5,
     AUTHENTICATION_DISABLED_MAX = 6
-    /* Enumerated values 0-63 are reserved for definition by ASHRAE.
-       Enumerated values 64-65535 may be used by others subject to
-       the procedures and constraints described in Clause 23. */
+        /* Enumerated values 0-63 are reserved for definition by ASHRAE.
+           Enumerated values 64-65535 may be used by others subject to
+           the procedures and constraints described in Clause 23. */
 } BACNET_AUTHENTICATION_DISABLE_REASON;
 
 typedef enum {
@@ -2333,15 +2335,28 @@ typedef enum BACnetNetworkPortCommand_T {
     NETWORK_PORT_COMMAND_RESTART_AUTONEGOTIATION = 5,
     NETWORK_PORT_COMMAND_DISCONNECT = 6,
     NETWORK_PORT_COMMAND_RESTART_PORT = 7,
-    /* Enumerated values 0-127 are reserved for definition 
-       by ASHRAE. Enumerated values 128-255 may be used 
-       by others subject to the procedures and constraints 
-       described in Clause 23.*/
+    /* Enumerated values 0-127 are reserved for definition
+       by ASHRAE. Enumerated values 128-255 may be used
+       by others subject to the procedures and constraints
+       described in Clause 23. */
     /* do the max range inside of enum so that
        compilers will allocate adequate sized datatype for enum
        which is used to store decoding */
     NETWORK_PORT_COMMAND_PROPRIETARY_MIN = 128,
     NETWORK_PORT_COMMAND_PROPRIETARY_MAX = 255
 } BACNET_NETWORK_PORT_COMMAND;
+
+typedef enum BACnetProtocolLevel_T {
+    BACNET_PROTOCOL_LEVEL_PHYSICAL=0,
+    BACNET_PROTOCOL_LEVEL_PROTOCOL=1,
+    BACNET_PROTOCOL_LEVEL_BACNET_APPLICATION=2,
+    BACNET_PROTOCOL_LEVEL_NON_BACNET_APPLICATION=3
+} BACNET_PROTOCOL_LEVEL;
+
+typedef enum BACnetIPMode_T {
+    BACNET_IP_MODE_NORMAL = 0,
+    BACNET_IP_MODE_FOREIGN = 1,
+    BACNET_IP_MODE_BBMD = 2
+} BACNET_IP_MODE;
 
 #endif /* end of BACENUM_H */

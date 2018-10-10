@@ -17,6 +17,7 @@ MY_BACNET_DEFINES += -DBACFILE
 MY_BACNET_DEFINES += -DINTRINSIC_REPORTING
 MY_BACNET_DEFINES += -DBACNET_TIME_MASTER
 MY_BACNET_DEFINES += -DBACNET_PROPERTY_LISTS=1
+MY_BACNET_DEFINES += -DBACNET_PROTOCOL_REVISION=17
 BACNET_DEFINES ?= $(MY_BACNET_DEFINES)
 
 # un-comment the next line to build in uci integration
@@ -73,7 +74,7 @@ gateway:
 	$(MAKE) -B -s -C demo gateway
 
 server:
-	$(MAKE) -B -C demo server
+	$(MAKE) -j -B -C demo server
 
 mstpcap:
 	$(MAKE) -B -C demo mstpcap
@@ -86,6 +87,9 @@ iam:
 
 uevent:
 	$(MAKE) -B -C demo uevent
+
+writepropm:
+	$(MAKE) -s -B -C demo writepropm
 
 abort:
 	$(MAKE) -B -C demo abort
@@ -100,14 +104,17 @@ router-ipv6:
 	$(MAKE) -B -s -C demo router-ipv6
 
 # Add "ports" to the build, if desired
-ports:	atmega168 bdk-atxx4-mstp at91sam7s
+ports:	atmega168 bdk-atxx4-mstp at91sam7s stm32f10x
 	@echo "Built the ARM7 and AVR ports"
 
 atmega168: ports/atmega168/Makefile
 	$(MAKE) -s -C ports/atmega168 clean all
 
-at91sam7s: ports/at91sam7s/makefile
+at91sam7s: ports/at91sam7s/Makefile
 	$(MAKE) -s -C ports/at91sam7s clean all
+
+stm32f10x: ports/stm32f10x/Makefile
+	$(MAKE) -s -C ports/stm32f10x clean all
 
 mstpsnap: ports/linux/mstpsnap.mak
 	$(MAKE) -s -C ports/linux -f mstpsnap.mak clean all

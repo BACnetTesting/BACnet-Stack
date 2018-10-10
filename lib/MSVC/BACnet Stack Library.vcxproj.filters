@@ -806,5 +806,14 @@
     <ClInclude Include="..\..\ConnectExUtil\llist.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\ports\win32\net.h">
+      <Filter>Source Files\ports\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ports\win32\rs485.h">
+      <Filter>Source Files\ports\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ports\win32\timer.h">
+      <Filter>Source Files\ports\win32</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
