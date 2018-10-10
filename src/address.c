@@ -1045,7 +1045,10 @@ static void set_file_address(
     }
 }
 
+<<<<<<< HEAD
 #ifdef BACNET_ADDRESS_CACHE_FILE
+=======
+>>>>>>> 4b5cffca0381fea5a26346b9e9c0c87159e7d2fb
 void testAddressFile(
     Test * pTest)
 {
@@ -1092,7 +1095,10 @@ void testAddressFile(
     ct_test(pTest, bacnet_address_same(&test_address, &src));
 
 }
+<<<<<<< HEAD
 #endif
+=======
+>>>>>>> 4b5cffca0381fea5a26346b9e9c0c87159e7d2fb
 
 void testAddress(
     Test * pTest)
@@ -1154,10 +1160,15 @@ int main(
     /* individual tests */
     rc = ct_addTestFunction(pTest, testAddress);
     assert(rc);
+<<<<<<< HEAD
 #ifdef BACNET_ADDRESS_CACHE_FILE
     rc = ct_addTestFunction(pTest, testAddressFile);
     assert(rc);
 #endif
+=======
+    rc = ct_addTestFunction(pTest, testAddressFile);
+    assert(rc);
+>>>>>>> 4b5cffca0381fea5a26346b9e9c0c87159e7d2fb
 
 
     ct_setStream(pTest, stdout);
