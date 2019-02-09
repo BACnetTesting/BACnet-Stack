@@ -38,10 +38,6 @@
 #endif
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
     typedef struct {
         bool value_active[BACNET_MAX_PRIORITY];
         BACNET_DOOR_VALUE priority_array[BACNET_MAX_PRIORITY];
@@ -58,9 +54,10 @@ extern "C" {
     } ACCESS_DOOR_DESCR;
 
     void Access_Door_Property_Lists(
-        const int **pRequired,
-        const int **pOptional,
-        const int **pProprietary);
+        const BACNET_PROPERTY_ID **pRequired,
+        const BACNET_PROPERTY_ID **pOptional,
+        const BACNET_PROPERTY_ID **pProprietary);
+
     bool Access_Door_Valid_Instance(
         uint32_t object_instance);
     unsigned Access_Door_Count(
@@ -137,7 +134,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

@@ -29,18 +29,52 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
 #include <stdint.h>     /* for standard integer types uint8_t etc. */
 #include <stdbool.h>    /* for the standard bool type. */
 #include "bacdcode.h"
 #include "bip.h"
 #include "net.h"
+#include "bitsDebug.h"
+#include <net/if.h>
+
+// additional attempts to diagnose that struct ifreq definition issue
+#include <stddef.h>
+#include "bacdef.h"
+#include <stdio.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <netinet/in.h>
+#include <net/if.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+
+#include "datalink.h"
+#include "debug.h"
 
 /** @file linux/bip-init.c  Initializes BACnet/IP interface (Linux). */
 
 bool BIP_Debug = false;
+
+#define h_addr h_addr_list[0] /* for backward compatibility */
 
 /* gets an IP address by name, where name can be a
    string that is an IP address in dotted form, or
@@ -52,14 +86,13 @@ long bip_getaddrbyname(
 {
     struct hostent *host_ent;
 
-    if ((host_ent = gethostbyname(host_name)) == NULL)
-        return 0;
+    if ((host_ent = gethostbyname(host_name)) == NULL) return 0;
 
-    return *(long *) host_ent->h_addr;
+    return *(long *) host_ent->h_addr ; // h_addr needs -std=gnu11 to be set, else... h_addr_list[0]; (and many more)
 }
 
 static int get_local_ifr_ioctl(
-    char *ifname,
+    const char *ifname,
     struct ifreq *ifr,
     int request)
 {
@@ -68,9 +101,21 @@ static int get_local_ifr_ioctl(
 
     strncpy(ifr->ifr_name, ifname, sizeof(ifr->ifr_name));
     fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
+
+#if 0
+    if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, (void *)ifr, sizeof(struct ifreq)) < 0)
+        {
+        printf("Failed to bind to [%s] - Did you run SUDO?? \n", ifr->ifr_name);
+        close(fd);
+        return -1;
+        }
+#endif
+
     if (fd < 0) {
+        printf("Socket open failed 1\n");
         rv = fd;
-    } else {
+    }
+    else {
         rv = ioctl(fd, request, ifr);
         close(fd);
     }
@@ -78,29 +123,25 @@ static int get_local_ifr_ioctl(
     return rv;
 }
 
-/* forward prototype required for compilers */
-int get_local_address_ioctl(
-    char *ifname,
-    struct in_addr *addr,
-    int request);
 
 int get_local_address_ioctl(
-    char *ifname,
+    const char *ifname,
     struct in_addr *addr,
     int request)
 {
-    struct ifreq ifr = { {{0}} };
+    struct ifreq ifr ; // = { {{0}} };
     struct sockaddr_in *tcpip_address;
-    int rv;     /* return value */
+    int rv;
 
     rv = get_local_ifr_ioctl(ifname, &ifr, request);
     if (rv >= 0) {
-        tcpip_address = (struct sockaddr_in *) &ifr.ifr_addr;
+        tcpip_address = (struct sockaddr_in *) (void *) &ifr.ifr_addr;
         memcpy(addr, &tcpip_address->sin_addr, sizeof(struct in_addr));
     }
 
     return rv;
 }
+
 
 /** Gets the local IP address and local broadcast address from the system,
  *  and saves it into the BACnet/IP data structures.
@@ -109,24 +150,27 @@ int get_local_address_ioctl(
  *        Eg, for Linux, ifname is eth0, ath0, arc0, and others.
  */
 void bip_set_interface(
-    char *ifname)
+    const char *ifname)
 {
     struct in_addr local_address;
     struct in_addr broadcast_address;
     struct in_addr netmask;
-    int rv = 0;
+    int rv ;
 
     /* setup local address */
     rv = get_local_address_ioctl(ifname, &local_address, SIOCGIFADDR);
     if (rv < 0) {
-        local_address.s_addr = 0;
+        dbTraffic(DBD_ALL, DB_ERROR, "Unable to set interface parameters for %s", ifname ) ;
+        // without these, we are not going to be able to filter echos. Quit. Harshly.
+        exit(-1);
+//        local_address.s_addr = 0;
+//        return ;
     }
     bip_set_addr(local_address.s_addr);
-    if (BIP_Debug) {
-        fprintf(stderr, "Interface: %s\n", ifname);
-        fprintf(stderr, "IP Address: %s\n", inet_ntoa(local_address));
-    }
+//        dbTraffic(DB_NOTE, "Interface: %s", ifname);
+//        dbTraffic(DB_NOTE, "IP Address: %s", inet_ntoa(local_address));
     /* setup local broadcast address */
+// old - todo2 review why the change    rv = get_local_address_ioctl(portParams, ifname, &broadcast_address, SIOCGIFBRDADDR);
     rv = get_local_address_ioctl(ifname, &netmask, SIOCGIFNETMASK);
 
     if (rv < 0) {
@@ -156,6 +200,7 @@ void bip_set_interface(
  *    BACnet/IP (by default, 0xBAC0 = 47808).
  *
  * @note For Linux, ifname is eth0, ath0, arc0, and others.
+ *       For Windows, ifname is the dotted ip address of the interface.
  *
  * @param ifname [in] The named interface to use for the network layer.
  *        If NULL, the "eth0" interface is assigned.
@@ -163,22 +208,27 @@ void bip_set_interface(
  *         else False if the socket functions fail.
  */
 bool bip_init(
-    char *ifname)
+    const char *ifname )
 {
     int status = 0;     /* return from socket lib calls */
     struct sockaddr_in sin;
-    int sockopt = 0;
-    int sock_fd = -1;
+    int sockopt ;
+    int sock_fd ;
 
-    if (ifname)
+    if (ifname) {
         bip_set_interface(ifname);
-    else
+    }
+    else {
         bip_set_interface("eth0");
+    }
     /* assumes that the driver has already been initialized */
     sock_fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     bip_set_socket(sock_fd);
-    if (sock_fd < 0)
+    if (sock_fd < 0) {
+        fprintf(stderr, "bip: failed to allocate a socket.\n");
         return false;
+    }
+
     /* Allow us to use the same socket for sending and receiving */
     /* This makes sure that the src port is correct when sending */
     sockopt = 1;
@@ -188,7 +238,7 @@ bool bip_init(
     if (status < 0) {
         close(sock_fd);
         bip_set_socket(-1);
-        return status;
+        return false;
     }
     /* allow us to send a broadcast */
     status =
@@ -199,6 +249,7 @@ bool bip_init(
         bip_set_socket(-1);
         return false;
     }
+
     /* bind the socket to the local port number and IP address */
     sin.sin_family = AF_INET;
     sin.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -214,6 +265,7 @@ bool bip_init(
 
     return true;
 }
+
 
 /** Cleanup and close out the BACnet/IP services by closing the socket.
  * @ingroup DLBIP
@@ -242,7 +294,7 @@ int bip_get_local_netmask(
     int rv;
     char *ifname = getenv("BACNET_IFACE");      /* will probably be null */
     if (ifname == NULL)
-        ifname = "eth0";
+        ifname = (char *) "eth0";
     rv = get_local_address_ioctl(ifname, netmask, SIOCGIFNETMASK);
     return rv;
 }

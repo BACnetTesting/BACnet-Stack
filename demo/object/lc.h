@@ -33,36 +33,36 @@
 #include "wp.h"
 
 
-    void Load_Control_Property_Lists(
-        const int **pRequired,
-        const int **pOptional,
-        const int **pProprietary);
-    void Load_Control_State_Machine_Handler(
-        void);
+void Load_Control_Property_Lists(
+    const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary);
+void Load_Control_State_Machine_Handler(
+    void);
 
-    bool Load_Control_Valid_Instance(
-        uint32_t object_instance);
-    unsigned Load_Control_Count(
-        void);
-    uint32_t Load_Control_Index_To_Instance(
-        unsigned index);
-    unsigned Load_Control_Instance_To_Index(
-        uint32_t object_instance);
+bool Load_Control_Valid_Instance(
+    uint32_t object_instance);
+unsigned Load_Control_Count(
+    void);
+uint32_t Load_Control_Index_To_Instance(
+    unsigned index);
+unsigned Load_Control_Instance_To_Index(
+    uint32_t object_instance);
 
-    bool Load_Control_Object_Name(
-        uint32_t object_instance,
-        BACNET_CHARACTER_STRING * object_name);
+bool Load_Control_Object_Name(
+    uint32_t object_instance,
+    BACNET_CHARACTER_STRING * object_name);
 
-    void Load_Control_Init(
-        void);
-    void Load_Control_State_Machine(
-        int object_index);
+void Load_Control_Init(
+    void);
+void Load_Control_State_Machine(
+    int object_index);
 
-    int Load_Control_Read_Property(
-        BACNET_READ_PROPERTY_DATA * rpdata);
+int Load_Control_Read_Property(
+    BACNET_READ_PROPERTY_DATA * rpdata);
 
-    bool Load_Control_Write_Property(
-        BACNET_WRITE_PROPERTY_DATA * wp_data);
+bool Load_Control_Write_Property(
+    BACNET_WRITE_PROPERTY_DATA * wp_data);
 
 #ifdef TEST
 #include "ctest.h"

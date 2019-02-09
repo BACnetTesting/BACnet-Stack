@@ -82,7 +82,7 @@ static void MyErrorHandler(
 void MyAbortHandler(
     BACNET_ADDRESS * src,
     uint8_t invoke_id,
-    uint8_t abort_reason,
+    BACNET_ABORT_REASON abort_reason,
     bool server)
 {
     /* FIXME: verify src and invoke id */
@@ -144,13 +144,13 @@ static void Init_Service_Handlers(
     apdu_set_reject_handler(MyRejectHandler);
 }
 
-static void print_usage(char *filename)
+static void print_usage(const char *filename)
 {
     printf("Usage: %s device-instance state [timeout [password]]\n", filename);
     printf("       [--version][--help]\n");
 }
 
-static void print_help(char *filename)
+static void print_help(const char *filename)
 {
     printf("Send BACnet DeviceCommunicationControl service to device.\n"
         "\n" "The device-instance can be 0 to %lu.\n"
@@ -172,17 +172,17 @@ int main(
     BACNET_ADDRESS src = {
         0
     };  /* address where message came from */
-    uint16_t pdu_len = 0;
+    uint16_t pdu_len ;
     unsigned timeout = 100;     /* milliseconds */
-    unsigned max_apdu = 0;
-    time_t elapsed_seconds = 0;
-    time_t last_seconds = 0;
-    time_t current_seconds = 0;
-    time_t timeout_seconds = 0;
-    uint8_t invoke_id = 0;
-    bool found = false;
-    int argi = 0;
-    char *filename = NULL;
+    unsigned max_apdu ;
+    time_t elapsed_seconds = 0 ;
+    time_t last_seconds ;
+    time_t current_seconds ;
+    time_t timeout_seconds ;
+    uint8_t invoke_id ;
+    bool found ;
+    int argi ;
+    const char *filename ;
 
     filename = filename_remove_path(argv[0]);
     for (argi = 1; argi < argc; argi++) {
@@ -206,7 +206,7 @@ int main(
     }
     /* decode the command line parameters */
     Target_Device_Object_Instance = strtol(argv[1], NULL, 0);
-    Communication_State = (uint16_t) strtol(argv[2], NULL, 0);
+    Communication_State = (BACNET_COMMUNICATION_ENABLE_DISABLE) strtol(argv[2], NULL, 0);
     /* optional timeout, required if password is included */
     if (argc > 3) {
         Communication_Timeout_Minutes = (uint16_t) strtol(argv[3], NULL, 0);

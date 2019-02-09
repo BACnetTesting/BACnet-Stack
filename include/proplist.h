@@ -20,7 +20,27 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*********************************************************************/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
+/*
+    This functionality only aimed at supporting EPICS.c
+*/
+
 #ifndef PROPLIST_H
 #define PROPLIST_H
 
@@ -33,7 +53,7 @@
 /** @file proplist.h  Library of all required and optional object properties */
 
 struct property_list_t {
-    const int *pList;
+    const BACNET_PROPERTY_ID *pList;
     unsigned count;
 };
 
@@ -44,25 +64,31 @@ struct special_property_list_t {
 };
 
 unsigned property_list_count(
-    const int *pList);
-const int * property_list_optional(
+    const BACNET_PROPERTY_ID *pList);
+
+const BACNET_PROPERTY_ID * property_list_optional(
     BACNET_OBJECT_TYPE object_type);
-const int * property_list_required(
+
+const BACNET_PROPERTY_ID* property_list_required(
     BACNET_OBJECT_TYPE object_type);
+
 void property_list_special(
     BACNET_OBJECT_TYPE object_type,
     struct special_property_list_t *pPropertyList);
+
 BACNET_PROPERTY_ID property_list_special_property(
     BACNET_OBJECT_TYPE object_type,
     BACNET_PROPERTY_ID special_property,
     unsigned index);
+
 unsigned property_list_special_count(
     BACNET_OBJECT_TYPE object_type,
     BACNET_PROPERTY_ID special_property);
+
 int property_list_encode(
     BACNET_READ_PROPERTY_DATA * rpdata,
-    const int *pListRequired,
-    const int *pListOptional,
-    const int *pListProprietary);
+    const BACNET_PROPERTY_ID *pListRequired,
+    const BACNET_PROPERTY_ID *pListOptional,
+    const BACNET_PROPERTY_ID *pListProprietary);
 
 #endif

@@ -20,28 +20,52 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*********************************************************************/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef BACDEF_H
 #define BACDEF_H
 
 #include <stddef.h>
 #include <stdint.h>
-#include "bacenum.h"
 #include "config.h"
+#include "bacenum.h"
+#include "bitsDebug.h"
 
 #if defined(_MSC_VER)
 /* Silence the warnings about unsafe versions of library functions */
 /* as we need to keep the code portable */
-#pragma warning( disable : 4996)
+#pragma warning( disable : 4996)        // 'use strncpy_s' type warnings
+#endif
+
+// good ol' microsoft (gcc already has one)
+#ifdef _MSC_VER
+typedef __int64 int64_t;
 #endif
 
 /* This stack implements this version of BACnet */
 #define BACNET_PROTOCOL_VERSION 1
+
 /* Although this stack can implement a later revision,
  * sometimes another revision is desired */
-#ifndef BACNET_PROTOCOL_REVISION
-#define BACNET_PROTOCOL_REVISION 14
-#endif
+// moved to config.h to avoid circular .h file inclusion with bacdef.h bacenum.h
+//#ifndef BACNET_PROTOCOL_REVISION
+//#define BACNET_PROTOCOL_REVISION 14
+//#endif
 
 /* there are a few dependencies on the BACnet Protocol-Revision */
 #if (BACNET_PROTOCOL_REVISION == 0)
@@ -122,40 +146,59 @@
 #define BACNET_ARRAY_ALL 0xFFFFFFFFU
 /* For device object property references with no device id defined */
 #define BACNET_NO_DEV_ID   0xFFFFFFFFu
-#define BACNET_NO_DEV_TYPE 0xFFFFu
+// made part of BACNET_OBJECT_TYPE enum #define BACNET_NO_DEV_TYPE 0xFFFFu
 /* Priority Array for commandable objects */
 #define BACNET_NO_PRIORITY 0
 #define BACNET_MIN_PRIORITY 1
 #define BACNET_MAX_PRIORITY 16
 
-#define BACNET_BROADCAST_NETWORK (0xFFFF)
+#define BACNET_BROADCAST_NETWORK (0xFFFFu)
+
 /* Any size MAC address should be allowed which is less than or
    equal to 7 bytes.  The IPv6 addresses are planned to be handled
    outside this area. */
 /* FIXME: mac[] only needs to be as big as our local datalink MAC */
+
 #define MAX_MAC_LEN 7
-struct BACnet_Device_Address {
-    /* mac_len = 0 is a broadcast address */
-    uint8_t mac_len;
-    /* note: MAC for IP addresses uses 4 bytes for addr, 2 bytes for port */
-    /* use de/encode_unsigned32/16 for re/storing the IP address */
-    uint8_t mac[MAX_MAC_LEN];
-    /* DNET,DLEN,DADR or SNET,SLEN,SADR */
-    /* the following are used if the device is behind a router */
-    /* net = 0 indicates local */
-    uint16_t net;       /* BACnet network number */
-    /* LEN = 0 denotes broadcast MAC ADR and ADR field is absent */
-    /* LEN > 0 specifies length of ADR field */
-    uint8_t len;        /* length of MAC address */
-    uint8_t adr[MAX_MAC_LEN];   /* hwaddr (MAC) address */
-};
-typedef struct BACnet_Device_Address BACNET_ADDRESS;
 /* define a MAC address for manipulation */
-struct BACnet_MAC_Address {
+typedef struct {
     uint8_t len;        /* length of MAC address */
-    uint8_t adr[MAX_MAC_LEN];
-};
-typedef struct BACnet_MAC_Address BACNET_MAC_ADDRESS;
+    uint8_t bytes[MAX_MAC_LEN];
+#if ( BAC_DEBUG == 1 )
+    uint8_t signature;
+#else
+#error
+#endif
+} BACNET_MAC_ADDRESS ;
+
+typedef struct {
+    uint16_t            net;                /* BACnet network number        */
+    BACNET_MAC_ADDRESS  mac;                /* Devices MAC address on NN    */
+} BACNET_GLOBAL_ADDRESS ;
+
+typedef struct {
+    BACNET_MAC_ADDRESS          localMac;       // router, or device itself if no router and no network number
+    BACNET_GLOBAL_ADDRESS       glAdr;          // device and network number, if behind router
+} BACNET_PATH ;
+
+
+/*
+    New adressing structure
+    
+    Old                     Becomes....
+    BACNET_ADDRESS          BACNET_PATH
+                            BACNET_GLOBAL_ADDRESS           BACNET_MAC_ADDRESS
+    
+    mac_len                                                 localMac.len
+    mac                                                     localMac.bytes
+    
+    net                                                     gladr.net
+    
+    len                                                     gladr.mac.len
+    adr                                                     gladr.mac.bytes
+    
+*/
+
 
 /* note: with microprocessors having lots more code space than memory,
    it might be better to have a packed encoding with a library to
@@ -165,8 +208,13 @@ typedef struct BACnet_Object_Id {
     uint32_t instance;
 } BACNET_OBJECT_ID;
 
-#define MAX_NPDU (1+1+2+1+MAX_MAC_LEN+2+1+MAX_MAC_LEN+1+1+2)
-#define MAX_PDU (MAX_APDU + MAX_NPDU)
+// See: http://www.bacnetwiki.com/wiki/index.php?title=NPCI
+
+#define MAX_NPCI (1+1+2+1+6+2+1+6+1)        // 21
+
+
+// #define MAX_PDU (MAX_APDU + MAX_NPDU)
+
 
 #define BACNET_ID_VALUE(bacnet_object_instance, bacnet_object_type) ((((bacnet_object_type) & BACNET_MAX_OBJECT) << BACNET_INSTANCE_BITS) | ((bacnet_object_instance) & BACNET_MAX_INSTANCE))
 #define BACNET_INSTANCE(bacnet_object_id_num) ((bacnet_object_id_num)&BACNET_MAX_INSTANCE)
@@ -176,5 +224,6 @@ typedef struct BACnet_Object_Id {
 #define BACNET_STATUS_ERROR (-1)
 #define BACNET_STATUS_ABORT (-2)
 #define BACNET_STATUS_REJECT (-3)
+#define BACNET_STATUS_UNKNOWN_PROPERTY (-4)
 
 #endif

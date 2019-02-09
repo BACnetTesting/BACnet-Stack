@@ -21,13 +21,31 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "config.h"
+
+#if (INTRINSIC_REPORTING == 1)
+
 #include "txbuf.h"
 #include "bacdef.h"
 #include "bacdcode.h"
@@ -59,7 +77,7 @@ void handler_get_alarm_summary(
     int len = 0;
     int pdu_len = 0;
     int apdu_len = 0;
-    int bytes_sent = 0;
+//    int bytes_sent ;
     int alarm_value = 0;
     unsigned i = 0;
     unsigned j = 0;
@@ -147,15 +165,9 @@ GET_ALARM_SUMMARY_ERROR:
 
 GET_ALARM_SUMMARY_ABORT:
     pdu_len += apdu_len;
-    bytes_sent =
-        datalink_send_pdu(src, &npci_data, dlcb );
-#if PRINT_ENABLED
-    if (bytes_sent <= 0) {
-        /*fprintf(stderr, "Failed to send PDU (%s)!\n", strerror(errno)); */
-    }
-#else
-    bytes_sent = bytes_sent;
-#endif
-
-    return;
+    src->portParams->SendPdu(src->portParams, pDev, &src->bacnetPath->localMac, &npci_data, &Handler_Transmit_Buffer[0],
+                          pdu_len);
 }
+
+
+#endif // INTRINSIC_REPORTING

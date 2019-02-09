@@ -29,8 +29,23 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 
 #include <stdio.h>      /* for standard i/o, like printing */
 #include <stdint.h>     /* for standard integer types uint8_t etc. */
@@ -260,7 +275,7 @@ int bip6_send_pdu(
     unsigned pdu_len)
 {
     BACNET_IP6_ADDRESS bvlc_dest = {{0}};
-    uint8_t mtu[MAX_MPDU] = { 0 };
+    uint8_t mtu[MAX_MPDU_BIP6] = { 0 };
     uint16_t mtu_len = 0;
     uint32_t vmac_src = 0;
     uint32_t vmac_dst = 0;
@@ -296,7 +311,7 @@ int bip6_send_pdu(
         vmac_src = Device_Object_Instance_Number();
         mtu_len = bvlc6_encode_original_broadcast(
             mtu, sizeof(mtu), vmac_src, pdu, pdu_len);
-        debug_printf("BVLC6: Sent Original-Broadcast-NPDU.\n");
+        // debug_printf("BVLC6: Sent Original-Broadcast-NPDU.\n");
     } else if (dest->mac_len == 3) {
         /* valid unicast */
         bbmd6_address_from_bacnet_address(&bvlc_dest, &vmac_dst, dest);
@@ -429,7 +444,7 @@ static int bvlc6_send_result(
     uint32_t vmac_src,
     uint16_t result_code)
 {
-    uint8_t mtu[MAX_MPDU] = { 0 };
+    uint8_t mtu[MAX_MPDU_BIP6] = { 0 };
     uint16_t mtu_len = 0;
 
     mtu_len = bvlc6_encode_result(&mtu[0], sizeof(mtu), vmac_src, result_code);
@@ -453,7 +468,7 @@ static int bvlc6_send_address_resolution_ack(
     uint32_t vmac_src,
     uint32_t vmac_dst)
 {
-    uint8_t mtu[MAX_MPDU] = { 0 };
+    uint8_t mtu[MAX_MPDU_BIP6] = { 0 };
     uint16_t mtu_len = 0;
 
     mtu_len = bvlc6_encode_address_resolution_ack(
@@ -480,7 +495,7 @@ static int bvlc6_send_virtual_address_resolution_ack(
     uint32_t vmac_src,
     uint32_t vmac_dst)
 {
-    uint8_t mtu[MAX_MPDU] = { 0 };
+    uint8_t mtu[MAX_MPDU_BIP6] = { 0 };
     uint16_t mtu_len = 0;
 
     mtu_len = bvlc6_encode_virtual_address_resolution_ack(
@@ -696,7 +711,7 @@ static int handler_bbmd6_for_non_bbmd(
             case BVLC6_ORIGINAL_UNICAST_NPDU:
                 /* This message is used to send directed NPDUs to
                    another B/IPv6 node or router. */
-                debug_printf("BIP6: Received Original-Unicast-NPDU.\n");
+                // debug_printf("BIP6: Received Original-Unicast-NPDU.\n");
                 if (bbmd6_address_match_self(addr)) {
                     /* ignore messages from my IPv6 address */
                     offset = 0;
@@ -1018,7 +1033,7 @@ int bvlc6_register_with_bbmd(
     uint32_t vmac_src,
     uint16_t time_to_live_seconds)
 {
-    uint8_t mtu[MAX_MPDU] = { 0 };
+    uint8_t mtu[MAX_MPDU_BIP6] = { 0 };
     uint16_t mtu_len = 0;
 
     mtu_len = bvlc6_encode_register_foreign_device(

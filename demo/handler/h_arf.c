@@ -21,26 +21,42 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
+//#include <stddef.h>
+//#include <stdint.h>
+//#include <stdio.h>
+//#include <string.h>
+//#include <errno.h>
 #include "config.h"
-#include "txbuf.h"
-#include "bacdef.h"
+    
+// #include "bacdef.h"
 #include "bacerror.h"
-#include "bacdcode.h"
+//#include "bacdcode.h"
 #include "apdu.h"
 #include "npdu.h"
 #include "abort.h"
 #include "arf.h"
-/* demo objects */
-#if defined(BACFILE)
 #include "bacfile.h"
-#endif
-#include "handlers.h"
+//#include "handlers.h"
+//#include "debug.h"
+//#include "bitsDebug.h"
+//#include "datalink.h"
+#include "multipleDatalink.h"
 
 /** @file h_arf.c  Handles Atomic Read File request. */
 
@@ -97,28 +113,25 @@ shall be TRUE, otherwise FALSE.
 
 #if defined(BACFILE)
 void handler_atomic_read_file(
-	BACNET_ROUTE *rxDetails, 
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src,
+    BACNET_ROUTE *rxDetails,
     BACNET_CONFIRMED_SERVICE_DATA * service_data)
 {
     BACNET_ATOMIC_READ_FILE_DATA data;
     int len = 0;
     int pdu_len = 0;
     bool error = false;
-    int bytes_sent = 0;
     BACNET_NPCI_DATA npci_data;
     // BACNET_PATH my_address;
     BACNET_ERROR_CLASS error_class = ERROR_CLASS_OBJECT;
     BACNET_ERROR_CODE error_code = ERROR_CODE_UNKNOWN_OBJECT;
 
-	DLCB *dlcb = alloc_dlcb_response('B', rxDetails->portParams);
+	DLCB *dlcb = alloc_dlcb_response('B', rxDetails );
 	if (dlcb == NULL) return;
 
-#if PRINT_ENABLED
-    fprintf(stderr, "Received Atomic-Read-File Request!\n");
-#endif
+    dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "Received Atomic-Read-File Request!\n");
+
     /* encode the NPDU portion of the packet */
     // datalink_get_my_address(&my_address);
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
@@ -130,9 +143,7 @@ void handler_atomic_read_file(
             abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, ABORT_REASON_SEGMENTATION_NOT_SUPPORTED,
             true);
-#if PRINT_ENABLED
-        fprintf(stderr, "ARF: Segmented Message. Sending Abort!\n");
-#endif
+        dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "ARF: Segmented Message. Sending Abort!\n");
         goto ARF_ABORT;
     }
     len = arf_decode_service_request(service_request, service_len, &data);
@@ -141,9 +152,7 @@ void handler_atomic_read_file(
         len =
             abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, ABORT_REASON_OTHER, true);
-#if PRINT_ENABLED
-        fprintf(stderr, "Bad Encoding. Sending Abort!\n");
-#endif
+        dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "Bad Encoding. Sending Abort!\n");
         goto ARF_ABORT;
     }
     if (data.object_type == OBJECT_FILE) {
@@ -153,11 +162,9 @@ void handler_atomic_read_file(
             if (data.type.stream.requestedOctetCount <
                 octetstring_capacity(&data.fileData[0])) {
                 bacfile_read_stream_data(&data);
-#if PRINT_ENABLED
-				fprintf(stderr, "ARF: Stream offset %d, %d octets.\n",
+				dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "ARF: Stream offset %d, %d octets.\n",
 					data.type.stream.fileStartPosition,
 					data.type.stream.requestedOctetCount);
-#endif
 				len =
 					arf_ack_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
 					service_data->invoke_id, &data);
@@ -166,11 +173,9 @@ void handler_atomic_read_file(
                     abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
                     service_data->invoke_id,
                     ABORT_REASON_SEGMENTATION_NOT_SUPPORTED, true);
-#if PRINT_ENABLED
-                fprintf(stderr, "Too Big To Send (%d >= %d). Sending Abort!\n",
+                dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "Too Big To Send (%d >= %d). Sending Abort!\n",
                     data.type.stream.requestedOctetCount,
                     (int)octetstring_capacity(&data.fileData[0]));
-#endif
             }
         } else if (data.access == FILE_RECORD_ACCESS) {
             if (data.type.record.fileStartRecord >=
@@ -179,11 +184,9 @@ void handler_atomic_read_file(
                 error_code = ERROR_CODE_INVALID_FILE_START_POSITION;
                 error = true;
             } else if (bacfile_read_stream_data(&data)) {
-#if PRINT_ENABLED
-                fprintf(stderr, "ARF: fileStartRecord %d, %u RecordCount.\n",
+                dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "ARF: fileStartRecord %d, %u RecordCount.\n",
                     data.type.record.fileStartRecord,
                     data.type.record.RecordCount);
-#endif
                 len =
                     arf_ack_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
                     service_data->invoke_id, &data);
@@ -196,9 +199,7 @@ void handler_atomic_read_file(
             error = true;
             error_class = ERROR_CLASS_SERVICES;
             error_code = ERROR_CODE_INVALID_FILE_ACCESS_METHOD;
-#if PRINT_ENABLED
-            fprintf(stderr, "Record Access Requested. Sending Error!\n");
-#endif
+            dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "Record Access Requested. Sending Error!\n");
         }
     } else {
         error = true;
@@ -214,14 +215,6 @@ void handler_atomic_read_file(
   ARF_ABORT:
     pdu_len += len;
     dlcb->optr = pdu_len;
-    bytes_sent =
-        datalink_send_pdu(src, &npci_data, dlcb );
-        
-#if PRINT_ENABLED
-    if (bytes_sent <= 0) {
-        fprintf(stderr, "Failed to send PDU (%s)!\n", strerror(errno));
-    }
-#endif
-
+    rxDetails->portParams->SendPdu(dlcb);
 }
 #endif

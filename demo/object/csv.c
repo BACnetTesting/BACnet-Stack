@@ -51,29 +51,30 @@ static char Object_Name[MAX_CHARACTERSTRING_VALUES][64];
 static char Object_Description[MAX_CHARACTERSTRING_VALUES][64];
 
 /* These three arrays are used by the ReadPropertyMultiple handler */
-static const int Properties_Required[] = {
+static const BACNET_PROPERTY_ID Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
     PROP_PRESENT_VALUE,
     PROP_STATUS_FLAGS,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Properties_Optional[] = {
     PROP_EVENT_STATE,
     PROP_OUT_OF_SERVICE,
-    -1
+    PROP_DESCRIPTION,
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Properties_Proprietary[] = {
-    -1
+static const BACNET_PROPERTY_ID Properties_Proprietary[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
 void CharacterString_Value_Property_Lists(
-    const int **pRequired,
-    const int **pOptional,
-    const int **pProprietary)
+    const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary)
 {
     if (pRequired)
         *pRequired = Properties_Required;
@@ -82,7 +83,6 @@ void CharacterString_Value_Property_Lists(
     if (pProprietary)
         *pProprietary = Properties_Proprietary;
 
-    return;
 }
 
 void CharacterString_Value_Init(
@@ -95,7 +95,6 @@ void CharacterString_Value_Init(
         characterstring_init_ansi(&Present_Value[i], "");
     }
 
-    return;
 }
 
 /* we simply have 0-n object instances.  Yours might be */
@@ -198,7 +197,6 @@ static void CharacterString_Value_Out_Of_Service_Set(
         Out_Of_Service[index] = value;
     }
 
-    return;
 }
 
 static char *CharacterString_Value_Description(
@@ -252,6 +250,24 @@ bool CharacterString_Value_Object_Name(
 
     index = CharacterString_Value_Instance_To_Index(object_instance);
     if (index < MAX_CHARACTERSTRING_VALUES) {
+
+			/* 	BACnet Testing Observed Incident oi00119 - 2016.07.22
+				Revealed by BACnet Test Client v1.8.36 ( www.bac-test.com/bacnet-test-client-download )
+					Test BITS: BIT00057
+				Any discussions can be directed to edward@bac-test.com
+				Please feel free to remove this comment when my changes accepted after suitable time for
+				review by all interested parties. Say 6 months -> Jan 2017
+            */
+                
+        // every object must have a (unique) object name, it seems that this implementation 'expects' to have the name
+        // created by the BACnet Client (?) (Please confirm)
+        // Anyway, we cannot rely on this having happened by the time we read the name here, so I
+        // 'autocreate' a name if it does not exist in the same way e.g. Analog Input names are created.
+        if ( Object_Name[index][0] == 0 ) {
+            sprintf(Object_Name[index], "CHARACTERSTRING VALUE %lu", (unsigned long)object_instance);
+        }
+        // end of change....
+        
         status = characterstring_init_ansi(object_name, Object_Name[index]);
     }
 
@@ -464,7 +480,7 @@ bool WPValidateArgType(
 void testCharacterStringValue(
     Test * pTest)
 {
-    uint8_t apdu[MAX_LPDU_IP] = { 0 };
+    uint8_t apdu[MAX_APDU] = { 0 };
     int len = 0;
     uint32_t len_value = 0;
     uint8_t tag_number = 0;
@@ -487,7 +503,6 @@ void testCharacterStringValue(
     ct_test(pTest, decoded_type == rpdata.object_type);
     ct_test(pTest, decoded_instance == rpdata.object_instance);
 
-    return;
 }
 
 #ifdef TEST_CHARACTERSTRING_VALUE

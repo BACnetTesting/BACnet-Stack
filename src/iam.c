@@ -29,15 +29,30 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stdint.h>
-#include "bacenum.h"
-#include "bacdef.h"
-#include "npdu.h"
-#include "dcc.h"
+//#include "bacenum.h"
+//#include "bacdef.h"
+//#include "npdu.h"
+//#include "dcc.h"
 #include "bacdcode.h"
-#include "address.h"
+//#include "address.h"
 #include "iam.h"
 
 /** @file iam.c  Encode/Decode I-Am service */
@@ -82,13 +97,13 @@ int iam_decode_service_request(
     int *pSegmentation,
     uint16_t * pVendor_id)
 {
-    int len = 0;
+    int len ;
     int apdu_len = 0;   /* total length of the apdu, return value */
     BACNET_OBJECT_TYPE object_type ;   /* should be a Device Object */
-    uint32_t object_instance = 0;
-    uint8_t tag_number = 0;
-    uint32_t len_value = 0;
-    uint32_t decoded_value = 0;
+    uint32_t object_instance ;
+    uint8_t tag_number ;
+    uint32_t len_value ;
+    uint32_t decoded_value ;
 
     /* OBJECT ID - object id */
     len =

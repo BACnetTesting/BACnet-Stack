@@ -29,8 +29,23 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stdint.h>
 #include "bacenum.h"
 #include "bacdcode.h"
@@ -86,21 +101,24 @@ int rd_decode_service_request(
     /* check for value pointers */
     if (apdu_len) {
         /* Tag 0: reinitializedStateOfDevice */
-        if (!decode_is_context_tag(&apdu[len], 0))
+        if (!decode_is_context_tag(&apdu[len], 0)) {
             return -1;
+        }
         len +=
             decode_tag_number_and_value(&apdu[len], &tag_number,
-            &len_value_type);
+                                        &len_value_type);
         len += decode_enumerated(&apdu[len], len_value_type, &value);
-        if (state)
+        if (state) {
             *state = (BACNET_REINITIALIZED_STATE) value;
+        }
         /* Tag 1: password - optional */
         if (len < apdu_len) {
-            if (!decode_is_context_tag(&apdu[len], 1))
+            if (!decode_is_context_tag(&apdu[len], 1)) {
                 return -1;
+            }
             len +=
                 decode_tag_number_and_value(&apdu[len], &tag_number,
-                &len_value_type);
+                                            &len_value_type);
             len +=
                 decode_character_string(&apdu[len], len_value_type, password);
         }
@@ -124,21 +142,24 @@ int rd_decode_apdu(
     int len = 0;
     unsigned offset = 0;
 
-    if (!apdu)
+    if (!apdu) {
         return -1;
+    }
     /* optional checking - most likely was already done prior to this call */
-    if (apdu[0] != PDU_TYPE_CONFIRMED_SERVICE_REQUEST)
+    if (apdu[0] != PDU_TYPE_CONFIRMED_SERVICE_REQUEST) {
         return -1;
+    }
     /*  apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU); */
     *invoke_id = apdu[2];       /* invoke id - filled in by net layer */
-    if (apdu[3] != SERVICE_CONFIRMED_REINITIALIZE_DEVICE)
+    if (apdu[3] != SERVICE_CONFIRMED_REINITIALIZE_DEVICE) {
         return -1;
+    }
     offset = 4;
 
     if (apdu_len > offset) {
         len =
             rd_decode_service_request(&apdu[offset], apdu_len - offset, state,
-            password);
+                                      password);
     }
 
     return len;
@@ -165,13 +186,12 @@ void test_ReinitializeDevice(
 
     len =
         rd_decode_apdu(&apdu[0], apdu_len, &test_invoke_id, &test_state,
-        &test_password);
+                       &test_password);
     ct_test(pTest, len != -1);
     ct_test(pTest, test_invoke_id == invoke_id);
     ct_test(pTest, test_state == state);
     ct_test(pTest, characterstring_same(&test_password, &password));
 
-    return;
 }
 
 #ifdef TEST_REINITIALIZE_DEVICE

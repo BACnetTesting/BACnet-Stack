@@ -26,6 +26,10 @@
 /* Load Control Objects - customize for your use */
 /* from 135-2004-Addendum e */
 
+#include "config.h"     /* the custom stuff */
+
+#if (BACNET_USE_OBJECT_LOAD_CONTROL == 1)
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -35,7 +39,6 @@
 #include "bacdcode.h"
 #include "datetime.h"
 #include "bacenum.h"
-#include "config.h"     /* the custom stuff */
 #include "lc.h"
 #include "ao.h"
 #include "wp.h"
@@ -139,7 +142,7 @@ static float Shed_Level_Values[MAX_SHED_LEVELS] = {
 
 
 /* These three arrays are used by the ReadPropertyMultiple handler */
-static const int Load_Control_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Load_Control_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -155,23 +158,23 @@ static const int Load_Control_Properties_Required[] = {
     PROP_ACTUAL_SHED_LEVEL,
     PROP_SHED_LEVELS,
     PROP_SHED_LEVEL_DESCRIPTIONS,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Load_Control_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Load_Control_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_FULL_DUTY_BASELINE,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Load_Control_Properties_Proprietary[] = {
-    -1
+static const BACNET_PROPERTY_ID Load_Control_Properties_Proprietary[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
 void Load_Control_Property_Lists(
-    const int **pRequired,
-    const int **pOptional,
-    const int **pProprietary)
+    const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary)
 {
     if (pRequired)
         *pRequired = Load_Control_Properties_Required;
@@ -180,7 +183,6 @@ void Load_Control_Property_Lists(
     if (pProprietary)
         *pProprietary = Load_Control_Properties_Proprietary;
 
-    return;
 }
 
 void Load_Control_Init(
@@ -211,7 +213,6 @@ void Load_Control_Init(
         }
     }
 
-    return;
 }
 
 /* we simply have 0-n object instances.  Yours might be */
@@ -408,7 +409,7 @@ static bool Able_To_Meet_Shed_Request(
     if (priority >= 4) {
         /* is the level able to be lowered? */
         requested_level = Requested_Shed_Level_Value(object_index);
-        level = Analog_Output_Present_Value(object_instance);
+        level = Analog_Output_Present_Value_from_Instance(object_instance);
         if (level >= requested_level) {
             status = true;
         }
@@ -649,7 +650,6 @@ void Load_Control_State_Machine(
             break;
     }
 
-    return;
 }
 
 /* call every second or so */
@@ -845,7 +845,7 @@ int Load_Control_Read_Property(
                         encode_application_unsigned(&apdu[apdu_len],
                         Shed_Levels[object_index][i]);
                     /* add it if we have room */
-                    if ((apdu_len + len) < MAX_LPDU_IP)
+                    if ((apdu_len + len) < MAX_APDU)
                         apdu_len += len;
                     else {
                         rpdata->error_code =
@@ -883,7 +883,7 @@ int Load_Control_Read_Property(
                         encode_application_character_string(&apdu[apdu_len],
                         &char_string);
                     /* add it if we have room */
-                    if ((apdu_len + len) < MAX_LPDU_IP)
+                    if ((apdu_len + len) < MAX_APDU)
                         apdu_len += len;
                     else {
                         rpdata->error_code =
@@ -1459,7 +1459,7 @@ void testLoadControlStateMachine(
 void testLoadControl(
     Test * pTest)
 {
-    uint8_t apdu[MAX_LPDU_IP] = { 0 };
+    uint8_t apdu[MAX_APDU] = { 0 };
     int len = 0;
     uint32_t len_value = 0;
     uint8_t tag_number = 0;
@@ -1467,6 +1467,7 @@ void testLoadControl(
     uint32_t decoded_instance = 0;
     BACNET_READ_PROPERTY_DATA rpdata;
 
+    Analog_Output_Init();
     Load_Control_Init();
     rpdata.application_data = &apdu[0];
     rpdata.application_data_len = sizeof(apdu);
@@ -1482,7 +1483,6 @@ void testLoadControl(
     ct_test(pTest, decoded_type == rpdata.object_type);
     ct_test(pTest, decoded_instance == rpdata.object_instance);
 
-    return;
 }
 
 #ifdef TEST_LOAD_CONTROL
@@ -1508,3 +1508,6 @@ int main(
 }
 #endif /* TEST_LOAD_CONTROL */
 #endif /* TEST */
+
+
+#endif 0

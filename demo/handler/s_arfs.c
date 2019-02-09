@@ -21,7 +21,22 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stddef.h>
 #include <stdint.h>
 #include <errno.h>
@@ -45,14 +60,18 @@
 
 /** @file s_arfs.c  Send part of an Atomic Read File Stream. */
 
+#if 0
+
 uint8_t Send_Atomic_Read_File_Stream(
+    BACNET_ROUTE *dest,
+    DEVICE_OBJECT_DATA *sendingDev,
     uint32_t device_id,
     uint32_t file_instance,
     int fileStartPosition,
     unsigned requestedOctetCount)
 {
-    BACNET_ADDRESS dest;
-    BACNET_ADDRESS my_address;
+    BACNET_PATH dest;
+    //BACNET_PATH my_address;
     BACNET_NPCI_DATA npci_data;
     unsigned max_apdu = 0;
     uint8_t invoke_id = 0;
@@ -79,10 +98,10 @@ uint8_t Send_Atomic_Read_File_Stream(
         data.type.stream.fileStartPosition = fileStartPosition;
         data.type.stream.requestedOctetCount = requestedOctetCount;
         /* encode the NPDU portion of the packet */
-        datalink_get_my_address(&my_address);
+        //datalink_get_my_address(&my_address);
         npdu_setup_npci_data(&npci_data, true, MESSAGE_PRIORITY_NORMAL);
         pdu_len =
-            npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest, &my_address,
+            npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest, NULL,
             &npci_data);
         len =
             arf_encode_apdu(&Handler_Transmit_Buffer[pdu_len], invoke_id,
@@ -96,16 +115,15 @@ uint8_t Send_Atomic_Read_File_Stream(
         if ((unsigned) pdu_len < max_apdu) {
             dlcb->optr = pdu_len ;
             tsm_set_confirmed_unsegmented_transaction(invoke_id, &dest,
-                &npci_data, dlcb );
-            bytes_sent =
-                datalink_send_pdu(&dest, &npci_data,
-                dlcb );
-#if PRINT_ENABLED
-            if (bytes_sent <= 0)
-                fprintf(stderr,
-                    "Failed to Send AtomicReadFile Request (%s)!\n",
-                    strerror(errno));
-#endif
+                &npci_data, &Handler_Transmit_Buffer[0], (uint16_t) pdu_len);
+
+            //bytes_sent =
+            //    datalink_send_pdu(&dest, &npci_data,
+            //    &Handler_Transmit_Buffer[0], pdu_len);
+
+            dest->portParams->SendPdu(dest->portParams, sendingDev, &dest->bacnetPath->localMac, &npci_data, &Handler_Transmit_Buffer[0],
+                pdu_len);
+
         } else {
             tsm_free_invoke_id(invoke_id);
             invoke_id = 0;
@@ -119,3 +137,5 @@ uint8_t Send_Atomic_Read_File_Stream(
 
     return invoke_id;
 }
+
+#endif

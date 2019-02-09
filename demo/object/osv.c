@@ -45,32 +45,32 @@
 #define MAX_OCTETSTRING_VALUES 4
 #endif
 
-OCTETSTRING_VALUE_DESCR AV_Descr[MAX_OCTETSTRING_VALUES];
+OCTETSTRING_VALUE_DESCR OSV_Descr[MAX_OCTETSTRING_VALUES];
 
 /* These three arrays are used by the ReadPropertyMultiple handler */
-static const int OctetString_Value_Properties_Required[] = {
+static const BACNET_PROPERTY_ID OctetString_Value_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
     PROP_PRESENT_VALUE,
     PROP_STATUS_FLAGS,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int OctetString_Value_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID OctetString_Value_Properties_Optional[] = {
     PROP_EVENT_STATE,
     PROP_OUT_OF_SERVICE,
     PROP_DESCRIPTION,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int OctetString_Value_Properties_Proprietary[] = {
-    -1
+static const BACNET_PROPERTY_ID OctetString_Value_Properties_Proprietary[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
-void OctetString_Value_Property_Lists(const int **pRequired,
-    const int **pOptional,
-    const int **pProprietary)
+void OctetString_Value_Property_Lists(const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary)
 {
     if (pRequired)
         *pRequired = OctetString_Value_Properties_Required;
@@ -79,7 +79,6 @@ void OctetString_Value_Property_Lists(const int **pRequired,
     if (pProprietary)
         *pProprietary = OctetString_Value_Properties_Proprietary;
 
-    return;
 }
 
 void OctetString_Value_Init(void)
@@ -87,8 +86,8 @@ void OctetString_Value_Init(void)
     unsigned i;
 
     for (i = 0; i < MAX_OCTETSTRING_VALUES; i++) {
-        memset(&AV_Descr[i], 0x00, sizeof(OCTETSTRING_VALUE_DESCR));
-        octetstring_init(&AV_Descr[i].Present_Value, NULL, 0);
+        memset(&OSV_Descr[i], 0x00, sizeof(OCTETSTRING_VALUE_DESCR));
+        octetstring_init(&OSV_Descr[i].Present_Value, NULL, 0);
     }
 }
 
@@ -150,7 +149,7 @@ bool OctetString_Value_Present_Value_Set(uint32_t object_instance,
 
     index = OctetString_Value_Instance_To_Index(object_instance);
     if (index < MAX_OCTETSTRING_VALUES) {
-        octetstring_copy(&AV_Descr[index].Present_Value, value);
+        octetstring_copy(&OSV_Descr[index].Present_Value, value);
         status = true;
     }
     return status;
@@ -163,7 +162,7 @@ BACNET_OCTET_STRING *OctetString_Value_Present_Value(uint32_t object_instance)
 
     index = OctetString_Value_Instance_To_Index(object_instance);
     if (index < MAX_OCTETSTRING_VALUES) {
-        value = &AV_Descr[index].Present_Value;
+        value = &OSV_Descr[index].Present_Value;
     }
 
     return value;
@@ -207,7 +206,7 @@ int OctetString_Value_Read_Property(BACNET_READ_PROPERTY_DATA * rpdata)
     object_index =
         OctetString_Value_Instance_To_Index(rpdata->object_instance);
     if (object_index < MAX_OCTETSTRING_VALUES)
-        CurrentAV = &AV_Descr[object_index];
+        CurrentAV = &OSV_Descr[object_index];
     else
         return BACNET_STATUS_ERROR;
 
@@ -307,7 +306,7 @@ bool OctetString_Value_Write_Property(BACNET_WRITE_PROPERTY_DATA * wp_data)
     object_index =
         OctetString_Value_Instance_To_Index(wp_data->object_instance);
     if (object_index < MAX_OCTETSTRING_VALUES)
-        CurrentAV = &AV_Descr[object_index];
+        CurrentAV = &OSV_Descr[object_index];
     else
         return false;
 
@@ -366,7 +365,8 @@ bool OctetString_Value_Write_Property(BACNET_WRITE_PROPERTY_DATA * wp_data)
 }
 
 
-void OctetString_Value_Intrinsic_Reporting(uint32_t object_instance)
+void OctetString_Value_Intrinsic_Reporting(
+    uint32_t object_instance)
 {
 }
 
@@ -391,7 +391,7 @@ bool WPValidateArgType(BACNET_APPLICATION_DATA_VALUE * pValue,
 void testOctetString_Value(Test * pTest)
 {
     BACNET_READ_PROPERTY_DATA rpdata;
-    uint8_t apdu[MAX_LPDU_IP] = { 0 };
+    uint8_t apdu[MAX_APDU] = { 0 };
     int len = 0;
     uint32_t len_value = 0;
     uint8_t tag_number = 0;
@@ -413,7 +413,6 @@ void testOctetString_Value(Test * pTest)
     ct_test(pTest, decoded_type == rpdata.object_type);
     ct_test(pTest, decoded_instance == rpdata.object_instance);
 
-    return;
 }
 
 #ifdef TEST_OCTETSTRING_VALUE

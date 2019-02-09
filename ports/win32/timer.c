@@ -22,18 +22,40 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
+
 #define WIN32_LEAN_AND_MEAN
 #define STRICT 1
 #include <windows.h>
+#include <timeapi.h>
+
 #include "net.h"
 #include <MMSystem.h>
-#include "timer.h"
+#include "timerCommon.h"
+#include "debug.h"
+#include "bitsDebug.h"
+
+#pragma comment(lib, "Winmm.lib")           // for timeGetTime()
 
 /* Offset between Windows epoch 1/1/1601 and
    Unix epoch 1/1/1970 in 100 nanosec units */
@@ -104,9 +126,15 @@ int gettimeofday(
             _tzset();
             tzflag++;
         }
+
         tz = (struct timezone *) tzp;
-        tz->tz_minuteswest = _timezone / 60;
-        tz->tz_dsttime = _daylight;
+        long ltimezone;
+        if (_get_timezone(&ltimezone)) panic();
+        tz->tz_minuteswest = ltimezone / 60; 
+
+        int ldaylight;
+        if (_get_daylight(&ldaylight)) panic();
+        tz->tz_dsttime = ldaylight;
     }
 
     return 0;
@@ -186,6 +214,30 @@ uint32_t timer_reset(
     }
     return timer_value;
 }
+
+//// ms since machine was started
+//uint32_t timer_get_time(void)
+//{
+//	return timeGetTime();
+//}
+//
+//uint16_t timer_delta_time(uint32_t startTime)
+//{
+//    uint32_t timeNow = timeGetTime();
+//    uint32_t deltaTime;
+//
+//    if (timeNow < startTime)
+//    {
+//        deltaTime = timeNow - startTime;
+//    }
+//    else
+//    {
+//        deltaTime = (UINT32_MAX - startTime + timeNow + 1);
+//    }
+//
+//	if (deltaTime > UINT16_MAX) return UINT16_MAX;			// todo, this will still fail WHEN the timer wraps on 32 bits...
+//	return (uint16_t)deltaTime;
+//}
 
 /*************************************************************************
 * Description: Shut down for timer

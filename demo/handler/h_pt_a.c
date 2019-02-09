@@ -21,7 +21,22 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -44,6 +59,8 @@
 #include "handlers.h"
 
 /** @file h_pt_a.c  Handles Confirmed Private Transfer Acknowledgment. */
+
+#if ( BACNET_SVC_PRIVATE_TRANSFER )
 
 extern uint8_t IOBufferPT[300]; /* Somewhere to build the encoded result block for Private Transfers */
 
@@ -202,9 +219,6 @@ void handler_conf_private_trans_ack(
     (void) src;
     (void) service_data;
 
-
-
-
 #if PRINT_ENABLED
     printf("Received Confirmed Private Transfer Ack!\n");
 #endif
@@ -235,4 +249,6 @@ void PTErrorHandler(
         bactext_error_code_name((int) error_code));
     Error_Detected = true;
 }
+#endif
+
 #endif

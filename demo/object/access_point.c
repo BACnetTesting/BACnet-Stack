@@ -42,7 +42,7 @@ static bool Access_Point_Initialized = false;
 static ACCESS_POINT_DESCR ap_descr[MAX_ACCESS_POINTS];
 
 /* These three arrays are used by the ReadPropertyMultiple handler */
-static const int Properties_Required[] = {
+static const BACNET_PROPERTY_ID Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -60,21 +60,21 @@ static const int Properties_Required[] = {
     PROP_ACCESS_EVENT_CREDENTIAL,
     PROP_ACCESS_DOORS,
     PROP_PRIORITY_FOR_WRITING,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Properties_Optional[] = {
-    -1
+static const BACNET_PROPERTY_ID Properties_Optional[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Properties_Proprietary[] = {
-    -1
+static const BACNET_PROPERTY_ID Properties_Proprietary[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
 void Access_Point_Property_Lists(
-    const int **pRequired,
-    const int **pOptional,
-    const int **pProprietary)
+    const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary)
 {
     if (pRequired)
         *pRequired = Properties_Required;
@@ -83,7 +83,6 @@ void Access_Point_Property_Lists(
     if (pProprietary)
         *pProprietary = Properties_Proprietary;
 
-    return;
 }
 
 void Access_Point_Init(
@@ -112,7 +111,6 @@ void Access_Point_Init(
         }
     }
 
-    return;
 }
 
 /* we simply have 0-n object instances.  Yours might be */
@@ -450,7 +448,6 @@ void testAccessPoint(
     ct_test(pTest, decoded_type == rpdata.object_type);
     ct_test(pTest, decoded_instance == rpdata.object_instance);
 
-    return;
 }
 
 #ifdef TEST_ACCESS_POINT

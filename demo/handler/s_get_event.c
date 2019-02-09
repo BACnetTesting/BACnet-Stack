@@ -1,3 +1,4 @@
+#if 0 // client side
 /**
  * @file
  * @author Daniel Blazevic <daniel.blazevic@gmail.com>
@@ -26,6 +27,22 @@
  * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************
  *
  * @section DESCRIPTION
  *
@@ -53,6 +70,8 @@
 #include "handlers.h"
 #include "client.h"
 #include "getevent.h"
+
+#if (INTRINSIC_REPORTING_B == 1)
 
 uint8_t Send_Get_Event_Information_Address(
     BACNET_PATH *dest,
@@ -115,15 +134,21 @@ uint8_t Send_Get_Event_Information(
 {
     BACNET_PATH dest = {0};
     unsigned max_apdu = 0;
-    uint8_t invoke_id = 0;
-    bool status = false;
+    uint8_t invoke_id ;
+    bool status ;
 
     /* is the device bound? */
     status = address_get_by_device(device_id, &max_apdu, &dest);
     if (status) {
         invoke_id = Send_Get_Event_Information_Address(
-            &dest, max_apdu, lastReceivedObjectIdentifier);
+                        &dest, max_apdu, lastReceivedObjectIdentifier);
+    } else {
+        // todo 5 - surely we can do better than this
+        invoke_id = 0 ;
+        // and what about max_apdu (etc) ?
     }
 
     return invoke_id;
 }
+
+#endif

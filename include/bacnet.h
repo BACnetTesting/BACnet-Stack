@@ -20,14 +20,30 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*********************************************************************/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef BACNET_H
 #define BACNET_H
 
 /** @file bacnet.h  This file is designed to reference the entire BACnet stack library */
 
 /* core files */
-#include "version.h"
+#include "bacversion.h"
 #include "config.h"
 #include "address.h"
 #include "apdu.h"
@@ -70,6 +86,7 @@
 #include "device.h"
 
 /* demo objects */
+#if 0
 #include "ai.h"
 #include "ao.h"
 #include "av.h"
@@ -80,6 +97,7 @@
 #include "lc.h"
 #include "lsp.h"
 #include "mso.h"
+#endif
 
 /* demo handlers */
 #include "txbuf.h"

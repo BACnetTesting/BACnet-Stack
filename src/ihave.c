@@ -29,8 +29,23 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stdint.h>
 #include "bacenum.h"
 #include "bacdcode.h"
@@ -79,8 +94,8 @@ int ihave_decode_service_request(
     BACNET_I_HAVE_DATA * data)
 {
     int len = 0;
-    uint8_t tag_number = 0;
-    uint32_t len_value = 0;
+    uint8_t tag_number ;
+    uint32_t len_value ;
     BACNET_OBJECT_TYPE decoded_type ;  /* for decoding */
 
     if (apdu_len && data) {
@@ -124,7 +139,7 @@ int ihave_decode_apdu(
     unsigned apdu_len,
     BACNET_I_HAVE_DATA * data)
 {
-    int len = 0;
+    int len ;
 
     if (!apdu)
         return -1;

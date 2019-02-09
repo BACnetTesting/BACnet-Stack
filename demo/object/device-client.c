@@ -21,7 +21,21 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
 /** @file device-client.c Lightweight base "class" for handling all
  * BACnet objects belonging to a BACnet device, as well as
@@ -47,6 +61,9 @@
 #include "handlers.h"
 #include "datalink.h"
 #include "address.h"
+#if (BACNET_PROTOCOL_REVISION >= 17)
+#include "netport.h"
+#endif
 /* include the device object */
 #include "device.h"     /* me */
 
@@ -64,12 +81,13 @@ extern long int timezone;
 static uint32_t Object_Instance_Number = 260001;
 static BACNET_CHARACTER_STRING My_Object_Name;
 static BACNET_DEVICE_STATUS System_Status = STATUS_OPERATIONAL;
-static char *Vendor_Name = BACNET_VENDOR_NAME;
+static const char *Vendor_Name = BACNET_VENDOR_NAME;
 static uint16_t Vendor_Identifier = BACNET_VENDOR_ID;
-static char *Model_Name = "GNU";
-static char *Application_Software_Version = "1.0";
-static char *Location = "USA";
-static char *Description = "command line client";
+static const char *Model_Name = "BITS Reference Stack Client";
+static const char *Application_Software_Version = "1.0";
+static const char *Location = "USA";
+static const char *Description = "command line client";
+extern const char *BACnet_Version;
 /* static uint8_t Protocol_Version = 1; - constant, not settable */
 /* static uint8_t Protocol_Revision = 4; - constant, not settable */
 /* Protocol_Services_Supported - dynamically generated */
@@ -87,7 +105,7 @@ static BACNET_DATE Local_Date;  /* rely on OS, if there is one */
    BACnet UTC offset is expressed in minutes. */
 static int32_t UTC_Offset = 5 * 60;
 static bool Daylight_Savings_Status = false;    /* rely on OS */
-#if defined(BACNET_TIME_MASTER)
+#if (BACNET_TIME_MASTER == 1)
 static bool Align_Intervals;
 static uint32_t Interval_Minutes;
 static uint32_t Interval_Offset_Minutes;
@@ -111,43 +129,86 @@ static uint32_t Database_Revision = 0;
 /* local forward (semi-private) and external prototypes */
 int Device_Read_Property_Local(
     BACNET_READ_PROPERTY_DATA * rpdata);
-extern int Routed_Device_Read_Property_Local(
-    BACNET_READ_PROPERTY_DATA * rpdata);
-extern bool Routed_Device_Write_Property_Local(
-    BACNET_WRITE_PROPERTY_DATA * wp_data);
+//extern int Routed_Device_Read_Property_Local(
+//    BACNET_READ_PROPERTY_DATA * rpdata);
+//extern bool Routed_Device_Write_Property_Local(
+//    BACNET_WRITE_PROPERTY_DATA * wp_data);
 
 /* All included BACnet objects */
 static object_functions_t Object_Table[] = {
-    {OBJECT_DEVICE,
-            NULL /* Init - don't init Device or it will recourse! */ ,
-            Device_Count,
-            Device_Index_To_Instance,
-            Device_Valid_Object_Instance_Number,
-            Device_Object_Name,
-            Device_Read_Property_Local,
-            NULL /* Write_Property */ ,
-            NULL /* Property_Lists */ ,
-            NULL /* ReadRangeInfo */ ,
-            NULL /* Iterator */ ,
-            NULL /* Value_Lists */ ,
-            NULL /* COV */ ,
-            NULL /* COV Clear */ ,
-        NULL /* Intrinsic Reporting */ },
-    {MAX_BACNET_OBJECT_TYPE,
-            NULL /* Init */ ,
-            NULL /* Count */ ,
-            NULL /* Index_To_Instance */ ,
-            NULL /* Valid_Instance */ ,
-            NULL /* Object_Name */ ,
-            NULL /* Read_Property */ ,
-            NULL /* Write_Property */ ,
-            NULL /* Property_Lists */ ,
-            NULL /* ReadRangeInfo */ ,
-            NULL /* Iterator */ ,
-            NULL /* Value_Lists */ ,
-            NULL /* COV */ ,
-            NULL /* COV Clear */ ,
-        NULL /* Intrinsic Reporting */ }
+    {
+    OBJECT_DEVICE,
+    NULL /* Init - don't init Device or it will recourse! */ ,
+    Device_Count,
+    Device_Index_To_Instance,
+    Device_Valid_Object_Instance_Number,
+    Device_Object_Name,
+    Device_Read_Property_Local,
+    NULL /* Write_Property */ ,
+    NULL /* Property_Lists */ ,
+#if ( BACNET_SVC_RR_B == 1 )
+    NULL /* ReadRangeInfo */ ,
+#endif
+    NULL /* Iterator */ ,
+#if ( BACNET_SVC_COV_B == 1 )
+    NULL /* Value_Lists */ ,
+    NULL /* COV */ ,
+    NULL /* COV Clear */ ,
+#endif
+#if (INTRINSIC_REPORTING_B == 1)
+    NULL /* Intrinsic Reporting */
+#endif
+    },
+
+#if (BACNET_PROTOCOL_REVISION >= 17)
+    {
+    OBJECT_NETWORK_PORT,
+    Network_Port_Init,
+    Network_Port_Count,
+    Network_Port_Index_To_Instance,
+    Network_Port_Valid_Instance,
+    Network_Port_Object_Name,
+    Network_Port_Read_Property,
+    Network_Port_Write_Property,
+    Network_Port_Property_Lists,
+#if ( BACNET_SVC_RR_B == 1 )
+    NULL /* ReadRangeInfo */ ,
+#endif
+    NULL /* Iterator */ ,
+#if ( BACNET_SVC_COV_B == 1 )
+    NULL /* Value_Lists */ ,
+    NULL /* COV */ ,
+    NULL /* COV Clear */ ,
+#endif
+#if (INTRINSIC_REPORTING_B == 1)
+    NULL /* Intrinsic Reporting */
+#endif
+    },
+#endif
+
+    {
+    MAX_BACNET_OBJECT_TYPE,
+    NULL /* Init */ ,
+    NULL /* Count */ ,
+    NULL /* Index_To_Instance */ ,
+    NULL /* Valid_Instance */ ,
+    NULL /* Object_Name */ ,
+    NULL /* Read_Property */ ,
+    NULL /* Write_Property */ ,
+    NULL /* Property_Lists */ ,
+#if ( BACNET_SVC_RR_B == 1 )
+    NULL /* ReadRangeInfo */ ,
+#endif
+    NULL /* Iterator */ ,
+#if ( BACNET_SVC_COV_B == 1 )
+    NULL /* Value_Lists */ ,
+    NULL /* COV */ ,
+    NULL /* COV Clear */ ,
+#endif
+#if (INTRINSIC_REPORTING_B == 1)
+    NULL /* Intrinsic Reporting */
+#endif
+    }
 };
 
 /** Glue function to let the Device object, when called by a handler,
@@ -184,7 +245,7 @@ unsigned Device_Count(
 uint32_t Device_Index_To_Instance(
     unsigned index)
 {
-    index = index;
+    (void) index ;
     return Object_Instance_Number;
 }
 
@@ -199,11 +260,7 @@ uint32_t Device_Index_To_Instance(
 uint32_t Device_Object_Instance_Number(
     void)
 {
-#ifdef BAC_ROUTING
-    return Routed_Device_Object_Instance_Number();
-#else
     return Object_Instance_Number;
-#endif
 }
 
 bool Device_Set_Object_Instance_Number(
@@ -353,20 +410,21 @@ const char *Device_Model_Name(
     return Model_Name;
 }
 
-bool Device_Set_Model_Name(
-    const char *name,
-    size_t length)
-{
-    bool status = false;        /*return value */
-
-    if (length < sizeof(Model_Name)) {
-        memmove(Model_Name, name, length);
-        Model_Name[length] = 0;
-        status = true;
-    }
-
-    return status;
-}
+//bool Device_Set_Model_Name(
+//    const char *name,
+//    size_t length)
+//{
+//    bool status = false;        /*return value */
+//
+//    if (length < sizeof(Model_Name)) {
+//        memmove(Model_Name, name, length);
+//			this is so wrong, Model_Name is a pointer, not an array!
+//        Model_Name[length] = 0;
+//        status = true;
+//    }
+//
+//    return status;
+//}
 
 const char *Device_Firmware_Revision(
     void)
@@ -380,20 +438,21 @@ const char *Device_Application_Software_Version(
     return Application_Software_Version;
 }
 
-bool Device_Set_Application_Software_Version(
-    const char *name,
-    size_t length)
-{
-    bool status = false;        /*return value */
-
-    if (length < sizeof(Application_Software_Version)) {
-        memmove(Application_Software_Version, name, length);
-        Application_Software_Version[length] = 0;
-        status = true;
-    }
-
-    return status;
-}
+//bool Device_Set_Application_Software_Version(
+//    const char *name,
+//    size_t length)
+//{
+//    bool status = false;        /*return value */
+//
+//    if (length < sizeof(Application_Software_Version)) {
+//        memmove(Application_Software_Version, name, length);
+//			wrong, location is a pointer, this will crash most devices todo BTC !!!! (see others like it) cr23418468946
+//        Application_Software_Version[length] = 0;
+//        status = true;
+//    }
+//
+//    return status;
+//}
 
 const char *Device_Description(
     void)
@@ -401,20 +460,21 @@ const char *Device_Description(
     return Description;
 }
 
-bool Device_Set_Description(
-    const char *name,
-    size_t length)
-{
-    bool status = false;        /*return value */
-
-    if (length < sizeof(Description)) {
-        memmove(Description, name, length);
-        Description[length] = 0;
-        status = true;
-    }
-
-    return status;
-}
+//bool Device_Set_Description(
+//    const char *name,
+//    size_t length)
+//{
+//    bool status = false;        /*return value */
+//
+//    if (length < sizeof(Description)) {
+//        memmove(Description, name, length);
+//			wrong, location is a pointer, this will crash most devices todo BTC !!!! (see others like it) cr23418468946
+//        Description[length] = 0;
+//        status = true;
+//    }
+//
+//    return status;
+//}
 
 const char *Device_Location(
     void)
@@ -422,20 +482,21 @@ const char *Device_Location(
     return Location;
 }
 
-bool Device_Set_Location(
-    const char *name,
-    size_t length)
-{
-    bool status = false;        /*return value */
-
-    if (length < sizeof(Location)) {
-        memmove(Location, name, length);
-        Location[length] = 0;
-        status = true;
-    }
-
-    return status;
-}
+//bool Device_Set_Location(
+//    const char *name,
+//    size_t length)
+//{
+//    bool status = false;        /*return value */
+//
+//    if (length < sizeof(Location)) {
+//        memmove(Location, name, length);
+//			wrong, location is a pointer, this will crash most devices todo BTC !!!! (see others like it) cr23418468946
+//        Location[length] = 0;
+//        status = true;
+//    }
+//
+//    return status;
+//}
 
 uint8_t Device_Protocol_Version(
     void)
@@ -725,7 +786,8 @@ bool Device_Daylight_Savings_Status(void)
     return Daylight_Savings_Status;
 }
 
-#if defined(BACNET_TIME_MASTER)
+
+#if (BACNET_TIME_MASTER == 1)
 /**
  * Sets the time sync interval in minutes
  *

@@ -29,8 +29,22 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
 /* BACnet Integer encoding and decoding */
 
@@ -40,6 +54,14 @@
 #include "bacint.h"
 
 /** @file bacint.c  Encode/Decode Integer Types */
+
+uint8_t encode_unsigned8(
+	uint8_t * apdu,
+	uint8_t value)
+{
+	apdu[0] = value;
+	return 1;
+}
 
 int encode_unsigned16(
     uint8_t * apdu,
@@ -52,14 +74,13 @@ int encode_unsigned16(
 }
 
 int decode_unsigned16(
-    uint8_t * apdu,
+    const uint8_t * apdu,
     uint16_t * value)
 {
     if (value) {
-        *value = (uint16_t) ((((uint16_t) apdu[0]) << 8) & 0xff00);
-        *value |= ((uint16_t) (((uint16_t) apdu[1]) & 0x00ff));
+        *value = (uint16_t)((((uint16_t)apdu[0]) << 8) & 0xff00);
+        *value |= ((uint16_t)(((uint16_t)apdu[1]) & 0x00ff));
     }
-
     return 2;
 }
 
@@ -74,8 +95,9 @@ int encode_unsigned24(
     return 3;
 }
 
+
 int decode_unsigned24(
-    uint8_t * apdu,
+    const uint8_t * apdu,
     uint32_t * value)
 {
     if (value) {
@@ -100,7 +122,7 @@ int encode_unsigned32(
 }
 
 int decode_unsigned32(
-    uint8_t * apdu,
+    const uint8_t * apdu,
     uint32_t * value)
 {
     if (value) {

@@ -21,29 +21,43 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
-#include <stddef.h>
-#include <stdint.h>
-#include <errno.h>
-#include <string.h>
-#include "config.h"
-#include "bacdef.h"
-#include "bacdcode.h"
-#include "address.h"
-#include "tsm.h"
-#include "dcc.h"
-#include "npdu.h"
-#include "apdu.h"
-#include "device.h"
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
+//#include <stddef.h>
+//#include <stdint.h>
+//#include <errno.h>
+//#include <string.h>
+//#include "config.h"
+//#include "bacdef.h"
+//#include "bacdcode.h"
+//#include "address.h"
+//#include "tsm.h"
+//#include "dcc.h"
+//#include "npdu.h"
+//#include "apdu.h"
+// #include "device.h"
 #include "datalink.h"
 #include "cov.h"
-/* some demo stuff needed */
-#include "handlers.h"
-#include "txbuf.h"
-#include "client.h"
+///* some demo stuff needed */
+//#include "handlers.h"
+//#include "client.h"
 
 /** @file s_cov.c  Send a Change of Value (COV) update or a Subscribe COV request. */
-
+#if 0
 /** Encodes an Unconfirmed COV Notification.
  * @ingroup DSCOV
  *
@@ -56,15 +70,15 @@
  */
 int ucov_notify_encode_pdu(
 	DLCB *dlcb, // todo3 why is this passed to us?
-    unsigned buffer_len,
+    DEVICE_OBJECT_DATA *pDev,
     BACNET_PATH * dest,
     BACNET_NPCI_DATA * npci_data,
     BACNET_COV_DATA * cov_data)
 {
     int len = 0;
     int pdu_len = 0;
-    BACNET_ADDRESS my_address;
-    datalink_get_my_address(&my_address);
+    // BACNET_PATH my_address;
+    // datalink_get_my_address(&my_address);
 
     /* unconfirmed is a broadcast */
     // datalink_get_broadcast_address(dest);
@@ -94,9 +108,11 @@ int ucov_notify_encode_pdu(
  * @param cov_data [in]  The COV update information to be encoded.
  * @return Size of the message sent (bytes), or a negative value on error.
  */
+#if 0
+// todo 3 - why can we comment this out? are we not using it?
 int Send_UCOV_Notify(
     PORT_SUPPORT *portParams,
-    unsigned buffer_len,
+    DEVICE_OBJECT_DATA *pDev,
     DLCB *dlcb,
     BACNET_COV_DATA * cov_data)
 {
@@ -105,12 +121,15 @@ int Send_UCOV_Notify(
     int bytes_sent = 0;
     BACNET_NPCI_DATA npci_data;
 
-    pdu_len = ucov_notify_encode_pdu(buffer, buffer_len, &dest, &npci_data,
-        cov_data);
-    bytes_sent = datalink_send_pdu(&dest, &npci_data, dlcb);
+    pdu_len = ucov_notify_encode_pdu( portParams, pDev, buffer, &dest, &npci_data, cov_data);
+    dlcb->bufSize = pdu_len;
+    bytes_sent = portParams->SendPdu(dlcb);
 
     return bytes_sent;
 }
+#endif
+
+#if 0 // client side
 
 /** Sends a COV Subscription request.
  * @ingroup DSCOV
@@ -122,6 +141,7 @@ int Send_UCOV_Notify(
  */
 uint8_t Send_COV_Subscribe(
     PORT_SUPPORT *portParams,
+    DEVICE_OBJECT_DATA *pDev,
     uint32_t device_id,
     BACNET_SUBSCRIBE_COV_DATA * cov_data)
 {
@@ -132,20 +152,20 @@ uint8_t Send_COV_Subscribe(
     bool status = false;
     int len = 0;
     int pdu_len = 0;
-    int bytes_sent = 0;
     BACNET_NPCI_DATA npci_data;
 
-    if (!dcc_communication_enabled())
+    if (!dcc_communication_enabled(pDev)) {
         return 0;
+    }
     /* is the device bound? */
     status = address_get_by_device(device_id, &max_apdu, &dest);
     /* is there a tsm available? */
     if (status) {
-        invoke_id = tsm_next_free_invokeID();
+        invoke_id = tsm_next_free_invokeID(pDev);
     }
     if (invoke_id) {
         /* encode the NPDU portion of the packet */
-        datalink_get_my_address(&my_address);
+        // datalink_get_my_address(&my_address);
         npdu_setup_npci_data(&npci_data, true, MESSAGE_PRIORITY_NORMAL);
         pdu_len =
             npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &dest, NULL,
@@ -162,22 +182,24 @@ uint8_t Send_COV_Subscribe(
         if ((unsigned) pdu_len < max_apdu) {
            dlcb->optr = pdu_len ;
            // todo1, make sure other occurences set optr before submittal to tsm!
-            tsm_set_confirmed_unsegmented_transaction(invoke_id, &dest,
-                &npci_data, dlcb );
-            bytes_sent =
-                datalink_send_pdu(&dest, &npci_data,
-                dlcb );
-            if (bytes_sent <= 0) {
+            tsm_set_confirmed_unsegmented_transaction( portParams, pDev, invoke_id, &dest,
+                &npci_data, &Handler_Transmit_Buffer[0], (uint16_t) pdu_len);
 #if PRINT_ENABLED
-                fprintf(stderr, "Failed to Send SubscribeCOV Request (%s)!\n",
-                        strerror(errno));
+            bytes_sent =
 #endif
+                portParams->SendPdu(portParams, &dest, &npdu_data, 
+
+#if PRINT_ENABLED
+            if (bytes_sent <= 0) {
+                dbTraffic(DB_UNEXPECTED_ERROR, "Failed to Send SubscribeCOV Request (%s)!\n",
+                        strerror(errno));
             }
+#endif
         } else {
-            tsm_free_invoke_id(invoke_id);
+            tsm_free_invoke_id(pDev, invoke_id);
             invoke_id = 0;
 #if PRINT_ENABLED
-            fprintf(stderr,
+            dbTraffic(DB_UNEXPECTED_ERROR,
                     "Failed to Send SubscribeCOV Request "
                     "(exceeds destination maximum APDU)!\n");
 #endif
@@ -186,3 +208,7 @@ uint8_t Send_COV_Subscribe(
 
     return invoke_id;
 }
+#endif // 0  client side
+
+#endif // ( BACNET_SVC_COV_B == 1 )
+

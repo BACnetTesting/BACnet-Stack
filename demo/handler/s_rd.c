@@ -1,3 +1,5 @@
+#if 0
+
 /**************************************************************************
 *
 * Copyright (C) 2005 Steve Karg <skarg@users.sourceforge.net>
@@ -21,7 +23,22 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stddef.h>
 #include <stdint.h>
 #include <errno.h>
@@ -81,7 +98,7 @@ uint8_t Send_Reinitialize_Device_Request(
         invoke_id = tsm_next_free_invokeID();
     if (invoke_id) {
         /* encode the NPDU portion of the packet */
-        datalink_get_my_address(&my_address);
+        //datalink_get_my_address(&my_address);
         npdu_setup_npci_data(&npci_data, true, MESSAGE_PRIORITY_NORMAL);
         pdu_len =
             npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest.adr, NULL,
@@ -100,16 +117,12 @@ uint8_t Send_Reinitialize_Device_Request(
         if ((unsigned) pdu_len < max_apdu) {
             tsm_set_confirmed_unsegmented_transaction(portParams, invoke_id, &dest.localMac,
                 &npci_data, &Handler_Transmit_Buffer[0], (uint16_t) pdu_len);
-                
-                dlcb->optr = pdu_len ;
-            bytes_sent =
-                datalink_send_pdu(&dest, &npci_data, dlcb );
-#if PRINT_ENABLED
-            if (bytes_sent <= 0)
-                fprintf(stderr,
-                    "Failed to Send ReinitializeDevice Request (%s)!\n",
-                    strerror(errno));
-#endif
+            //bytes_sent =
+            //    datalink_send_pdu(&dest, &npci_data,
+            //    &Handler_Transmit_Buffer[0], pdu_len);
+
+            portParams->SendPdu(portParams, sendingDev, &dest.localMac, &npci_data, &Handler_Transmit_Buffer[0],
+                pdu_len);
         } else {
             tsm_free_invoke_id(invoke_id);
             invoke_id = 0;
@@ -123,3 +136,5 @@ uint8_t Send_Reinitialize_Device_Request(
 
     return invoke_id;
 }
+
+#endif

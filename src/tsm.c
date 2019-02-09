@@ -30,8 +30,23 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -76,8 +91,16 @@ void tsm_set_timeout_handler(
 static uint8_t tsm_find_invokeID_index(
     uint8_t invokeID)
 {
-    unsigned i = 0;     /* counter */
+    unsigned i ;     /* counter */
     uint8_t index = MAX_TSM_TRANSACTIONS;       /* return value */
+
+    if (invokeID == 0)
+    {
+        panic();
+        return index;
+    }
+
+    // todo 2 SemaWait(tsmSema);
 
     for (i = 0; i < MAX_TSM_TRANSACTIONS; i++) {
         if (TSM_List[i].InvokeID == invokeID) {
@@ -85,6 +108,8 @@ static uint8_t tsm_find_invokeID_index(
             break;
         }
     }
+
+    // todo 2 SemaFree(tsmSema);
 
     return index;
 }
@@ -95,12 +120,16 @@ static uint8_t tsm_find_first_free_index(
     unsigned i = 0;     /* counter */
     uint8_t index = MAX_TSM_TRANSACTIONS;       /* return value */
 
+    // todo 2 SemaWait(tsmSema);
+
     for (i = 0; i < MAX_TSM_TRANSACTIONS; i++) {
         if (TSM_List[i].InvokeID == 0) {
             index = (uint8_t) i;
             break;
         }
     }
+
+    // todo 2 SemaFree(tsmSema);
 
     return index;
 }
@@ -111,7 +140,9 @@ bool tsm_transaction_available(
     bool status = false;        /* return value */
     unsigned i = 0;     /* counter */
 
-    for (i = 0; i < MAX_TSM_TRANSACTIONS; i++) {
+    // todo 2 SemaWait(tsmSema);
+
+    for (i=0; i < MAX_TSM_TRANSACTIONS; i++) {
         if (TSM_List[i].InvokeID == 0) {
             /* one is available! */
             status = true;
@@ -119,6 +150,11 @@ bool tsm_transaction_available(
         }
     }
 
+    // todo2 - remove for release
+    // note though - if something goes wrong - client does not ack COV notification, this gets triggered. Investigate.
+    if (!status) panic();
+
+    // todo 2 SemaFree(tsmSema);
     return status;
 }
 
@@ -128,6 +164,8 @@ uint8_t tsm_transaction_idle_count(
     uint8_t count = 0;  /* return value */
     unsigned i = 0;     /* counter */
 
+    // todo 2 SemaWait(tsmSema);
+
     for (i = 0; i < MAX_TSM_TRANSACTIONS; i++) {
         if ((TSM_List[i].InvokeID == 0) &&
             (TSM_List[i].state == TSM_STATE_IDLE)) {
@@ -136,29 +174,34 @@ uint8_t tsm_transaction_idle_count(
         }
     }
 
+    // todo 2 SemaFree(tsmSema);
+
     return count;
 }
 
 /* sets the invokeID */
-
-void tsm_invokeID_set(
-    uint8_t invokeID)
-{
-    if (invokeID == 0) {
-        invokeID = 1;
-    }
-    Current_Invoke_ID = invokeID;
-}
+// todo3 - we do not use this, confirm then remove
+//void tsm_invokeID_set(
+//    DEVICE_OBJECT_DATA *pDev,
+//    uint8_t invokeID)
+//{
+//    if (invokeID == 0) {
+//        invokeID = 1;
+//    }
+//    pDev->Current_Invoke_ID = invokeID;
+//}
 
 /* gets the next free invokeID,
    and reserves a spot in the table
    returns 0 if none are available */
-uint8_t tsm_next_free_invokeID(
-    void)
+static uint8_t tsm_find_free_invokeID(
+    bool autoclear)
 {
-    uint8_t index = 0;
+    uint8_t index;
     uint8_t invokeID = 0;
     bool found = false;
+
+    // todo 2 SemaWait(tsmSema);
 
     /* is there even space available? */
     if (tsm_transaction_available()) {
@@ -180,7 +223,8 @@ uint8_t tsm_next_free_invokeID(
                         Current_Invoke_ID = 1;
                     }
                 }
-            } else {
+            }
+            else {
                 /* found! This invokeID is already used */
                 /* try next one */
                 Current_Invoke_ID++;
@@ -191,81 +235,108 @@ uint8_t tsm_next_free_invokeID(
             }
         }
     }
-
+    // todo 2 SemaFree(tsmSema);
     return invokeID;
 }
 
+
+/* gets the next free invokeID,
+   and reserves a spot in the table
+   returns 0 if none are available */
+uint8_t tsm_next_free_invokeID(
+    void)
+{
+    return tsm_find_free_invokeID(false);
+}
+
+
+// Karg has no way of clearing a failed notification... todo BTC
+uint8_t tsm_next_free_invokeID_autoclear(
+    void)
+{
+    return tsm_find_free_invokeID(true);
+}
+
+
 void tsm_set_confirmed_unsegmented_transaction(
     uint8_t invokeID,
-    BACNET_ADDRESS * dest,
-    BACNET_NPCI_DATA * ndpu_data,
-    uint8_t * apdu,
-    uint16_t apdu_len)
+    DLCB *dlcb
+    )
 {
-    uint16_t j = 0;
     uint8_t index;
+
+    // todo 2 SemaWait(tsmSema);
 
     if (invokeID) {
         index = tsm_find_invokeID_index(invokeID);
         if (index < MAX_TSM_TRANSACTIONS) {
             /* SendConfirmedUnsegmented */
-            TSM_List[index].dlcb = dlcb_clone_deep(dlcb); // nah, need txdetails. (viz. port) // todo 3 - probably don't have to clone the _whole_ buffer, check optr?
-            if (pDev->TSM_List[index].dlcb2 != NULL)
+            TSM_List[index].dlcb2 = dlcb_clone_deep(dlcb); // nah, need txdetails. (viz. port) // todo 3 - probably don't have to clone the _whole_ buffer, check optr?
+            if (TSM_List[index].dlcb2 != NULL)
             {
             TSM_List[index].state = TSM_STATE_AWAIT_CONFIRMATION;
             TSM_List[index].RetryCount = 0;
             /* start the timer */
             TSM_List[index].RequestTimer = apdu_timeout();
             }
-            // TSM_List[index].apdu_len = apdu_len;
-            // npdu_copy_data(&TSM_List[index].npci_data, ndpu_data);
-            // bacnet_address_copy(&TSM_List[index].dest, dest);
         }
     }
 
-    return;
+    // todo 2 SemaFree(tsmSema);
 }
 
 /* used to retrieve the transaction payload */
 /* if we wanted to find out what we sent (i.e. when we get an ack) */
 bool tsm_get_transaction_pdu(
     uint8_t invokeID,
-    BACNET_ADDRESS * dest,
-    BACNET_NPCI_DATA * ndpu_data,
+    //BACNET_ROUTE * dest,
+    //BACNET_NPCI_DATA * ndpu_data,
     // uint8_t * apdu,
     //uint16_t * apdu_len)
     DLCB **dlcb)
 {
-    uint16_t j = 0;
-    uint8_t index;
+    // never used by target uint16_t j = 0;
+    // uint8_t index;
     // bool found = false;
 
+    // todo 2 SemaWait(tsmSema);
+
     if (invokeID) {
-        index = tsm_find_invokeID_index(invokeID);
+        uint8_t index = tsm_find_invokeID_index(invokeID);
         /* how much checking is needed?  state?  dest match? just invokeID? */
         if (index < MAX_TSM_TRANSACTIONS) {
             /* FIXME: we may want to free the transaction so it doesn't timeout */
             /* retrieve the transaction */
             /* FIXME: bounds check the pdu_len? */
-            *apdu_len = (uint16_t) TSM_List[index].apdu_len;
-            for (j = 0; j < *apdu_len; j++) {
-                apdu[j] = TSM_List[index].apdu[j];
-            }
-            npdu_copy_data(ndpu_data, &TSM_List[index].npci_data);
-            bacnet_address_copy(dest, &TSM_List[index].dest);
-            *dlcb = pDev->TSM_List[index].dlcb2;
+            // *apdu_len = (uint16_t)pDev->TSM_List[index].apdu_len;
+
+            // panic(); // this does not match the above function !!! "Todo2 !!!!! ");
+            // use dlcb information
+            //for (j = 0; j < *apdu_len; j++) {
+            //    apdu[j] = TSM_List[index].apdu[j];
+            //}
+            
+            // npdu_copy_data(ndpu_data, &pDev->TSM_List[index].npci_data);
+            // bacnet_route_copy(dest, &pDev->TSM_List[index].destRoute);
+            *dlcb = TSM_List[index].dlcb2;
             return true;
         }
     }
 
+    // todo 2 SemaFree(tsmSema);
+
     return false;
 }
 
+
 /* called once a millisecond or slower */
 void tsm_timer_milliseconds(
+    PORT_SUPPORT  *portParams,
     uint16_t milliseconds)
 {
-    unsigned i = 0;     /* counter */
+    unsigned i ;     /* counter */
+
+    // todo 2 SemaWait(tsmSema);
 
     for (i = 0; i < MAX_TSM_TRANSACTIONS; i++) {
         if (TSM_List[i].state == TSM_STATE_AWAIT_CONFIRMATION) {
@@ -279,30 +350,44 @@ void tsm_timer_milliseconds(
                     TSM_List[i].RequestTimer = apdu_timeout();
                     TSM_List[i].RetryCount++;
                     // make a copy of the dclb (and its attachments)
-                    DLCB *dlcb = dlcb_clone_deep(pDev->TSM_List[i].dlcb2);
+                    DLCB *dlcb = dlcb_clone_deep(TSM_List[i].dlcb2);
                     if (dlcb != NULL)
-                    {                    
-                      datalink_send_pdu(&TSM_List[i].dest,
-                          &TSM_List[i].npci_data, dlcb ) ;
+                    {
+                        dlcb->route.portParams->SendPdu(dlcb);
                     }
-                } else {
+                    // else, we may be able to alloc later, so leave this as a non-responded send for now (don't kill off further retries)
+                }
+                else {
                     /* note: the invoke id has not been cleared yet
                        and this indicates a failed message:
                        IDLE and a valid invoke id */
                     TSM_List[i].state = TSM_STATE_IDLE;
-                    if (TSM_List[i].InvokeID != 0) {
-                        dlcb_free(pDev->TSM_List[i].dlcb2);
-                        pDev->TSM_List[i].dlcb2 = NULL;
-                    
-                        if (Timeout_Function) {
-                            Timeout_Function(TSM_List[i].InvokeID);
-                        }
+
+                    // and free the copy we kept around for resending
+                    dlcb_free(TSM_List[i].dlcb2);
+                    TSM_List[i].dlcb2 = NULL;
+
+                    if (TSM_List[i].autoClear)
+                    {
+                        // clear it forever
+                        TSM_List[i].InvokeID = 0;
                     }
+
+                    // EKH: I have made this mod. The Karg method requires the client to monitor the TSM progress.
+                    // A better way would have been to callback when finally done... we can do that.
+                    // For now, to review towards the end of the project, todo4, I am clearing the InvokeId too...
+                    // see tsm_free_invoke_id() TSM_List[i].InvokeID = 0;
+
+                    // 2017.02.20 Karg's latest now has a callback, but he does not use it, and anyway, he does not distinquish between a 'monitored'
+                    // transaction e.g. ReadProperty, WriteProperty, and an Event Notification, which is why I added 'autoClear'
                 }
             }
         }
     }
+
+    // todo 2 SemaFree(tsmSema);
 }
+
 
 /* frees the invokeID and sets its state to IDLE */
 void tsm_free_invoke_id(
@@ -314,11 +399,15 @@ void tsm_free_invoke_id(
     if (index < MAX_TSM_TRANSACTIONS) {
         TSM_List[index].state = TSM_STATE_IDLE;
         TSM_List[index].InvokeID = 0;
-        if (pDev->TSM_List[index].dlcb2 != NULL)
+        if (TSM_List[index].dlcb2 != NULL)
         {
-            dlcb_free(pDev->TSM_List[index].dlcb2);
+            dlcb_free(TSM_List[index].dlcb2);
         }
-        pDev->TSM_List[index].dlcb2 = NULL;
+        TSM_List[index].dlcb2 = NULL;
+    }
+    else
+    {
+        panic();
     }
 }
 
@@ -326,15 +415,21 @@ void tsm_free_invoke_id(
  * @param invokeID [in] The invokeID to be checked, normally of last message sent.
  * @return True if it is free (done with), False if still pending in the TSM.
  */
-bool tsm_invoke_id_free(
+bool is_tsm_invoke_id_free(
     uint8_t invokeID)
 {
     bool status = true;
     uint8_t index;
 
+    // todo 2 SemaWait(tsmSema);
+
     index = tsm_find_invokeID_index(invokeID);
-    if (index < MAX_TSM_TRANSACTIONS)
+    if (index < MAX_TSM_TRANSACTIONS) {
+        // no! this is just a check!! dlcb_free(TSM_List[index].dlcb2);
         status = false;
+    }
+
+    // todo 2 SemaFree(tsmSema);
 
     return status;
 }
@@ -351,6 +446,8 @@ bool tsm_invoke_id_failed(
     bool status = false;
     uint8_t index;
 
+    // todo 2 SemaWait(tsmSema);
+
     index = tsm_find_invokeID_index(invokeID);
     if (index < MAX_TSM_TRANSACTIONS) {
         /* a valid invoke ID and the state is IDLE is a
@@ -358,6 +455,12 @@ bool tsm_invoke_id_failed(
         if (TSM_List[index].state == TSM_STATE_IDLE)
             status = true;
     }
+    else {
+        // EKH: If the invokeId could not be found, that too would be a failure, right?
+        status = true;
+    }
+
+    // todo 2 SemaFree(tsmSema);
 
     return status;
 }
@@ -378,10 +481,10 @@ int datalink_send_pdu(
     uint8_t * pdu,
     unsigned pdu_len)
 {
-    (void) dest;
-    (void) npci_data;
-    (void) pdu;
-    (void) pdu_len;
+    (void)dest;
+    (void)npci_data;
+    (void)pdu;
+    (void)pdu_len;
 
     return 0;
 }
@@ -390,14 +493,13 @@ int datalink_send_pdu(
 void datalink_get_broadcast_address(
     BACNET_ADDRESS * dest)
 {
-    (void) dest;
+    (void)dest;
 }
 
 void testTSM(
     Test * pTest)
 {
     /* FIXME: add some unit testing... */
-    return;
 }
 
 #ifdef TEST_TSM
@@ -414,7 +516,7 @@ int main(
 
     ct_setStream(pTest, stdout);
     ct_run(pTest);
-    (void) ct_report(pTest);
+    (void)ct_report(pTest);
     ct_destroy(pTest);
 
     return 0;

@@ -42,7 +42,7 @@ static bool Access_Rights_Initialized = false;
 static ACCESS_RIGHTS_DESCR ar_descr[MAX_ACCESS_RIGHTSS];
 
 /* These three arrays are used by the ReadPropertyMultiple handler */
-static const int Properties_Required[] = {
+static const BACNET_PROPERTY_ID Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -52,21 +52,21 @@ static const int Properties_Required[] = {
     PROP_ENABLE,
     PROP_NEGATIVE_ACCESS_RULES,
     PROP_POSITIVE_ACCESS_RULES,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Properties_Optional[] = {
-    -1
+static const BACNET_PROPERTY_ID Properties_Optional[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Properties_Proprietary[] = {
-    -1
+static const BACNET_PROPERTY_ID Properties_Proprietary[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
 void Access_Rights_Property_Lists(
-    const int **pRequired,
-    const int **pOptional,
-    const int **pProprietary)
+    const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary)
 {
     if (pRequired)
         *pRequired = Properties_Required;
@@ -75,7 +75,6 @@ void Access_Rights_Property_Lists(
     if (pProprietary)
         *pProprietary = Properties_Proprietary;
 
-    return;
 }
 
 void Access_Rights_Init(
@@ -96,7 +95,6 @@ void Access_Rights_Init(
         }
     }
 
-    return;
 }
 
 /* we simply have 0-n object instances.  Yours might be */
@@ -409,7 +407,6 @@ void testAccessRights(
     ct_test(pTest, decoded_type == rpdata.object_type);
     ct_test(pTest, decoded_instance == rpdata.object_instance);
 
-    return;
 }
 
 #ifdef TEST_ACCESS_RIGHTS

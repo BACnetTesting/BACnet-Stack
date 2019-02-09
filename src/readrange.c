@@ -29,8 +29,23 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stdint.h>
 #include "bacenum.h"
 #include "bacdcode.h"
@@ -47,7 +62,7 @@
  *     propertyArrayIndex [2] Unsigned OPTIONAL, -- used only with array datatype
  *     range CHOICE {
  *         byPosition [3] SEQUENCE {
- *             referenceIndex Unsigned, 
+ *             referenceIndex Unsigned,
  *             count          INTEGER
  *         },
  *     -- context tag 4 is deprecated
@@ -154,25 +169,27 @@ int rr_decode_service_request(
     BACNET_READ_RANGE_DATA * rrdata)
 {
     unsigned len = 0;
-    unsigned TagLen = 0;
-    uint8_t tag_number = 0;
-    uint32_t len_value_type = 0;
+    unsigned TagLen ;
+    uint8_t tag_number ;
+    uint32_t len_value_type ;
     BACNET_OBJECT_TYPE type;  /* for decoding */
     uint32_t UnsignedTemp;
 
     /* check for value pointers */
     if (apdu_len && rrdata) {
         /* Tag 0: Object ID */
-        if (!decode_is_context_tag(&apdu[len++], 0))
+        if (!decode_is_context_tag(&apdu[len++], 0)) {
             return -1;
+        }
         len += decode_object_id(&apdu[len], &type, &rrdata->object_instance);
         rrdata->object_type = (BACNET_OBJECT_TYPE) type;
         /* Tag 1: Property ID */
         len +=
             decode_tag_number_and_value(&apdu[len], &tag_number,
-            &len_value_type);
-        if (tag_number != 1)
+                                        &len_value_type);
+        if (tag_number != 1) {
             return -1;
+        }
         len += decode_enumerated(&apdu[len], len_value_type, &UnsignedTemp);
         rrdata->object_property = (BACNET_PROPERTY_ID) UnsignedTemp;
         rrdata->Overhead = RR_OVERHEAD; /* Start with the fixed overhead */
@@ -394,7 +411,8 @@ int rr_ack_decode_service_request(
         len += tag_len;
         len += decode_unsigned(&apdu[len], len_value_type, &array_value);
         rrdata->array_index = array_value;
-    } else {
+    } 
+    else {
         rrdata->array_index = BACNET_ARRAY_ALL;
     }
 

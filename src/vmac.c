@@ -29,8 +29,23 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -56,7 +71,7 @@ static OS_Keylist VMAC_List;
  */
 unsigned int VMAC_Count(void)
 {
-    return (unsigned int)Keylist_Count(VMAC_List);
+    return Keylist_Count(VMAC_List);
 }
 
 /**
@@ -90,7 +105,7 @@ bool VMAC_Add(uint32_t device_id, struct vmac_data *src)
             index = Keylist_Data_Add(VMAC_List, device_id, pVMAC);
             if (index >= 0) {
                 status = true;
-                printf("VMAC %u added.\n", (unsigned int)device_id);
+                printf("VMAC %u added.\n", device_id);
             }
         }
     }
@@ -151,7 +166,7 @@ bool VMAC_Different(
             status = true;
         } else {
             if (vmac1->mac_len < mac_len) {
-                mac_len = (unsigned int)vmac1->mac_len;
+                mac_len = vmac1->mac_len;
             }
             for (i = 0; i < mac_len; i++) {
                 if (vmac1->mac[i] != vmac2->mac[i]) {
@@ -185,7 +200,7 @@ bool VMAC_Match(
             status = false;
         } else {
             if (vmac1->mac_len < mac_len) {
-                mac_len = (unsigned int)vmac1->mac_len;
+                mac_len = vmac1->mac_len;
             }
             for (i = 0; i < mac_len; i++) {
                 if (vmac1->mac[i] != vmac2->mac[i]) {

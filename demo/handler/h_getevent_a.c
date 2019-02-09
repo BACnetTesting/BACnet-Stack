@@ -26,6 +26,22 @@
  * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************
  *
  * @section DESCRIPTION
  *
@@ -36,6 +52,8 @@
  * Acked_Transitions property, which has at least one of the bits
  * (TO-OFFNORMAL, TO-FAULT, TONORMAL) set to FALSE.
  */
+#include "config.h"
+
 #include <assert.h>
 #include "config.h"
 #include "txbuf.h"
@@ -48,6 +66,8 @@
 #include "handlers.h"
 #include "getevent.h"
 
+#if (INTRINSIC_REPORTING_B == 1)
+
  /* 40 = min size of get event data in APDU */
 #define MAX_NUMBER_OF_EVENTS ((MAX_LPDU_IP / 40) + 1)
 
@@ -55,7 +75,7 @@
  *
  * @param service_request [in] The contents of the service request.
  * @param service_len [in] The length of the service_request.
- * @param src [in] BACNET_ADDRESS of the source of the message
+ * @param src [in] BACNET_PATH of the source of the message
  * @param service_data [in] The BACNET_CONFIRMED_SERVICE_ACK_DATA information
  * decoded from the APDU header of this message.
  */
@@ -85,3 +105,5 @@ void get_event_ack_handler(
         /* FIXME: Add code to process get_event_data */
     }
 }
+
+#endif // #if (INTRINSIC_REPORTING == 1)

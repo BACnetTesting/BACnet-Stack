@@ -30,16 +30,28 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-#include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>     /* for standard integer types uint8_t etc. */
 #include <stdbool.h>    /* for the standard bool type. */
-#include "bacdcode.h"
-#include "config.h"
-#include "bip.h"
+//#include "bacdcode.h"
+//#include "config.h"
+#include "datalink.h"
 #include "net.h"
 
 #if defined(_MSC_VER)
@@ -77,13 +89,18 @@ static long gethostaddr(
 
     if ((host_ent = gethostbyname(host_name)) == NULL)
         return -1;
-    if (BIP_Debug) {
-        printf("host: %s at %u.%u.%u.%u\n", host_name,
-            (unsigned) ((uint8_t *) host_ent->h_addr)[0],
-            (unsigned) ((uint8_t *) host_ent->h_addr)[1],
-            (unsigned) ((uint8_t *) host_ent->h_addr)[2],
-            (unsigned) ((uint8_t *) host_ent->h_addr)[3]);
+
+    if (((uint8_t *)host_ent->h_addr)[0] != 192) {
+        // Cisco VPN adapter interfering
+        dbTraffic(DBD_ALL, DB_ERROR, "NOTE!! Host not local (todo 2 - remove this warning before delivery)");
     }
+
+    dbTraffic(DBD_ALL, DB_NOTE, "host: %s at %u.%u.%u.%u", host_name,
+               (unsigned) ((uint8_t *) host_ent->h_addr)[0],
+               (unsigned) ((uint8_t *) host_ent->h_addr)[1],
+               (unsigned) ((uint8_t *) host_ent->h_addr)[2],
+               (unsigned) ((uint8_t *) host_ent->h_addr)[3]);
+
     /* note: network byte order */
     return *(long *) host_ent->h_addr;
 }
@@ -107,7 +124,7 @@ static uint32_t getIpMaskForIpAddress(
        [out] buffer to receive data
        [in] size of receive data buffer */
     DWORD dwStatus = GetAdaptersInfo(AdapterInfo,
-        &dwBufLen);
+                                     &dwBufLen);
     if (dwStatus == ERROR_SUCCESS) {
         /* Verify return value is valid, no buffer overflow
            Contains pointer to current adapter info */
@@ -136,14 +153,15 @@ static uint32_t getIpMaskForIpAddress(
 }
 #endif
 
-static void set_broadcast_address(
+void set_broadcast_address(
+    PORT_SUPPORT *portParams,
     uint32_t net_address)
 {
 #if defined(USE_INADDR) && USE_INADDR
     /*   Note: sometimes INADDR_BROADCAST does not let me get
        any unicast messages.  Not sure why... */
-    net_address = net_address;
-    bip_set_broadcast_addr(INADDR_BROADCAST);
+    (void) net_address ;
+    bip_set_broadcast_addr(portParams, INADDR_BROADCAST);
 #elif defined(USE_CLASSADDR) && USE_CLASSADDR
     long broadcast_address = 0;
 
@@ -164,8 +182,8 @@ static void set_broadcast_address(
     bip_set_broadcast_addr(htonl(broadcast_address));
 #else
     /* these are network byte order variables */
-    long broadcast_address = 0;
-    long net_mask = 0;
+    uint32_t broadcast_address = 0;
+    uint32_t net_mask = 0;
 
     net_mask = getIpMaskForIpAddress(net_address);
     if (BIP_Debug) {
@@ -174,147 +192,144 @@ static void set_broadcast_address(
         printf("IP Mask: %s\n", inet_ntoa(address));
     }
     broadcast_address = (net_address & net_mask) | (~net_mask);
-    bip_set_broadcast_addr(broadcast_address);
+    bip_set_broadcast_addr(portParams, broadcast_address);
 #endif
 }
 
+
 /* on Windows, ifname is the dotted ip address of the interface */
-void bip_set_interface(
-    char *ifname)
-{
-    struct in_addr address;
+//void bip_set_interface(
+//    PORT_SUPPORT *portParams,
+//    char *ifname)
+//{
+//    /* setup local address */
+//    if (portParams->bipParams.nwoLocal_addr  == 0) {
+//        portParams->bipParams.nwoLocal_addr = inet_addr(ifname) ;
+//    }
+//
+//    /* setup local broadcast address */
+//    if (portParams->bipParams.nwoBroadcast_addr == 0) {
+//        set_broadcast_address( portParams, portParams->bipParams.nwoLocal_addr);
+//    }
+//}
 
-    /* setup local address */
-    if (bip_get_addr() == 0) {
-        bip_set_addr(inet_addr(ifname));
-    }
-    if (BIP_Debug) {
-        address.s_addr = bip_get_addr();
-        fprintf(stderr, "Interface: %s\n", ifname);
-    }
-    /* setup local broadcast address */
-    if (bip_get_broadcast_addr() == 0) {
-        address.s_addr = bip_get_addr();
-        set_broadcast_address(address.s_addr);
-    }
-}
-
-static char *winsock_error_code_text(
-    int code)
+const char *winsock_error_code_text(
+    const int code)
 {
     switch (code) {
-        case WSAEACCES:
-            return "Permission denied.";
-        case WSAEINTR:
-            return "Interrupted system call.";
-        case WSAEBADF:
-            return "Bad file number.";
-        case WSAEFAULT:
-            return "Bad address.";
-        case WSAEINVAL:
-            return "Invalid argument.";
-        case WSAEMFILE:
-            return "Too many open files.";
-        case WSAEWOULDBLOCK:
-            return "Operation would block.";
-        case WSAEINPROGRESS:
-            return "Operation now in progress. "
-                "This error is returned if any Windows Sockets API "
-                "function is called while a blocking function "
-                "is in progress.";
-        case WSAENOTSOCK:
-            return "Socket operation on nonsocket.";
-        case WSAEDESTADDRREQ:
-            return "Destination address required.";
-        case WSAEMSGSIZE:
-            return "Message too long.";
-        case WSAEPROTOTYPE:
-            return "Protocol wrong type for socket.";
-        case WSAENOPROTOOPT:
-            return "Protocol not available.";
-        case WSAEPROTONOSUPPORT:
-            return "Protocol not supported.";
-        case WSAESOCKTNOSUPPORT:
-            return "Socket type not supported.";
-        case WSAEOPNOTSUPP:
-            return "Operation not supported on socket.";
-        case WSAEPFNOSUPPORT:
-            return "Protocol family not supported.";
-        case WSAEAFNOSUPPORT:
-            return "Address family not supported by protocol family.";
-        case WSAEADDRINUSE:
-            return "Address already in use.";
-        case WSAEADDRNOTAVAIL:
-            return "Cannot assign requested address.";
-        case WSAENETDOWN:
-            return "Network is down. "
-                "This error may be reported at any time "
-                "if the Windows Sockets implementation "
-                "detects an underlying failure.";
-        case WSAENETUNREACH:
-            return "Network is unreachable.";
-        case WSAENETRESET:
-            return "Network dropped connection on reset.";
-        case WSAECONNABORTED:
-            return "Software caused connection abort.";
-        case WSAECONNRESET:
-            return "Connection reset by peer.";
-        case WSAENOBUFS:
-            return "No buffer space available.";
-        case WSAEISCONN:
-            return "Socket is already connected.";
-        case WSAENOTCONN:
-            return "Socket is not connected.";
-        case WSAESHUTDOWN:
-            return "Cannot send after socket shutdown.";
-        case WSAETOOMANYREFS:
-            return "Too many references: cannot splice.";
-        case WSAETIMEDOUT:
-            return "Connection timed out.";
-        case WSAECONNREFUSED:
-            return "Connection refused.";
-        case WSAELOOP:
-            return "Too many levels of symbolic links.";
-        case WSAENAMETOOLONG:
-            return "File name too long.";
-        case WSAEHOSTDOWN:
-            return "Host is down.";
-        case WSAEHOSTUNREACH:
-            return "No route to host.";
-        case WSASYSNOTREADY:
-            return "Returned by WSAStartup(), "
-                "indicating that the network subsystem is unusable.";
-        case WSAVERNOTSUPPORTED:
-            return "Returned by WSAStartup(), "
-                "indicating that the Windows Sockets DLL cannot support "
-                "this application.";
-        case WSANOTINITIALISED:
-            return "Winsock not initialized. "
-                "This message is returned by any function "
-                "except WSAStartup(), "
-                "indicating that a successful WSAStartup() has not yet "
-                "been performed.";
-        case WSAEDISCON:
-            return "Disconnect.";
-        case WSAHOST_NOT_FOUND:
-            return "Host not found. " "This message indicates that the key "
-                "(name, address, and so on) was not found.";
-        case WSATRY_AGAIN:
-            return "Nonauthoritative host not found. "
-                "This error may suggest that the name service itself "
-                "is not functioning.";
-        case WSANO_RECOVERY:
-            return "Nonrecoverable error. "
-                "This error may suggest that the name service itself "
-                "is not functioning.";
-        case WSANO_DATA:
-            return "Valid name, no data record of requested type. "
-                "This error indicates that the key "
-                "(name, address, and so on) was not found.";
-        default:
-            return "unknown";
+    case WSAEACCES:
+        return "Permission denied.";
+    case WSAEINTR:
+        return "Interrupted system call.";
+    case WSAEBADF:
+        return "Bad file number.";
+    case WSAEFAULT:
+        return "Bad address.";
+    case WSAEINVAL:
+        return "Invalid argument.";
+    case WSAEMFILE:
+        return "Too many open files.";
+    case WSAEWOULDBLOCK:
+        return "Operation would block.";
+    case WSAEINPROGRESS:
+        return "Operation now in progress. "
+               "This error is returned if any Windows Sockets API "
+               "function is called while a blocking function "
+               "is in progress.";
+    case WSAENOTSOCK:
+        return "Socket operation on nonsocket.";
+    case WSAEDESTADDRREQ:
+        return "Destination address required.";
+    case WSAEMSGSIZE:
+        return "Message too long.";
+    case WSAEPROTOTYPE:
+        return "Protocol wrong type for socket.";
+    case WSAENOPROTOOPT:
+        return "Protocol not available.";
+    case WSAEPROTONOSUPPORT:
+        return "Protocol not supported.";
+    case WSAESOCKTNOSUPPORT:
+        return "Socket type not supported.";
+    case WSAEOPNOTSUPP:
+        return "Operation not supported on socket.";
+    case WSAEPFNOSUPPORT:
+        return "Protocol family not supported.";
+    case WSAEAFNOSUPPORT:
+        return "Address family not supported by protocol family.";
+    case WSAEADDRINUSE:
+        return "Address already in use.";
+    case WSAEADDRNOTAVAIL:
+        return "Cannot assign requested address.";
+    case WSAENETDOWN:
+        return "Network is down. "
+               "This error may be reported at any time "
+               "if the Windows Sockets implementation "
+               "detects an underlying failure.";
+    case WSAENETUNREACH:
+        return "Network is unreachable.";
+    case WSAENETRESET:
+        return "Network dropped connection on reset.";
+    case WSAECONNABORTED:
+        return "Software caused connection abort.";
+    case WSAECONNRESET:
+        return "Connection reset by peer.";
+    case WSAENOBUFS:
+        return "No buffer space available.";
+    case WSAEISCONN:
+        return "Socket is already connected.";
+    case WSAENOTCONN:
+        return "Socket is not connected.";
+    case WSAESHUTDOWN:
+        return "Cannot send after socket shutdown.";
+    case WSAETOOMANYREFS:
+        return "Too many references: cannot splice.";
+    case WSAETIMEDOUT:
+        return "Connection timed out.";
+    case WSAECONNREFUSED:
+        return "Connection refused.";
+    case WSAELOOP:
+        return "Too many levels of symbolic links.";
+    case WSAENAMETOOLONG:
+        return "File name too long.";
+    case WSAEHOSTDOWN:
+        return "Host is down.";
+    case WSAEHOSTUNREACH:
+        return "No route to host.";
+    case WSASYSNOTREADY:
+        return "Returned by WSAStartup(), "
+               "indicating that the network subsystem is unusable.";
+    case WSAVERNOTSUPPORTED:
+        return "Returned by WSAStartup(), "
+               "indicating that the Windows Sockets DLL cannot support "
+               "this application.";
+    case WSANOTINITIALISED:
+        return "Winsock not initialized. "
+               "This message is returned by any function "
+               "except WSAStartup(), "
+               "indicating that a successful WSAStartup() has not yet "
+               "been performed.";
+    case WSAEDISCON:
+        return "Disconnect.";
+    case WSAHOST_NOT_FOUND:
+        return "Host not found. " "This message indicates that the key "
+               "(name, address, and so on) was not found.";
+    case WSATRY_AGAIN:
+        return "Nonauthoritative host not found. "
+               "This error may suggest that the name service itself "
+               "is not functioning.";
+    case WSANO_RECOVERY:
+        return "Nonrecoverable error. "
+               "This error may suggest that the name service itself "
+               "is not functioning.";
+    case WSANO_DATA:
+        return "Valid name, no data record of requested type. "
+               "This error indicates that the key "
+               "(name, address, and so on) was not found.";
+    default:
+        return "unknown";
     }
 }
+
 
 /** Initialize the BACnet/IP services at the given interface.
  * @ingroup DLBIP
@@ -326,7 +341,8 @@ static char *winsock_error_code_text(
  * -# Binds the socket to the local IP address at the specified port for
  *    BACnet/IP (by default, 0xBAC0 = 47808).
  *
- * @note For Windows, ifname is the dotted ip address of the interface.
+ * @note For Linux, ifname is eth0, ath0, arc0, and others.
+ *       For Windows, ifname is the dotted ip address of the interface.
  *
  * @param ifname [in] The named interface to use for the network layer.
  *        If NULL, the "eth0" interface is assigned.
@@ -334,95 +350,106 @@ static char *winsock_error_code_text(
  *         else False if the socket functions fail.
  */
 bool bip_init(
-    char *ifname)
+    PORT_SUPPORT *portParams,
+    const char *ifname )
 {
     int rv = 0; /* return from socket lib calls */
-    struct sockaddr_in sin = { -1 };
+    struct sockaddr_in sin ;
     int value = 1;
-    int sock_fd = -1;
+    SOCKET sock_fd = -1;
     int Result;
     int Code;
     WSADATA wd;
-    struct in_addr address;
+    // struct in_addr address;
     struct in_addr broadcast_address;
 
     Result = WSAStartup((1 << 8) | 1, &wd);
     /*Result = WSAStartup(MAKEWORD(2,2), &wd); */
     if (Result != 0) {
         Code = WSAGetLastError();
-        printf("TCP/IP stack initialization failed\n" " error code: %i %s\n",
-            Code, winsock_error_code_text(Code));
+        dbTraffic(DBD_ALL, DB_ERROR, "TCP/IP stack initialization failed\n" " error code: %i %s\n",
+               Code, winsock_error_code_text(Code));
         exit(1);
     }
-    atexit(bip_cleanup);
+    // datalink cleanup registered in main.c atexit(bip_cleanup);
 
-    if (ifname)
-        bip_set_interface(ifname);
+    // We have many interfaces to worry about, and currently we dynamically set them when the first incoming packet to the corresponding port arrives
+    //if (ifname)
+    //    bip_set_interface( portParams, ifname);
+
     /* has address been set? */
-    address.s_addr = bip_get_addr();
-    if (address.s_addr == 0) {
-        address.s_addr = gethostaddr();
-        if (address.s_addr == (unsigned) -1) {
-            Code = WSAGetLastError();
-            printf("Get host address failed\n" " error code: %i %s\n", Code,
-                winsock_error_code_text(Code));
-            exit(1);
-        }
-        bip_set_addr(address.s_addr);
-    }
-    if (BIP_Debug) {
-        fprintf(stderr, "IP Address: %s\n", inet_ntoa(address));
-    }
+    portParams->datalink.bipParams.nwoBroadcast_addr = INADDR_BROADCAST ;
+    portParams->datalink.bipParams.nwoLocal_addr = INADDR_ANY ;
+    // we now set on first incoming packet...
+    // EKH: no longer statically defined, cannot depend on this being 0. todo3
+//    if ( portParams->bipParams.local_addr == 0) {
+        //address.s_addr = gethostaddr();
+        //if (address.s_addr == (unsigned) -1) {
+        //    Code = WSAGetLastError();
+        //    printf("Get host address failed\n" " error code: %i %s\n", Code,
+        //           winsock_error_code_text(Code));
+        //    exit(1);
+        //}
+        //portParams->bipParams.nwoLocal_addr = address.s_addr ;
+//    }
+
+    //if (BIP_Debug) {
+    //    fprintf(stderr, "IP Address: %s\n", inet_ntoa(address));
+    //}
     /* has broadcast address been set? */
-    if (bip_get_broadcast_addr() == 0) {
-        set_broadcast_address(address.s_addr);
-    }
+    // if ( portParams->bipParams.broadcast_addr == 0) {
+        //set_broadcast_address( portParams, portParams->bipParams.nwoLocal_addr );
+    // }
     if (BIP_Debug) {
-        broadcast_address.s_addr = bip_get_broadcast_addr();
-        fprintf(stderr, "IP Broadcast Address: %s\n",
-            inet_ntoa(broadcast_address));
-        fprintf(stderr, "UDP Port: 0x%04X [%hu]\n", ntohs(bip_get_port()),
-            ntohs(bip_get_port()));
+        broadcast_address.s_addr = portParams->datalink.bipParams.nwoBroadcast_addr ;
+        dbTraffic(DBD_ALL, DB_ERROR, "IP Broadcast Address: %s\n",
+                inet_ntoa(broadcast_address));
+        dbTraffic(DBD_ALL, DB_ERROR, "UDP Port: 0x%04X [%hu]\n", ntohs( portParams->datalink.bipParams.nwoPort ),
+            ntohs(portParams->datalink.bipParams.nwoPort));
     }
+
     /* assumes that the driver has already been initialized */
     sock_fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    bip_set_socket(sock_fd);
+    portParams->datalink.bipParams.socket = sock_fd ;
     if (sock_fd < 0) {
         fprintf(stderr, "bip: failed to allocate a socket.\n");
         return false;
     }
+
     /* Allow us to use the same socket for sending and receiving */
     /* This makes sure that the src port is correct when sending */
     rv = setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, (char *) &value,
-        sizeof(value));
+                    sizeof(value));
     if (rv < 0) {
         fprintf(stderr, "bip: failed to set REUSEADDR socket option.\n");
-        close(sock_fd);
-        bip_set_socket(-1);
+        closesocket(sock_fd);
+        portParams->datalink.bipParams.socket = -1;
         return false;
     }
     /* Enables transmission and receipt of broadcast messages on the socket. */
     rv = setsockopt(sock_fd, SOL_SOCKET, SO_BROADCAST, (char *) &value,
-        sizeof(value));
+                    sizeof(value));
     if (rv < 0) {
         fprintf(stderr, "bip: failed to set BROADCAST socket option.\n");
-        close(sock_fd);
-        bip_set_socket(-1);
+        closesocket(sock_fd);
+        portParams->datalink.bipParams.socket = -1;
         return false;
     }
 #if 0
     /* probably only for Apple... */
     /* rebind a port that is already in use.
        Note: all users of the port must specify this flag */
+    // See this: http://stackoverflow.com/questions/14388706/socket-options-so-reuseaddr-and-so-reuseport-how-do-they-differ-do-they-mean-t/14388707#14388707
     rv = setsockopt(sock_fd, SOL_SOCKET, SO_REUSEPORT, (char *) &value,
-        sizeof(value));
+                    sizeof(value));
     if (rv < 0) {
         fprintf(stderr, "bip: failed to set REUSEPORT socket option.\n");
-        close(sock_fd);
-        bip_set_socket(-1);
+        closesocket(sock_fd);
+        portParams->datalink.bipParams.socket = -1;
         return false;
     }
 #endif
+
     /* bind the socket to the local port number and IP address */
     sin.sin_family = AF_INET;
 #if defined(USE_INADDR) && USE_INADDR
@@ -442,37 +469,35 @@ bool bip_init(
 #else
     /* or we could use the specific adapter address
        note: already in network byte order */
-    sin.sin_addr.s_addr = address.s_addr;
+    sin.sin_addr.s_addr = portParams->datalink.bipParams.nwoLocal_addr;
 #endif
-    sin.sin_port = bip_get_port();
+    sin.sin_port = bip_get_local_port( portParams);
     memset(&(sin.sin_zero), '\0', sizeof(sin.sin_zero));
     rv = bind(sock_fd, (const struct sockaddr *) &sin,
-        sizeof(struct sockaddr));
+              sizeof(struct sockaddr));
     if (rv < 0) {
-        fprintf(stderr, "bip: failed to bind to %s port %hu\n",
-            inet_ntoa(sin.sin_addr), ntohs(bip_get_port()));
-        close(sock_fd);
-        bip_set_socket(-1);
+        dbTraffic(DBD_ALL, DB_ERROR, "bip: failed to bind to %s port %hu\n",
+                inet_ntoa(sin.sin_addr), portParams->datalink.bipParams.nwoPort );
+        closesocket(sock_fd);
+        portParams->datalink.bipParams.socket = -1;
         return false;
     }
 
     return true;
 }
 
+
 /** Cleanup and close out the BACnet/IP services by closing the socket.
  * @ingroup DLBIP
   */
+// this gets called by the OS, no parameters
 void bip_cleanup(
-    void)
+    PORT_SUPPORT *portParams)
 {
-    int sock_fd = 0;
-
-    if (bip_valid()) {
-        sock_fd = bip_socket();
-        close(sock_fd);
+    if ( portParams->datalink.bipParams.socket >= 0 ) {
+        closesocket(portParams->datalink.bipParams.socket);
     }
-    bip_set_socket(-1);
+    portParams->datalink.bipParams.socket = -1;
     WSACleanup();
-
-    return;
 }
+

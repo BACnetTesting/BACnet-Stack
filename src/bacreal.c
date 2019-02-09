@@ -29,8 +29,22 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
 #include <string.h>
 
@@ -46,8 +60,9 @@
 
 /* NOTE: byte order plays a role in decoding multibyte values */
 /* http://www.unixpapa.com/incnote/byteorder.html */
-#ifndef BIG_ENDIAN
-#error Define BIG_ENDIAN=0 or BIG_ENDIAN=1 for BACnet Stack in compiler settings
+// 2016.08.20 EKH: Found a conflict with BIG_ENDIAN in another library. Renaming for BACnet.
+#ifndef BACNET_STACK_BIG_ENDIAN
+#error Define BACNET_STACK_BIG_ENDIAN=0 or BACNET_STACK_BIG_ENDIAN=1 for BACnet Stack in compiler settings
 #endif
 
 /* from clause 20.2.6 Encoding of a Real Number Value */
@@ -62,7 +77,7 @@ int decode_real(
     } my_data;
 
     /* NOTE: assumes the compiler stores float as IEEE-754 float */
-#if BIG_ENDIAN
+#if BACNET_STACK_BIG_ENDIAN
     my_data.byte[0] = apdu[0];
     my_data.byte[1] = apdu[1];
     my_data.byte[2] = apdu[2];
@@ -123,7 +138,7 @@ int encode_bacnet_real(
 
     /* NOTE: assumes the compiler stores float as IEEE-754 float */
     my_data.real_value = value;
-#if BIG_ENDIAN
+#if BACNET_STACK_BIG_ENDIAN
     apdu[0] = my_data.byte[0];
     apdu[1] = my_data.byte[1];
     apdu[2] = my_data.byte[2];
@@ -152,7 +167,7 @@ int decode_double(
     } my_data;
 
     /* NOTE: assumes the compiler stores float as IEEE-754 float */
-#if BIG_ENDIAN
+#if BACNET_STACK_BIG_ENDIAN
     my_data.byte[0] = apdu[0];
     my_data.byte[1] = apdu[1];
     my_data.byte[2] = apdu[2];
@@ -203,7 +218,7 @@ int encode_bacnet_double(
 
     /* NOTE: assumes the compiler stores float as IEEE-754 float */
     my_data.double_value = value;
-#if BIG_ENDIAN
+#if BACNET_STACK_BIG_ENDIAN
     apdu[0] = my_data.byte[0];
     apdu[1] = my_data.byte[1];
     apdu[2] = my_data.byte[2];

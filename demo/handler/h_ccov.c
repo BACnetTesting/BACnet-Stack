@@ -21,13 +21,31 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include "config.h"
+
+#if ( BACNET_SVC_COV_B == 1 )
+
 #include "txbuf.h"
 #include "bacdef.h"
 #include "bacdcode.h"
@@ -55,7 +73,7 @@
  *
  * @param service_request [in] The contents of the service request.
  * @param service_len [in] The length of the service_request.
- * @param src [in] BACNET_ADDRESS of the source of the message
+ * @param src [in] BACNET_PATH of the source of the message
  * @param service_data [in] The BACNET_CONFIRMED_SERVICE_DATA information
  *                          decoded from the APDU header of this message.
  */
@@ -160,13 +178,16 @@ CCOV_ABORT:
     pdu_len += len;
     dlcb->optr = pdu_len ;
     bytes_sent =
-        datalink_send_pdu(src, &npci_data, dlcb);
+        src->portParams->SendPdu(dlcb);
 #if PRINT_ENABLED
     if (bytes_sent <= 0) {
         fprintf(stderr, "CCOV: Failed to send PDU (%s)!\n", strerror(errno));
     }
 #else
-    bytes_sent = bytes_sent;
+    (void) bytes_sent;
 #endif
 
 }
+
+#endif // ( BACNET_SVC_COV_B == 1 )
+

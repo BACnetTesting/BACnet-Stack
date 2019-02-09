@@ -9,7 +9,23 @@
 * described in Annex J.
 * The functions described here fulfill the roles defined generically at the
 * DataLink level by serving as the implementation of the function templates.
-*/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef BIP6_H
 #define BIP6_H
 
@@ -20,11 +36,14 @@
 #include "npdu.h"
 #include "bvlc6.h"
 
+#define BIP6_MAX_PDU 14776 
+
 /* specific defines for BACnet/IP over Ethernet */
 #define BIP6_HEADER_MAX (1 + 1 + 2)
-#define BIP6_MPDU_MAX (BIP6_HEADER_MAX+MAX_PDU)
+#define BIP6_MPDU_MAX (BIP6_HEADER_MAX+BIP6_MAX_PDU)
 /* for legacy demo applications */
-#define MAX_MPDU BIP6_MPDU_MAX
+#define MAX_MPDU_BIP6 BIP6_MPDU_MAX
+
 
     /* 6 datalink functions used by demo handlers and applications:
        init, send, receive, cleanup, unicast/broadcast address.
@@ -35,13 +54,16 @@
         void);
     void bip6_get_broadcast_address(
         BACNET_PATH * my_address);
+
     void bip6_get_my_address(
         BACNET_PATH * my_address);
+
     int bip6_send_pdu(
         BACNET_PATH * dest,
         BACNET_NPCI_DATA * npdu_data,
         uint8_t * pdu,
         unsigned pdu_len);
+
     uint16_t bip6_receive(
         BACNET_PATH * src,
         uint8_t * pdu,
@@ -50,7 +72,7 @@
 
     /* functions that are custom per port */
     void bip6_set_interface(
-        char *ifname);
+        const char *ifname);
 
     bool bip6_set_addr(
         BACNET_IP6_ADDRESS *addr);

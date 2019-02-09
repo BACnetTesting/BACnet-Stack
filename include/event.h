@@ -20,7 +20,23 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*********************************************************************/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef BACNET_EVENT_H_
 #define BACNET_EVENT_H_
 
@@ -126,6 +142,14 @@ typedef struct BACnet_Event_Notification_Data {
          ** EVENT_BUFFER_READY
          */
         struct {
+            uint16_t                        vendorId;
+            unsigned                        extendedEventType;      // Vendor choice
+            BACNET_APPLICATION_DATA_VALUE   value;
+        } extended;
+        /*
+         ** EVENT_BUFFER_READY
+         */
+        struct {
             BACNET_DEVICE_OBJECT_PROPERTY_REFERENCE bufferProperty;
             uint32_t previousNotification;
             uint32_t currentNotification;
@@ -140,7 +164,6 @@ typedef struct BACnet_Event_Notification_Data {
         } unsignedRange;
     } notificationParams;
 } BACNET_EVENT_NOTIFICATION_DATA;
-
 
 
 /***************************************************
@@ -158,45 +181,45 @@ int cevent_notify_encode_apdu(
 ** Creates an Unconfirmed Event Notification APDU
 **
 ****************************************************/
-    int uevent_notify_encode_apdu(
-        uint8_t * apdu,
-        BACNET_EVENT_NOTIFICATION_DATA * data);
+int uevent_notify_encode_apdu(
+    uint8_t * apdu,
+    BACNET_EVENT_NOTIFICATION_DATA * data);
 
 /***************************************************
 **
 ** Encodes the service data part of Event Notification
 **
 ****************************************************/
-    int event_notify_encode_service_request(
-        uint8_t * apdu,
-        BACNET_EVENT_NOTIFICATION_DATA * data);
+int event_notify_encode_service_request(
+    uint8_t * apdu,
+    BACNET_EVENT_NOTIFICATION_DATA * data);
 
 /***************************************************
 **
 ** Decodes the service data part of Event Notification
 **
 ****************************************************/
-    int event_notify_decode_service_request(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        BACNET_EVENT_NOTIFICATION_DATA * data);
+int event_notify_decode_service_request(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    BACNET_EVENT_NOTIFICATION_DATA * data);
 
 /***************************************************
 **
 ** Sends an Unconfirmed Event Notifcation to a dest
 **
 ****************************************************/
-    int uevent_notify_send(
-        uint8_t * buffer,
-        BACNET_EVENT_NOTIFICATION_DATA * data,
-        BACNET_ADDRESS * dest);
+int uevent_notify_send(
+    uint8_t * buffer,
+    BACNET_EVENT_NOTIFICATION_DATA * data,
+    BACNET_PATH * dest);
 
 
 /** @defgroup ALMEVNT Alarm and Event Management BIBBs
  * These BIBBs prescribe the BACnet capabilities required to interoperably
  * perform the alarm and event management functions enumerated in 22.2.1.2
  * for the BACnet devices defined therein.
-          *//** @defgroup EVNOTFCN Alarm and Event-Notification (AE-N)
+ *//** @defgroup EVNOTFCN Alarm and Event-Notification (AE-N)
  * @ingroup ALMEVNT
  * 13.6 ConfirmedCOVNotification Service <br>
  * The ConfirmedCOVNotification service is used to notify subscribers about
@@ -213,7 +236,7 @@ int cevent_notify_encode_apdu(
  * For unsubscribed notifications, the algorithm for determining when to issue
  * this service is a local matter and may be based on a change of value,
  * periodic updating, or some other criteria.
-          *//** @defgroup ALMACK  Alarm and Event-ACK (AE-ACK)
+ *//** @defgroup ALMACK  Alarm and Event-ACK (AE-ACK)
  * @ingroup ALMEVNT
  * 13.5 AcknowledgeAlarm Service <br>
  * In some systems a device may need to know that an operator has seen the alarm

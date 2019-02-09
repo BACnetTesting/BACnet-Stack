@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="1">
+    <exclude>
+        <path name="E:/Dev/BITS Reference Stack/BITS Reference Stack - Feature Creep/bits/persist/sqlite/"/>
+    </exclude>
+</project>

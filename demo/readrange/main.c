@@ -89,7 +89,7 @@ static void MyErrorHandler(
 void MyAbortHandler(
     BACNET_ADDRESS * src,
     uint8_t invoke_id,
-    uint8_t abort_reason,
+    BACNET_ABORT_REASON abort_reason,
     bool server)
 {
     (void) server;
@@ -141,7 +141,7 @@ static void Init_Service_Handlers(
     apdu_set_reject_handler(MyRejectHandler);
 }
 
-static void print_usage(char *filename)
+static void print_usage(const char *filename)
 {
     printf("Usage: %s device-instance object-type object-instance property\n",
         filename);
@@ -149,7 +149,7 @@ static void print_usage(char *filename)
     printf("       [--version][--help]\n");
 }
 
-static void print_help(char *filename)
+static void print_help(const char *filename)
 {
     printf("Read a range of properties from an array or list property\n"
         "in an object in a BACnet device and print the values.\n"
@@ -210,7 +210,7 @@ int main(
     int count = 0;
     int hour, min, sec, hundredths;
     int year, month, day, wday;
-    char *filename = NULL;
+    const char *filename ;
 
     filename = filename_remove_path(argv[0]);
     for (argi = 1; argi < argc; argi++) {
@@ -234,9 +234,9 @@ int main(
     }
     /* decode the command line parameters */
     Target_Device_Object_Instance = strtol(argv[1], NULL, 0);
-    Target_Object_Type = strtol(argv[2], NULL, 0);
+    Target_Object_Type = (BACNET_OBJECT_TYPE) strtol(argv[2], NULL, 0);
     Target_Object_Instance = strtol(argv[3], NULL, 0);
-    Target_Object_Property = strtol(argv[4], NULL, 0);
+    Target_Object_Property = (BACNET_PROPERTY_ID) strtol(argv[4], NULL, 0);
     Target_Object_Range_Type = strtol(argv[5], NULL, 0);
     /* some bounds checking */
     if (Target_Device_Object_Instance > BACNET_MAX_INSTANCE) {
@@ -282,7 +282,7 @@ int main(
             RR_Request.Range.RefTime.date.year = (uint16_t) year;
             RR_Request.Range.RefTime.date.month = (uint8_t) month;
             RR_Request.Range.RefTime.date.day = (uint8_t) day;
-            RR_Request.Range.RefTime.date.wday = (uint8_t) wday;
+            RR_Request.Range.RefTime.date.wday = (BACNET_WEEKDAY) wday;
         } else {
             fprintf(stderr, "Invalid date format!\r\n");
             return 1;

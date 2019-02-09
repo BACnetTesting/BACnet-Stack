@@ -29,24 +29,42 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stdint.h>
-#include <stdbool.h>
-#include <string.h>
-#include <stdio.h>
+//#include <stdbool.h>
+//#include <string.h>
+//#include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "bacenum.h"
+//#include "bacenum.h"
 #include "bacdcode.h"
-#include "bacint.h"
-#include "bacreal.h"
-#include "bacdef.h"
+//#include "bacint.h"
+//#include "bacreal.h"
+//#include "bacdef.h"
 #include "bacapp.h"
 #include "bactext.h"
-#include "datetime.h"
-#include "bacstr.h"
-#include "lighting.h"
+//#include "datetime.h"
+//#include "bacstr.h"
+//
+//#if defined (BACAPP_LIGHTING_COMMAND)
+//#include "lighting.h"
+//#endif
 
 /** @file bacapp.c  Utilities for the BACnet_Application_Data_Value */
 
@@ -154,6 +172,8 @@ int bacapp_encode_application_data(
                     &value->type.Lighting_Command);
             break;
 #endif
+
+#if (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1)
 #if defined (BACAPP_DEVICE_OBJECT_PROP_REF)
         case BACNET_APPLICATION_TAG_DEVICE_OBJECT_PROPERTY_REFERENCE:
             /* BACnetDeviceObjectPropertyReference */
@@ -161,6 +181,7 @@ int bacapp_encode_application_data(
                 bacapp_encode_device_obj_property_ref(&apdu[0],
                     &value->type.Device_Object_Property_Reference);
             break;
+#endif
 #endif
         default:
             break;
@@ -263,10 +284,9 @@ int bacapp_decode_data(
             break;
 #endif
 #if defined (BACAPP_OBJECT_ID)
-        case BACNET_APPLICATION_TAG_OBJECT_ID:
-        {
+        case BACNET_APPLICATION_TAG_OBJECT_ID: {
             BACNET_OBJECT_TYPE object_type;
-            uint32_t instance = 0;
+            uint32_t instance;
             len =
                 decode_object_id_safe(&apdu[0], len_value_type,
                     &object_type, &instance);
@@ -292,9 +312,7 @@ int bacapp_decode_data(
         (tag_data_type != BACNET_APPLICATION_TAG_BOOLEAN) &&
         (tag_data_type != BACNET_APPLICATION_TAG_OCTET_STRING)) {
         /* indicate that we were not able to decode the value */
-        if (value) {
-            value->tag = MAX_BACNET_APPLICATION_TAG;
-        }
+        value->tag = MAX_BACNET_APPLICATION_TAG;
     }
     return len;
 }
@@ -319,7 +337,7 @@ int bacapp_decode_application_data(
                 &len_value_type);
         if (tag_len) {
             len += tag_len;
-            value->tag = tag_number;
+            value->tag = (BACNET_APPLICATION_TAG) tag_number;
             decode_len =
                 bacapp_decode_data(&apdu[len], tag_number, len_value_type,
                     value);
@@ -385,7 +403,7 @@ bool bacapp_decode_application_data_safe(
              ** checking with apdu_len_remaining */
             if (tag_number == BACNET_APPLICATION_TAG_BOOLEAN ||
                 len_value_type <= apdu_len_remaining) {
-                value->tag = tag_number;
+                value->tag = (BACNET_APPLICATION_TAG) tag_number;
                 len =
                     bacapp_decode_data(&apdu[apdu_len], tag_number,
                         len_value_type, value);
@@ -1019,6 +1037,7 @@ int bacapp_data_len(
     return total_len;
 }
 
+
 #ifdef BACAPP_SNPRINTF_ENABLED
 static bool append_str(
     char **str,
@@ -1026,7 +1045,7 @@ static bool append_str(
     const char *add_str)
 {
     bool retval;
-    int bytes_written;
+    uint16_t bytes_written;
 
     bytes_written = snprintf(*str, *rem_str_len, "%s", add_str);
     if ((bytes_written < 0) || (bytes_written >= *rem_str_len)) {
@@ -1162,6 +1181,8 @@ int bacapp_snprintf_value(
             break;
         case BACNET_APPLICATION_TAG_ENUMERATED:
             switch (property) {
+
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
             case PROP_PROPERTY_LIST:
                 char_str = (char *)bactext_property_name_default(
                     value->type.Enumerated, NULL);
@@ -1174,6 +1195,8 @@ int bacapp_snprintf_value(
                         (unsigned long)value->type.Enumerated);
                 }
                 break;
+#endif
+
             case PROP_OBJECT_TYPE:
                 if (value->type.Enumerated < MAX_ASHRAE_OBJECT_TYPE) {
                     ret_val =
@@ -1386,6 +1409,7 @@ int bacapp_snprintf_value(
             /* bytes were written. */
             ret_val = str_len - rem_str_len;
             break;
+#if defined (BACAPP_LIGHTING_COMMAND)
         case BACNET_APPLICATION_TAG_LIGHTING_COMMAND:
             if (!append_str(&p_str, &rem_str_len, "("))
                 break;
@@ -1401,6 +1425,7 @@ int bacapp_snprintf_value(
             /* bytes were written. */
             ret_val = str_len - rem_str_len;
             break;
+#endif
         default:
             ret_val = 0;
             break;
@@ -1454,6 +1479,7 @@ bool bacapp_print_value(
 }
 #endif
 
+// uptransfer demo needs this function, cannot limit to only when print enabled...
 #ifdef BACAPP_PRINT_ENABLED
 /* used to load the app data struct with the proper data
    converted from a command line argument */
@@ -1464,13 +1490,14 @@ bool bacapp_parse_application_data(
 {
     int hour, min, sec, hundredths;
     int year, month, day, wday;
-    BACNET_OBJECT_TYPE object_type;
-    uint32_t instance = 0;
+//    BACNET_OBJECT_TYPE object_type;
+    uint32_t instance;
     bool status = false;
-    long long_value = 0;
-    unsigned long unsigned_long_value = 0;
-    double double_value = 0.0;
+    long long_value;
+    unsigned long unsigned_long_value;
+    double double_value;
     int count = 0;
+    int tobject_type ;
 
     if (value && (tag_number < MAX_BACNET_APPLICATION_TAG)) {
         status = true;
@@ -1567,18 +1594,23 @@ bool bacapp_parse_application_data(
             }
             break;
         case BACNET_APPLICATION_TAG_OBJECT_ID:
-            count = sscanf(argv, "%4d:%7d", &object_type, &instance);
+            int tobject_type ;
+            count = sscanf(argv, "%4d:%7d", &tobject_type, &instance);
             if (count == 2) {
-                value->type.Object_Id.type = object_type;
+                value->type.Object_Id.type = (BACNET_OBJECT_TYPE)tobject_type;
                 value->type.Object_Id.instance = instance;
             }
             else {
                 status = false;
             }
             break;
+
+#if defined (BACAPP_LIGHTING_COMMAND)
         case BACNET_APPLICATION_TAG_LIGHTING_COMMAND:
             /* FIXME: add parsing for lighting command */
             break;
+#endif
+
         default:
             break;
         }
@@ -1755,8 +1787,7 @@ void testBACnetApplicationData_Safe(
             input_value[i].type.Double = 2.32323232323;
             break;
 
-        case BACNET_APPLICATION_TAG_OCTET_STRING:
-        {
+        case BACNET_APPLICATION_TAG_OCTET_STRING: {
             uint8_t test_octet[5] = { "Karg" };
             octetstring_init(&input_value[i].type.Octet_String,
                 test_octet, sizeof(test_octet));
@@ -2020,10 +2051,8 @@ void testBACnetApplicationData(
     Test * pTest)
 {
     BACNET_APPLICATION_DATA_VALUE value;
-    bool status = false;
 
-
-    status =
+    bool status =
         bacapp_parse_application_data(BACNET_APPLICATION_TAG_NULL, NULL,
             &value);
     ct_test(pTest, status == true);
@@ -2248,7 +2277,6 @@ void testBACnetApplicationData(
     ct_test(pTest, status == true);
     ct_test(pTest, testBACnetApplicationDataValue(&value));
 
-    return;
 }
 
 

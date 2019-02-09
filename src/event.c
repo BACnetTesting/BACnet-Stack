@@ -29,13 +29,34 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <assert.h>
+#include "config.h"
+
+#if (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1)
+
 #include "event.h"
 #include "bacdcode.h"
 #include "npdu.h"
 #include "timestamp.h"
+#include "logging/logging.h"
+#include "bitsDebug.h"
 
 /** @file event.c  Encode/Decode Event Notifications */
 
@@ -95,14 +116,32 @@ int event_notify_encode_service_request(
     uint8_t * apdu,
     BACNET_EVENT_NOTIFICATION_DATA * data)
 {
-    int len = 0;        /* length of each encoding */
+    int len ;           /* length of each encoding */
     int apdu_len = 0;   /* total length of the apdu, return value */
+
+    /*
+    UnconfirmedEventNotification-Request ::= SEQUENCE {
+        process-identifier 		        [0] Unsigned32,
+        initiating-device-identifier 	[1] BACnetObjectIdentifier,
+        event-object-identifier 	    [2] BACnetObjectIdentifier,
+        timestamp 			            [3] BACnetTimeStamp,
+        notification-class 		        [4] Unsigned,
+        priority 			            [5] Unsigned8,
+        event-type 			            [6] BACnetEventType,
+        message-text 			        [7] CharacterString OPTIONAL,
+        notify-type 			        [8] BACnetNotifyType,
+        ack-required 			        [9] BOOLEAN OPTIONAL,
+        from-state 			            [10] BACnetEventState OPTIONAL,
+        to-state 			            [11] BACnetEventState,
+        event-values 			        [12] BACnetNotificationParameters OPTIONAL
+        } 
+    */
 
     if (apdu) {
         /* tag 0 - processIdentifier */
         len =
             encode_context_unsigned(&apdu[apdu_len], 0,
-            data->processIdentifier);
+                                    data->processIdentifier);
         apdu_len += len;
         /* tag 1 - initiatingObjectIdentifier */
         len =
@@ -141,13 +180,19 @@ int event_notify_encode_service_request(
         len = encode_context_enumerated(&apdu[apdu_len], 6, data->eventType);
         apdu_len += len;
 
+#if 1
+        // todo1 - did this solve tridium bug?
+        // optional, problems with Tridium. BTC - Spec: 13.9.1.1.8 Message Text
         /* tag 7 - messageText */
         if (data->messageText) {
             len =
                 encode_context_character_string(&apdu[apdu_len], 7,
-                data->messageText);
+                                                data->messageText);
             apdu_len += len;
         }
+#endif
+
+
         /* tag 8 - notifyType */
         len = encode_context_enumerated(&apdu[apdu_len], 8, data->notifyType);
         apdu_len += len;
@@ -414,27 +459,71 @@ int event_notify_encode_service_request(
                                             unsignedRange.exceededLimit);
                 apdu_len += len;
 
-                        len = encode_closing_tag(&apdu[apdu_len], 11);
-                        apdu_len += len;
-                        break;
-                    case EVENT_EXTENDED:
-                    case EVENT_COMMAND_FAILURE:
-                    default:
-                        assert(0);
-                        break;
-                }
-                len = encode_closing_tag(&apdu[apdu_len], 12);
+                len = encode_closing_tag(&apdu[apdu_len], 11);
                 apdu_len += len;
                 break;
-            case NOTIFY_ACK_NOTIFICATION:
-                /* FIXME: handle this case */
-            default:
+            case EVENT_EXTENDED:
+                apdu_len += encode_opening_tag(&apdu[apdu_len], 9); 
+                /*
+                extended[9] SEQUENCE{
+                    vendor - id[0] Unsigned16,
+                    extended - event - type[1] Unsigned,
+                    parameters[2] SEQUENCE OF CHOICE {
+                        null NULL,
+                            real REAL,
+                            unsigned Unsigned,
+                            boolean BOOLEAN,
+                            integer INTEGER,
+                            double Double,
+                            octet OCTET STRING,
+                            characterString CharacterString,
+                            bitstring BIT STRING,
+                        enum ENUMERATED,
+                            date Date,
+                            time Time,
+                            objectIdentifier BACnetObjectIdentifier,
+                            reference[0] BACnetDeviceObjectPropertyReference
+                    }
+                }
+                */
+
+                apdu_len += encode_context_unsigned(&apdu[apdu_len], 0, data->notificationParams.extended.vendorId);    // todo 2 - we need to ensure this is unsigned 16
+                apdu_len += encode_context_unsigned (&apdu[apdu_len], 1, data->notificationParams.extended.extendedEventType );
+                apdu_len += encode_opening_tag(&apdu[apdu_len], 2);
+                
+                // todo1 - did this solve tridium bug?
+                // apdu_len += bacapp_encode_application_data(&apdu[apdu_len], &data->notificationParams.extended.value);
+
+                //data->notificationParams.extended.value.tag = BACNET_APPLICATION_TAG_ENUMERATED;
+                //data->notificationParams.extended.value.type.Enumerated = 88 ;
+
+                data->notificationParams.extended.value.tag = BACNET_APPLICATION_TAG_REAL ;
+                data->notificationParams.extended.value.type.Real = 99.9f ;
+
+                apdu_len += bacapp_encode_application_data(&apdu[apdu_len], &data->notificationParams.extended.value);
+
+                apdu_len += encode_closing_tag(&apdu[apdu_len], 2);
+                apdu_len += encode_closing_tag(&apdu[apdu_len], 9); 
                 break;
+
+            case EVENT_COMMAND_FAILURE:
+            default:
+                panic();
+                break;
+            }
+            len = encode_closing_tag(&apdu[apdu_len], 12);
+            apdu_len += len;
+            break;
+        case NOTIFY_ACK_NOTIFICATION:
+        /* FIXME: handle this case */
+        default:
+            break;
         }
     }
     return apdu_len;
 }
 
+#if ( BAC_CLIENT == 1 )
 int event_notify_decode_service_request(
     uint8_t * apdu,
     unsigned apdu_len,
@@ -868,6 +957,8 @@ int event_notify_decode_service_request(
 
     return len;
 }
+#endif // BAC_CLIENT 
+
 
 #ifdef  TEST
 
@@ -1520,3 +1611,6 @@ int main(
 
 #endif /* TEST_EVENT */
 #endif /* TEST */
+
+#endif // ( BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1 )
+

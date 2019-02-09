@@ -29,8 +29,23 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stdint.h>
 #include "bacenum.h"
 #include "bacdcode.h"
@@ -137,6 +152,7 @@ int timesync_decode_service_request(
  *  @return How many bytes were encoded in the buffer, or
  *   BACNET_STATUS_ABORT if the response would not fit within the buffer.
  */
+#if BACNET_SVC_TS_A
 int timesync_encode_timesync_recipients(
     uint8_t * apdu,
     unsigned max_apdu,
@@ -205,6 +221,7 @@ int timesync_encode_timesync_recipients(
 
     return apdu_len;
 }
+#endif
 
 /** Handle a request to decode a list of timesync recipients.
  *
@@ -240,7 +257,7 @@ int timesync_decode_timesync_recipients(
     int tag_len = 0;
     uint8_t tag_number = 0;
     uint32_t len_value_type = 0;
-    uint32_t unsigned_value = 0;
+    uint32_t unsigned_value ;
     BACNET_OCTET_STRING octet_string;
     BACNET_RECIPIENT_LIST *pRecipient;
 

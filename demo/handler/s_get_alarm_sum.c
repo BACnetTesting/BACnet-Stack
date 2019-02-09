@@ -26,6 +26,22 @@
  * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************
  *
  * @section DESCRIPTION
  *
@@ -52,14 +68,16 @@
 #include "client.h"
 #include "get_alarm_sum.h"
 
+#if 0
+
 uint8_t Send_Get_Alarm_Summary_Address(
     PORT_SUPPORT *portParams,
     BACNET_ADDRESS *dest,
     uint16_t max_apdu)
 {
-    int len = 0;
-    int pdu_len = 0;
-    uint8_t invoke_id = 0;
+    int len ;
+    int pdu_len ;
+    uint8_t invoke_id ;
     BACNET_NPCI_DATA npci_data;
     BACNET_ADDRESS my_address;
 #if PRINT_ENABLED
@@ -69,41 +87,28 @@ uint8_t Send_Get_Alarm_Summary_Address(
     /* is there a tsm available? */
     invoke_id = tsm_next_free_invokeID();
     if (invoke_id) {
-        datalink_get_my_address(&my_address);
+        // datalink_get_my_address(&my_address);
         /* encode the NPDU portion of the packet */
         npdu_setup_npci_data(&npci_data, true, MESSAGE_PRIORITY_NORMAL);
 
         pdu_len =
             npdu_encode_pdu(&Handler_Transmit_Buffer[0], dest,
-            &my_address, &npci_data);
+                            &my_address, &npci_data);
         /* encode the APDU portion of the packet */
         len = get_alarm_summary_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-            invoke_id);
+                                            invoke_id);
 
         pdu_len += len;
         if ((uint16_t) pdu_len < max_apdu) {
-            tsm_set_confirmed_unsegmented_transaction(invoke_id, dest,
-                &npci_data, &Handler_Transmit_Buffer[0],
-                (uint16_t) pdu_len);
-#if PRINT_ENABLED
-            bytes_sent =
-#endif
-                datalink_send_pdu(dest, &npci_data,
-                &Handler_Transmit_Buffer[0], pdu_len);
-#if PRINT_ENABLED
-            if (bytes_sent <= 0)
-                fprintf(stderr,
-                "Failed to Send Get Alarm Summary Request (%s)!\n",
-                    strerror(errno));
-#endif
+            tsm_set_confirmed_unsegmented_transaction(portParams, pDev, invoke_id, dest,
+                    &npci_data, &Handler_Transmit_Buffer[0],
+                    (uint16_t) pdu_len);
+                portParams->SendPdu(portParams, dest, &npci_data,
+                        &Handler_Transmit_Buffer[0], pdu_len);
+
         } else {
             tsm_free_invoke_id(invoke_id);
             invoke_id = 0;
-#if PRINT_ENABLED
-            fprintf(stderr,
-                "Failed to Send Get Alarm Summary Request "
-                "(exceeds destination maximum APDU)!\n");
-#endif
         }
     }
 
@@ -113,17 +118,21 @@ uint8_t Send_Get_Alarm_Summary_Address(
 uint8_t Send_Get_Alarm_Summary(
     uint32_t device_id)
 {
-    BACNET_ADDRESS dest;
-    unsigned max_apdu = 0;
-    uint8_t invoke_id = 0;
-    bool status = false;
+    BACNET_PATH dest;
+    unsigned max_apdu ;
+    uint8_t invoke_id ;
+    bool status ;
 
     /* is the device bound? */
     status = address_get_by_device(device_id, &max_apdu, &dest);
     if (status) {
         invoke_id = Send_Get_Alarm_Summary_Address(
-            &dest, max_apdu);
+                        &dest, max_apdu);
+    } else {
+        invoke_id = 0 ;
+        // todo 5 - surely we can do better than this?
     }
 
     return invoke_id;
 }
+#endif

@@ -21,7 +21,22 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stddef.h>
 #include <stdint.h>
 #include <errno.h>
@@ -55,8 +70,11 @@
  * @return The invokeID of the transmitted message, or 0 on failure.
  */
 
+#if 0
+
 uint8_t Send_Device_Communication_Control_Request(
     BACNET_ROUTE *dest,
+    DEVICE_OBJECT_DATA *sendingDev,
     uint32_t device_id,
     uint16_t timeDuration,      /* 0=optional */
     BACNET_COMMUNICATION_ENABLE_DISABLE state,
@@ -102,17 +120,14 @@ uint8_t Send_Device_Communication_Control_Request(
            max_apdu in the address binding table. */
         if ((unsigned) pdu_len < max_apdu) {
             tsm_set_confirmed_unsegmented_transaction(invoke_id, &dest,
-                &npci_data, dlcb );
-                dlcb->optr = pdu_len ;
-            bytes_sent =
-                datalink_send_pdu(&dest, &npci_data,
-                dlcb );
-#if PRINT_ENABLED
-            if (bytes_sent <= 0)
-                fprintf(stderr,
-                    "Failed to Send DeviceCommunicationControl Request (%s)!\n",
-                    strerror(errno));
-#endif
+                &npci_data, &Handler_Transmit_Buffer[0], (uint16_t) pdu_len);
+            //bytes_sent =
+            //    datalink_send _pdu(&dest, &npci_data,
+            //    &Handler_Transmit_Buffer[0], pdu_len);
+
+            dest->portParams->SendPdu(dest->portParams, sendingDev, &dest->bacnetPath->localMac, &npci_data, &Handler_Transmit_Buffer[0],
+                pdu_len);
+
         } else {
             tsm_free_invoke_id(invoke_id);
             invoke_id = 0;
@@ -126,3 +141,5 @@ uint8_t Send_Device_Communication_Control_Request(
 
     return invoke_id;
 }
+
+#endif

@@ -94,7 +94,7 @@ static void MyErrorHandler(
 void MyAbortHandler(
     BACNET_ADDRESS * src,
     uint8_t invoke_id,
-    uint8_t abort_reason,
+    BACNET_ABORT_REASON abort_reason,
     bool server)
 {
     (void) server;
@@ -160,7 +160,7 @@ int main(
     time_t timeout_seconds = 0;
     time_t delta_seconds = 0;
     bool found = false;
-    char *filename = NULL;
+    const char *filename ;
     char *value_string = NULL;
     bool status = false;
     int args_remaining = 0, tag_value_arg = 0, i = 0;
@@ -240,7 +240,7 @@ int main(
         } else {
             Target_Object_Property_Value[i].context_specific = false;
         }
-        property_tag = strtol(argv[tag_value_arg], NULL, 0);
+        property_tag = (BACNET_APPLICATION_TAG) strtol(argv[tag_value_arg], NULL, 0);
         args_remaining--;
         if (args_remaining <= 0) {
             fprintf(stderr, "Error: not enough tag-value pairs\r\n");

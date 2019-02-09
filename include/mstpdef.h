@@ -20,7 +20,23 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*********************************************************************/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef MSTPDEF_H
 #define MSTPDEF_H
 
@@ -37,14 +53,18 @@
 
 /* MS/TP Frame Type */
 /* Frame Types 8 through 127 are reserved by ASHRAE. */
-#define FRAME_TYPE_TOKEN 0
-#define FRAME_TYPE_POLL_FOR_MASTER 1
-#define FRAME_TYPE_REPLY_TO_POLL_FOR_MASTER 2
-#define FRAME_TYPE_TEST_REQUEST 3
-#define FRAME_TYPE_TEST_RESPONSE 4
-#define FRAME_TYPE_BACNET_DATA_EXPECTING_REPLY 5
-#define FRAME_TYPE_BACNET_DATA_NOT_EXPECTING_REPLY 6
-#define FRAME_TYPE_REPLY_POSTPONED 7
+typedef enum
+{
+    FRAME_TYPE_TOKEN=0,
+    FRAME_TYPE_POLL_FOR_MASTER =1,
+    FRAME_TYPE_REPLY_TO_POLL_FOR_MASTER= 2,
+    FRAME_TYPE_TEST_REQUEST= 3,
+    FRAME_TYPE_TEST_RESPONSE =4,
+    FRAME_TYPE_BACNET_DATA_EXPECTING_REPLY= 5,
+    FRAME_TYPE_BACNET_DATA_NOT_EXPECTING_REPLY= 6,
+    FRAME_TYPE_REPLY_POSTPONED =7
+} FRAME_TYPE ;
+
 /* Frame Types 128 through 255: Proprietary Frames */
 /* These frames are available to vendors as proprietary (non-BACnet) frames. */
 /* The first two octets of the Data field shall specify the unique vendor */
@@ -119,10 +139,9 @@ typedef enum {
 /* 15 milliseconds. */
 #define Tusage_delay 15
 
-#define DEFAULT_MAX_INFO_FRAMES 1
+#define DEFAULT_MAX_INFO_FRAMES 127
 #define DEFAULT_MAX_MASTER 127
 #define DEFAULT_MAC_ADDRESS 127
-
 
 
 #endif

@@ -20,12 +20,29 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*********************************************************************/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef REJECT_H
 #define REJECT_H
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "bacdef.h"
 
 BACNET_REJECT_REASON reject_convert_error_code(
     BACNET_ERROR_CODE error_code);
@@ -39,7 +56,7 @@ int reject_decode_service_request(
     uint8_t * apdu,
     unsigned apdu_len,
     uint8_t * invoke_id,
-    BACNET_REJECT_REASON * reject_reason);
+    BACNET_REJECT_REASON *reject_reason);
 
 #ifdef TEST
 int reject_decode_apdu(

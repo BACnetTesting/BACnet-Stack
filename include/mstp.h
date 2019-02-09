@@ -21,7 +21,22 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef MSTP_H
 #define MSTP_H
 
@@ -29,8 +44,15 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "mstpdef.h"
+#include "llist.h"
+#include "timerCommon.h"
+#include "rs485.h"
+#include "osLayer.h"
+#include "dlmstp.h"
 
-struct mstp_port_struct_t {
+#define BTA_DEBUG_MSTP
+
+typedef struct mstp_port_struct_t {
     MSTP_RECEIVE_STATE receive_state;
     /* When a master node is powered up or reset, */
     /* it shall unconditionally enter the INITIALIZE state. */
@@ -38,28 +60,39 @@ struct mstp_port_struct_t {
     /* A Boolean flag set to TRUE by the Receive State Machine  */
     /* if an error is detected during the reception of a frame.  */
     /* Set to FALSE by the Master or Slave Node state machine. */
-    unsigned ReceiveError:1;
+    uint8_t ReceiveError:1;
     /* There is data in the buffer */
-    unsigned DataAvailable:1;
-    unsigned ReceivedInvalidFrame:1;
+    uint8_t DataAvailable:1;
+    uint8_t ReceivedInvalidFrame:1;
     /* A Boolean flag set to TRUE by the Receive State Machine  */
     /* if a valid frame is received.  */
     /* Set to FALSE by the Master or Slave Node state machine. */
-    unsigned ReceivedValidFrame:1;
+    uint8_t ReceivedValidFrame:1;
     /* A Boolean flag set to TRUE by the Receive State Machine  */
     /* if a valid frame is received but it is not addressed to us.  */
     /* Set to FALSE by the Master or Slave Node state machine. */
-    unsigned ReceivedValidFrameNotForUs:1;
+    uint8_t ReceivedValidFrameNotForUs:1;
     /* A Boolean flag set to TRUE by the master machine if this node is the */
     /* only known master node. */
-    unsigned SoleMaster:1;
+    uint8_t SoleMaster:1;
+    //    /* A Boolean flag set TRUE by the datalink if a
+    //       packet has been received, but not processed. */
+    uint8_t ReceivePacketPending:1;
     /* stores the latest received data */
-    uint8_t DataRegister;
+    uint8_t     DataRegister;
+    uint32_t    timestamp;
+
     /* Used to accumulate the CRC on the data field of a frame. */
     uint16_t DataCRC;
     /* Used to store the actual CRC from the data field. */
-    uint8_t DataCRCActualMSB;
-    uint8_t DataCRCActualLSB;
+
+#ifdef MSTP_ANALYZER
+    // only used by MSTPCAP.C - can optimize out for most projects
+    // uint8_t DataCRCActualMSB;
+    // uint8_t DataCRCActualLSB;
+    uint8_t HeaderCRCActual;
+#endif
+
     /* Used to store the data length of a received frame. */
     uint16_t DataLength;
     /* Used to store the destination address of a received frame. */
@@ -76,8 +109,11 @@ struct mstp_port_struct_t {
     uint8_t FrameCount;
     /* Used to accumulate the CRC on the header of a frame. */
     uint8_t HeaderCRC;
+    
     /* Used to store the actual CRC from the header. */
-    uint8_t HeaderCRCActual;
+    // only used by MSTPCAP.C - can optimize out for most projects
+    // uint8_t HeaderCRCActual;
+    
     /* Used as an index by the Receive State Machine, up to a maximum value of */
     /* InputBufferSize. */
     uint32_t Index;
@@ -100,6 +136,7 @@ struct mstp_port_struct_t {
     /* A counter of transmission retries used for Token and Poll For Master */
     /* transmission. */
     unsigned RetryCount;
+
     /* A timer with nominal 5 millisecond resolution used to measure and */
     /* generate silence on the medium between octets. It is incremented by a */
     /* timer process and is cleared by the Receive State Machine when activity */
@@ -109,12 +146,15 @@ struct mstp_port_struct_t {
     /* denote intervals between N-1 and N */
     /* Note: done here as functions - put into timer task or ISR
        so that you can be atomic on 8 bit microcontrollers */
-             uint32_t(
-        *SilenceTimer) (
-        void *pArg);
-    void (
-        *SilenceTimerReset) (
-        void *pArg);
+    // I don't buy the ISR/atomic thing..
+    //uint32_t(
+    //    *SilenceTimer) (
+    //    void *pArg);
+
+    //void (
+    //    *SilenceTimerReset) (
+    //    void *pArg);
+    // todo 1 TimerControl silenceTimerControl;
 
     /* A timer used to measure and generate Reply Postponed frames.  It is */
     /* incremented by a timer process and is cleared by the Master Node State */
@@ -161,66 +201,113 @@ struct mstp_port_struct_t {
     /* Note: the buffer is designed as a pointer since some compilers
        and microcontroller architectures have limits as to places to
        hold contiguous memory. */
-    uint8_t *OutputBuffer;
-    uint16_t OutputBufferSize;
 
+    uint8_t OutputBuffer[MAX_MPDU_MSTP];                   // this is a temp buffer to build MS/TP frame into
+    // uint16_t OutputBufferSize;
+    LLIST_HDR mstpOutputQueuePtr;
+
+    struct etimer silenceTimer ;
+    uint32_t    Baud_Rate;
+    
     /*Platform-specific port data */
     void *UserData;
 
+    bool btaReceivedValidFrame;
+
+} mstp_port_struct ;
+
+
+typedef struct _DLCB DLCB;
+
+struct mstp_pdu_packet
+{
+    LLIST_LB    ll_lb;          // must be first
+
+    bool data_expecting_reply;
+    uint8_t destination_mac;
+    FRAME_TYPE specialFunction;     // For BMDA only
+    // uint16_t length;
+    // uint8_t buffer[MAX_MPDU_MSTP];
+    DLCB *dlcb;
 };
 
+// message on wire struct
+typedef struct 
+{
+    uint8_t source;
+    uint8_t dest;
+    uint8_t frameType;
+    uint32_t    firstByteTimestamp;
+    uint32_t    lastByteTimestamp;
+    bool valid;
+} MOW_TYPE;
 
-    void MSTP_Init(
-        volatile struct mstp_port_struct_t *mstp_port);
-    void MSTP_Receive_Frame_FSM(
-        volatile struct mstp_port_struct_t
-        *mstp_port);
-    bool MSTP_Master_Node_FSM(
-        volatile struct mstp_port_struct_t
-        *mstp_port);
-    void MSTP_Slave_Node_FSM(
-        volatile struct mstp_port_struct_t *mstp_port);
 
-    /* returns true if line is active */
-    bool MSTP_Line_Active(
-        volatile struct mstp_port_struct_t *mstp_port);
+void MSTP_Init(
+    volatile struct mstp_port_struct_t *mstp_port);
 
-    uint16_t MSTP_Create_Frame(
-        uint8_t * buffer,       /* where frame is loaded */
-        uint16_t buffer_len,    /* amount of space available */
-        uint8_t frame_type,     /* type of frame to send - see defines */
-        uint8_t destination,    /* destination address */
-        uint8_t source, /* source address */
-        uint8_t * data, /* any data to be sent - may be null */
-        uint16_t data_len);     /* number of bytes of data (up to 501) */
+void MSTP_Receive_Frame_FSM(
+    volatile struct mstp_port_struct_t *mstp_port);
 
-    void MSTP_Create_And_Send_Frame(
-        volatile struct mstp_port_struct_t *mstp_port,  /* port to send from */
-        uint8_t frame_type,     /* type of frame to send - see defines */
-        uint8_t destination,    /* destination address */
-        uint8_t source, /* source address */
-        uint8_t * data, /* any data to be sent - may be null */
-        uint16_t data_len);
 
-    void MSTP_Fill_BACnet_Address(
-        BACNET_PATH * src,
-        uint8_t mstp_address);
+bool MSTP_Master_Node_FSM(
+    volatile struct mstp_port_struct_t *mstp_port);
 
-    /* functions used by the MS/TP state machine to put or get data */
-    /* FIXME: developer must implement these in their DLMSTP module */
-    uint16_t MSTP_Put_Receive(
-        volatile struct mstp_port_struct_t *mstp_port);
+// void MSTP_Slave_Node_FSM(
+//     volatile struct mstp_port_struct_t *mstp_port);
 
-    /* for the MS/TP state machine to use for getting data to send */
-    /* Return: amount of PDU data */
-    uint16_t MSTP_Get_Send(
-        volatile struct mstp_port_struct_t *mstp_port,
-        unsigned timeout);      /* milliseconds to wait for a packet */
-    /* for the MS/TP state machine to use for getting the reply for
-       Data-Expecting-Reply Frame */
-    /* Return: amount of PDU data */
-    uint16_t MSTP_Get_Reply(
-        volatile struct mstp_port_struct_t *mstp_port,
-        unsigned timeout);      /* milliseconds to wait for a packet */
+/* returns true if line is active */
+bool MSTP_Line_Active(
+    volatile struct mstp_port_struct_t *mstp_port);
+
+uint16_t MSTP_Create_Frame(
+    uint8_t * buffer,       /* where frame is loaded */
+    uint16_t buffer_len,    /* amount of space available */
+    uint8_t frame_type,     /* type of frame to send - see defines */
+    uint8_t destination,    /* destination address */
+    uint8_t source, /* source address */
+    uint8_t * data, /* any data to be sent - may be null */
+    uint16_t data_len);     /* number of bytes of data (up to 501) */
+
+void MSTP_Create_And_Send_Frame(
+    volatile struct mstp_port_struct_t *mstp_port,  /* port to send from */
+    uint8_t frame_type,     /* type of frame to send - see defines */
+    uint8_t destination,    /* destination address */
+    uint8_t source, /* source address */
+    uint8_t * data, /* any data to be sent - may be null */
+    uint16_t data_len);
+
+    //void MSTP_Fill_BACnet_Address(
+    //    BACNET_PATH * src,
+    //    uint8_t mstp_address);
+
+/* functions used by the MS/TP state machine to put or get data */
+/* FIXME: developer must implement these in their DLMSTP module */
+uint16_t MSTP_Put_Receive(
+    volatile struct mstp_port_struct_t *mstp_port);
+
+/* for the MS/TP state machine to use for getting data to send */
+/* Return: amount of PDU data */
+uint16_t MSTP_Get_Send(
+    volatile struct mstp_port_struct_t *mstp_port,
+	unsigned timeout); /* milliseconds to wait for a packet */
+
+/* for the MS/TP state machine to use for getting the reply for
+   Data-Expecting-Reply Frame */
+/* Return: amount of PDU data */
+uint16_t MSTP_Get_Reply(
+    volatile struct mstp_port_struct_t *mstp_port,
+	unsigned timeout); /* milliseconds to wait for a packet */
+
+void SilenceTimerReset(volatile mstp_port_struct *mstp_port);
+uint32_t SilenceTimer(volatile mstp_port_struct *mstp_port);
+
+void dlmstp_tick(volatile struct mstp_port_struct_t *mstp_port); 
+
+void dllmstp_Send_Frame(
+    volatile struct mstp_port_struct_t *mstp_port,
+    uint8_t *data,                                    
+    uint16_t data_len);
+
 
 #endif

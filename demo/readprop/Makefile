@@ -15,23 +15,29 @@ TARGET = bacrp
 TARGET_BIN = ${TARGET}$(TARGET_EXT)
 
 SRCS = main.c \
+	../object/netport.c \
 	../object/device-client.c
 
 OBJS = ${SRCS:.c=.o}
 
 all: ${BACNET_LIB_TARGET} Makefile ${TARGET_BIN}
+	echo libs=${BACNET_LIB_DIR}
 
 ${TARGET_BIN}: ${OBJS} Makefile ${BACNET_LIB_TARGET}
-	${CC} ${PFLAGS} ${OBJS} ${LFLAGS} -o $@
+	echo libs=${BACNET_LIB_TARGET}
+	${CC} ${PFLAGS} ${OBJS} ${BACNET_LIB_TARGET} ${LFLAGS} -o $@
 	size $@
 	cp $@ ../../bin
 
+.PHONY:lib
 lib: ${BACNET_LIB_TARGET}
 
 ${BACNET_LIB_TARGET}:
+	echo libs=${BACNET_LIB_DIR}
 	( cd ${BACNET_LIB_DIR} ; $(MAKE) clean ; $(MAKE) )
 
 .c.o:
+	echo cflags= ${CFLAGS}
 	${CC} -c ${CFLAGS} $*.c -o $@
 
 depend:

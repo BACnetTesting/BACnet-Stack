@@ -21,7 +21,22 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -37,6 +52,9 @@
 #include "ptransfer.h"
 #include "handlers.h"
 
+#if ( BACNET_SVC_PRIVATE_TRANSFER )
+
+
 /** @file h_upt.c  Handles Unconfirmed Private Transfer requests. */
 
 void private_transfer_print_data(
@@ -48,7 +66,9 @@ void private_transfer_print_data(
     uint8_t *application_data;
     int application_data_len;
     bool first_value = true;
+#if PRINT_ENABLED
     bool print_brace = false;
+#endif
 
     if (private_data) {
 #if PRINT_ENABLED
@@ -67,8 +87,8 @@ void private_transfer_print_data(
                 first_value = false;
 #if PRINT_ENABLED
                 fprintf(stdout, "{");
-#endif
                 print_brace = true;
+#endif
             }
             /* private transfer doesn't provide any clues */
             object_value.object_type = MAX_BACNET_OBJECT_TYPE;
@@ -119,3 +139,6 @@ void handler_unconfirmed_private_transfer(
         private_transfer_print_data(&private_data);
     }
 }
+
+#endif // #if ( BACNET_SVC_PRIVATE_TRANSFER )
+

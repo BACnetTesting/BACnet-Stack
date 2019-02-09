@@ -21,27 +21,42 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
-#include <stddef.h>
-#include <stdint.h>
-#include <errno.h>
-#include <string.h>
-#include "config.h"
-#include "txbuf.h"
-#include "bacdef.h"
-#include "bacdcode.h"
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
+//#include <stddef.h>
+//#include <stdint.h>
+//#include <errno.h>
+//#include <string.h>
+//#include "config.h"
+//#include "txbuf.h"
+//#include "bacdef.h"
+//#include "bacdcode.h"
 #include "address.h"
 #include "tsm.h"
-#include "npdu.h"
-#include "apdu.h"
-#include "device.h"
+//#include "npdu.h"
+//#include "apdu.h"
+//#include "device.h"
 #include "datalink.h"
 #include "dcc.h"
 #include "rpm.h"
 /* some demo stuff needed */
-#include "handlers.h"
+//#include "handlers.h"
 #include "sbuf.h"
-#include "client.h"
+//#include "client.h"
 
 /** @file s_rpm.c  Send Read Property Multiple request. */
 
@@ -62,15 +77,15 @@ uint8_t Send_Read_Property_Multiple_Request(
     BACNET_READ_ACCESS_DATA * read_access_data)
 {
     BACNET_ROUTE dest;
-    BACNET_ADDRESS my_address;
     uint16_t max_apdu;
     uint8_t invoke_id = 0;
-    bool status = false;
+    bool status;
     int len = 0;
     int pdu_len = 0;
-    int bytes_sent = 0;
+//    int bytes_sent = 0;
     BACNET_NPCI_DATA npci_data;
 
+    /* if we are forbidden to send, don't send! */
     if (!dcc_communication_enabled())
         return 0;
 
@@ -80,6 +95,7 @@ uint8_t Send_Read_Property_Multiple_Request(
     /* is there a tsm available? */
     if (status)
         invoke_id = tsm_next_free_invokeID();
+
     if (invoke_id) {
 
         DLCB *dlcb = alloc_dlcb_application('r', &dest);
@@ -90,45 +106,34 @@ uint8_t Send_Read_Property_Multiple_Request(
         }
 
         /* encode the NPDU portion of the packet */
-        datalink_get_my_address(&my_address);
+        //datalink_get_my_address(&my_address);
         npdu_setup_npci_data(&npci_data, true, MESSAGE_PRIORITY_NORMAL);
-        pdu_len = npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &dest, &my_address, &npci_data);
+        pdu_len =
+            npdu_encode_pdu(dlcb->Handler_Transmit_Buffer, &dlcb->route.bacnetPath.glAdr, NULL,
+                &npci_data);
         /* encode the APDU portion of the packet */
         len =
-            rpm_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len], max_pdu - pdu_len, invoke_id,
-            read_access_data);
+            rpm_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len], max_apdu - pdu_len,
+                invoke_id,
+                read_access_data);
         if (len <= 0) {
             return 0;
         }
         pdu_len += len;
-        /* is it small enough for the the destination to receive?
+
+        /* is it small enough for the destination to receive?
            note: if there is a bottleneck router in between
            us and the destination, we won't know unless
            we have a way to check for that and update the
            max_apdu in the address binding table. */
-        if ((unsigned) pdu_len < max_apdu) {
-            tsm_set_confirmed_unsegmented_transaction(invoke_id, &dest,
-                &npci_data, dlcb );
-                
-                dlcb->optr = pdu_len ;
-            bytes_sent =
-                datalink_send_pdu(&dest, &npci_data, 
-                dlcb );
-                
-#if PRINT_ENABLED
-            if (bytes_sent <= 0)
-                fprintf(stderr,
-                    "Failed to Send ReadPropertyMultiple Request (%s)!\n",
-                    strerror(errno));
-#endif
-        } else {
+        if ((uint16_t)pdu_len < max_apdu) {
+            tsm_set_confirmed_unsegmented_transaction(invoke_id, dlcb);
+
+            dlcb->route.portParams->SendPdu(dlcb);
+        }
+        else {
             tsm_free_invoke_id(invoke_id);
             invoke_id = 0;
-#if PRINT_ENABLED
-            fprintf(stderr,
-                "Failed to Send ReadPropertyMultiple Request "
-                "(exceeds destination maximum APDU)!\n");
-#endif
         }
     }
 

@@ -20,7 +20,23 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*********************************************************************/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef NPDU_H
 #define NPDU_H
 
@@ -79,14 +95,14 @@ void npdu_copy_data(
     BACNET_NPCI_DATA * dest,
     BACNET_NPCI_DATA * src);
 
-int npdu_decode(
+int npci_decode(
     const uint8_t * npdu,
     BACNET_GLOBAL_ADDRESS * dest,
     BACNET_GLOBAL_ADDRESS * src,
     BACNET_NPCI_DATA * npdu_data);
 
 void init_common_npci(
-    BACNET_NPCI_DATA * npdu_data,
+    BACNET_NPCI_DATA * npci_data,
     bool data_expecting_reply);
 
 #endif

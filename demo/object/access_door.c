@@ -42,7 +42,7 @@ static bool Access_Door_Initialized = false;
 static ACCESS_DOOR_DESCR ad_descr[MAX_ACCESS_DOORS];
 
 /* These three arrays are used by the ReadPropertyMultiple handler */
-static const int Properties_Required[] = {
+static const BACNET_PROPERTY_ID Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -56,26 +56,26 @@ static const int Properties_Required[] = {
     PROP_DOOR_PULSE_TIME,
     PROP_DOOR_EXTENDED_PULSE_TIME,
     PROP_DOOR_OPEN_TOO_LONG_TIME,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Properties_Optional[] = {
     PROP_DOOR_STATUS,
     PROP_LOCK_STATUS,
     PROP_SECURED_STATUS,
     PROP_DOOR_UNLOCK_DELAY_TIME,
     PROP_DOOR_ALARM_STATE,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Properties_Proprietary[] = {
-    -1
+static const BACNET_PROPERTY_ID Properties_Proprietary[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
 void Access_Door_Property_Lists(
-    const int **pRequired,
-    const int **pOptional,
-    const int **pProprietary)
+    const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary)
 {
     if (pRequired)
         *pRequired = Properties_Required;
@@ -84,7 +84,6 @@ void Access_Door_Property_Lists(
     if (pProprietary)
         *pProprietary = Properties_Proprietary;
 
-    return;
 }
 
 void Access_Door_Init(
@@ -117,7 +116,6 @@ void Access_Door_Init(
         }
     }
 
-    return;
 }
 
 /* we simply have 0-n object instances.  Yours might be */
@@ -664,7 +662,6 @@ void testAccessDoor(
     ct_test(pTest, decoded_type == rpdata.object_type);
     ct_test(pTest, decoded_instance == rpdata.object_instance);
 
-    return;
 }
 
 #ifdef TEST_ACCESS_DOOR

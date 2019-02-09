@@ -21,7 +21,22 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -53,7 +68,7 @@ TL_DATA_REC Logs[MAX_TREND_LOGS][TL_MAX_ENTRIES];
 static TL_LOG_INFO LogInfo[MAX_TREND_LOGS];
 
 /* These three arrays are used by the ReadPropertyMultiple handler */
-static const int Trend_Log_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Trend_Log_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -66,10 +81,10 @@ static const int Trend_Log_Properties_Required[] = {
     PROP_EVENT_STATE,
     PROP_LOGGING_TYPE,
     PROP_STATUS_FLAGS,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Trend_Log_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Trend_Log_Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_START_TIME,
     PROP_STOP_TIME,
@@ -93,17 +108,17 @@ static const int Trend_Log_Properties_Optional[] = {
     PROP_ALIGN_INTERVALS,
     PROP_INTERVAL_OFFSET,
     PROP_TRIGGER,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Trend_Log_Properties_Proprietary[] = {
-    -1
+static const BACNET_PROPERTY_ID Trend_Log_Properties_Proprietary[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
 void Trend_Log_Property_Lists(
-    const int **pRequired,
-    const int **pOptional,
-    const int **pProprietary)
+    const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary)
 {
     if (pRequired)
         *pRequired = Trend_Log_Properties_Required;
@@ -112,7 +127,6 @@ void Trend_Log_Property_Lists(
     if (pProprietary)
         *pProprietary = Trend_Log_Properties_Proprietary;
 
-    return;
 }
 
 /* we simply have 0-n object instances.  Yours might be */
@@ -200,6 +214,7 @@ void Trend_Log_Init(
             TempTime.tm_hour = 0;
             TempTime.tm_min = 0;
             TempTime.tm_sec = 0;
+            TempTime.tm_isdst = -1; // means 'figure it out'
             tClock = mktime(&TempTime);
 
             for (iEntry = 0; iEntry < TL_MAX_ENTRIES; iEntry++) {
@@ -248,7 +263,6 @@ void Trend_Log_Init(
         }
     }
 
-    return;
 }
 
 
@@ -969,9 +983,11 @@ time_t TL_BAC_Time_To_Local(
     LocalTime.tm_hour = SourceTime->time.hour;
     LocalTime.tm_min = SourceTime->time.min;
     LocalTime.tm_sec = SourceTime->time.sec;
+    LocalTime.tm_isdst = -1;    // means 'figure it out'
 
     return (mktime(&LocalTime));
 }
+
 
 /*****************************************************************************
  * Convert a local time in seconds since the local epoch into a BACnet time  *
@@ -1069,7 +1085,7 @@ int TL_encode_by_position(
     uint32_t uiRemaining = 0;   /* Amount of unused space in packet */
 
     /* See how much space we have */
-    uiRemaining = MAX_LPDU_IP - pRequest->Overhead;
+    uiRemaining = MAX_APDU - pRequest->Overhead;
     log_index = Trend_Log_Instance_To_Index(pRequest->object_instance);
     CurrentLog = &LogInfo[log_index];
     if (pRequest->RequestType == RR_READ_ALL) {
@@ -1179,7 +1195,7 @@ int TL_encode_by_sequence(
     bool bWrapLog = false;      /* Has log sequence range spanned the max for uint32_t? */
 
     /* See how much space we have */
-    uiRemaining = MAX_LPDU_IP - pRequest->Overhead;
+    uiRemaining = MAX_APDU - pRequest->Overhead;
     log_index = Trend_Log_Instance_To_Index(pRequest->object_instance);
     CurrentLog = &LogInfo[log_index];
     /* Figure out the sequence number for the first record, last is ulTotalRecordCount */
@@ -1311,7 +1327,7 @@ int TL_encode_by_time(
     time_t tRefTime = 0;        /* The time from the request in local format */
 
     /* See how much space we have */
-    uiRemaining = MAX_LPDU_IP - pRequest->Overhead;
+    uiRemaining = MAX_APDU - pRequest->Overhead;
     log_index = Trend_Log_Instance_To_Index(pRequest->object_instance);
     CurrentLog = &LogInfo[log_index];
 
@@ -1464,7 +1480,7 @@ int TL_encode_entry(
         case TL_TYPE_BOOL:
             iLen +=
                 encode_context_boolean(&apdu[iLen], pSource->ucRecType,
-                pSource->Datum.ucBoolean);
+                (bool) pSource->Datum.ucBoolean);
             break;
 
         case TL_TYPE_REAL:
@@ -1561,7 +1577,7 @@ static int local_read_property(
     if (value != NULL) {
         /* configure our storage */
         rpdata.application_data = value;
-        rpdata.application_data_len = MAX_LPDU_IP;
+        rpdata.application_data_len = MAX_APDU;
         rpdata.object_type = Source->objectIdentifier.type;
         rpdata.object_instance = Source->objectIdentifier.instance;
         rpdata.object_property = Source->propertyIdentifier;
@@ -1577,7 +1593,7 @@ static int local_read_property(
     if ((len >= 0) && (status != NULL)) {
         /* Fetch the status flags if required */
         rpdata.application_data = status;
-        rpdata.application_data_len = MAX_LPDU_IP;
+        rpdata.application_data_len = MAX_APDU;
         rpdata.object_property = PROP_STATUS_FLAGS;
         rpdata.array_index = BACNET_ARRAY_ALL;
         len = Device_Read_Property(&rpdata);
@@ -1597,7 +1613,7 @@ static int local_read_property(
 static void TL_fetch_property(
     int iLog)
 {
-    uint8_t ValueBuf[MAX_LPDU_IP]; /* This is a big buffer in case someone selects the device object list for example */
+    uint8_t ValueBuf[MAX_APDU]; /* This is a big buffer in case someone selects the device object list for example */
     uint8_t StatusBuf[3];       /* Should be tag, bits unused in last octet and 1 byte of data */
     BACNET_ERROR_CLASS error_class = ERROR_CLASS_SERVICES;
     BACNET_ERROR_CODE error_code = ERROR_CODE_OTHER;
@@ -1725,7 +1741,7 @@ void trend_log_timer(
     time_t tNow = 0;
 
     /* unused parameter */
-    uSeconds = uSeconds;
+    (void) uSeconds ;
     /* use OS to get the current time */
     tNow = time(NULL);
     for (iCount = 0; iCount < MAX_TREND_LOGS; iCount++) {

@@ -27,6 +27,22 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************
+*
 * @section DESCRIPTION
 *
 * The GetAlarmSummary service is used by a client BACnet-user
@@ -41,6 +57,7 @@
 #include "bacdcode.h"
 #include "get_alarm_sum.h"
 #include "npdu.h"
+#include "bip.h"
 
 /* encode service */
 int get_alarm_summary_encode_apdu(
@@ -143,7 +160,7 @@ int get_alarm_summary_ack_decode_apdu_data(
         /* tag 0 - Object Identifier */
         apdu_len +=
             bacapp_decode_application_data(&apdu[apdu_len],
-                                           max_apdu - apdu_len, &value);
+            (unsigned int)(max_apdu - apdu_len), &value);
         if (value.tag == BACNET_APPLICATION_TAG_OBJECT_ID) {
             get_alarm_data->objectIdentifier = value.type.Object_Id;
         } else {
@@ -152,7 +169,7 @@ int get_alarm_summary_ack_decode_apdu_data(
         /* tag 1 - Alarm State */
         apdu_len +=
             bacapp_decode_application_data(&apdu[apdu_len],
-                                           max_apdu - apdu_len, &value);
+            (unsigned int)(max_apdu - apdu_len), &value);
         if (value.tag == BACNET_APPLICATION_TAG_ENUMERATED) {
             get_alarm_data->alarmState =
                 (BACNET_EVENT_STATE) value.type.Enumerated;
@@ -162,7 +179,7 @@ int get_alarm_summary_ack_decode_apdu_data(
         /* tag 2 - Acknowledged Transitions */
         apdu_len +=
             bacapp_decode_application_data(&apdu[apdu_len],
-                                           max_apdu - apdu_len, &value);
+            (unsigned int)(max_apdu - apdu_len), &value);
         if (value.tag == BACNET_APPLICATION_TAG_BIT_STRING) {
             get_alarm_data->acknowledgedTransitions = value.type.Bit_String;
         } else {

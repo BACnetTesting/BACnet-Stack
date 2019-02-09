@@ -20,12 +20,33 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*********************************************************************/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef GETEVENT_H
 #define GETEVENT_H
 
 #include <stdint.h>
 #include <stdbool.h>
+
+#include "config.h"
+
+#if (BACNET_USE_EVENT_HANDLING == 1)
+
 #include "bacdef.h"
 #include "bacenum.h"
 #include "timestamp.h"
@@ -48,9 +69,8 @@ typedef struct BACnet_Get_Event_Information_Data {
    return +1 if active event */
 typedef int (
     *get_event_info_function) (
-    unsigned index,
-    BACNET_GET_EVENT_INFORMATION_DATA * getevent_data);
-
+        unsigned index,
+        BACNET_GET_EVENT_INFORMATION_DATA * getevent_data);
 
 int getevent_encode_apdu(
     uint8_t * apdu,
@@ -106,4 +126,5 @@ void testGetEventInformationAck(
 
 #endif
 
-#endif
+#endif // BACNET_USE_EVENT_HANDLING
+#endif // INTRINSIC_REPORTING

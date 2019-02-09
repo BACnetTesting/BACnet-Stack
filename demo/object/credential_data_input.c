@@ -43,7 +43,7 @@ static bool Credential_Data_Input_Initialized = false;
 static CREDENTIAL_DATA_INPUT_DESCR cdi_descr[MAX_CREDENTIAL_DATA_INPUTS];
 
 /* These three arrays are used by the ReadPropertyMultiple handler */
-static const int Properties_Required[] = {
+static const BACNET_PROPERTY_ID Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -53,21 +53,21 @@ static const int Properties_Required[] = {
     PROP_OUT_OF_SERVICE,
     PROP_SUPPORTED_FORMATS,
     PROP_UPDATE_TIME,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Properties_Optional[] = {
-    -1
+static const BACNET_PROPERTY_ID Properties_Optional[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Properties_Proprietary[] = {
-    -1
+static const BACNET_PROPERTY_ID Properties_Proprietary[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
 void Credential_Data_Input_Property_Lists(
-    const int **pRequired,
-    const int **pOptional,
-    const int **pProprietary)
+    const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary)
 {
     if (pRequired)
         *pRequired = Properties_Required;
@@ -76,7 +76,6 @@ void Credential_Data_Input_Property_Lists(
     if (pProprietary)
         *pProprietary = Properties_Proprietary;
 
-    return;
 }
 
 void Credential_Data_Input_Init(
@@ -101,7 +100,6 @@ void Credential_Data_Input_Init(
         }
     }
 
-    return;
 }
 
 /* we simply have 0-n object instances.  Yours might be */
@@ -436,7 +434,6 @@ void testCredentialDataInput(
     ct_test(pTest, decoded_type == rpdata.object_type);
     ct_test(pTest, decoded_instance == rpdata.object_instance);
 
-    return;
 }
 
 #ifdef TEST_CREDENTIAL_DATA_INPUT

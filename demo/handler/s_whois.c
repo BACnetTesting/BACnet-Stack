@@ -21,30 +21,49 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
-#include <stddef.h>
-#include <stdint.h>
-#include <errno.h>
-#include <string.h>
-#include "config.h"
-#include "txbuf.h"
-#include "bacdef.h"
-#include "bacdcode.h"
-#include "address.h"
-#include "tsm.h"
-#include "npdu.h"
-#include "apdu.h"
-#include "device.h"
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
+//#include <stddef.h>
+//#include <stdint.h>
+//#include <errno.h>
+//#include <string.h>
+//#include "config.h"
+//#include "txbuf.h"
+//#include "bacdef.h"
+//#include "bacdcode.h"
+//#include "address.h"
+//#include "tsm.h"
+//#include "npdu.h"
+//#include "apdu.h"
+//#include "device.h"
 #include "datalink.h"
 #include "dcc.h"
 #include "whois.h"
-#include "bacenum.h"
-/* some demo stuff needed */
-#include "handlers.h"
-#include "txbuf.h"
-#include "client.h"
+//#include "bacenum.h"
+///* some demo stuff needed */
+//#include "handlers.h"
+//#include "txbuf.h"
+//#include "client.h"
+#include "debug.h"
+#include "bacaddr.h"
 
 /** @file s_whois.c  Send a Who-Is request. */
+
+extern volatile struct  mstp_port_struct_t *tx_mstp_port;
 
 /** Send a Who-Is request to a remote network for a specific device, a range,
  * or any device.
@@ -63,32 +82,29 @@ void Send_WhoIs_To_Network(
 {
     int len = 0;
     int pdu_len = 0;
-    int bytes_sent = 0;
     BACNET_NPCI_DATA npci_data;
-    BACNET_ADDRESS my_address;
+    // BACNET_PATH my_address;
 
 	DLCB *dlcb = alloc_dlcb_response('t', dest );
 	if (dlcb == NULL) return;
 
-    datalink_get_my_address(&my_address);
+    //datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
 
     pdu_len =
-        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], target_address,
-        &my_address, &npci_data);
+        npdu_encode_pdu( dlcb->Handler_Transmit_Buffer, &dest->bacnetPath.glAdr,
+        NULL, &npci_data);
     /* encode the APDU portion of the packet */
     len =
         whois_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len], low_limit,
                           high_limit);
     pdu_len += len;
-    bytes_sent =
-        datalink_send_pdu(target_address, &npci_data, dlcb );
-#if PRINT_ENABLED
-    if (bytes_sent <= 0)
-        fprintf(stderr, "Failed to Send Who-Is Request (%s)!\n",
-            strerror(errno));
-#endif
+
+    dbTraffic(DBD_ALL, DB_NOTE, "Sending who-is %d:%d", low_limit, high_limit);
+
+    dest->portParams->SendPdu(dlcb);
+
 }
 
 /** Send a global Who-Is request for a specific device, a range, or any device.
@@ -99,10 +115,13 @@ void Send_WhoIs_To_Network(
  * @param low_limit [in] Device Instance Low Range, 0 - 4,194,303 or -1
  * @param high_limit [in] Device Instance High Range, 0 - 4,194,303 or -1
  */
+
+// extern PORT_SUPPORT *datalinkSupportHead;
+
 void Send_WhoIs_Global(
     PORT_SUPPORT  *portParams,
-    int32_t low_limit,
-    int32_t high_limit)
+    const int32_t low_limit,
+    const int32_t high_limit)
 {
     BACNET_ROUTE dest;
 
@@ -110,6 +129,7 @@ void Send_WhoIs_Global(
         return;
 
     dest.portParams = portParams;
+
     /* Who-Is is a global broadcast */
     // todo2 - why not return a pointer, less copying...
     // portParams->get_broadcast_address(portParams, &dest);
@@ -132,17 +152,12 @@ void Send_WhoIs_Local(
     int32_t high_limit)
 {
     BACNET_ROUTE dest;
-    char temp[6];
-    int loop;
 
     if (!dcc_communication_enabled())
         return;
 
-    /* Who-Is is a global broadcast */
-    datalink_get_broadcast_address(&dest);
     dest.portParams = portParams;
     bacnet_path_set_broadcast_local(&dest.bacnetPath );
-
 
     Send_WhoIs_To_Network(&dest, low_limit, high_limit);
 }
@@ -170,7 +185,8 @@ void Send_WhoIs_Remote(
 
     dest.portParams = portParams;
     bacnet_path_copy(&dest.bacnetPath, target_address);
-    Send_WhoIs_To_Network(target_address, low_limit, high_limit);
+
+    Send_WhoIs_To_Network( &dest, low_limit, high_limit);
 }
 
 /** Send a global Who-Is request for a specific device, a range, or any device.
@@ -185,9 +201,11 @@ void Send_WhoIs_Remote(
  * @param low_limit [in] Device Instance Low Range, 0 - 4,194,303 or -1
  * @param high_limit [in] Device Instance High Range, 0 - 4,194,303 or -1
  */
-void Send_WhoIs(
-    int32_t low_limit,
-    int32_t high_limit)
-{
-    Send_WhoIs_Global(low_limit, high_limit);
-}
+//void Send_WhoIs(
+//    PORT_SUPPORT  *portParams,
+//    DEVICE_OBJECT_DATA *pDev,
+//    int32_t low_limit,
+//    int32_t high_limit)
+//{
+//    Send_WhoIs_Global(portParams, pDev, low_limit, high_limit);
+//}

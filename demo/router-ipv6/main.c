@@ -100,6 +100,8 @@ static uint8_t Tx_Buffer[MAX_MPDU];
 /* main loop exit control */
 static bool Exit_Requested;
 
+extern const char *BACnet_Version;
+
 /**
  * Search the router table to find a matching DNET entry
  *
@@ -1037,6 +1039,12 @@ static void my_routing_npdu_handler(
                     routed_apdu_handler(snet, &npci_data, src, &dest,
                         &pdu[apdu_offset],
                         (uint16_t) (pdu_len - apdu_offset));
+                    /* add a Device object and application layer */
+                    if ((dest.net == 0) ||
+                        (dest.net == BACNET_BROADCAST_NETWORK)) {
+                        apdu_handler(src, &pdu[apdu_offset],
+                        (uint16_t) (pdu_len - apdu_offset));
+                    }
                 }
             } else {
                 fprintf(stderr, "NPDU: DNET=%u.  Discarded!\n",

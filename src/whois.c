@@ -29,8 +29,23 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stdint.h>
 #include "bacenum.h"
 #include "bacdcode.h"
@@ -67,15 +82,15 @@ int whois_encode_apdu(
 
 /* decode the service request only */
 int whois_decode_service_request(
-    uint8_t * apdu,
-    unsigned apdu_len,
+    const uint8_t * apdu,
+    const uint16_t apdu_len,
     int32_t * pLow_limit,
     int32_t * pHigh_limit)
 {
-    unsigned int len = 0;
-    uint8_t tag_number = 0;
-    uint32_t len_value = 0;
-    uint32_t decoded_value = 0;
+    int len = 0;
+    uint8_t tag_number ;
+    uint32_t len_value ;
+    uint32_t decoded_value ;
 
     /* optional limits - must be used as a pair */
     if (apdu_len) {
@@ -113,7 +128,8 @@ int whois_decode_service_request(
         } else {
             return BACNET_STATUS_ERROR;
         }
-    } else {
+    } 
+    else {
         if (pLow_limit) {
             *pLow_limit = -1;
         }
@@ -123,7 +139,7 @@ int whois_decode_service_request(
         len = 0;
     }
 
-    return (int)len;
+    return len;
 }
 
 #ifdef TEST

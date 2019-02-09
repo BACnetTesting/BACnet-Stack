@@ -13,18 +13,29 @@ BACNET_PORT_DIR = ../ports/${BACNET_PORT}
 BACNET_OBJECT = ../demo/object
 BACNET_HANDLER = ../demo/handler
 BACNET_CORE = ../src
+BACNET_UTIL=../bits
 BACNET_INCLUDE = ../include
+BACNET_UTIL = ../bits/util
+
 # compiler configuration
-#STANDARDS = -std=c99
+#set by main makefile STANDARDS = -std=gnu11
 INCLUDE1 = -I$(BACNET_PORT_DIR) -I$(BACNET_OBJECT) -I$(BACNET_HANDLER)
 INCLUDE2 = -I$(BACNET_INCLUDE)
-INCLUDES = $(INCLUDE1) $(INCLUDE2)
+INCLUDES = $(INCLUDE1) $(INCLUDE2) \
+	-I../bits \
+	-I../bits/util \
+	-I../bits/persist \
+	-I../bits/logging \
+	-I../bits/bitsRouter \
+	-I../bits/osLayer/linux \
+	-I../bits/ipc/udp
 
 # target
 TARGET = bacnet
 LIBRARY = lib$(TARGET).a
 
 CORE_SRC = \
+	$(BACNET_CORE)/address.c \
 	$(BACNET_CORE)/apdu.c \
 	$(BACNET_CORE)/npdu.c \
 	$(BACNET_CORE)/bacdcode.c \
@@ -36,6 +47,7 @@ CORE_SRC = \
 	$(BACNET_CORE)/bactext.c \
 	$(BACNET_CORE)/bactimevalue.c \
 	$(BACNET_CORE)/datetime.c \
+	$(BACNET_CORE)/datalink.c \
 	$(BACNET_CORE)/indtext.c \
 	$(BACNET_CORE)/key.c \
 	$(BACNET_CORE)/keylist.c \
@@ -64,7 +76,6 @@ CORE_SRC = \
 	$(BACNET_CORE)/filename.c \
 	$(BACNET_CORE)/tsm.c \
 	$(BACNET_CORE)/bacaddr.c \
-	$(BACNET_CORE)/address.c \
 	$(BACNET_CORE)/bacdevobjpropref.c \
 	$(BACNET_CORE)/bacpropstates.c \
 	$(BACNET_CORE)/alarm_ack.c \
@@ -80,6 +91,22 @@ CORE_SRC = \
 	$(BACNET_CORE)/authentication_factor_format.c \
 	$(BACNET_CORE)/authentication_factor.c \
 	$(BACNET_CORE)/credential_authentication_factor.c \
+	$(BACNET_UTIL)/BACnetObject.c \
+	$(BACNET_UTIL)/btaDebug.c \
+	$(BACNET_UTIL)/ese.c \
+	$(BACNET_UTIL)/misc.c \
+	$(BACNET_UTIL)/linklist.c \
+	$(BACNET_UTIL)/llist.c \
+	$(BACNET_UTIL)/../util/bitsDebug.c \
+	$(BACNET_UTIL)/../util/BACnetToString.c \
+	$(BACNET_UTIL)/../util/commandLine.c \
+	$(BACNET_UTIL)/../util/emm.c \
+	$(BACNET_UTIL)/../util/menuDiags.c \
+	$(BACNET_UTIL)/../util/bacnetProc.c \
+	$(BACNET_UTIL)/../logging/logDispatch.c \
+	$(BACNET_UTIL)/../logging/linuxConio.c \
+	$(BACNET_UTIL)/persist/sqlite/sqlitePersist.c \
+	$(BACNET_UTIL)/persist/sqlite/sqlite3.c \
 	$(BACNET_CORE)/version.c
 
 HANDLER_SRC = \
@@ -160,6 +187,7 @@ PORT_ETHERNET_SRC = \
 
 PORT_BIP_SRC = \
 	$(BACNET_PORT_DIR)/bip-init.c \
+	$(BACNET_PORT_DIR)/timer.c \
 	$(BACNET_CORE)/bvlc.c \
 	$(BACNET_CORE)/bip.c
 
@@ -203,17 +231,27 @@ SRCS = ${CORE_SRC} ${PORT_SRC} ${HANDLER_SRC}
 OBJS = ${SRCS:.c=.o}
 
 # use local includes, but other values from calling Makefile
-CFLAGS  = $(WARNINGS) $(DEBUGGING) $(OPTIMIZATION) $(STANDARDS) $(INCLUDES) $(DEFINES)
+CFLAGS  = $(STANDARDS) $(WARNINGS) $(DEBUGGING) $(OPTIMIZATION) $(INCLUDES) $(DEFINES)
 
 all: $(LIBRARY)
 
 lib: $(LIBRARY)
 
-$(LIBRARY): $(OBJS) Makefile
+$(LIBRARY): $(OBJS) Makefile $(BACNET_UTIL)/persist/sqlite/sqlite3.o
 	$(AR) rcs $@ $(OBJS)
 
 .c.o:
+	# echo libfile compile $*.c standards= $(STANDARDS) 
+	# echo libfile compile $*.c cflags= $(CFLAGS) 
 	${CC} -c ${CFLAGS} $*.c -o $@
+
+# sqlite3 is 'C', compile separately
+$(BACNET_UTIL)/persist/sqlite/sqlite3.o : $(BACNET_UTIL)/persist/sqlite/sqlite3.c
+	# echo attempting to build sqlite3.o, cflags = $(CFLAGS) $(DEBUGMAKE)
+	# gcc -c ${CFLAGS} $*.c -o $@
+	gcc -c $*.c -o $@
+	# echo  $(AR) rcs $(LIBRARY) $(BACNET_UTIL)/persist/sqlite/sqlite3.o $(DEBUGMAKE)
+	$(AR) rcs $(LIBRARY) $(BACNET_UTIL)/persist/sqlite/sqlite3.o
 
 depend:
 	rm -f .depend
@@ -221,5 +259,6 @@ depend:
 
 clean:
 	rm -rf core $(OBJS) $(LIBRARY)
+	rm -rf $(BACNET_UTIL)/persist/sqlite/sqlite3.o
 
 include: .depend

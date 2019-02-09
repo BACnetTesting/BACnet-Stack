@@ -79,7 +79,7 @@ static void MyErrorHandler(
 void MyAbortHandler(
     BACNET_ADDRESS * src,
     uint8_t invoke_id,
-    uint8_t abort_reason,
+	BACNET_ABORT_REASON abort_reason,
     bool server)
 {
     /* FIXME: verify src and invoke id */
@@ -169,7 +169,7 @@ int main(
     }
     /* decode the command line parameters */
     Target_Device_Object_Instance = strtol(argv[1], NULL, 0);
-    Reinitialize_State = strtol(argv[2], NULL, 0);
+    Reinitialize_State = (BACNET_REINITIALIZED_STATE) strtol(argv[2], NULL, 0);
     /* optional password */
     if (argc > 3)
         Reinitialize_Password = argv[3];

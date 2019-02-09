@@ -21,15 +21,31 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef TXBUF_H
 #define TXBUF_H
 
-//#include <stddef.h>
+// #include <stddef.h>
 //#include <stdint.h>
-//#include "config.h"
+// #include "config.h"
 //#include "datalink.h"
+// #include "bacdef.h"
 //
-//extern uint8_t Handler_Transmit_Buffer[MAX_PDU];
+// extern uint8_t Handler_Transmit_Buffer[MAX_PDU];
 
 #endif

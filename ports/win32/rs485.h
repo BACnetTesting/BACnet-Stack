@@ -30,8 +30,22 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+ *
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
 
 #ifndef RS485_H
 #define RS485_H
@@ -40,41 +54,36 @@
 #include "mstp.h"
 #include "net.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+void RS485_Set_Interface(
+    char *ifname);
 
-    void RS485_Set_Interface(
-        char *ifname);
-    const char *RS485_Interface(
-        void);
+const char *RS485_Interface(
+    void);
 
-    void RS485_Initialize(
-        void);
+void RS485_Initialize(
+    void);
 
-    void RS485_Send_Frame(
-        volatile struct mstp_port_struct_t *mstp_port,  /* port specific data */
-        uint8_t * buffer,       /* frame to send (up to 501 bytes of data) */
-        uint16_t nbytes);       /* number of bytes of data (up to 501) */
+void RS485_Send_Frame(
+    volatile struct mstp_port_struct_t *mstp_port,  /* port specific data */
+    uint8_t * buffer,       /* frame to send (up to 501 bytes of data) */
+    uint16_t nbytes);       /* number of bytes of data (up to 501) */
 
-    void RS485_Check_UART_Data(
-        volatile struct mstp_port_struct_t *mstp_port); /* port specific data */
+void RS485_Check_UART_Data(
+    volatile struct mstp_port_struct_t *mstp_port); /* port specific data */
 
-    uint32_t RS485_Get_Baud_Rate(
-        void);
-    bool RS485_Set_Baud_Rate(
-        uint32_t baud);
+uint32_t RS485_Get_Baud_Rate(
+    void);
 
-    void RS485_Print_Error(
-        void);
+bool RS485_Set_Baud_Rate(
+    uint32_t baud);
 
-    bool RS485_Interface_Valid(
-        unsigned port_number);
-    void RS485_Print_Ports(
-        void);
+void RS485_Print_Error(
+    void);
 
+bool RS485_Interface_Valid(
+    unsigned port_number);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+void RS485_Print_Ports(
+    void);
+
 #endif

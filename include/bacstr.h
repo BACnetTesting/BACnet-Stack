@@ -20,15 +20,41 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*********************************************************************/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef BACSTR_H
 #define BACSTR_H
 
 #include <stdint.h>
+#ifdef __GNUC__
 #include <stdbool.h>
-#include <stddef.h>
+#endif
+
+//#include <stddef.h>
 #include "bacdef.h"
 #include "config.h"
+#include "bacenum.h"
+
+// in bacdef.h (where Karg originally had it)
+//typedef struct BACnet_Object_Id {
+//        BACNET_OBJECT_TYPE type;
+//        uint32_t instance;
+//    } BACNET_OBJECT_ID;
 
 /* bit strings
    They could be as large as 256/8=32 octets */
@@ -54,35 +80,44 @@ typedef struct BACnet_Octet_String {
 
 void bitstring_init(
     BACNET_BIT_STRING * bit_string);
+
 void bitstring_set_bit(
     BACNET_BIT_STRING * bit_string,
-    uint8_t bit_number,
-    bool value);
+    const uint8_t bit_number,
+    const bool value);
+
 bool bitstring_bit(
     BACNET_BIT_STRING * bit_string,
     uint8_t bit_number);
 uint8_t bitstring_bits_used(
     BACNET_BIT_STRING * bit_string);
+
 /* returns the number of bytes that a bit string is using */
 uint8_t bitstring_bytes_used(
     BACNET_BIT_STRING * bit_string);
+
 uint8_t bitstring_bits_capacity(
     BACNET_BIT_STRING * bit_string);
+
 /* used for encoding and decoding from the APDU */
 uint8_t bitstring_octet(
     BACNET_BIT_STRING * bit_string,
     uint8_t octet_index);
+
 bool bitstring_set_octet(
     BACNET_BIT_STRING * bit_string,
     uint8_t index,
     uint8_t octet);
+
 bool bitstring_set_bits_used(
     BACNET_BIT_STRING * bit_string,
     uint8_t bytes_used,
     uint8_t unused_bits);
+
 bool bitstring_copy(
     BACNET_BIT_STRING * dest,
     BACNET_BIT_STRING * src);
+
 bool bitstring_same(
     BACNET_BIT_STRING * bitstring1,
     BACNET_BIT_STRING * bitstring2);
@@ -98,12 +133,18 @@ bool characterstring_init(
     const char *value,
     size_t length);
 /* used for ANSI C-Strings */
+
 bool characterstring_init_ansi(
     BACNET_CHARACTER_STRING * char_string,
     const char *value);
+
+BACNET_CHARACTER_STRING *characterstring_create_ansi(
+    const char *value);
+
 bool characterstring_copy(
     BACNET_CHARACTER_STRING * dest,
-    BACNET_CHARACTER_STRING * src);
+    const BACNET_CHARACTER_STRING * src);
+
 bool characterstring_ansi_copy(
     char *dest,
     size_t dest_max_len,
@@ -116,10 +157,10 @@ bool characterstring_ansi_same(
     BACNET_CHARACTER_STRING * dest,
     const char *src);
 /* returns false if the string exceeds capacity */
-    bool characterstring_append(
-        BACNET_CHARACTER_STRING * char_string,
-        const char *value,
-        size_t length);
+bool characterstring_append(
+    BACNET_CHARACTER_STRING * char_string,
+    const char *value,
+    size_t length);
 /* This function sets a new length without changing the value.
    If length exceeds capacity, no modification happens and
    function returns false.  */
@@ -127,69 +168,76 @@ bool characterstring_truncate(
     BACNET_CHARACTER_STRING * char_string,
     size_t length);
 bool characterstring_set_encoding(
-    BACNET_CHARACTER_STRING * char_string,
+    BACNET_CHARACTER_STRING *char_string,
     BACNET_CHARACTER_STRING_ENCODING encoding);
+
 /* Returns the value */
 char *characterstring_value(
-    BACNET_CHARACTER_STRING * char_string);
+    const BACNET_CHARACTER_STRING *char_string);
+
 /* returns the length */
 size_t characterstring_length(
-    BACNET_CHARACTER_STRING * char_string);
-BACNET_CHARACTER_STRING_ENCODING characterstring_encoding(
-    BACNET_CHARACTER_STRING * char_string);
-size_t characterstring_capacity(
-        BACNET_CHARACTER_STRING * char_string);
-    bool characterstring_printable(
-        BACNET_CHARACTER_STRING * char_string);
-    bool characterstring_valid(
-        BACNET_CHARACTER_STRING * char_string);
-    bool utf8_isvalid(
-        const char *str,
-        size_t length);
+    const BACNET_CHARACTER_STRING *char_string);
 
-    /* returns false if the string exceeds capacity
-       initialize by using length=0 */
-    bool octetstring_init(
-        BACNET_OCTET_STRING * octet_string,
-        uint8_t * value,
-        size_t length);
-#ifdef PRINT_ENABLED
-    /* converts an null terminated ASCII Hex string to an octet string.
-       returns true if successfully converted and fits; false if too long */
-    bool octetstring_init_ascii_hex(
-        BACNET_OCTET_STRING * octet_string,
-        const char *ascii_hex);
+BACNET_CHARACTER_STRING_ENCODING characterstring_encoding(
+    const BACNET_CHARACTER_STRING * char_string);
+
+size_t characterstring_capacity(
+    BACNET_CHARACTER_STRING * char_string);
+bool characterstring_printable(
+    BACNET_CHARACTER_STRING * char_string);
+bool characterstring_valid(
+    BACNET_CHARACTER_STRING * char_string);
+bool utf8_isvalid(
+    const char *str,
+    size_t length);
+
+/* returns false if the string exceeds capacity
+   initialize by using length=0 */
+bool octetstring_init(
+    BACNET_OCTET_STRING * octet_string,
+    uint8_t * value,
+    size_t length);
+#if PRINT_ENABLED
+/* converts an null terminated ASCII Hex string to an octet string.
+   returns true if successfully converted and fits; false if too long */
+bool octetstring_init_ascii_hex(
+    BACNET_OCTET_STRING * octet_string,
+    const char *ascii_hex);
 #endif
-    bool octetstring_copy(
-        BACNET_OCTET_STRING * dest,
-        BACNET_OCTET_STRING * src);
-    size_t octetstring_copy_value(
-        uint8_t * dest,
-        size_t length,
-        BACNET_OCTET_STRING * src);
+
+bool octetstring_copy(
+    BACNET_OCTET_STRING * dest,
+    BACNET_OCTET_STRING * src);
+
+size_t octetstring_copy_value(
+    uint8_t * dest,
+    size_t length,
+    BACNET_OCTET_STRING * src);
 /* returns false if the string exceeds capacity */
-    bool octetstring_append(
-        BACNET_OCTET_STRING * octet_string,
-        uint8_t * value,
-        size_t length);
+bool octetstring_append(
+    BACNET_OCTET_STRING * octet_string,
+    uint8_t * value,
+    size_t length);
 /* This function sets a new length without changing the value.
    If length exceeds capacity, no modification happens and
    function returns false.  */
-    bool octetstring_truncate(
-        BACNET_OCTET_STRING * octet_string,
-        size_t length);
+bool octetstring_truncate(
+    BACNET_OCTET_STRING * octet_string,
+    size_t length);
 /* Returns the value */
-    uint8_t *octetstring_value(
-        BACNET_OCTET_STRING * octet_string);
+uint8_t *octetstring_value(
+    BACNET_OCTET_STRING * octet_string);
 /* Returns the length.*/
-    size_t octetstring_length(
-        BACNET_OCTET_STRING * octet_string);
-    size_t octetstring_capacity(
-        BACNET_OCTET_STRING * octet_string);
-    /* returns true if the same length and contents */
-    bool octetstring_value_same(
-        BACNET_OCTET_STRING * octet_string1,
-        BACNET_OCTET_STRING * octet_string2);
+
+size_t octetstring_length(
+    BACNET_OCTET_STRING * octet_string);
+size_t octetstring_capacity(
+    BACNET_OCTET_STRING * octet_string);
+/* returns true if the same length and contents */
+bool octetstring_value_same(
+    BACNET_OCTET_STRING * octet_string1,
+    BACNET_OCTET_STRING * octet_string2);
 
 #ifdef TEST
 #include "ctest.h"

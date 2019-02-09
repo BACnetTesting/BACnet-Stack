@@ -21,32 +21,50 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
-#include <stddef.h>
-#include <stdint.h>
-#include <errno.h>
-#include <string.h>
-#include "config.h"
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
+//#include <stddef.h>
+//#include <stdint.h>
+//#include <errno.h>
+//#include <string.h>
+//#include "config.h"
+//#include "txbuf.h"
+//#include "bacdef.h"
+//#include "bacdcode.h"
+//#include "address.h"
+//#include "tsm.h"
+//#include "dcc.h"
+//#include "npdu.h"
+//#include "apdu.h"
+//#include "device.h"
+//#include "datalink.h"
+//#include "awf.h"
+///* some demo stuff needed */
+//#include "handlers.h"
 #include "txbuf.h"
-#include "bacdef.h"
-#include "bacdcode.h"
-#include "address.h"
-#include "tsm.h"
-#include "dcc.h"
-#include "npdu.h"
-#include "apdu.h"
-#include "device.h"
-#include "datalink.h"
-#include "awf.h"
-/* some demo stuff needed */
-#include "handlers.h"
-#include "txbuf.h"
-#include "client.h"
+//#include "client.h"
 
 /** @file s_awfs.c  Send part of an Atomic Write File Stream request. */
 
+#if 0
+
 uint8_t Send_Atomic_Write_File_Stream(
     BACNET_ROUTE *dest,
+    DEVICE_OBJECT_DATA *sendingDev,
     uint32_t device_id,
     uint32_t file_instance,
     int fileStartPosition,
@@ -100,15 +118,14 @@ uint8_t Send_Atomic_Write_File_Stream(
                 tsm_set_confirmed_unsegmented_transaction(invoke_id, &dest,
                     &npci_data, &Handler_Transmit_Buffer[0],
                     (uint16_t) pdu_len);
-                bytes_sent =
-                    datalink_send_pdu(&dest, &npci_data,
-                    dlcb );
-#if PRINT_ENABLED
-                if (bytes_sent <= 0)
-                    fprintf(stderr,
-                        "Failed to Send AtomicWriteFile Request (%s)!\n",
-                        strerror(errno));
-#endif
+
+                //bytes_sent =
+                //    datalink_send_pdu(&dest, &npci_data,
+                //    &Handler_Transmit_Buffer[0], pdu_len);
+
+                dest->portParams->SendPdu(dest->portParams, sendingDev, &dest->bacnetPath->localMac, &npci_data, &Handler_Transmit_Buffer[0],
+                    pdu_len);
+
             } else {
                 tsm_free_invoke_id(invoke_id);
                 invoke_id = 0;
@@ -132,3 +149,6 @@ uint8_t Send_Atomic_Write_File_Stream(
 
     return invoke_id;
 }
+
+#endif
+

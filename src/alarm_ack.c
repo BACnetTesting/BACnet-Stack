@@ -29,8 +29,26 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
+#include "config.h"
+
+#if (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1) || (INTRINSIC_REPORTING_B == 1)
 
 #include "alarm_ack.h"
 
@@ -79,33 +97,33 @@ int alarm_ack_encode_service_request(
     if (apdu) {
         len =
             encode_context_unsigned(&apdu[apdu_len], 0,
-            data->ackProcessIdentifier);
+                                    data->ackProcessIdentifier);
         apdu_len += len;
 
         len =
             encode_context_object_id(&apdu[apdu_len], 1,
-            data->eventObjectIdentifier.type,
-            data->eventObjectIdentifier.instance);
+                                     data->eventObjectIdentifier.type,
+                                     data->eventObjectIdentifier.instance);
         apdu_len += len;
 
         len =
             encode_context_enumerated(&apdu[apdu_len], 2,
-            data->eventStateAcked);
+                                      data->eventStateAcked);
         apdu_len += len;
 
         len =
             bacapp_encode_context_timestamp(&apdu[apdu_len], 3,
-            &data->eventTimeStamp);
+                                            &data->eventTimeStamp);
         apdu_len += len;
 
         len =
             encode_context_character_string(&apdu[apdu_len], 4,
-            &data->ackSource);
+                                            &data->ackSource);
         apdu_len += len;
 
         len =
             bacapp_encode_context_timestamp(&apdu[apdu_len], 5,
-            &data->ackTimeStamp);
+                                            &data->ackTimeStamp);
         apdu_len += len;
     }
 
@@ -131,44 +149,44 @@ int alarm_ack_decode_service_request(
     apdu_len = apdu_len;
 
     if (-1 == (section_len =
-            decode_context_unsigned(&apdu[len], 0,
-                &data->ackProcessIdentifier))) {
+                   decode_context_unsigned(&apdu[len], 0,
+                                           &data->ackProcessIdentifier))) {
         return -1;
     }
     len += section_len;
 
     if (-1 == (section_len =
-            decode_context_object_id(&apdu[len], 1,
-                &data->eventObjectIdentifier.type,
-                &data->eventObjectIdentifier.instance))) {
+                   decode_context_object_id(&apdu[len], 1,
+                                            &data->eventObjectIdentifier.type,
+                                            &data->eventObjectIdentifier.instance))) {
         return -1;
     }
     len += section_len;
 
     if (-1 == (section_len =
-            decode_context_enumerated(&apdu[len], 2, &enumValue))) {
+                   decode_context_enumerated(&apdu[len], 2, &enumValue))) {
         return -1;
     }
     data->eventStateAcked = (BACNET_EVENT_STATE) enumValue;
     len += section_len;
 
     if (-1 == (section_len =
-            bacapp_decode_context_timestamp(&apdu[len], 3,
-                &data->eventTimeStamp))) {
+                   bacapp_decode_context_timestamp(&apdu[len], 3,
+                           &data->eventTimeStamp))) {
         return -1;
     }
     len += section_len;
 
     if (-1 == (section_len =
-            decode_context_character_string(&apdu[len], 4,
-                &data->ackSource))) {
+                   decode_context_character_string(&apdu[len], 4,
+                           &data->ackSource))) {
         return -1;
     }
     len += section_len;
 
     if (-1 == (section_len =
-            bacapp_decode_context_timestamp(&apdu[len], 5,
-                &data->ackTimeStamp))) {
+                   bacapp_decode_context_timestamp(&apdu[len], 5,
+                           &data->ackTimeStamp))) {
         return -1;
     }
     len += section_len;
@@ -279,3 +297,5 @@ int main(
 
 #endif /* TEST_ALARM_ACK */
 #endif /* TEST */
+
+#endif

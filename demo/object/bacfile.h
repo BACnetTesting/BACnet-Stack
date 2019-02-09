@@ -29,8 +29,23 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef BACFILE_H
 #define BACFILE_H
 
@@ -44,45 +59,63 @@
 #include "rp.h"
 #include "wp.h"
 
+typedef struct
+{
+    uint32_t instance;
+    bool archive;
+    char *filename;
+} BACNET_FILE_LISTING;
 
-    void BACfile_Property_Lists(
-        const int **pRequired,
-        const int **pOptional,
-        const int **pProprietary);
-    bool bacfile_object_name(
-        uint32_t object_instance,
-        BACNET_CHARACTER_STRING * object_name);
-    bool bacfile_valid_instance(
-        uint32_t object_instance);
-    uint32_t bacfile_count(
-        void);
-    uint32_t bacfile_index_to_instance(
-        unsigned find_index);
-    unsigned bacfile_instance_to_index(
-        uint32_t instance);
-    uint32_t bacfile_instance(
-        char *filename);
-    /* this is one way to match up the invoke ID with */
-    /* the file ID from the AtomicReadFile request. */
-    /* Another way would be to store the */
-    /* invokeID and file instance in a list or table */
-    /* when the request was sent */
-    uint32_t bacfile_instance_from_tsm(
-        uint8_t invokeID);
+
+void BACfile_Property_Lists(
+    const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary);
+
+bool bacfile_object_name(
+    uint32_t object_instance,
+    BACNET_CHARACTER_STRING * object_name);
+
+bool bacfile_valid_instance(
+    uint32_t object_instance);
+
+uint32_t bacfile_count(
+    void);
+
+uint32_t bacfile_index_to_instance(
+    unsigned find_index);
+
+unsigned bacfile_instance_to_index(
+    uint32_t instance);
+
+uint32_t bacfile_instance(
+    char *filename);
+/* this is one way to match up the invoke ID with */
+/* the file ID from the AtomicReadFile request. */
+/* Another way would be to store the */
+/* invokeID and file instance in a list or table */
+/* when the request was sent */
+uint32_t bacfile_instance_from_tsm(
+    uint8_t invokeID);
 
 /* handler ACK helper */
 bool bacfile_read_stream_data(
     BACNET_ATOMIC_READ_FILE_DATA * data);
+
 bool bacfile_read_ack_stream_data(
     uint32_t instance,
     BACNET_ATOMIC_READ_FILE_DATA * data);
+
 bool bacfile_write_stream_data(
     BACNET_ATOMIC_WRITE_FILE_DATA * data);
+
 bool bacfile_read_record_data(
     BACNET_ATOMIC_READ_FILE_DATA * data);
+
 bool bacfile_read_ack_record_data(
     uint32_t instance,
     BACNET_ATOMIC_READ_FILE_DATA * data);
+
 bool bacfile_write_record_data(
     BACNET_ATOMIC_WRITE_FILE_DATA * data);
 

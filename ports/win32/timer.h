@@ -20,7 +20,23 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*********************************************************************/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef TIMER_H
 #define TIMER_H
 
@@ -30,18 +46,8 @@
 #define WIN32_LEAN_AND_MEAN
 #define STRICT 1
 #include <windows.h>
-#if defined(__BORLANDC__)
-#include <winsock2.h>
-#else
-#if !defined(_MSC_VER)
-#include <sys/time.h>
-#endif
-#endif
+
 #include <sys/timeb.h>
-#if defined(__BORLANDC__)
-#define _timeb timeb
-#define _ftime(param) ftime(param)
-#endif
 
 /* Timer Module */
 #ifndef MAX_MILLISECOND_TIMERS
@@ -55,20 +61,26 @@ struct timeval *tp,
 
 void timer_init(
     void);
+
 uint32_t timer_milliseconds(
     unsigned index);
+
 bool timer_elapsed_milliseconds(
     unsigned index,
     uint32_t value);
+
 bool timer_elapsed_seconds(
     unsigned index,
     uint32_t value);
+
 bool timer_elapsed_minutes(
     unsigned index,
     uint32_t seconds);
+
 uint32_t timer_milliseconds_set(
     unsigned index,
     uint32_t value);
+
 uint32_t timer_reset(
     unsigned index);
 

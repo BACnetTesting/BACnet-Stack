@@ -21,26 +21,46 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
+//#include <stddef.h>
+//#include <stdint.h>
+//#include <stdio.h>
+//#include <string.h>
+//#include <errno.h>
 #include "config.h"
 #include "txbuf.h"
-#include "bacdef.h"
-#include "bacdcode.h"
+//#include "bacdef.h"
+//#include "bacdcode.h"
 #include "bacerror.h"
-#include "apdu.h"
-#include "npdu.h"
+//#include "apdu.h"
+//#include "npdu.h"
 #include "abort.h"
-#include "event.h"
-#include "getevent.h"
+//#include "event.h"
+//#include "getevent.h"
 #include "handlers.h"
+//#include "debug.h"
+//#include "bitsDebug.h"
 
 /** @file h_getevent.c  Handles Get Event Information request. */
 
+#if (BACNET_USE_EVENT_HANDLING == 1)
+
+// todo2 - this is a HUGE array to cycle through each time. Reconsider the approach soon.
 static get_event_info_function Get_Event_Info[MAX_BACNET_OBJECT_TYPE];
 
 
@@ -52,19 +72,19 @@ void ge_ack_print_data(
 {
     BACNET_GET_EVENT_INFORMATION_DATA *act_data = data;
     const char* state_strs[] = {"NO", "FA", "ON", "HL", "LL"};
-	printf("DeviceID\tType\tInstance\teventState\n");
-	    printf("--------------- ------- --------------- ---------------\n");
-	    int count = 0;
-	    while (act_data) {
-        	    printf("%u\t\t%u\t%u\t\t%s\n",
-                	   device_id,
-	                   act_data->objectIdentifier.type,
-        	           act_data->objectIdentifier.instance,
-	                   state_strs[data->eventState]
-        	           );
-	            act_data = act_data->next;
-            count++;
-        }
+    printf("DeviceID\tType\tInstance\teventState\n");
+    printf("--------------- ------- --------------- ---------------\n");
+    unsigned count = 0;
+    while (act_data) {
+        printf("%u\t\t%u\t%u\t\t%s\n",
+               device_id,
+               act_data->objectIdentifier.type,
+               act_data->objectIdentifier.instance,
+               state_strs[data->eventState]
+              );
+        act_data = act_data->next;
+        count++;
+    }
     printf("\n%u\t Total\n",count);
 }
 
@@ -89,10 +109,8 @@ void handler_get_event_information(
     BACNET_NPCI_DATA npci_data;
     bool error = false;
     bool more_events = false;
-    int bytes_sent = 0;
     BACNET_ERROR_CLASS error_class = ERROR_CLASS_OBJECT;
     BACNET_ERROR_CODE error_code = ERROR_CODE_UNKNOWN_OBJECT;
-    // BACNET_PATH my_address;
     BACNET_OBJECT_ID object_id;
     unsigned i = 0, j = 0;      /* counter */
     BACNET_GET_EVENT_INFORMATION_DATA getevent_data;
@@ -105,7 +123,6 @@ void handler_get_event_information(
     object_id.type = MAX_BACNET_OBJECT_TYPE;
 
     /* encode the NPDU portion of the packet */
-    // datalink_get_my_address(&my_address);
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
         npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &rxDetails->bacnetPath.glAdr, NULL, // &my_address,
@@ -116,10 +133,8 @@ void handler_get_event_information(
             abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
                               service_data->invoke_id, ABORT_REASON_SEGMENTATION_NOT_SUPPORTED,
                               true);
-#if PRINT_ENABLED
-        fprintf(stderr,
-                "GetEventInformation: " "Segmented message. Sending Abort!\n");
-#endif
+        dbTraffic(DB_UNEXPECTED_ERROR,
+            "GetEventInformation: " "Segmented message. Sending Abort!\n");
         goto GET_EVENT_ABORT;
     }
 
@@ -131,10 +146,8 @@ void handler_get_event_information(
         len =
             abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
                               service_data->invoke_id, ABORT_REASON_OTHER, true);
-#if PRINT_ENABLED
-        fprintf(stderr,
-                "GetEventInformation: Bad Encoding.  Sending Abort!\n");
-#endif
+        dbTraffic(DB_UNEXPECTED_ERROR,
+            "GetEventInformation: Bad Encoding.  Sending Abort!\n");
         goto GET_EVENT_ABORT;
     }
     len =
@@ -174,7 +187,7 @@ void handler_get_event_information(
                     }
                     apdu_len += len;
                     if ((apdu_len >= service_data->max_resp - 2)  ||
-                        (apdu_len >= MAX_LPDU_IP - 2)) {
+                        (apdu_len >= MAX_LPDU_IP - 2)) {    // todo use dlcb lengths
                         /* Device must be able to fit minimum
                            one event information.
                            Length of one event informations needs
@@ -204,9 +217,7 @@ void handler_get_event_information(
         error = true;
         goto GET_EVENT_ERROR;
     }
-#if PRINT_ENABLED
-    fprintf(stderr, "Got a GetEventInformation request: Sending Ack!\n");
-#endif
+    dbTraffic(DB_UNEXPECTED_ERROR, "Got a GetEventInformation request: Sending Ack!\n");
 GET_EVENT_ERROR:
     if (error) {
         pdu_len =
@@ -219,29 +230,21 @@ GET_EVENT_ERROR:
                 abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
                                   service_data->invoke_id,
                                   ABORT_REASON_SEGMENTATION_NOT_SUPPORTED, true);
-#if PRINT_ENABLED
-            fprintf(stderr,
+            dbTraffic(DB_UNEXPECTED_ERROR,
                 "GetEventInformation: " "Reply too big to fit into APDU!\n");
-#endif
-        } else {
+        }
+        else {
             len =
                 bacerror_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
                                      service_data->invoke_id, SERVICE_CONFIRMED_READ_PROPERTY,
                                      error_class, error_code);
-#if PRINT_ENABLED
-            fprintf(stderr, "GetEventInformation: Sending Error!\n");
-#endif
+            dbTraffic(DB_UNEXPECTED_ERROR, "GetEventInformation: Sending Error!\n");
         }
     }
 GET_EVENT_ABORT:
     pdu_len += len;
-        dlcb->optr = pdu_len;
-    bytes_sent =
-        datalink_send_pdu(src, &npci_data, dlcb );
-#if PRINT_ENABLED
-    if (bytes_sent <= 0)
-        fprintf(stderr, "Failed to send PDU (%s)!\n", strerror(errno));
-#endif
-
-    return;
+    dlcb->optr = pdu_len;
+    rxDetails->portParams->SendPdu(dlcb);
 }
+#endif // BACNET_USE_EVENT_HANDLING
+

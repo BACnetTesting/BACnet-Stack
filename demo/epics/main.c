@@ -21,7 +21,21 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
 /** @file epics/main.c  Command line tool to build a full VTS3 EPICS file,
  *                          including the heading information. */
@@ -126,10 +140,10 @@ static OS_Keylist Object_List;
 #define MAX_PROPS 128   /* Supersized so it always is big enough. */
 static uint32_t Property_List_Length = 0;
 static uint32_t Property_List_Index = 0;
-static int32_t Property_List[MAX_PROPS + 2];
+static BACNET_PROPERTY_ID Property_List[MAX_PROPS + 2];
 
 struct property_value_list_t {
-    int32_t property_id;
+	BACNET_PROPERTY_ID property_id;
     BACNET_APPLICATION_DATA_VALUE *value;
 };
 static struct property_value_list_t Property_Value_List[] = {
@@ -139,8 +153,9 @@ static struct property_value_list_t Property_Value_List[] = {
     {PROP_PROTOCOL_SERVICES_SUPPORTED, NULL},
     {PROP_PROTOCOL_OBJECT_TYPES_SUPPORTED, NULL},
     {PROP_DESCRIPTION, NULL},
-    {-1, NULL}
+    {MAX_BACNET_PROPERTY_ID, NULL}
 };
+
 
 static BACNET_APPLICATION_DATA_VALUE *object_property_value(
     int32_t property_id)
@@ -154,7 +169,7 @@ static BACNET_APPLICATION_DATA_VALUE *object_property_value(
             break;
         }
         index++;
-    } while (Property_Value_List[index].property_id != -1);
+    } while (Property_Value_List[index].property_id != MAX_BACNET_PROPERTY_ID );
 
     return value;
 }
@@ -204,7 +219,7 @@ static void MyErrorHandler(
 void MyAbortHandler(
     BACNET_ADDRESS * src,
     uint8_t invoke_id,
-    uint8_t abort_reason,
+    BACNET_ABORT_REASON abort_reason,
     bool server)
 {
     (void) server;
@@ -230,7 +245,7 @@ void MyAbortHandler(
 void MyRejectHandler(
     BACNET_ADDRESS * src,
     uint8_t invoke_id,
-    uint8_t reject_reason)
+    BACNET_REJECT_REASON reject_reason)
 {
     if (address_match(&Target_Address, src) &&
         (invoke_id == Request_Invoke_ID)) {
@@ -261,7 +276,7 @@ void MyReadPropertyAckHandler(
 
     if (address_match(&Target_Address, src) &&
         (service_data->invoke_id == Request_Invoke_ID)) {
-        rp_data = calloc(1, sizeof(BACNET_READ_ACCESS_DATA));
+        rp_data = (BACNET_READ_ACCESS_DATA *) calloc(1, sizeof(BACNET_READ_ACCESS_DATA));
         if (rp_data) {
             len =
                 rp_ack_fully_decode_service_request(service_request,
@@ -291,7 +306,7 @@ void MyReadPropertyMultipleAckHandler(
 
     if (address_match(&Target_Address, src) &&
         (service_data->invoke_id == Request_Invoke_ID)) {
-        rpm_data = calloc(1, sizeof(BACNET_READ_ACCESS_DATA));
+        rpm_data = (BACNET_READ_ACCESS_DATA *)  calloc(1, sizeof(BACNET_READ_ACCESS_DATA));
         if (rpm_data) {
             len =
                 rpm_ack_decode_service_request(service_request, service_len,
@@ -327,7 +342,7 @@ static void Init_Service_Handlers(
 
     /* we need to handle who-is
        to support dynamic device binding to us */
-    apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_WHO_IS, handler_who_is);
+    apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_WHO_IS, handler_who_is_unicast);
     /* handle i-am to support binding to other devices */
     apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_I_AM, handler_i_am_bind);
     /* set the handler for all the services we don't implement
@@ -441,7 +456,7 @@ void CheckIsWritableProperty(
 
 
 static const char *protocol_services_supported_text(
-    size_t bit_index)
+		BACNET_SERVICES_SUPPORTED bit_index)
 {
     bool is_confirmed = false;
     size_t text_index = 0;
@@ -511,7 +526,7 @@ bool PrettyPrintPropertyValue(
                         } else {
                             /* PROP_PROTOCOL_SERVICES_SUPPORTED */
                             fprintf(stream, " %s,",
-                                protocol_services_supported_text(j));
+                                protocol_services_supported_text((BACNET_SERVICES_SUPPORTED)j));
                         }
                     } else      /* not supported */
                         fprintf(stream, ",");
@@ -802,7 +817,7 @@ static void BuildPropRequest(
     BACNET_PROPERTY_REFERENCE *oldEntry = rpm_object->listOfProperties;
     for (i = 0; Property_Value_List[i].property_id != -1; i++) {
         if (propEntry == NULL) {
-            propEntry = calloc(1, sizeof(BACNET_PROPERTY_REFERENCE));
+            propEntry = (BACNET_PROPERTY_REFERENCE *) calloc(1, sizeof(BACNET_PROPERTY_REFERENCE));
             assert(propEntry);
             oldEntry->next = propEntry;
         }
@@ -860,10 +875,10 @@ static uint8_t Read_Properties(
             }
         }
         /* Just to be sure we terminate */
-        Property_List[i] = -1;
+		Property_List[i] = MAX_BACNET_PROPERTY_ID;
     }
-    if (Property_List[Property_List_Index] != -1) {
-        int prop = Property_List[Property_List_Index];
+    if (Property_List[Property_List_Index] != MAX_BACNET_PROPERTY_ID) {
+    	BACNET_PROPERTY_ID prop = Property_List[Property_List_Index];
         uint32_t array_index;
         IsLongArray = false;
         if (Using_Walked_List) {
@@ -890,8 +905,12 @@ static uint8_t Read_Properties(
             }
         }
         invoke_id =
-            Send_Read_Property_Request(device_instance, pMyObject->type,
-            pMyObject->instance, prop, array_index);
+            Send_Read_Property_Request(
+            		device_instance,
+            		pMyObject->type,
+            pMyObject->instance,
+			prop,
+			array_index);
 
     }
 
@@ -993,7 +1012,7 @@ EPICS_STATES ProcessRPMData(
             Property_List_Length++;
         }
         /* Now insert the -1 list terminator, but don't count it. */
-        Property_List[Property_List_Index] = -1;
+        Property_List[Property_List_Index] = MAX_BACNET_PROPERTY_ID;
         assert(Property_List_Length < MAX_PROPS);
         Property_List_Index = 0;        /* Will start at top of the list */
         nextState = GET_PROPERTY_REQUEST;
@@ -1001,14 +1020,14 @@ EPICS_STATES ProcessRPMData(
     return nextState;
 }
 
-static void print_usage(char *filename)
+static void print_usage(const char *filename)
 {
     printf("Usage: %s [-v] [-d] [-p sport] [-t target_mac [-n dnet]]"
             " device-instance\n", filename);
     printf("       [--version][--help]\n");
 }
 
-static void print_help(char *filename)
+static void print_help(const char *filename)
 {
     printf("Generates Full EPICS file, including Object and Property List\n");
     printf("device-instance:\n"
@@ -1038,7 +1057,7 @@ int CheckCommandLineArgs(
     int i;
     bool bFoundTarget = false;
     int argi = 0;
-    char *filename = NULL;
+    const char *filename ;
 
     filename = filename_remove_path(argv[0]);
     for (argi = 1; argi < argc; argi++) {
@@ -1208,7 +1227,7 @@ void PrintHeading(
     printf("-- AE-ACK-B\n");
     printf("-- AE-ACK-A\n");
     printf("-- DM-UTC-B\n");
-#ifdef BAC_ROUTING
+#if ( BAC_ROUTING == 1 )
     /* Next line only for the gateway (ie, if not addressing a subNet) */
     if (Target_Address.net == 0)
         printf("-- NM-RC-B\n");
@@ -1225,7 +1244,7 @@ void PrintHeading(
         printf("-- services reported by this device\n");
         for (i = 0; i < len; i++) {
             if (bitstring_bit(&value->type.Bit_String, (uint8_t) i))
-                printf(" %s\n", protocol_services_supported_text(i));
+                printf(" %s\n", protocol_services_supported_text( (BACNET_SERVICES_SUPPORTED) i));
         }
     } else {
         printf("-- use \'Initiate\' or \'Execute\' or both for services.\n");
@@ -1249,7 +1268,7 @@ void PrintHeading(
         printf("-- ReadRange                      Initiate Execute\n");
         printf("-- GetEventInformation            Initiate Execute\n");
         printf("-- SubscribeCOVProperty           Initiate Execute\n");
-#ifdef BAC_ROUTING
+#if ( BAC_ROUTING == 1 )
         if (Target_Address.net == 0) {
             printf
                 ("-- Note: The following Routing Services are Supported:\n");
@@ -1400,7 +1419,7 @@ void StartNextObject(
     Property_List_Index = Property_List_Length = 0;
     rpm_object->object_type = pNewObject->type;
     rpm_object->object_instance = pNewObject->instance;
-    rpm_property = calloc(1, sizeof(BACNET_PROPERTY_REFERENCE));
+    rpm_property = (BACNET_PROPERTY_REFERENCE *) calloc(1, sizeof(BACNET_PROPERTY_REFERENCE));
     rpm_object->listOfProperties = rpm_property;
     rpm_object->next = NULL;
     assert(rpm_property);
@@ -1439,6 +1458,7 @@ int main(
     KEY nextKey;
 
     CheckCommandLineArgs(argc, argv);   /* Won't return if there is an issue. */
+
     memset(&src, 0, sizeof(BACNET_ADDRESS));
 
     /* setup my info */
@@ -1462,11 +1482,13 @@ int main(
     current_seconds = time(NULL);
     timeout_seconds = (apdu_timeout() / 1000) * apdu_retries();
 
-#if defined(BACDL_BIP)
-    if (My_BIP_Port > 0) {
-        bip_set_port(htons(0xBAC0));    /* Set back to std BACnet/IP port */
-    }
-#endif
+// 2017.07.04 Why set this back to 0xBAC0 when above we used the -p switch to explicitly set it so some other?
+//#if defined(BACDL_BIP)
+//    if (My_BIP_Port > 0) {
+//        bip_set_port(htons(0xBAC0));    /* Set back to std BACnet/IP port */
+//    }
+//#endif
+
     /* try to bind with the target device */
     found =
         address_bind_request(Target_Device_Object_Instance, &max_apdu,
@@ -1534,7 +1556,7 @@ int main(
                     /* else, loop back and try again */
                     continue;
                 } else {
-                    rpm_object = calloc(1, sizeof(BACNET_READ_ACCESS_DATA));
+                    rpm_object = (BACNET_READ_ACCESS_DATA *) calloc(1, sizeof(BACNET_READ_ACCESS_DATA));
                     assert(rpm_object);
                     myState = GET_HEADING_INFO;
                 }
@@ -1759,7 +1781,7 @@ int main(
                     tsm_free_invoke_id(Request_Invoke_ID);
                     elapsed_seconds = 0;
                     Request_Invoke_ID = 0;
-                    myState = 3;        /* Let's try again, same Property */
+                    myState = PRINT_HEADING ;        /* Let's try again, same Property */
                 } else if (Error_Detected) {
                     /* Don't think we'll ever actually reach this point. */
                     elapsed_seconds = 0;
@@ -1787,7 +1809,7 @@ int main(
                     Object_List_Index++;
                     if (Object_List_Index < Keylist_Count(Object_List)) {
                         nextKey = Keylist_Key(Object_List, Object_List_Index);
-                        myObject.type = KEY_DECODE_TYPE(nextKey);
+                        myObject.type = (BACNET_OBJECT_TYPE) KEY_DECODE_TYPE(nextKey);
                         myObject.instance = KEY_DECODE_ID(nextKey);
                         /* Don't re-list the Device Object among its objects */
                         if (myObject.type == OBJECT_DEVICE)

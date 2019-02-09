@@ -48,17 +48,17 @@
 #include "dlenv.h"
 
 /* parsed command line parameters */
-static uint16_t Target_Error_Class;
-static uint16_t Target_Error_Code;
+static BACNET_ERROR_CLASS Target_Error_Class;
+static BACNET_ERROR_CODE Target_Error_Code;
 static uint8_t Target_Invoke_ID = 1;
-static uint16_t Target_Service = SERVICE_CONFIRMED_READ_PROPERTY;
+static BACNET_CONFIRMED_SERVICE Target_Service = SERVICE_CONFIRMED_READ_PROPERTY;
 /* flag for signalling errors */
 static bool Error_Detected = false;
 
 void MyAbortHandler(
     BACNET_ADDRESS * src,
     uint8_t invoke_id,
-    uint8_t abort_reason,
+    BACNET_ABORT_REASON abort_reason,
     bool server)
 {
     (void) src;
@@ -100,7 +100,7 @@ static void Init_Service_Handlers(
     apdu_set_reject_handler(MyRejectHandler);
 }
 
-static void print_usage(char *filename)
+static void print_usage(const char *filename)
 {
     printf("Usage: %s [error-class error-code service-number invoke-id]\n",
         filename);
@@ -108,7 +108,7 @@ static void print_usage(char *filename)
     printf("       [--version][--help]\n");
 }
 
-static void print_help(char *filename)
+static void print_help(const char *filename)
 {
     printf("Send BACnet Error message to the network.\n");
     printf("--mac A\n"
@@ -152,7 +152,7 @@ int main(
     bool specific_address = false;
     int argi = 0;
     unsigned int target_args = 0;
-    char *filename = NULL;
+    const char *filename = NULL;
 
     filename = filename_remove_path(argv[0]);
     for (argi = 1; argi < argc; argi++) {
@@ -190,13 +190,13 @@ int main(
             }
         } else {
             if (target_args == 0) {
-                Target_Error_Class = strtol(argv[argi], NULL, 0);
+                Target_Error_Class = (BACNET_ERROR_CLASS) strtol(argv[argi], NULL, 0);
                 target_args++;
             } else if (target_args == 1) {
-                Target_Error_Code = strtol(argv[argi], NULL, 0);
+                Target_Error_Code = (BACNET_ERROR_CODE) strtol(argv[argi], NULL, 0);
                 target_args++;
             } else if (target_args == 2) {
-                Target_Service = strtol(argv[argi], NULL, 0);
+                Target_Service = (BACNET_CONFIRMED_SERVICE) strtol(argv[argi], NULL, 0);
                 target_args++;
             } else if (target_args == 2) {
                 Target_Invoke_ID = strtol(argv[argi], NULL, 0);

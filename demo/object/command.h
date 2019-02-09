@@ -87,9 +87,9 @@
     } COMMAND_DESCR;
 
     void Command_Property_Lists(
-        const int **pRequired,
-        const int **pOptional,
-        const int **pProprietary);
+        const BACNET_PROPERTY_ID **pRequired,
+        const BACNET_PROPERTY_ID **pOptional,
+        const BACNET_PROPERTY_ID **pProprietary);
 
     bool Command_Valid_Instance(
         uint32_t object_instance);
@@ -151,8 +151,8 @@
         uint32_t instance,
         float value);
 
-    /* note: header of Intrinsic_Reporting function is required
-       even when INTRINSIC_REPORTING is not defined */
+    /* note: header of INTRINSIC_REPORTING_Bfunction is required
+       even when INTRINSIC_REPORTING_B is not defined */
     void Command_Intrinsic_Reporting(
         uint32_t object_instance);
 

@@ -21,48 +21,63 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
-#include <stddef.h>
-#include <stdint.h>
-#include <errno.h>
-#include <string.h>
-#include "config.h"
-#include "txbuf.h"
-#include "bacdef.h"
-#include "bacdcode.h"
-#include "address.h"
-#include "tsm.h"
-#include "npdu.h"
-#include "apdu.h"
-#include "device.h"
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
+//#include <stddef.h>
+//#include <stdint.h>
+//#include <errno.h>
+//#include <string.h>
+//#include "config.h"
+//#include "bacdef.h"
+//#include "bacdcode.h"
+//#include "address.h"
+//#include "tsm.h"
+//#include "npdu.h"
+//#include "apdu.h"
+//#include "device.h"
 #include "datalink.h"
 #include "dcc.h"
 #include "ptransfer.h"
-/* some demo stuff needed */
-#include "handlers.h"
-#include "txbuf.h"
-#include "client.h"
+///* some demo stuff needed */
+//#include "handlers.h"
+//#include "client.h"
+
+#if (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1)
 
 /** @file s_upt.c  Send an Unconfirmed Private Transfer request. */
 
 int Send_UnconfirmedPrivateTransfer(
-    BACNET_ADDRESS * dest,
+    BACNET_ROUTE *dest,
     BACNET_PRIVATE_TRANSFER_DATA * private_data)
 {
     int len = 0;
     int pdu_len = 0;
     int bytes_sent = 0;
     BACNET_NPCI_DATA npci_data;
-    BACNET_ADDRESS my_address;
+    //BACNET_PATH my_address;
 
     if (!dcc_communication_enabled())
         return bytes_sent;
 
-    datalink_get_my_address(&my_address);
+    //datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
-        npdu_encode_pdu(&Handler_Transmit_Buffer[0], dest, &my_address,
+        npdu_encode_pdu(&Handler_Transmit_Buffer[0], dest, NULL,
         &npci_data);
 
     /* encode the APDU portion of the packet */
@@ -70,16 +85,11 @@ int Send_UnconfirmedPrivateTransfer(
         uptransfer_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
         private_data);
     pdu_len += len;
-    bytes_sent =
-        datalink_send_pdu(dest, &npci_data, dlcb );
-        
-    if (bytes_sent <= 0) {
-#if PRINT_ENABLED
-        fprintf(stderr,
-            "Failed to Send UnconfirmedPrivateTransfer Request (%s)!\n",
-            strerror(errno));
-#endif
-    }
-
-    return bytes_sent;
+    //bytes_sent =
+    //    datalink_send _pdu(portParams, dest, &npci_data, &Handler_Transmit_Buffer[0],
+    //    pdu_len);
+    dlcb->optr = pdu_len ;
+    dest->portParams->SendPdu(dest->portParams, destDev, &dest->bacnetPath->localMac, &npdu_data, &Handler_Transmit_Buffer[0],
 }
+
+#endif

@@ -20,7 +20,23 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*********************************************************************/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef INDTEXT_H
 #define INDTEXT_H
 
@@ -29,7 +45,7 @@
 #include <string.h>
 
 /* index and text pairs */
-typedef const struct {
+typedef const struct _INDTEXT_DATA {
     const unsigned index;     /* index number that matches the text */
     const char *pString;        /* text pair - use NULL to end the list */
 } INDTEXT_DATA;
@@ -86,7 +102,7 @@ unsigned indtext_count(
     INDTEXT_DATA * data_list);
 
 
-#if !defined(__BORLANDC__) && !defined(_MSC_VER)
+#if !defined(__BORLANDC__) && ! defined ( _MSC_VER  ) && ! defined ( __GNUC__ )
 int stricmp(
     const char *s1,
     const char *s2);

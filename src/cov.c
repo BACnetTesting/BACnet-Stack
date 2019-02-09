@@ -29,9 +29,28 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stdint.h>
+#include "bip.h"
+
+#if ( BACNET_SVC_COV_B == 1 )
+
 #include "bacenum.h"
 #include "bacdcode.h"
 #include "bacdef.h"
@@ -151,9 +170,10 @@ int ccov_notify_encode_apdu(
         if (len < 0) {
             /* return the error */
             apdu_len = len;
-        } else {
-        apdu_len += len;
-    }
+        } 
+        else {
+            apdu_len += len;
+        }
     }
 
     return apdu_len;
@@ -176,9 +196,10 @@ int ucov_notify_encode_apdu(
         if (len < 0) {
             /* return the error */
             apdu_len = len;
-        } else {
-        apdu_len += len;
-    }
+        } 
+        else {
+            apdu_len += len;
+        }
     }
 
     return apdu_len;
@@ -191,15 +212,15 @@ int cov_notify_decode_service_request(
     unsigned apdu_len,
     BACNET_COV_DATA * data)
 {
-    int len = 0;        /* return value */
-    int app_len = 0;
-    uint8_t tag_number = 0;
-    uint32_t len_value = 0;
-    uint32_t decoded_value = 0; /* for decoding */
+    int len = 0 ;								/* return value */
+    int app_len ;
+    uint8_t tag_number ;
+    uint32_t len_value ;
+    uint32_t decoded_value ;					/* for decoding */
     BACNET_OBJECT_TYPE decoded_type ;			/* for decoding */
-    uint32_t property = 0;      /* for decoding */
-    BACNET_PROPERTY_VALUE *value = NULL;        /* value in list */
-	BACNET_APPLICATION_DATA_VALUE *app_data = NULL;
+    uint32_t property ;							/* for decoding */
+    BACNET_PROPERTY_VALUE *value ;				/* value in list */
+    BACNET_APPLICATION_DATA_VALUE *app_data ;
 
     if (apdu_len && data) {
         /* tag 0 - subscriberProcessIdentifier */
@@ -406,9 +427,9 @@ int cov_subscribe_decode_service_request(
     BACNET_SUBSCRIBE_COV_DATA * data)
 {
     int len = 0;        /* return value */
-    uint8_t tag_number = 0;
-    uint32_t len_value = 0;
-    uint32_t decoded_value = 0; /* for decoding */
+    uint8_t tag_number ;
+    uint32_t len_value ;
+    uint32_t decoded_value ; /* for decoding */
     BACNET_OBJECT_TYPE decoded_type ;  /* for decoding */
     
     if (apdu_len && data) {
@@ -558,11 +579,11 @@ int cov_subscribe_property_decode_service_request(
     BACNET_SUBSCRIBE_COV_DATA * data)
 {
     int len = 0;        /* return value */
-    uint8_t tag_number = 0;
-    uint32_t len_value = 0;
-    uint32_t decoded_value = 0; /* for decoding */
+    uint8_t tag_number;
+    uint32_t len_value;
+    uint32_t decoded_value ; /* for decoding */
     BACNET_OBJECT_TYPE decoded_type ;  /* for decoding */
-    uint32_t property = 0;      /* for decoding */
+    uint32_t property ;      /* for decoding */
 
     if (apdu_len && data) {
         /* tag 0 - subscriberProcessIdentifier */
@@ -1099,3 +1120,4 @@ int main(
 }
 #endif /* TEST_COV */
 #endif /* TEST */
+#endif // ( BACNET_SVC_COV_B == 1 )

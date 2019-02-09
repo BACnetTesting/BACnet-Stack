@@ -21,7 +21,22 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stddef.h>
 #include <stdint.h>
 #include <errno.h>
@@ -87,23 +102,28 @@ int abort_encode_pdu(
  *
  * @return Size of the message sent (bytes), or a negative value on error.
  */
-int Send_Abort_To_Network(
+#if 0
+void Send_Abort_To_Network(
     BACNET_ROUTE *dest,
+    DEVICE_OBJECT_DATA *sendingDev,
     uint8_t * buffer,
-    BACNET_ADDRESS *dest,
     uint8_t invoke_id,
     BACNET_ABORT_REASON reason,
     bool server)
 {
     int pdu_len = 0;
-    BACNET_ADDRESS src;
+    // BACNET_PATH src;
     int bytes_sent = 0;
     BACNET_NPCI_DATA npci_data;
 
-    datalink_get_my_address(&src);
-    pdu_len = abort_encode_pdu(buffer, dest, &src, &npci_data,
+    //datalink_get_my_address(&src);
+    pdu_len = abort_encode_pdu(buffer, &dest->bacnetPath->adr, NULL, &npci_data,
         invoke_id, reason, server);
-    bytes_sent = datalink_send_pdu(dest, &npci_data, dlcb);
 
-    return bytes_sent;
+    //bytes_sent = datalink_send _pdu(portParams, dest, &npci_data, &buffer[0], pdu_len);
+
+    dest->portParams->SendPdu(dlcb);
+
+    // return bytes_sent;
 }
+#endif

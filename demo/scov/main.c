@@ -20,7 +20,21 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
 /* command line tool that sends a BACnet service, and displays the reply */
 #include <stddef.h>
@@ -35,6 +49,9 @@
 
 #include "bacdef.h"
 #include "config.h"
+
+#if ( BACNET_SVC_COV_B == 1 )
+
 #include "bactext.h"
 #include "bacerror.h"
 #include "iam.h"
@@ -91,7 +108,7 @@ static void MyErrorHandler(
 void MyAbortHandler(
     BACNET_ADDRESS * src,
     uint8_t invoke_id,
-    uint8_t abort_reason,
+    BACNET_ABORT_REASON abort_reason,
     bool server)
 {
     (void) server;
@@ -116,6 +133,7 @@ void MyRejectHandler(
     }
 }
 
+#if ( BACNET_SVC_COV_B == 1 )
 void My_Unconfirmed_COV_Notification_Handler(
     uint8_t * service_request,
     uint16_t service_len,
@@ -132,6 +150,7 @@ void My_Confirmed_COV_Notification_Handler(
 {
     handler_ccov_notification(service_request, service_len, src, service_data);
 }
+#endif
 
 void MyWritePropertySimpleAckHandler(
     BACNET_ADDRESS * src,
@@ -160,11 +179,15 @@ static void Init_Service_Handlers(
     /* we must implement read property - it's required! */
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_READ_PROPERTY,
         handler_read_property);
+
+#if ( BACNET_SVC_COV_B == 1 )
     /* handle the data coming back from COV subscriptions */
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_COV_NOTIFICATION,
         My_Confirmed_COV_Notification_Handler);
     apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_COV_NOTIFICATION,
         My_Unconfirmed_COV_Notification_Handler);
+#endif
+
     /* handle the Simple ack coming back from SubscribeCOV */
     apdu_set_confirmed_simple_ack_handler(SERVICE_CONFIRMED_SUBSCRIBE_COV,
         MyWritePropertySimpleAckHandler);
@@ -187,11 +210,14 @@ void cleanup(
         free(cov_data_old);
     }
 }
+#endif
+
 
 int main(
     int argc,
     char *argv[])
 {
+#if ( BACNET_SVC_COV_B == 1 )
     BACNET_ADDRESS src = {
         0
     };  /* address where message came from */
@@ -204,7 +230,7 @@ int main(
     time_t timeout_seconds = 0;
     time_t delta_seconds = 0;
     bool found = false;
-    char *filename = NULL;
+    const char *filename ;
     bool print_usage_terse = false;
     bool print_usage_verbose = false;
     BACNET_SUBSCRIBE_COV_DATA *cov_data = NULL;
@@ -266,11 +292,11 @@ int main(
         return 1;
     }
     atexit(cleanup);
-    COV_Subscribe_Data = calloc(1, sizeof(BACNET_SUBSCRIBE_COV_DATA));
+    COV_Subscribe_Data = (BACNET_SUBSCRIBE_COV_DATA *) calloc(1, sizeof(BACNET_SUBSCRIBE_COV_DATA));
     cov_data = COV_Subscribe_Data;
     argi = 2;
     while (cov_data) {
-        cov_data->monitoredObjectIdentifier.type = strtol(argv[argi], NULL, 0);
+        cov_data->monitoredObjectIdentifier.type = (BACNET_OBJECT_TYPE) strtol(argv[argi], NULL, 0);
         if (cov_data->monitoredObjectIdentifier.type >= MAX_BACNET_OBJECT_TYPE) {
             fprintf(stderr, "object-type=%u - it must be less than %u\r\n",
                 cov_data->monitoredObjectIdentifier.type,
@@ -315,7 +341,7 @@ int main(
         if (arg_remaining < 5) {
             break;
         } else {
-            cov_data->next = calloc(1, sizeof(BACNET_SUBSCRIBE_COV_DATA));
+            cov_data->next = (struct BACnet_Subscribe_COV_Data *) calloc(1, sizeof(BACNET_SUBSCRIBE_COV_DATA));
             cov_data = cov_data->next;
         }
     }
@@ -420,5 +446,8 @@ int main(
     }
     if (Error_Detected)
         return 1;
+
+#endif // ( BACNET_SVC_COV_B == 1 )
     return 0;
 }
+

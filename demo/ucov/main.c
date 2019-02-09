@@ -76,7 +76,7 @@ int main(
     bool status = false;
     BACNET_COV_DATA cov_data;
     BACNET_PROPERTY_VALUE value_list;
-    uint8_t tag;
+    BACNET_APPLICATION_TAG tag;
 
     if (argc < 7) {
         /* note: priority 16 and 0 should produce the same end results... */
@@ -134,13 +134,13 @@ int main(
     /* decode the command line parameters */
     cov_data.subscriberProcessIdentifier = strtol(argv[1], NULL, 0);
     cov_data.initiatingDeviceIdentifier = strtol(argv[2], NULL, 0);
-    cov_data.monitoredObjectIdentifier.type = strtol(argv[3], NULL, 0);
+    cov_data.monitoredObjectIdentifier.type = (BACNET_OBJECT_TYPE) strtol(argv[3], NULL, 0);
     cov_data.monitoredObjectIdentifier.instance = strtol(argv[4], NULL, 0);
     cov_data.timeRemaining = strtol(argv[5], NULL, 0);
     cov_data.listOfValues = &value_list;
     value_list.next = NULL;
-    value_list.propertyIdentifier = strtol(argv[6], NULL, 0);
-    tag = strtol(argv[7], NULL, 0);
+    value_list.propertyIdentifier = (BACNET_PROPERTY_ID) strtol(argv[6], NULL, 0);
+    tag = (BACNET_APPLICATION_TAG) strtol(argv[7], NULL, 0);
     value_string = argv[8];
     /* optional priority */
     if (argc > 9)

@@ -21,17 +21,34 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
-#include <stddef.h>
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
+//#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include "config.h"
 #include "txbuf.h"
 #include "bacdef.h"
-#include "bacdcode.h"
+// #include "bacdcode.h"
 #include "iam.h"
 #include "address.h"
-#include "handlers.h"
+//#include "handlers.h"
+#include "debug.h"
+#include "device.h"
 
 /** @file h_iam.c  Handles I-Am requests. */
 
@@ -40,14 +57,15 @@
  * @ingroup DMDDB
  * @param service_request [in] The received message to be handled.
  * @param service_len [in] Length of the service_request message.
- * @param src [in] The BACNET_ADDRESS of the message's source.
+ * @param src [in] The BACNET_PATH of the message's source.
  */
+#if 0
 void handler_i_am_add(
     uint8_t * service_request,
     uint16_t service_len,
     BACNET_ROUTE * srcRoute )
 {
-    int len = 0;
+    int len ;
     uint32_t device_id = 0;
     uint16_t max_apdu = 0;
     int segmentation = 0;
@@ -57,24 +75,25 @@ void handler_i_am_add(
     len =
         iam_decode_service_request(service_request, &device_id, &max_apdu,
                                    &segmentation, &vendor_id);
+
 #if PRINT_ENABLED
     fprintf(stderr, "Received I-Am Request");
 #endif
     if (len != -1) {
 #if PRINT_ENABLED
-        fprintf(stderr, " from %lu, MAC = %d.%d.%d.%d.%d.%d\n",
-            (unsigned long) device_id, src->mac[0], src->mac[1], src->mac[2],
-            src->mac[3], src->mac[4], src->mac[5]);
+        //fprintf(stderr, " from %lu, MAC = %d.%d.%d.%d.%d.%d\n",
+        //        (unsigned long) device_id, src->mac[0], src->mac[1], src->mac[2],
+        //        src->mac[3], src->mac[4], src->mac[5]);
 #endif
-        address_add(device_id, max_apdu, src);
+        address_add(device_id, max_apdu, srcRoute->bacnetPath );
     } else {
 #if PRINT_ENABLED
         fprintf(stderr, ", but unable to decode it.\n");
 #endif
     }
 
-    return;
 }
+#endif
 
 /** Handler for I-Am responses (older binding-update-only version).
  * Will update the responder's binding, but if already in our cache.
@@ -82,10 +101,10 @@ void handler_i_am_add(
  *
  * @param service_request [in] The received message to be handled.
  * @param service_len [in] Length of the service_request message.
- * @param src [in] The BACNET_ADDRESS of the message's source.
+ * @param src [in] The BACNET_PATH of the message's source.
  */
 void handler_i_am_bind(
-    uint8_t * service_request,
+    uint8_t *service_request,
     uint16_t service_len,
     BACNET_ROUTE * srcRoute)
 {

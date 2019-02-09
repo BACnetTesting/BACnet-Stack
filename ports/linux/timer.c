@@ -26,7 +26,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <time.h>
-#include "timer.h"
+
+#include "timerCommon.h"
 
 /** @file linux/timer.c  Provides Linux-specific time and timer functions. */
 

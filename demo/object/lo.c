@@ -30,16 +30,19 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include "config.h"     /* the custom stuff */
+
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
+
 #include "bacdef.h"
 #include "bacdcode.h"
 #include "bacenum.h"
 #include "bacapp.h"
-#include "config.h"     /* the custom stuff */
 #include "rp.h"
 #include "wp.h"
 #include "lighting.h"
 #include "handlers.h"
-#include "proplist.h"
+// #include "proplist.h"
 /* me! */
 #include "lo.h"
 
@@ -75,7 +78,7 @@ struct lighting_output_object Lighting_Output[MAX_LIGHTING_OUTPUTS];
 
 /* These arrays are used by the ReadPropertyMultiple handler and
    property-list property (as of protocol-revision 14) */
-static const int Lighting_Output_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Lighting_Output_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -94,14 +97,14 @@ static const int Lighting_Output_Properties_Required[] = {
     PROP_PRIORITY_ARRAY,
     PROP_RELINQUISH_DEFAULT,
     PROP_LIGHTING_COMMAND_DEFAULT_PRIORITY,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
-static const int Lighting_Output_Properties_Optional[] = {
-    -1
+static const BACNET_PROPERTY_ID Lighting_Output_Properties_Optional[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Lighting_Output_Properties_Proprietary[] = {
-    -1
+static const BACNET_PROPERTY_ID Lighting_Output_Properties_Proprietary[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
 /**
@@ -116,9 +119,9 @@ static const int Lighting_Output_Properties_Proprietary[] = {
  * BACnet proprietary properties for this object.
  */
 void Lighting_Output_Property_Lists(
-    const int **pRequired,
-    const int **pOptional,
-    const int **pProprietary)
+    const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary)
 {
     if (pRequired)
         *pRequired = Lighting_Output_Properties_Required;
@@ -127,7 +130,6 @@ void Lighting_Output_Property_Lists(
     if (pProprietary)
         *pProprietary = Lighting_Output_Properties_Proprietary;
 
-    return;
 }
 
 /**
@@ -1078,7 +1080,7 @@ int Lighting_Output_Read_Property(
                         len = encode_application_null(&apdu[apdu_len]);
                     }
                     /* add it if we have room */
-                    if ((apdu_len + len) < MAX_LPDU_IP)
+                    if ((apdu_len + len) < MAX_APDU)
                         apdu_len += len;
                     else {
                         rpdata->error_code =
@@ -1402,7 +1404,6 @@ void Lighting_Output_Init(
         Lighting_Output[i].Lighting_Command_Default_Priority = 16;
     }
 
-    return;
 }
 
 #ifdef TEST
@@ -1427,7 +1428,7 @@ bool WPValidateArgType(
 void testLightingOutput(
     Test * pTest)
 {
-    uint8_t apdu[MAX_LPDU_IP] = { 0 };
+    uint8_t apdu[MAX_APDU] = { 0 };
     int len = 0;
     uint32_t len_value = 0;
     uint8_t tag_number = 0;
@@ -1450,7 +1451,6 @@ void testLightingOutput(
     ct_test(pTest, decoded_type == rpdata.object_type);
     ct_test(pTest, decoded_instance == rpdata.object_instance);
 
-    return;
 }
 
 #ifdef TEST_LIGHTING_OUTPUT
@@ -1474,3 +1474,5 @@ int main(
 }
 #endif /* TEST_LIGHTING_INPUT */
 #endif /* TEST */
+
+#endif // ( BACNET_PROTOCOL_REVISION >= 14 )

@@ -21,7 +21,21 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
 #ifndef NET_H
 #define NET_H
@@ -44,6 +58,7 @@
 #include	<unistd.h>
 #include	<sys/wait.h>
 #include	<sys/un.h>      /* for Unix domain sockets */
+#include	<net/if.h>
 
 #ifdef	HAVE_SYS_SELECT_H
 #include	<sys/select.h>  /* for convenience */
@@ -106,5 +121,7 @@
 extern int bip_get_local_netmask(
     struct in_addr *netmask);
 
+#define closesocket(a)	close(a)
 
+typedef struct sockaddr_in SOCKADDR_IN ;
 #endif

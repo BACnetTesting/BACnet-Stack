@@ -20,15 +20,31 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*********************************************************************/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef BACADDR_H
 #define BACADDR_H
 
-#include <stddef.h>
-#include <stdint.h>
+//#include <stddef.h>
+//#include <stdint.h>
 #include <stdbool.h>
 #include "bacdef.h"
-// #include "datalink.h"
+#include "datalink.h"
 
 //#if defined ( DEVICE_H )
 //#error This file must be included before device.h
@@ -50,8 +66,7 @@ void bacnet_mac_clear(
 void bacnet_mac_copy(
     BACNET_MAC_ADDRESS *target,
     const BACNET_MAC_ADDRESS *src);
-
-void bacnet_mac_check(
+bool bacnet_mac_check(
     const BACNET_MAC_ADDRESS * mac);
 
 void bacnet_address_copy(

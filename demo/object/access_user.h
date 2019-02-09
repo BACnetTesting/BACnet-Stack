@@ -42,9 +42,6 @@
 #define MAX_ACCESS_USER_CREDENTIALS_COUNT 4
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     typedef struct {
         uint32_t global_identifier;
@@ -56,9 +53,10 @@ extern "C" {
     } ACCESS_USER_DESCR;
 
     void Access_User_Property_Lists(
-        const int **pRequired,
-        const int **pOptional,
-        const int **pProprietary);
+        const BACNET_PROPERTY_ID **pRequired,
+        const BACNET_PROPERTY_ID **pOptional,
+        const BACNET_PROPERTY_ID **pProprietary);
+
     bool Access_User_Valid_Instance(
         uint32_t object_instance);
     unsigned Access_User_Count(
@@ -97,7 +95,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

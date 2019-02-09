@@ -20,16 +20,28 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*********************************************************************/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef BIP_H
 #define BIP_H
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stddef.h>
-#include "bacdef.h"
 #include "npdu.h"
-#include "net.h"
+// #include "net.h"
 
 /* specific defines for BACnet/IP over Ethernet */
 
@@ -51,106 +63,174 @@ device may ignore the encoded value in favor of the value of this property, if i
             https://en.wikipedia.org/wiki/User_Datagram_Protocol#Packet_structure
             https://notes.shichao.io/tcpv1/ch10/
     leaves LPDU for BACnet/IP of 1472. A packet any longer than this will result in fragmented packets, so we would like to draw the line here
-    However. BACnet specifies a possible MAX_LPDU_IP of 1497, and many people use it (fragmented), so we need to accomodate these reassembled
+    However. BACnet specifies a possible MAX_LPDU_IP of 1476, and many people use it (fragmented), so we need to accomodate these reassembled
     packets. Lets just shame those users who go to the limit, allow it, and for ourselves just set a lower threshold...
 */
 
-#define MAX_APDU_IP     1497                                    // Common practice
-#define MAX_NPCI        (22)                                    // (22) bytes, see http://www.bacnetwiki.com/wiki/index.php?title=NPCI
-#define MAX_HEADER_IP   (1 + 2 + 1 + 6)                         // (10) Max BVLL (forwarded) // BSA - look for users who make their packets overflow...
-#define MAX_LPDU_IP     MAX_APDU_IP+MAX_NPCI+MAX_HEADER_IP      // 1529, for those who are counting
+#define MAX_APDU_IP     1476
+
+// bacdef.h MAX_NPCI is (21) bytes, see http://www.bacnetwiki.com/wiki/index.php?title=NPCI
+
+#define MAX_HEADER_IP   (1 + 1 + 2)
+
+#define MAX_NPDU_IP     (MAX_NPCI+MAX_APDU_IP)
+
+#define MAX_LPDU_IP     (MAX_HEADER_IP+MAX_APDU_IP)
+
+// MAX_MPDU_IP contains the UDP header, which we have no control over. 
 
 /*
-    Note that the result of 1492-10-22 is  1460. But BACnet was defined using BACnet/Ethernet, 1500-3=1497
-    So we are stuck with that. If packets are build using 1497 bytes, they WILL fragment over IPv4 UDP, and 
+    See my calculations: https://docs.google.com/spreadsheets/d/1lHet3Dd_Qm6tAHOXjy0zL1QZMZQ-PiYPFlP9TjMofjg/edit#gid=0
+
+    Note that for BACnet/IP the LPDU calculation is 1500-20-8-4-21 = 1447.
+
+    But MAX_APDU here was defined using BACnet/Ethernet
+    So we are stuck with the original BACnet Committee of 1500-3-21 = 1476 for BACnet/IP.
+    
+    If packets are build using a max APDU 1476 bytes, they WILL fragment over IPv4 UDP, and 
     according to Maximum Transmission Unit (MTU) of the underlying layer, (looking at you IPv6 at 1280) 
     possibly sooner.
+
     https://en.wikipedia.org/wiki/Maximum_transmission_unit
     https://blog.apnic.net/2016/05/19/fragmenting-ipv6/
 */
 
 #define BVLL_TYPE_BACNET_IP (0x81)
 
+#if defined(BIP_DEBUG)
 extern bool BIP_Debug;
+#endif
 
+// check for file inversions
+#if defined ( DEVICE_H )
+#error This file must be included before device.h
+#endif
+#if defined ( DATALINK_H ) 
+#error This file must be included before datalink.h
+#endif
 
-    /* note: define init, set_interface, and cleanup in your port */
-    /* on Linux, ifname is eth0, ath0, arc0, and others.
-       on Windows, ifname is the dotted ip address of the interface */
-    bool bip_init(
-        char *ifname);
-    void bip_set_interface(
-        char *ifname);
-    void bip_cleanup(
-        void);
+typedef struct _PORT_SUPPORT PORT_SUPPORT;
+// typedef struct devObj_s DEVICE_OBJECT_DATA;
+// class DEVICE_OBJECT_DATA;
+typedef struct _DLCB DLCB;                          // Datalink control block
 
-    /* common BACnet/IP functions */
-    void bip_set_socket(
-        int sock_fd);
-    int bip_socket(
-        void);
-    bool bip_valid(
-        void);
-    void bip_get_broadcast_address(
-        BACNET_ADDRESS * dest); /* destination address */
-    void bip_get_my_address(
-        BACNET_ADDRESS * my_address);
+/* note: define init, set_interface, and cleanup in your port */
+/* on Linux, ifname is eth0, ath0, arc0, and others.
+   on Windows, ifname is the dotted ip address of the interface */
+bool bip_init(
+	PORT_SUPPORT *portParams,
+    const char *ifname);
 
-    /* function to send a packet out the BACnet/IP socket */
-    /* returns zero on success, non-zero on failure */
-    int bip_send_pdu(
-        BACNET_ADDRESS * dest,  /* destination address */
-        BACNET_NPCI_DATA * npci_data,   /* network information */
-        //uint8_t * pdu,  /* any data to be sent - may be null */
-        //unsigned pdu_len);      /* number of bytes of data */
+// returns < 0 if fails
+int bip_set_interface(
+    PORT_SUPPORT *portParams,
+    const char *ifname);
+
+void bip_cleanup(
+    PORT_SUPPORT *portParams
+    );
+
+/* common BACnet/IP functions */
+
+// following moved to PORT_SUPPORT
+//void bip_set_socket(
+//    int sock_fd);
+//int bip_socket(
+//    void);
+//bool bip_valid(
+//    void);
+
+void CheckLocalAddressKnown(PORT_SUPPORT *portParams, struct sockaddr_in *sin);
+
+// EKH: this original name (bip_get_broadcast_address) was very close to (bip_get_broadcast_addr)
+// Renaming bip_get_broadcast_address to bip_get_broadcast_BACnetAddress
+void bip_get_broadcast_BACnetMacAddress(
+    const PORT_SUPPORT *portParams,
+    BACNET_MAC_ADDRESS *dest);
+
+//void bip_get_my_BACnetAddress(
+//    PORT_SUPPORT *portParams,
+//    BACNET_GLOBAL_ADDRESS * my_address);
+
+/* function to send a packet out the BACnet/IP socket */
+/* returns zero on success, non-zero on failure */
+void bip_send_npdu(
+    //const PORT_SUPPORT          *portParams,
+    // const DEVICE_OBJECT_DATA    *pDev,                // this is only needed because the virtual router needs to know the sending device's MAC address
+    //const BACNET_MAC_ADDRESS    *destMac,           /* destination address */
+    //const BACNET_NPCI_DATA      *npci_data,         /* network information */
     const DLCB *dlcb);
     
-    
-    /* receives a BACnet/IP packet */
-    /* returns the number of octets in the PDU, or zero on failure */
-    uint16_t bip_receive(
-        BACNET_ADDRESS * src,   /* source address */
-        uint8_t * pdu,  /* PDU data */
-        uint16_t max_pdu,       /* amount of space available in the PDU  */
-        unsigned timeout);      /* milliseconds to wait for a packet */
+//int bip_send_pdu_local_only(
+//    const PORT_SUPPORT *portParams,
+//    const BACNET_MAC *destMAC,      /* destination address, if null, then broadcast */
+//    const uint8_t * pdu,      /* any data to be sent - may be null */
+//    const uint16_t pdu_len);
 
-    /* use network byte order for setting */
-    void bip_set_port(
-        uint16_t port);
-    bool bip_port_changed(void);
+/* receives a BACnet/IP packet */
+/* returns the number of octets in the PDU, or zero on failure */
+uint16_t bip_receive(
+    PORT_SUPPORT *portParams,
+    BACNET_MAC_ADDRESS *mac, 
+    uint8_t *pdu,
+    uint16_t max_pdu);
+
+/* use network byte order for setting */
+//void bip_set_local_port(
+//    uint16_t port);
+
+void bip_set_nat_port(
+    uint16_t port);
+
+bool bip_port_changed(void);
+
+// replaced by portParams
+///* returns network byte order */
+uint16_t bip_get_local_port(
+    const PORT_SUPPORT *portParams ) ;
+
+/* use network byte order for setting */
+void bip_set_addr(
+	PORT_SUPPORT *portParams,
+    uint32_t net_address);
+
+/* returns network byte order */
+uint32_t bip_get_addr(const PORT_SUPPORT *portParams);
+
+/* use network byte order for setting */
+void bip_set_broadcast_addr(
+    PORT_SUPPORT *portParams,
+    uint32_t net_address);
+
+void set_broadcast_address(
+    PORT_SUPPORT *portParams,
+    uint32_t hostAddress);
+
     /* returns network byte order */
-    uint16_t bip_get_port(
-        void);
+uint32_t bip_get_broadcast_ipAddr(
+    const PORT_SUPPORT *portParams
+    );
 
-    /* use network byte order for setting */
-    void bip_set_addr(
-        uint32_t net_address);
-    /* returns network byte order */
-    uint32_t bip_get_addr(
-        void);
+void TryGetLocalAddress(struct sockaddr_in *sin);
 
-    /* use network byte order for setting */
-    void bip_set_broadcast_addr(
-        uint32_t net_address);
-    /* returns network byte order */
-    uint32_t bip_get_broadcast_addr(
-        void);
+//void bip_ipAddr_port_from_bacnet_address(struct in_addr *ipAddr, uint16_t *port, const BACNET_GLOBAL_ADDRESS *addr );
+void bip_ipAddr_port_to_bacnet_mac(BACNET_MAC_ADDRESS *mac, const uint32_t nwoIpAddr, const uint16_t nwoPort);
+void bip_ipAddr_port_to_bacnet_addr(BACNET_GLOBAL_ADDRESS *addr, const uint32_t nwoIpAddr, const uint16_t nwoPort);
 
-    /* gets an IP address by name, where name can be a
-       string that is an IP address in dotted form, or
-       a name that is a domain name
-       returns 0 if not found, or
-       an IP address in network byte order */
-    long bip_getaddrbyname(
-        const char *host_name);
+/* gets an IP address by name, where name can be a
+   string that is an IP address in dotted form, or
+   a name that is a domain name
+   returns 0 if not found, or
+   an IP address in network byte order */
+long bip_getaddrbyname(
+    const char *host_name);
 
 
-/** @defgroup DLBIP BACnet/IP DataLink Network Layer
- * @ingroup DataLink
- * Implementation of the Network Layer using BACnet/IP as the transport, as
- * described in Annex J.
- * The functions described here fulfill the roles defined generically at the
- * DataLink level by serving as the implementation of the function templates.
- *
- */
+const char *winsock_error_code_text(
+    const int code);
+
+void bip_get_MAC_address(
+    const PORT_SUPPORT *portParams,
+    BACNET_MAC_ADDRESS * my_address);
+
 #endif

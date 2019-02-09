@@ -21,20 +21,35 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include "config.h"
-#include "txbuf.h"
 #include "bacdef.h"
 #include "bacdcode.h"
 #include "whohas.h"
 #include "device.h"
 #include "client.h"
 #include "handlers.h"
+#include "datalink.h"
 
 /** @file h_whohas.c  Handles Who-Has requests. */
 
@@ -57,20 +72,23 @@ static void match_name_or_object(
         /* valid name in my device? */
         found =
             Device_Valid_Object_Name(&data->object.name, &object_type,
-            &object_instance);
+                                     &object_instance);
         if (found) {
-            Send_I_Have(Device_Object_Instance_Number(),
-                (BACNET_OBJECT_TYPE) object_type, object_instance,
-                &data->object.name);
+            Send_I_Have( src, Device_Object_Instance_Number(),
+                         (BACNET_OBJECT_TYPE) object_type, object_instance,
+                         &data->object.name);
         }
     } else {
         /* valid object_name copy in my device? */
         found =
-            Device_Object_Name_Copy((BACNET_OBJECT_TYPE) data->
-            object.identifier.type, data->object.identifier.instance,
-            &object_name);
+            Device_Object_Name_Copy(
+                (BACNET_OBJECT_TYPE) data->object.identifier.type, 
+                data->object.identifier.instance,
+                &object_name);
         if (found) {
-            Send_I_Have(Device_Object_Instance_Number(),
+            Send_I_Have( 
+                src, 
+                Device_Object_Instance_Number(),
                 (BACNET_OBJECT_TYPE) data->object.identifier.type,
                 data->object.identifier.instance, &object_name);
         }
@@ -85,7 +103,7 @@ static void match_name_or_object(
  * @ingroup DMDOB
  * @param service_request [in] The received message to be handled.
  * @param service_len [in] Length of the service_request message.
- * @param src [in] The BACNET_ADDRESS of the message's source.
+ * @param src [in] The BACNET_GLOBAL_ADDRESS of the message's source.
  */
 void handler_who_has(
     uint8_t * service_request,
@@ -102,54 +120,13 @@ void handler_who_has(
         if ((data.low_limit == -1) || (data.high_limit == -1))
             directed_to_me = true;
         else if ((Device_Object_Instance_Number() >= (uint32_t) data.low_limit)
-            && (Device_Object_Instance_Number() <= (uint32_t) data.high_limit))
+                   && (Device_Object_Instance_Number() <= (uint32_t) data.high_limit))
             directed_to_me = true;
         if (directed_to_me) {
-            match_name_or_object(&data);
+            match_name_or_object(src, &data);
         }
     }
 }
 
 
-#ifdef BAC_ROUTING      /* was for BAC_ROUTING - delete in 2/2012 if still unused */
-                                                /* EKH: I restored this to BAC_ROUTING (from DEPRECATED) because I found that the server demo with the built-in 
-                                                   virtual Router did not insert the SADRs of the virtual devices on the virtual network without it */
 
-/** Handler for Who-Has requests in the virtual routing setup,
- * with broadcast I-Have response.
- * Will respond if the device Object ID matches, and we have
- * the Object or Object Name requested.
- *
- * @ingroup DMDOB
- * @param service_request [in] The received message to be handled.
- * @param service_len [in] Length of the service_request message.
- * @param src [in] The BACNET_ADDRESS of the message's source (ignored).
- */
-void handler_who_has_for_routing(
-    uint8_t * service_request,
-    uint16_t service_len,
-    BACNET_ADDRESS * src)
-{
-    int len = 0;
-    BACNET_WHO_HAS_DATA data;
-    int32_t dev_instance;
-    int cursor = 0;     /* Starting hint */
-    int my_list[2] = { 0, -1 }; /* Not really used, so dummy values */
-    BACNET_ADDRESS bcast_net;
-
-    (void) src;
-    len = whohas_decode_service_request(service_request, service_len, &data);
-    if (len > 0) {
-        /* Go through all devices, starting with the root gateway Device */
-        memset(&bcast_net, 0, sizeof(BACNET_ADDRESS));
-        bcast_net.net = BACNET_BROADCAST_NETWORK;       /* That's all we have to set */
-        while (Routed_Device_GetNext(&bcast_net, my_list, &cursor)) {
-            dev_instance = Device_Object_Instance_Number();
-            if ((data.low_limit == -1) || (data.high_limit == -1) ||
-                ((dev_instance >= data.low_limit) &&
-                    (dev_instance <= data.high_limit)))
-                match_name_or_object(&data);
-        }
-    }
-}
-#endif /* BAC_ROUTING */

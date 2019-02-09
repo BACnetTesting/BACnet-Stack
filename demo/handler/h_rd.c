@@ -21,14 +21,28 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include "config.h"
-#include "txbuf.h"
 #include "bacdef.h"
 #include "bacdcode.h"
 #include "bacerror.h"
@@ -40,6 +54,7 @@
 /* custom handling in device object */
 #include "device.h"
 #include "handlers.h"
+#include "debug.h"
 
 /** @file h_rd.c  Handles Reinitialize Device requests. */
 
@@ -84,43 +99,37 @@ void handler_reinitialize_device(
     pdu_len =
         npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &src->bacnetPath.glAdr, NULL, // &my_address,
             &npci_data);
-#if PRINT_ENABLED
-    fprintf(stderr, "ReinitializeDevice!\n");
-#endif
+    dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "ReinitializeDevice!\n");
     if (service_data->segmented_message) {
         len =
-            abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-            service_data->invoke_id, ABORT_REASON_SEGMENTATION_NOT_SUPPORTED,
-            true);
-#if PRINT_ENABLED
-        fprintf(stderr,
+            abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
+                service_data->invoke_id, ABORT_REASON_SEGMENTATION_NOT_SUPPORTED,
+                true);
+        dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR,
             "ReinitializeDevice: Sending Abort - segmented message.\n");
-#endif
         goto RD_ABORT;
     }
     /* decode the service request only */
     len =
         rd_decode_service_request(service_request, service_len, &rd_data.state,
             &rd_data.password);
-#if PRINT_ENABLED
+
     if (len > 0) {
-        fprintf(stderr, "ReinitializeDevice: state=%u password=%s\n",
-            (unsigned)rd_data.state,
+        dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "ReinitializeDevice: state=%u password=%s\n",
+            (unsigned) rd_data.state,
             characterstring_value(&rd_data.password));
     }
     else {
-        fprintf(stderr, "ReinitializeDevice: Unable to decode request!\n");
+        dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "ReinitializeDevice: Unable to decode request!\n");
     }
-#endif
+
     /* bad decoding or something we didn't understand - send an abort */
     if (len < 0) {
         len =
             abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
                 service_data->invoke_id, ABORT_REASON_OTHER, true);
-#if PRINT_ENABLED
-        fprintf(stderr,
+        dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR,
             "ReinitializeDevice: Sending Abort - could not decode.\n");
-#endif
         goto RD_ABORT;
     }
     /* check the data from the request */
@@ -128,54 +137,39 @@ void handler_reinitialize_device(
         len =
             reject_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
                 service_data->invoke_id, REJECT_REASON_UNDEFINED_ENUMERATION);
-#if PRINT_ENABLED
-        fprintf(stderr,
+        dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR,
             "ReinitializeDevice: Sending Reject - undefined enumeration\n");
-#endif
     }
     else {
-#if ( BAC_ROUTING == 1 )
-        /* Check to see if the current Device supports this service. */
-        len =
-            Routed_Device_Service_Approval
-            (SERVICE_CONFIRMED_REINITIALIZE_DEVICE, (int)rd_data.state,
-                &dlcb->Handler_Transmit_Buffer[pdu_len], service_data->invoke_id);
-        if (len > 0)
-            goto RD_ABORT;
-#endif
+    	// todo2
+//#if ( BAC_ROUTING == 1 )
+//        /* Check to see if the current Device supports this service. */
+//        len =
+//            Routed_Device_Service_Approval
+//            (SERVICE_CONFIRMED_REINITIALIZE_DEVICE, (int)rd_data.state,
+//                &dlcb->Handler_Transmit_Buffer[pdu_len], service_data->invoke_id);
+//        if (len > 0)
+//            goto RD_ABORT;
+//#endif
 
         if (Device_Reinitialize(&rd_data)) {
             len =
                 encode_simple_ack(&dlcb->Handler_Transmit_Buffer[pdu_len],
                     service_data->invoke_id,
                     SERVICE_CONFIRMED_REINITIALIZE_DEVICE);
-#if PRINT_ENABLED
-            fprintf(stderr, "ReinitializeDevice: Sending Simple Ack!\n");
-#endif
+            dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "ReinitializeDevice: Sending Simple Ack!\n");
         }
         else {
             len =
                 bacerror_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
                     service_data->invoke_id, SERVICE_CONFIRMED_REINITIALIZE_DEVICE,
                     rd_data.error_class, rd_data.error_code);
-#if PRINT_ENABLED
-            fprintf(stderr, "ReinitializeDevice: Sending Error.\n");
-#endif
+            dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "ReinitializeDevice: Sending Error.\n");
         }
     }
 
 RD_ABORT:
     pdu_len += len;
     dlcb->optr = pdu_len;
-    len =
-        datalink_send_pdu(src, &npci_data, dlcb);
-
-    if (len <= 0) {
-#if PRINT_ENABLED
-        fprintf(stderr, "ReinitializeDevice: Failed to send PDU (%s)!\n",
-            strerror(errno));
-#endif
-    }
-
-    return;
+    src->portParams->SendPdu(dlcb);
 }

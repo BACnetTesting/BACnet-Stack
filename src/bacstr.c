@@ -29,8 +29,22 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -58,8 +72,8 @@ void bitstring_init(
 
 void bitstring_set_bit(
     BACNET_BIT_STRING * bit_string,
-    uint8_t bit_number,
-    bool value)
+    const uint8_t bit_number,
+    const bool value)
 {
     uint8_t byte_number = bit_number / 8;
     uint8_t bit_mask = 1;
@@ -282,7 +296,7 @@ bool bitstring_init_ascii(
 /* returns false if the string exceeds capacity
    initialize by using value=NULL */
 bool characterstring_init(
-    BACNET_CHARACTER_STRING * char_string,
+    BACNET_CHARACTER_STRING *char_string,
     BACNET_CHARACTER_STRING_ENCODING encoding,
     const char *value,
     size_t length)
@@ -317,6 +331,7 @@ bool characterstring_init(
     return status;
 }
 
+// todo3 - we should create a 'const' string type where the static string can be referenced (any length then) and not use RAM.
 bool characterstring_init_ansi(
     BACNET_CHARACTER_STRING * char_string,
     const char *value)
@@ -327,7 +342,7 @@ bool characterstring_init_ansi(
 
 bool characterstring_copy(
     BACNET_CHARACTER_STRING * dest,
-    BACNET_CHARACTER_STRING * src)
+    const BACNET_CHARACTER_STRING * src)
 {
     return characterstring_init(dest, characterstring_encoding(src),
                                 characterstring_value(src), characterstring_length(src));
@@ -405,7 +420,7 @@ bool characterstring_ansi_same(
     }
     /* NULL matches an empty string in our world */
     else if (src) {
-        if (strlen(src) == 0) {
+        if (src[0] == 0) {
             same_status = true;
         }
     } else if (dest) {
@@ -460,12 +475,12 @@ bool characterstring_truncate(
 
 /* Returns the value. */
 char *characterstring_value(
-    BACNET_CHARACTER_STRING * char_string)
+    const BACNET_CHARACTER_STRING * char_string)
 {
     char *value = NULL;
 
     if (char_string) {
-        value = char_string->value;
+        value = (char *) char_string->value;
     }
 
     return value;
@@ -473,7 +488,7 @@ char *characterstring_value(
 
 /* returns the length. */
 size_t characterstring_length(
-    BACNET_CHARACTER_STRING * char_string)
+    const BACNET_CHARACTER_STRING * char_string)
 {
     size_t length = 0;
 
@@ -499,7 +514,7 @@ size_t characterstring_capacity(
 
 /* returns the encoding. */
 BACNET_CHARACTER_STRING_ENCODING characterstring_encoding(
-    BACNET_CHARACTER_STRING * char_string)
+    const BACNET_CHARACTER_STRING * char_string)
 {
     BACNET_CHARACTER_STRING_ENCODING encoding = CHARACTER_UTF8;
 
@@ -755,8 +770,11 @@ bool octetstring_init_ascii_hex(
                     /* at least one pair was decoded */
                     status = true;
                 } else {
-                    break;
+					// ekh 2016.05.29 : status was never set
+                    // feedback to Steve Karg, this was in the wrong order!
+                    // break;
                     status = false;
+                    break;
                 }
                 /* set up for next pair */
                 index += 2;

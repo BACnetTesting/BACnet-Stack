@@ -21,7 +21,22 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef WRITEPROPERTYMULTIPLE_H
 #define WRITEPROPERTYMULTIPLE_H
 
@@ -52,24 +67,27 @@ int wpm_decode_object_property(
     uint16_t apdu_len,
     BACNET_WRITE_PROPERTY_DATA * wpm_data);
 
-
 /* encode objects */
 int wpm_encode_apdu_init(
     uint8_t * apdu,
-        uint16_t max_apdu,
+    uint16_t max_apdu,
     uint8_t invoke_id);
+
 int wpm_encode_apdu_object_begin(
     uint8_t * apdu,
     BACNET_OBJECT_TYPE object_type,
     uint32_t object_instance);
+
 int wpm_encode_apdu_object_end(
     uint8_t * apdu);
+
 int wpm_encode_apdu_object_property(
     uint8_t * apdu,
     BACNET_WRITE_PROPERTY_DATA * wpdata);
+
 int wpm_encode_apdu(
     uint8_t * apdu,
-    size_t max_apdu,
+    uint16_t max_apdu,
     uint8_t invoke_id,
     BACNET_WRITE_ACCESS_DATA * write_access_data);
 

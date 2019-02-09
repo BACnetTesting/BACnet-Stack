@@ -46,10 +46,6 @@
 #define MAX_AUTHENTICATION_FACTOR_FORMAT_COUNT 4
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
     typedef struct {
         BACNET_AUTHENTICATION_FACTOR present_value;
         BACNET_RELIABILITY reliability;
@@ -61,9 +57,10 @@ extern "C" {
     } CREDENTIAL_DATA_INPUT_DESCR;
 
     void Credential_Data_Input_Property_Lists(
-        const int **pRequired,
-        const int **pOptional,
-        const int **pProprietary);
+        const BACNET_PROPERTY_ID **pRequired,
+        const BACNET_PROPERTY_ID **pOptional,
+        const BACNET_PROPERTY_ID **pProprietary);
+
     bool Credential_Data_Input_Valid_Instance(
         uint32_t object_instance);
     unsigned Credential_Data_Input_Count(
@@ -110,7 +107,4 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

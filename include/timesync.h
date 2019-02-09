@@ -20,7 +20,23 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*********************************************************************/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef TIMESYNC_H
 #define TIMESYNC_H
 
@@ -45,15 +61,21 @@ typedef struct BACnet_Recipient_List {
     struct BACnet_Recipient_List *next;
 } BACNET_RECIPIENT_LIST;
 
+void SetTime(
+    BACNET_DATE *bdate,
+    BACNET_TIME *btime);
+    
 /* encode service */
 int timesync_utc_encode_apdu(
     uint8_t * apdu,
     BACNET_DATE * my_date,
     BACNET_TIME * my_time);
+    
 int timesync_encode_apdu(
     uint8_t * apdu,
     BACNET_DATE * my_date,
     BACNET_TIME * my_time);
+
 int timesync_encode_apdu_service(
     uint8_t * apdu,
     BACNET_UNCONFIRMED_SERVICE service,

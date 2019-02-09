@@ -27,6 +27,7 @@
 #include "mstp.h"
 /*#include "dlmstp.h" */
 #include "bits/pthreadtypes.h"
+#include <semaphore.h>
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -70,11 +71,9 @@ typedef struct shared_mstp_data {
     DLMSTP_PACKET Receive_Packet;
     DLMSTP_PACKET Transmit_Packet;
     /*
-       RT_COND Receive_Packet_Flag;
-       RT_MUTEX Receive_Packet_Mutex;
+       RT_SEM Receive_Packet_Flag;
      */
-    pthread_cond_t Receive_Packet_Flag;
-    pthread_mutex_t Receive_Packet_Mutex;
+    sem_t Receive_Packet_Flag;
     /* mechanism to wait for a frame in state machine */
     /*
        RT_COND Received_Frame_Flag;
@@ -123,10 +122,6 @@ typedef struct shared_mstp_data {
     struct mstp_pdu_packet PDU_Buffer[MSTP_PDU_PACKET_COUNT];
 
 } SHARED_MSTP_DATA;
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
     bool dlmstp_init(
         void *poShared,
@@ -202,7 +197,4 @@ extern "C" {
     bool dlmstp_sole_master(
         void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif /*DLMSTP_LINUX_H */

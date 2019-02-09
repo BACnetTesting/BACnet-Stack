@@ -29,15 +29,29 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stdint.h>
 #include "bacenum.h"
 #include "bacdcode.h"
 #include "bacdef.h"
 #include "rp.h"
-
-/** @file rp.c  Encode/Decode Read Property and RP ACKs */
+#include "bip.h"
 
 #if BACNET_SVC_RP_A
 /* encode service */
@@ -91,14 +105,14 @@ int rp_decode_service_request(
     BACNET_READ_PROPERTY_DATA * rpdata)
 {
     unsigned len = 0;
-    uint8_t tag_number = 0;
-    uint32_t len_value_type = 0;
+    uint8_t tag_number ;
+    uint32_t len_value_type ;
     BACNET_OBJECT_TYPE type ;  /* for decoding */
-    uint32_t property = 0;      /* for decoding */
-    uint32_t array_value = 0;   /* for decoding */
+    uint32_t property ;      /* for decoding */
+    uint32_t array_value ;   /* for decoding */
 
     /* check for value pointers */
-    if (rpdata) {
+    if (rpdata != NULL) {
         /* Must have at least 2 tags, an object id and a property identifier
          * of at least 1 byte in length to have any chance of parsing */
         if (apdu_len < 7) {
@@ -112,39 +126,40 @@ int rp_decode_service_request(
             return BACNET_STATUS_REJECT;
         }
         len += decode_object_id(&apdu[len], &type, &rpdata->object_instance);
-        rpdata->object_type = (BACNET_OBJECT_TYPE) type;
+        rpdata->object_type = (BACNET_OBJECT_TYPE)type;
         /* Tag 1: Property ID */
         len +=
             decode_tag_number_and_value(&apdu[len], &tag_number,
-                                        &len_value_type);
+                &len_value_type);
         if (tag_number != 1) {
             rpdata->error_code = ERROR_CODE_REJECT_INVALID_TAG;
             return BACNET_STATUS_REJECT;
         }
         len += decode_enumerated(&apdu[len], len_value_type, &property);
-        rpdata->object_property = (BACNET_PROPERTY_ID) property;
+        rpdata->object_property = (BACNET_PROPERTY_ID)property;
         /* Tag 2: Optional Array Index */
         if (len < apdu_len) {
             len +=
                 decode_tag_number_and_value(&apdu[len], &tag_number,
-                                            &len_value_type);
+                    &len_value_type);
             if ((tag_number == 2) && (len < apdu_len)) {
                 len +=
                     decode_unsigned(&apdu[len], len_value_type, &array_value);
                 rpdata->array_index = array_value;
-            } else {
+            }
+            else {
                 rpdata->error_code = ERROR_CODE_REJECT_INVALID_TAG;
                 return BACNET_STATUS_REJECT;
             }
-        } else
+        }
+        else {
             rpdata->array_index = BACNET_ARRAY_ALL;
+        }
     }
 
     if (len < apdu_len) {
         /* If something left over now, we have an invalid request */
-        if (rpdata) {
-            rpdata->error_code = ERROR_CODE_REJECT_TOO_MANY_ARGUMENTS;
-        }
+        rpdata->error_code = ERROR_CODE_REJECT_TOO_MANY_ARGUMENTS;
         return BACNET_STATUS_REJECT;
     }
 
@@ -241,18 +256,19 @@ int rp_ack_decode_service_request(
     int apdu_len,       /* total length of the apdu */
     BACNET_READ_PROPERTY_DATA * rpdata)
 {
-    uint8_t tag_number = 0;
-    uint32_t len_value_type = 0;
-    int tag_len = 0;    /* length of tag decode */
+    uint8_t tag_number ;
+    uint32_t len_value_type ;
+    int tag_len ;    /* length of tag decode */
     int len = 0;        /* total length of decodes */
     BACNET_OBJECT_TYPE object ;        /* object type */
-    uint32_t property = 0;      /* for decoding */
-    uint32_t array_value = 0;   /* for decoding */
+    uint32_t property ;      /* for decoding */
+    uint32_t array_value ;   /* for decoding */
 
     /* FIXME: check apdu_len against the len during decode   */
     /* Tag 0: Object ID */
-    if (!decode_is_context_tag(&apdu[0], 0))
+    if (!decode_is_context_tag(&apdu[0], 0)) {
         return -1;
+    }
     len = 1;
     len += decode_object_id(&apdu[len], &object, &rpdata->object_instance);
     rpdata->object_type = (BACNET_OBJECT_TYPE) object;
@@ -270,7 +286,8 @@ int rp_ack_decode_service_request(
         len += tag_len;
         len += decode_unsigned(&apdu[len], len_value_type, &array_value);
         rpdata->array_index = array_value;
-    } else
+    }
+    else
         rpdata->array_index = BACNET_ARRAY_ALL;
     /* Tag 3: opening context tag */
     if (decode_is_opening_tag_number(&apdu[len], 3)) {
@@ -278,10 +295,11 @@ int rp_ack_decode_service_request(
         len++;
         /* don't decode the application tag number or its data here */
         rpdata->application_data = &apdu[len];
-        rpdata->application_data_len = apdu_len - len - 1 /*closing tag */ ;
+        rpdata->application_data_len = apdu_len - len - 1 /*closing tag */;
         /* len includes the data and the closing tag */
         len = apdu_len;
-    } else {
+    }
+    else {
         return -1;
     }
 
@@ -361,7 +379,7 @@ void testReadPropertyAck(
     uint8_t test_invoke_id = 0;
     BACNET_READ_PROPERTY_DATA rpdata;
     BACNET_READ_PROPERTY_DATA test_data;
-    BACNET_OBJECT_TYPE object_type = OBJECT_DEVICE;
+    BACNET_OBJECT_TYPE object_type ;
     uint32_t object_instance = 0;
     uint16_t object = 0;
 
@@ -393,9 +411,8 @@ void testReadPropertyAck(
 
     /* since object property == object_id, decode the application data using
        the appropriate decode function */
-    len =
-        decode_object_id(test_data.application_data, &object,
-        &object_instance);
+    decode_object_id(test_data.application_data, &object,
+                     &object_instance);
     object_type = object;
     ct_test(pTest, object_type == rpdata.object_type);
     ct_test(pTest, object_instance == rpdata.object_instance);
@@ -427,7 +444,6 @@ void testReadProperty(
     ct_test(pTest, test_data.object_property == rpdata.object_property);
     ct_test(pTest, test_data.array_index == rpdata.array_index);
 
-    return;
 }
 
 #ifdef TEST_READ_PROPERTY

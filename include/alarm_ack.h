@@ -20,14 +20,30 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*********************************************************************/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef ALARM_ACK_H_
 #define ALARM_ACK_H_
 
-#include "bacenum.h"
-#include <stdint.h>
-#include <stdbool.h>
-#include "bacapp.h"
+//#include "bacenum.h"
+//#include <stdint.h>
+//#include <stdbool.h>
+//#include "bacapp.h"
 #include "timestamp.h"
 
 typedef struct {
@@ -44,8 +60,9 @@ typedef struct {
    return -2 abort */
 typedef int (
     *alarm_ack_function) (
-    BACNET_ALARM_ACK_DATA * alarmack_data,
-    BACNET_ERROR_CODE * error_code);
+    BACNET_ALARM_ACK_DATA *alarmack_data,
+    BACNET_ERROR_CLASS *error_class,
+    BACNET_ERROR_CODE *error_code);
 
 
 /***************************************************

@@ -21,27 +21,42 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
-#include <stddef.h>
-#include <stdint.h>
-#include <errno.h>
-#include <string.h>
-#include "config.h"
-#include "bacdef.h"
-#include "bacdcode.h"
-#include "bacenum.h"
-#include "bacerror.h"
-#include "address.h"
-#include "tsm.h"
-#include "dcc.h"
-#include "npdu.h"
-#include "apdu.h"
-#include "device.h"
-#include "datalink.h"
-/* some demo stuff needed */
-#include "handlers.h"
-#include "client.h"
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
+//#include <stddef.h>
+#include <stdint.h>
+//#include <errno.h>
+//#include <string.h>
+//#include "config.h"
+//#include "bacdef.h"
+//#include "bacdcode.h"
+//#include "bacenum.h"
+#include "bacerror.h"
+//#include "address.h"
+//#include "tsm.h"
+//#include "dcc.h"
+//#include "npdu.h"
+//#include "apdu.h"
+#include "device.h"
+//#include "datalink.h"
+///* some demo stuff needed */
+//#include "handlers.h"
+//#include "client.h"
+#include "txbuf.h"
 
 /** Encodes an Error message
  * @param buffer The buffer to build the message for sending.
@@ -64,8 +79,8 @@ int error_encode_pdu(
     BACNET_ERROR_CLASS error_class,
     BACNET_ERROR_CODE error_code)
 {
-    int len = 0;
-    int pdu_len = 0;
+    int len ;
+    int pdu_len ;
 
     /* encode the NPDU portion of the packet */
     npdu_setup_npci_data(npci_data, false, MESSAGE_PRIORITY_NORMAL);
@@ -79,6 +94,7 @@ int error_encode_pdu(
     return pdu_len;
 }
 
+#if 0
 /** Sends an Abort message
  * @param buffer The buffer to build the message for sending.
  * @param dest - Destination address to send the message
@@ -88,24 +104,28 @@ int error_encode_pdu(
  *
  * @return Size of the message sent (bytes), or a negative value on error.
  */
-int Send_Error_To_Network(
+void Send_Error_To_Network(
     BACNET_ROUTE *dest,
     uint8_t * buffer,
-    BACNET_ADDRESS *dest,
     uint8_t invoke_id,
     BACNET_CONFIRMED_SERVICE service,
     BACNET_ERROR_CLASS error_class,
     BACNET_ERROR_CODE error_code)
 {
-    int pdu_len = 0;
-    BACNET_ADDRESS src;
-    int bytes_sent = 0;
+    int pdu_len ;
+    // BACNET_PATH src;
+    // int bytes_sent ;
     BACNET_NPCI_DATA npci_data;
 
     //datalink_get_my_address(&src);
-    pdu_len = error_encode_pdu( &dest->bacnetPath->adr, NULL, &npci_data,
+    pdu_len = error_encode_pdu(buffer, &dest->bacnetPath->adr, NULL, &npci_data,
         invoke_id, service, error_class, error_code);
-    bytes_sent = datalink_send_pdu(dest, &npci_data, dlcb );
+    
+    //bytes_sent = datalink_send _pdu(portParams, dest, &npci_data, &buffer[0], pdu_len);
 
-    return bytes_sent;
+    dest->portParams->SendPdu(dest->portParams, sendingDev, &dest->bacnetPath->localMac, &npci_data, &Handler_Transmit_Buffer[0],
+        pdu_len);
+
+    // return bytes_sent;
 }
+#endif

@@ -52,6 +52,9 @@ int Device_Read_Property_Local(
 bool Device_Write_Property_Local(
     BACNET_WRITE_PROPERTY_DATA * wp_data);
 
+extern const char *BACnet_Version;
+
+
 static struct my_object_functions {
     BACNET_OBJECT_TYPE Object_Type;
     object_init_function Object_Init;
@@ -343,7 +346,7 @@ unsigned Device_Count(
 uint32_t Device_Index_To_Instance(
     unsigned index)
 {
-    index = index;
+    (void) index ;
     return Object_Instance_Number;
 }
 
@@ -966,7 +969,7 @@ bool Device_Write_Property_Local(
             break;
     }
     /* not using len at this time */
-    len = len;
+    (void) len ;
 
     return status;
 }

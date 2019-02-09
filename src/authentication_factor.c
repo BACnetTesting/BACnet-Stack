@@ -82,13 +82,16 @@ int bacapp_decode_authentication_factor(
 {
     int len;
     int apdu_len = 0;
+    uint32_t tuint32 ;
 
     if (decode_is_context_tag(&apdu[apdu_len], 0)) {
-        len = decode_context_enumerated(&apdu[apdu_len], 0, &af->format_type);
+        len = decode_context_enumerated(&apdu[apdu_len], 0, &tuint32);
         if (len < 0)
             return -1;
-        else
+        else {
+            af->format_type = (BACNET_AUTHENTICATION_FACTOR_TYPE) tuint32 ;
             apdu_len += len;
+        }
     } else
         return -1;
 

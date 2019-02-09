@@ -21,22 +21,39 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
-#include <stdbool.h>
-#include <stdint.h>
-#include "bacdef.h"
-#include "bacdcode.h"
-#include "bacint.h"
-#include "bacenum.h"
-#include "bits.h"
-#include "npdu.h"
-#include "apdu.h"
-#include "handlers.h"
-#include "client.h"
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-#if PRINT_ENABLED
+//#include <stdbool.h>
 #include <stdio.h>
-#endif
+//#include <stdint.h>
+// #include "bacdef.h"
+//#include "bacdcode.h"
+//#include "bacint.h"
+//#include "bacenum.h"
+//#include "bits.h"
+//#include "npdu.h"
+#include "apdu.h"
+//#include "handlers.h"
+//#include "client.h"
+#include "datalink.h"
+
+//#if PRINT_ENABLED
+//#include <stdio.h>
+//#endif
 
 /** @file h_npdu.c  Handles messages at the NPDU level of the BACnet stack. */
 
@@ -63,37 +80,52 @@
  *  @param pdu [in]  Buffer containing the NPDU and APDU of the received packet.
  *  @param pdu_len [in] The size of the received message in the pdu[] buffer.
  */
+
+
+// we include this for the library - it is used for all NON-ROUTING applications (e.g. Server, ReadProp)
+
 void npdu_handler(
-    BACNET_ADDRESS * src,       /* source address */
-    uint8_t * pdu,      /* PDU data */
-    uint16_t pdu_len)
+    // BACNET_GLOBAL_ADDRESS * src,
+    // PORT_SUPPORT *portParams,
+    RX_DETAILS *rxDetails
+    )
+//    BACNET_ADDRESS * src,       /* source address */
+//    uint8_t * pdu,      /* PDU data */
+//    uint16_t pdu_len)
 {       /* length PDU  */
-    int apdu_offset = 0;
-    BACNET_ADDRESS dest = { 0 };
-    BACNET_NPCI_DATA npci_data = { 0 };
+    int apdu_offset ;
+    // BACNET_GLOBAL_ADDRESS src ;
+    BACNET_GLOBAL_ADDRESS dest;
+    BACNET_NPCI_DATA npci_data ;
+    // uint8_t *pdu = rxDetails->rxBuf ;
+    // BACNET_ADDRESS *src = &rxDetails->src;
+    BACNET_ROUTE route;
+
+    bacnet_route_clear(&route);
+    route.portParams = rxDetails->portParams;
 
     /* only handle the version that we know how to handle */
-    if (pdu[0] == BACNET_PROTOCOL_VERSION) {
-        apdu_offset = npdu_decode(&pdu[0], &dest, src, &npci_data);
+    if (rxDetails->npdu[0] == BACNET_PROTOCOL_VERSION) {
+        apdu_offset = npci_decode(&rxDetails->npdu[0], &dest, &route.bacnetPath.glAdr, &npci_data);
         if (npci_data.network_layer_message) {
             /*FIXME: network layer message received!  Handle it! */
 #if PRINT_ENABLED
             fprintf(stderr, "NPDU: Network Layer Message discarded!\n");
 #endif
-        } else if ((apdu_offset > 0) && (apdu_offset <= pdu_len)) {
+        } else if ((apdu_offset > 0) && (apdu_offset <= rxDetails->npdu_len)) {
             if ((dest.net == 0) || (dest.net == BACNET_BROADCAST_NETWORK)) {
                 /* only handle the version that we know how to handle */
                 /* and we are not a router, so ignore messages with
                    routing information cause they are not for us */
                 if ((dest.net == BACNET_BROADCAST_NETWORK) &&
-                    ((pdu[apdu_offset] & 0xF0) ==
+                    ((rxDetails->npdu[apdu_offset] & 0xF0) ==
                         PDU_TYPE_CONFIRMED_SERVICE_REQUEST)) {
                     /* hack for 5.4.5.1 - IDLE */
                     /* ConfirmedBroadcastReceived */
                     /* then enter IDLE - ignore the PDU */
                 } else {
-                    apdu_handler(src, &pdu[apdu_offset],
-                        (uint16_t) (pdu_len - apdu_offset));
+                    apdu_handler(&route, &rxDetails->npdu[apdu_offset],
+                                 (uint16_t) (rxDetails->npdu_len - apdu_offset));
                 }
             } else {
 #if PRINT_ENABLED
@@ -104,7 +136,8 @@ void npdu_handler(
     } else {
 #if PRINT_ENABLED
         printf("NPDU: BACnet Protocol Version=%u.  Discarded!\n",
-            (unsigned) pdu[0]);
+            (unsigned) rxDetails->npdu[0]);
 #endif
     }
 }
+

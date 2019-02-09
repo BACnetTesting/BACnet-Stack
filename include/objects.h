@@ -20,7 +20,23 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*********************************************************************/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef OBJECTS_H
 #define OBJECTS_H
 
@@ -57,9 +73,11 @@ typedef struct object_device_t {
     BACNET_DEVICE_STATUS System_Status;
     BACNET_CHARACTER_STRING Vendor_Name;
     uint16_t Vendor_Identifier;
-    BACNET_CHARACTER_STRING Model_Name;
+	// todonext - are these structures used at all? Check out Steve Karg's intent.
+    // BACNET_CHARACTER_STRING Model_Name;
     BACNET_CHARACTER_STRING Firmware_Revision;
-    BACNET_CHARACTER_STRING Application_Software_Version;
+	// todonext - are these structures used at all? Check out Steve Karg's intent.
+    // BACNET_CHARACTER_STRING Application_Software_Version;
     BACNET_CHARACTER_STRING Location;
     BACNET_CHARACTER_STRING Description;
     uint8_t Protocol_Version;

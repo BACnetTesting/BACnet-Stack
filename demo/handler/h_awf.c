@@ -21,28 +21,43 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
-#include <stddef.h>
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
+//#include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-#include "config.h"
-#include "txbuf.h"
-#include "bacdef.h"
-#include "bacstr.h"
+//#include <stdio.h>
+//#include <string.h>
+//#include <errno.h>
+//#include "config.h"
+//#include "bacdef.h"
+//#include "bacstr.h"
 #include "bacerror.h"
-#include "bacdcode.h"
+//#include "bacdcode.h"
 #include "apdu.h"
-#include "npdu.h"
+//#include "npdu.h"
 #include "abort.h"
 #include "awf.h"
-/* demo objects */
-#include "device.h"
-#if defined(BACFILE)
+///* demo objects */
+//#include "device.h"
 #include "bacfile.h"
-#endif
-#include "handlers.h"
+//#include "handlers.h"
+//#include "debug.h"
+//#include "multipleDatalink.h"
+#include "datalink.h"
 
 /** @file h_awf.c  Handles Atomic Write File request. */
 
@@ -79,25 +94,23 @@ standard.
 void handler_atomic_write_file(
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src,
+    BACNET_ROUTE *rxDetails,
     BACNET_CONFIRMED_SERVICE_DATA * service_data)
 {
     BACNET_ATOMIC_WRITE_FILE_DATA data;
     int len = 0;
     int pdu_len = 0;
     bool error = false;
-    int bytes_sent = 0;
+    // int bytes_sent = 0;
     BACNET_NPCI_DATA npci_data;
     // BACNET_PATH my_address;
     BACNET_ERROR_CLASS error_class = ERROR_CLASS_OBJECT;
     BACNET_ERROR_CODE error_code = ERROR_CODE_UNKNOWN_OBJECT;
 
-	DLCB *dlcb = alloc_dlcb_response('E', rxDetails->portParams );
+	DLCB *dlcb = alloc_dlcb_response('E', rxDetails );
 	if (dlcb == NULL) return;
 
-#if PRINT_ENABLED
-    fprintf(stderr, "Received AtomicWriteFile Request!\n");
-#endif
+    dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "Received AtomicWriteFile Request!\n");
     /* encode the NPDU portion of the packet */
     // datalink_get_my_address(&my_address);
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
@@ -109,9 +122,9 @@ void handler_atomic_write_file(
             abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, ABORT_REASON_SEGMENTATION_NOT_SUPPORTED,
             true);
-#if PRINT_ENABLED
-        fprintf(stderr, "Segmented Message. Sending Abort!\n");
-#endif
+
+        dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "Segmented Message. Sending Abort!\n");
+
         goto AWF_ABORT;
     }
     len = awf_decode_service_request(service_request, service_len, &data);
@@ -120,9 +133,7 @@ void handler_atomic_write_file(
         len =
             abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, ABORT_REASON_OTHER, true);
-#if PRINT_ENABLED
-        fprintf(stderr, "Bad Encoding. Sending Abort!\n");
-#endif
+        dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "Bad Encoding. Sending Abort!\n");
         goto AWF_ABORT;
     }
     if (data.object_type == OBJECT_FILE) {
@@ -130,11 +141,9 @@ void handler_atomic_write_file(
             error = true;
         } else if (data.access == FILE_STREAM_ACCESS) {
             if (bacfile_write_stream_data(&data)) {
-#if PRINT_ENABLED
-                fprintf(stderr, "AWF: Stream offset %d, %d bytes\n",
+                dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "AWF: Stream offset %d, %d bytes\n",
                     data.type.stream.fileStartPosition,
                     (int)octetstring_length(&data.fileData[0]));
-#endif
                 len =
                     awf_ack_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
                     service_data->invoke_id, &data);
@@ -162,9 +171,7 @@ void handler_atomic_write_file(
             error = true;
             error_class = ERROR_CLASS_SERVICES;
             error_code = ERROR_CODE_INVALID_FILE_ACCESS_METHOD;
-#if PRINT_ENABLED
-            fprintf(stderr, "Record Access Requested. Sending Error!\n");
-#endif
+            dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "Record Access Requested. Sending Error!\n");
         }
     } else {
         error = true;
@@ -177,17 +184,10 @@ void handler_atomic_write_file(
             service_data->invoke_id, SERVICE_CONFIRMED_ATOMIC_WRITE_FILE,
             error_class, error_code);
     }
-  AWF_ABORT:
+
+AWF_ABORT:
     pdu_len += len;
     dlcb->optr = pdu_len;
-    bytes_sent =
-        datalink_send_pdu(src, &npci_data, dlcb );
-#if PRINT_ENABLED
-    if (bytes_sent <= 0) {
-        fprintf(stderr, "Failed to send PDU (%s)!\n", strerror(errno));
-    }
-#endif
-
-    return;
+    rxDetails->portParams->SendPdu(dlcb);
 }
 #endif

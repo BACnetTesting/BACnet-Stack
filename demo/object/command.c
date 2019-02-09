@@ -19,38 +19,56 @@
  * @section LICENSE
  *
  * Copyright (C) 2014 Nikola Jelic <nikola.jelic@euroicc.com>
- *
- * Permission is hereby granted, free of charge, to any person obtaining
- * a copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to
- * the following conditions:
- *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
- * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
+*
+* Permission is hereby granted, free of charge, to any person obtaining
+* a copy of this software and associated documentation files (the
+* "Software"), to deal in the Software without restriction, including
+* without limitation the rights to use, copy, modify, merge, publish,
+* distribute, sublicense, and/or sell copies of the Software, and to
+* permit persons to whom the Software is furnished to do so, subject to
+* the following conditions:
+*
+* The above copyright notice and this permission notice shall be included
+* in all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+*  2018.07.04 EKH Diffed in hints from Binary Value for future reference
+*
+****************************************************************************************/
 
+// #include <stdbool.h>
+// #include <stdint.h>
+// #include <stdio.h>
 #include "bacdef.h"
 #include "bacdcode.h"
 #include "bacenum.h"
 #include "bactext.h"
 #include "config.h"     /* the custom stuff */
+#include "bip.h"
 #include "device.h"
 #include "handlers.h"
-#include "proplist.h"
+// #include "proplist.h"
 #include "timestamp.h"
 #include "command.h"
 
@@ -340,8 +358,9 @@ int cl_decode_apdu(
 
 COMMAND_DESCR Command_Descr[MAX_COMMANDS];
 
-/* These arrays are used by the ReadPropertyMultiple handler */
-static const int Command_Properties_Required[] = {
+/* These three arrays are used by the ReadPropertyMultiple handler */
+
+static const BACNET_PROPERTY_ID Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -349,16 +368,16 @@ static const int Command_Properties_Required[] = {
     PROP_IN_PROCESS,
     PROP_ALL_WRITES_SUCCESSFUL,
     PROP_ACTION,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Command_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Properties_Optional[] = {
     PROP_DESCRIPTION,
-    -1
+    MAX_BACNET_PROPERTY_ID
 };
 
-static const int Command_Properties_Proprietary[] = {
-    -1
+static const BACNET_PROPERTY_ID Properties_Proprietary[] = {
+    MAX_BACNET_PROPERTY_ID
 };
 
 /**
@@ -373,18 +392,16 @@ static const int Command_Properties_Proprietary[] = {
  * BACnet proprietary properties for this object.
  */
 void Command_Property_Lists(
-    const int **pRequired,
-    const int **pOptional,
-    const int **pProprietary)
+    const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary)
 {
     if (pRequired)
-        *pRequired = Command_Properties_Required;
+        *pRequired = Properties_Required;
     if (pOptional)
-        *pOptional = Command_Properties_Optional;
+        *pOptional = Properties_Optional;
     if (pProprietary)
-        *pProprietary = Command_Properties_Proprietary;
-
-    return;
+        *pProprietary = Properties_Proprietary;
 }
 
 
@@ -644,7 +661,7 @@ bool Command_Object_Name(
  * BACNET_STATUS_ERROR on error.
  */
 int Command_Read_Property(
-    BACNET_READ_PROPERTY_DATA * rpdata)
+    BACNET_READ_PROPERTY_DATA *rpdata)
 {
     int apdu_len = 0;   /* return value */
     int len = 0;
@@ -667,25 +684,28 @@ int Command_Read_Property(
     }
 
     apdu = rpdata->application_data;
-    switch ((int) rpdata->object_property) {
-        case PROP_OBJECT_IDENTIFIER:
-            apdu_len =
-                encode_application_object_id(&apdu[0], OBJECT_COMMAND,
+    switch (rpdata->object_property) {
+
+    case PROP_OBJECT_IDENTIFIER:
+        apdu_len =
+            encode_application_object_id(&apdu[0],
+                OBJECT_COMMAND,
                 rpdata->object_instance);
-            break;
+        break;
 
-        case PROP_OBJECT_NAME:
-        case PROP_DESCRIPTION:
+    case PROP_OBJECT_NAME:
+
+    case PROP_DESCRIPTION:
             Command_Object_Name(rpdata->object_instance, &char_string);
-            apdu_len =
-                encode_application_character_string(&apdu[0], &char_string);
-            break;
+        apdu_len =
+            encode_application_character_string(&apdu[0], &char_string);
+        break;
 
-        case PROP_OBJECT_TYPE:
+    case PROP_OBJECT_TYPE:
             apdu_len = encode_application_enumerated(&apdu[0], OBJECT_COMMAND);
-            break;
+        break;
 
-        case PROP_PRESENT_VALUE:
+    case PROP_PRESENT_VALUE:
             apdu_len =
                 encode_application_unsigned(&apdu[0],
                 Command_Present_Value(rpdata->object_instance));
@@ -708,7 +728,7 @@ int Command_Read_Property(
                 int i;
                 for (i = 0; i < MAX_COMMAND_ACTIONS; i++) {
                     BACNET_ACTION_LIST *Curr_CL_Member =
-                    &CurrentCommand->Action[i];
+                        &CurrentCommand->Action[0];
                     /* another loop, for aditional actions in the list */
                     for (; Curr_CL_Member != NULL;
                         Curr_CL_Member = Curr_CL_Member->next) {
@@ -827,21 +847,23 @@ bool Command_Write_Property(
                 status = false;
             }
 
-            break;
+        break;
 
-        case PROP_OBJECT_IDENTIFIER:
-        case PROP_OBJECT_NAME:
-        case PROP_OBJECT_TYPE:
-        case PROP_IN_PROCESS:
-        case PROP_ALL_WRITES_SUCCESSFUL:
-        case PROP_ACTION:
-            wp_data->error_class = ERROR_CLASS_PROPERTY;
-            wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
-            break;
-        default:
-            wp_data->error_class = ERROR_CLASS_PROPERTY;
-            wp_data->error_code = ERROR_CODE_UNKNOWN_PROPERTY;
-            break;
+    case PROP_OBJECT_IDENTIFIER:
+    case PROP_OBJECT_TYPE:
+    case PROP_OBJECT_NAME:
+    case PROP_DESCRIPTION:
+    case PROP_IN_PROCESS:
+    case PROP_ALL_WRITES_SUCCESSFUL:
+    case PROP_ACTION:
+        wp_data->error_class = ERROR_CLASS_PROPERTY;
+        wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
+        break;
+
+    default:
+        wp_data->error_class = ERROR_CLASS_PROPERTY;
+        wp_data->error_code = ERROR_CODE_UNKNOWN_PROPERTY;
+        break;
     }
 
     return status;
@@ -882,7 +904,7 @@ bool WPValidateArgType(
 void testCommand(
     Test * pTest)
 {
-    uint8_t apdu[MAX_LPDU_IP] = { 0 };
+    uint8_t apdu[MAX_APDU] = { 0 };
     int len = 0;
     uint32_t len_value = 0;
     uint8_t tag_number = 0;
@@ -937,7 +959,6 @@ void testCommand(
     ct_test(pTest, clist.Post_Delay == clist_test.Post_Delay);
     ct_test(pTest, clist.Quit_On_Failure == clist_test.Quit_On_Failure);
     ct_test(pTest, clist.Write_Successful == clist_test.Write_Successful);
-    return;
 }
 
 #ifdef TEST_COMMAND

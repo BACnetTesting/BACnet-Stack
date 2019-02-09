@@ -21,14 +21,28 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include "config.h"
-#include "txbuf.h"
 #include "bacdef.h"
 #include "bacdcode.h"
 #include "bacerror.h"
@@ -58,14 +72,19 @@
  *
  * @param service_request [in] The contents of the service request.
  * @param service_len [in] The length of the service_request.
- * @param src [in] BACNET_ADDRESS of the source of the message
+ * @param src [in] BACNET_PATH of the source of the message
  * @param service_data [in] The BACNET_CONFIRMED_SERVICE_DATA information
  *                          decoded from the APDU header of this message.
  */
+ 
+ // todo1 - remove this function...
+
+#if 0
 void handler_write_property_multiple(
+	BACNET_ROUTE *rxDetails, 
+    DEVICE_OBJECT_DATA *sendingDev,
     uint8_t * service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src,
     BACNET_CONFIRMED_SERVICE_DATA * service_data)
 {
     int len = 0;
@@ -86,7 +105,7 @@ void handler_write_property_multiple(
         wp_data.error_code = ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
         len = BACNET_STATUS_ABORT;
 #if PRINT_ENABLED
-        fprintf(stderr, "WPM: Segmented message.  Sending Abort!\n");
+        dbTraffic(DB_UNEXPECTED_ERROR, "WPM: Segmented message.  Sending Abort!\n");
 #endif
         goto WPM_ABORT;
     }
@@ -113,8 +132,9 @@ void handler_write_property_multiple(
                                                    [decode_len], service_len - decode_len, &wp_data);
                     if (len > 0) {
                         decode_len += len;
+                            if (validated) {
 #if PRINT_ENABLED
-                        fprintf(stderr,
+                                dbTraffic(DB_UNEXPECTED_ERROR,
                                 "WPM: type=%lu instance=%lu property=%lu priority=%lu index=%ld\n",
                                 (unsigned long) wp_data.object_type,
                                 (unsigned long) wp_data.object_instance,
@@ -122,14 +142,15 @@ void handler_write_property_multiple(
                                 (unsigned long) wp_data.priority,
                                 (long) wp_data.array_index);
 #endif
-                        if (Device_Write_Property(&wp_data) == false) {
+                        if (Device_Write_Property(pDev, &wp_data) == false) {
                             error = true;
                             len = BACNET_STATUS_ERROR;
                             goto WPM_ABORT;
                         }
+                            }
                     } else {
 #if PRINT_ENABLED
-                        fprintf(stderr, "WPM: Bad Encoding!\n");
+                            dbTraffic(DB_UNEXPECTED_ERROR, "WPM: Bad Encoding!\n");
 #endif
                         error = true;
                         goto WPM_ABORT;
@@ -140,11 +161,10 @@ void handler_write_property_multiple(
                                                      [decode_len], 1)) {
                         tag_number = 1;
                         decode_len++;
-                    } else
+                        } else {
                         tag_number = 0; /* it was not tag 1, decode next Property Identifier ... */
-
                 }
-                while (tag_number != 1);        /* end decoding List of Properties for "that" object */
+                    } while (tag_number != 1);  /* end decoding List of Properties for "that" object */
 
                 if (error) {
                     goto WPM_ABORT;
@@ -152,13 +172,15 @@ void handler_write_property_multiple(
             }
         } else {
 #if PRINT_ENABLED
-            fprintf(stderr, "WPM: Bad Encoding!\n");
+                dbTraffic(DB_UNEXPECTED_ERROR, "WPM: Bad Encoding!\n");
 #endif
             error = true;
             goto WPM_ABORT;
         }
     } while (decode_len < service_len);
-
+        
+        validated++;
+    }
 WPM_ABORT:
     /* encode the NPDU portion of the packet */
     //datalink_get_my_address(&my_address);
@@ -175,14 +197,14 @@ WPM_ABORT:
                                   service_data->invoke_id,
                                   abort_convert_error_code(wp_data.error_code), true);
 #if PRINT_ENABLED
-            fprintf(stderr, "WPM: Sending Abort!\n");
+            dbTraffic(DB_UNEXPECTED_ERROR, "WPM: Sending Abort!\n");
 #endif
         } else if (len == BACNET_STATUS_ERROR) {
             apdu_len =
                 wpm_error_ack_encode_apdu(&dlcb->Handler_Transmit_Buffer[npdu_len],
                                           service_data->invoke_id, &wp_data);
 #if PRINT_ENABLED
-            fprintf(stderr, "WPM: Sending Error!\n");
+            dbTraffic(DB_UNEXPECTED_ERROR, "WPM: Sending Error!\n");
 #endif
         } else if (len == BACNET_STATUS_REJECT) {
             apdu_len =
@@ -190,7 +212,7 @@ WPM_ABORT:
                                    service_data->invoke_id,
                                    reject_convert_error_code(wp_data.error_code));
 #if PRINT_ENABLED
-            fprintf(stderr, "WPM: Sending Reject!\n");
+            dbTraffic(DB_UNEXPECTED_ERROR, "WPM: Sending Reject!\n");
 #endif
         }
     } else {
@@ -198,19 +220,13 @@ WPM_ABORT:
             wpm_ack_encode_apdu_init(&dlcb->Handler_Transmit_Buffer[npdu_len],
                                      service_data->invoke_id);
 #if PRINT_ENABLED
-        fprintf(stderr, "WPM: Sending Ack!\n");
+        dbTraffic(DB_UNEXPECTED_ERROR, "WPM: Sending Ack!\n");
 #endif
     }
 
     pdu_len = npdu_len + apdu_len;
-        dlcb->optr = pdu_len;
-    bytes_sent =
-        datalink_send_pdu(src, &npci_data, dlcb );
-#if PRINT_ENABLED
-    if (bytes_sent <= 0) {
-        fprintf(stderr, "Failed to send PDU (%s)!\n", strerror(errno));
-    }
-#else
-    bytes_sent = bytes_sent;
-#endif
+    dlcb->optr = pdu_len;
+    rxDetails->portParams->SendPdu(dlcb);
 }
+
+#endif

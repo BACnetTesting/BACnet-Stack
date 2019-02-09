@@ -31,6 +31,7 @@
 #include "bacerror.h"
 #include "bacdevobjpropref.h"
 #include "access_rule.h"
+
 #include "rp.h"
 #include "wp.h"
 
@@ -47,14 +48,11 @@
 #define MAX_POSITIVE_ACCESS_RIGHTS_RULES 4
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
     typedef struct {
         uint32_t global_identifier;
         BACNET_RELIABILITY reliability;
         bool enable;
+
         uint32_t negative_access_rules_count, positive_access_rules_count;
                  BACNET_ACCESS_RULE
             negative_access_rules[MAX_NEGATIVE_ACCESS_RIGHTS_RULES];
@@ -63,9 +61,10 @@ extern "C" {
     } ACCESS_RIGHTS_DESCR;
 
     void Access_Rights_Property_Lists(
-        const int **pRequired,
-        const int **pOptional,
-        const int **pProprietary);
+        const BACNET_PROPERTY_ID **pRequired,
+        const BACNET_PROPERTY_ID **pOptional,
+        const BACNET_PROPERTY_ID **pProprietary);
+
     bool Access_Rights_Valid_Instance(
         uint32_t object_instance);
     unsigned Access_Rights_Count(
@@ -104,7 +103,5 @@ extern "C" {
         Test * pTest);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif
+

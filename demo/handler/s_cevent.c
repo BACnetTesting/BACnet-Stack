@@ -21,12 +21,27 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stddef.h>
 #include <stdint.h>
 #include <errno.h>
 #include <string.h>
-#include "event.h"
+// #include "event.h"
 #include "device.h"
 #include "datalink.h"
 #include "tsm.h"
@@ -34,8 +49,10 @@
 #include "address.h"
 /* some demo stuff needed */
 #include "handlers.h"
-#include "txbuf.h"
 #include "client.h"
+
+#include "config.h"
+#if ( BACNET_USE_EVENT_HANDLING == 1 )
 
 /** @file s_cevent.c  Send a ConfirmedEventNotification Request. */
 
@@ -48,13 +65,13 @@
  *         or no tsm slot is available.
  */
 uint8_t Send_CEvent_Notify(
-	PORT_SUPPORT *portParams,
+    PORT_SUPPORT *portParams,
+    DEVICE_OBJECT_DATA *pDev,
     uint32_t device_id,
     BACNET_EVENT_NOTIFICATION_DATA * data)
 {
     int len = 0;
     int pdu_len = 0;
-    int bytes_sent = 0;
     BACNET_NPCI_DATA npci_data;
     BACNET_PATH dest;
     //BACNET_GLOBAL_ADDRESS my_address;
@@ -62,17 +79,28 @@ uint8_t Send_CEvent_Notify(
     bool status = false;
     uint8_t invoke_id = 0;
 
-    if (!dcc_communication_enabled())
+    // BTC - todo 3
+    // the Send_UEvent_Notify() function does not have this check. This is a BTC opportunity
+    // Set up an event with a timer and in the meantime, set dcc off, and see if the event sneaks past!
+    // 2018.01.30
+    if (!dcc_communication_enabled(pDev)) {
         return 0;
+    }
 
+    // todo 2 - do this in the calling function (iff Send_CEvent_Notify (and uevent) not called from multiple locations that is..)
     /* is the device bound? */
     status = address_get_by_device(device_id, &max_apdu, &dest);
     /* is there a tsm available? */
-    if (status)
-        invoke_id = tsm_next_free_invokeID();
+    if (status) {
+    invoke_id = tsm_next_free_invokeID_autoclear(pDev);
+    } else {
+        // todonext8 - there must be a better way...
+        // printf("Target device is not bound, ignoring the Notify Event request\n\r");
+    }
+
     if (invoke_id) {
         /* encode the NPDU portion of the packet */
-        datalink_get_my_address(&my_address);
+        //datalink_get_my_address(&my_address);
         npdu_setup_npci_data(&npci_data, true, MESSAGE_PRIORITY_NORMAL);
         pdu_len =
             npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &dest->bacnetPath.glAdr, NULL, // &my_address,
@@ -88,29 +116,25 @@ uint8_t Send_CEvent_Notify(
            we have a way to check for that and update the
            max_apdu in the address binding table. */
         if ((unsigned) pdu_len < max_apdu) {
+            // dest.portParams = portParams;
             dlcb->optr = pdu_len;
-            tsm_set_confirmed_unsegmented_transaction(invoke_id, &dest,
-                &npci_data, dlcb );
-            bytes_sent =
-                datalink_send_pdu(&dest, &npci_data,
-                dlcb );
-#if PRINT_ENABLED
-            if (bytes_sent <= 0) {
-                fprintf(stderr,
-                    "Failed to Send ConfirmedEventNotification Request (%s)!\n",
-                    strerror(errno));
-            }
-#endif
+            tsm_set_confirmed_unsegmented_transaction(dlcb, invoke_id, dest,
+                &npci_data, (uint16_t) pdu_len);
+
+            dest->portParams->SendPdu(dlcb);
         } else {
-            tsm_free_invoke_id(invoke_id);
+            tsm_free_invoke_id(pDev, invoke_id);
             invoke_id = 0;
 #if PRINT_ENABLED
             fprintf(stderr,
-                "Failed to Send ConfirmedEventNotification Request "
-                "(exceeds destination maximum APDU)!\n");
+                    "Failed to Send ConfirmedEventNotification Request "
+                    "(exceeds destination maximum APDU)!\n");
 #endif
         }
     }
 
     return invoke_id;
 }
+
+#endif // #if (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1)
+
