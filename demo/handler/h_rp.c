@@ -40,7 +40,7 @@
 //#include <stddef.h>
 //#include <stdint.h>
 //#include <stdio.h>
-//#include <string.h>
+#include <string.h>
 //#include <errno.h>
 //#include "config.h"
 #include "txbuf.h"
@@ -57,6 +57,7 @@
 #include "device.h"
 #include "handlers.h"
 #include "bitsDebug.h"
+#include "datalink.h"
 
 /** @file h_rp.c  Handles Read Property requests. */
 

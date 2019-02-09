@@ -46,14 +46,17 @@
 *
 ****************************************************************************************/
 
+#include "config.h"
+
 #include <stdint.h>
-#include "bacenum.h"
-#include "bacerror.h"
+//#include "bacenum.h"
+//#include "bacerror.h"
 #include "bacdcode.h"
 #include "bacdef.h"
-#include "bacapp.h"
+//#include "bacapp.h"
 #include "memcopy.h"
 #include "rpm.h"
+#include "datalink.h"
 
 /** @file rpm.c  Encode/Decode Read Property Multiple and RPM ACKs  */
 

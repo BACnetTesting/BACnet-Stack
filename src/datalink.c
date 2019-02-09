@@ -49,13 +49,14 @@
 #ifdef _MSC_VER
 #include <process.h>
 #endif
-
   
 #include "datalink.h"
-#include "logging/logging.h"
+#include "logging.h"
 #include "handlers.h"
 #include "dlenv.h"
 #include "bitsDebug.h"
+#include "ese.h"
+#include "emm.h"
 
 /** @file datalink.c  Optional run-time assignment of datalink transport */
 
@@ -198,5 +199,67 @@ void Init_Datalink_Thread( void )
     // so we don't have to wait for the thread to complete before exiting main()
     pthread_detach(threadvar);
 #endif
-
 }
+
+
+DLCB *alloc_dlcb_sys(char tag, bool isResponse, uint8_t macAddress )
+{
+    DLCB *dlcb = (DLCB *) emm_dmalloc(tag, sizeof(DLCB));
+    if (dlcb == NULL) return NULL;
+
+    dlcb->Handler_Transmit_Buffer = (uint8_t *)emm_dmalloc(tag, MAX_NPDU);  // todo 2 - we can use portParams max_apdu here already
+    if (dlcb->Handler_Transmit_Buffer == NULL)
+    {
+        emm_free(dlcb);
+        return NULL;
+    }
+
+#if ( BAC_DEBUG == 1 )
+    dlcb->signature = 'd';
+#endif
+
+    // dlcb->portParams = portParams;
+    dlcb->isDERresponse = isResponse ;
+    dlcb->bufMax = MAX_NPDU;
+    dlcb->optr = 0 ;
+    // memset ( &dlcb->npciData2, 0, sizeof ( dlcb->npciData2 ));
+    // bacnet_mac_clear ( &dlcb->phyDest ) ;
+    dlcb->destMac = macAddress;
+    return dlcb;
+}
+
+
+
+#if ( BAC_DEBUG == 1 )
+bool dlcb_check (  DLCB *dlcb )
+{
+    if (dlcb->signature != 'd')
+    {
+        if ( dlcb->signature == 'Z' ) {
+          // DLCB is already freed!
+          ese_enqueue(ese008_08_duplicate_free) ;
+        }
+        else {
+          // probably a bad pointer to block
+          ese_enqueue(ese007_07_bad_malloc_free) ;
+        }
+        return false ;
+    }
+    return true ;
+}
+#endif
+
+
+
+void dlcb_free( DLCB *dlcb)
+{
+#if (BAC_DEBUG == 1 )
+  if ( ! dlcb_check ( dlcb ) ) return ;
+ ((DLCB *)dlcb)->signature = 'Z';
+#endif // DEBUG
+
+    // todo2 - add debug check that dlcb not already freed
+    emm_free(dlcb->Handler_Transmit_Buffer);
+    emm_free((void *) dlcb);
+}
+

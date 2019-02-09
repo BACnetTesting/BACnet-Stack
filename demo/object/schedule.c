@@ -104,6 +104,7 @@ bool Schedule_Create(
     currentObject->Present_Value.tag = BACNET_APPLICATION_TAG_NULL;
     currentObject->Out_Of_Service = false;
     currentObject->Reliability = RELIABILITY_NO_FAULT_DETECTED;
+
     return true;
 }
 
@@ -619,7 +620,10 @@ bool Schedule_Write_Property(
             }
             while (!IS_CLOSING_TAG(wp_data->application_data[apdu_len]) && apdu_len < wp_data->application_data_len) {
                 // todo - check error code in BTL conformance docs
-                if (Weekly_Schedule[i].ux_TimeValues == BACNET_WEEKLY_SCHEDULE_SIZE) return false;
+                if (Weekly_Schedule[i].ux_TimeValues >= BACNET_WEEKLY_SCHEDULE_SIZE) {
+                    panic(); // there is a code smell here, how on earth did this happen?
+                    return false;
+                }
                 // we can extract a list of timevalue pairs
                 len = bacapp_decode_application_data(&wp_data->application_data[apdu_len], wp_data->application_data_len, &value);
                 if (len > 0 && WPValidateArgType(&value, BACNET_APPLICATION_TAG_TIME, &wp_data->error_class, &wp_data->error_code)) {

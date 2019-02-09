@@ -93,7 +93,8 @@ unsigned Ringbuf_Count(RING_BUFFER const *b)
 * @param  b - pointer to RING_BUFFER structure
 * @return true if the ring buffer is full, false if it is not.
 */
-bool Ringbuf_Full(RING_BUFFER const *b)
+bool Ringbuf_Full(
+    RING_BUFFER const *b)
 {
     return (b ? (Ringbuf_Count(b) == b->element_count) : true);
 }
@@ -104,7 +105,8 @@ bool Ringbuf_Full(RING_BUFFER const *b)
 * @param  b - pointer to RING_BUFFER structure
 * @return true if the ring buffer is empty, false if it is not.
 */
-bool Ringbuf_Empty(RING_BUFFER const *b)
+bool Ringbuf_Empty(
+    RING_BUFFER const *b)
 {
     return (b ? (Ringbuf_Count(b) == 0) : true);
 }
@@ -234,7 +236,8 @@ volatile uint8_t *Ringbuf_Peek_Next(RING_BUFFER const *b,
 * @param  data_element - element of data that is loaded with data from ring
 * @return true if data was copied, false if list is empty
 */
-bool Ringbuf_Pop(RING_BUFFER * b,
+bool Ringbuf_Pop(
+    RING_BUFFER * b,
     uint8_t * data_element)
 {
     bool status = false;        /* return value */
@@ -318,7 +321,8 @@ bool Ringbuf_Pop_Element(RING_BUFFER * b,
 * @param  data_element - one element that is copied to the ring buffer
 * @return true on succesful add, false if not added
 */
-bool Ringbuf_Put(RING_BUFFER * b,
+bool Ringbuf_Put(
+    RING_BUFFER * b,    /* ring buffer structure */
     uint8_t * data_element)
 {
     bool status = false;        /* return value */

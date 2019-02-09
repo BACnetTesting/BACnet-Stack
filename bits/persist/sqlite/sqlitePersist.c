@@ -128,7 +128,7 @@ static int32_t RouterPortCallback(void *NotUsed, int argc, char **argv, char **a
 
     switch ( StringTo_PF(portType))
     {
-    case PF_BIP:
+    case BPT_BIP:
         log_printf("BACnet Port          %d, Network Number %d", bacnetPort, networkNumber);
         ok = InitRouterport(PF_BIP, adapter, (uint16_t) networkNumber, (uint16_t) bacnetPort );
 		if (!ok) {
@@ -137,7 +137,7 @@ static int32_t RouterPortCallback(void *NotUsed, int argc, char **argv, char **a
 		}
         break;
 
-    case PF_BBMD:
+    case BPT_BBMD:
         log_printf("BACnet BBMD Port     %d, Network Number %d", bacnetPort, networkNumber);
         ok = InitRouterport(PF_BBMD, adapter, (uint16_t)networkNumber, (uint16_t)bacnetPort);
 		if (!ok) {
@@ -146,7 +146,7 @@ static int32_t RouterPortCallback(void *NotUsed, int argc, char **argv, char **a
 		}
         break;
 
-    case PF_NAT:
+    case BPT_NAT:
         log_printf("BACnet NAT Port      %d, Network Number %d, EndPoint %s", bacnetPort, networkNumber, endpoint );
         if (!StringTo_IPEP(&ipep, endpoint))
         {

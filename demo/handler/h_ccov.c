@@ -154,8 +154,9 @@ void handler_ccov_notification(
         }
     }
 #endif
-    /* bad decoding or something we didn't understand - send an abort */
+
     if (len <= 0) {
+        /* bad decoding or something we didn't understand - send an abort */
         len =
             abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, ABORT_REASON_OTHER, true);
@@ -163,7 +164,8 @@ void handler_ccov_notification(
         fprintf(stderr, "CCOV: Bad Encoding. Sending Abort!\n");
 #endif
         goto CCOV_ABORT;
-    } else {
+    } 
+    else {
         len =
             encode_simple_ack(&Handler_Transmit_Buffer[pdu_len],
             service_data->invoke_id, SERVICE_CONFIRMED_COV_NOTIFICATION);
@@ -171,6 +173,8 @@ void handler_ccov_notification(
         fprintf(stderr, "CCOV: Sending Simple Ack!\n");
 #endif
     }
+
+
   CCOV_ABORT:
     pdu_len += len;
     bytes_sent =

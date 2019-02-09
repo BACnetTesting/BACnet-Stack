@@ -27,6 +27,8 @@
 
 #pragma once
 
+#include <stdbool.h>
+
 #if defined ( _MSC_VER  )
 #include <varargs.h>
 #else
@@ -97,22 +99,25 @@ typedef enum {
 #if 1 
 
 void SendBTAmessage(const char *message);
+void SendBTAmessageF1(char *message, int val1 );
+void SendBTAhexdump(const char *message, const void *buffer, const uint16_t len );
 void SendBTAstartMessage(const char *message);
 void SendBTApanicMessage(const char *message) ;
 void SendBTApanicInt(const char *message, const int value );
-void SendBTAmstpFrame(const uint8_t *outbuf, const uint16_t datalen ) ;
-void SendBTAmstpPayload(const uint8_t *payload, const uint16_t data_len, const uint8_t function, const uint8_t dest, const uint8_t source ) ;
+void SendBTAmstpFrame(const uint8_t portId, const bool tx, const uint8_t *outbuf, const uint16_t datalen ) ;
+void SendBTAmstpPayload(const uint8_t portId, const bool tx, const uint16_t data_len, const uint8_t function, const uint8_t dest, const uint8_t source, const uint8_t *payload ) ;
 void SendBTApacketRx(const int port_id, const BACNET_MAC_ADDRESS *srcPhyMac, const BACNET_MAC_ADDRESS *destPhyMac, const uint8_t *pdu, const int len);
 void SendBTApacketTx(const int port_id, const BACNET_MAC_ADDRESS *srcPhyMac, const BACNET_MAC_ADDRESS *destPhyMac, const uint8_t *pdu, const int len);
 void SendBTApayload(uint8_t *payload, const int sendlength);
 void SendBTAmemoryStats(void);
-// not static, cos used by emm.c
 void PrepareBTAheader(const BTApt fc, uint8_t *buffer ) ;
-void BTAinit(void);
-bool BTAready(void);
+bool BTA_Ready(void);
+void BTA_DatalinkIdle(void);
+bool BTA_DatalinkInit(void);
 
-int encodeUInt16(uint8_t *buf, const uint16_t port);
-// int encodeUInt32(uint8_t *buf, const uint32_t val);
+int encodeUInt8(uint8_t *buf, const uint8_t val);
+int encodeUInt16(uint8_t *buf, const uint16_t val);
+int encodeUInt32(uint8_t *buf, const uint32_t val);
 
 #else
 

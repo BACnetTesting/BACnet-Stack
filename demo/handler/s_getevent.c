@@ -59,6 +59,10 @@
 #include "txbuf.h"
 #include "client.h"
 
+#if (BACNET_USE_EVENT_HANDLING == 1)
+
+// redefinition, see config.h #define PRINT_ENABLED 1
+
 /** @file s_getevent.c  Send a GetEventInformation request. */
 
 /** Send a GetEventInformation request to a remote network for a specific device, a range,
@@ -123,4 +127,6 @@ uint8_t Send_GetEvent_Global( void )
 
     return Send_GetEvent(&dest, NULL);
 }
+
+#endif // #if (BACNET_USE_EVENT_HANDLING == 1)
 

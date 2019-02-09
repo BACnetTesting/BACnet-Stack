@@ -26,6 +26,7 @@
 ****************************************************************************************/
 
 #include "config.h"
+#include "osLayer.h"
 #include "bitsUtil.h"
 #include "bitsDebug.h"
 
@@ -59,12 +60,22 @@ void msSleep(uint16_t ms)
 // ms since machine was started
 uint32_t timer_get_time(void)
 {
+#ifdef OS_LAYER_WIN
 	return timeGetTime();
+#else
+    panic();
+#endif
 }
 
 uint16_t timer_delta_time(uint32_t startTime)
 {
+#ifdef OS_LAYER_WIN
     uint32_t timeNow = timeGetTime();
+#else
+    panic();
+    // uint32_t timeNow = timeGetTime();
+    uint32_t timeNow = 11 ;
+#endif
     uint32_t deltaTime;
 
     if (timeNow < startTime)
@@ -124,10 +135,26 @@ char bits_toupper(const char orig)
 
 size_t bits_strlen(const char *orig)
 {
-    for (int i = 0; i <= MAX_CHARACTER_STRING_BYTES; i++)         {
+    for (int i = 0; i <= 4096; i++) {
         if (orig[i] == 0) return i;
     }
     panicDesc("String too long for BACnet");
     return 0;
+}
+
+
+void bits_memcpy(void *dest, const void *src, uint len)
+{
+    for (int i = 0; i < len; i++) {
+        ((uint8_t *)dest)[i] = ((uint8_t *)src)[i];
+    }
+}
+
+
+void bits_memset(void *dest, uint8_t val, uint len)
+{
+    for (int i = 0; i < len; i++) {
+        ((uint8_t *)dest)[i] = val ;
+    }
 }
 

@@ -36,11 +36,13 @@
 #include "npdu.h"
 #include "bvlc6.h"
 
+#define BIP6_MAX_PDU 14776 
+
 /* specific defines for BACnet/IP over Ethernet */
 #define BIP6_HEADER_MAX (1 + 1 + 2)
-#define BIP6_MPDU_MAX (BIP6_HEADER_MAX+MAX_PDU)
+#define BIP6_MPDU_MAX (BIP6_HEADER_MAX+BIP6_MAX_PDU)
 /* for legacy demo applications */
-#define MAX_MPDU BIP6_MPDU_MAX
+#define MAX_MPDU_BIP6 BIP6_MPDU_MAX
 
 
     /* 6 datalink functions used by demo handlers and applications:

@@ -42,6 +42,7 @@
 
 /* Functional Description: Memory copy function */
 
+// #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
 

@@ -61,6 +61,9 @@ typedef struct BACnet_Recipient_List {
     struct BACnet_Recipient_List *next;
 } BACNET_RECIPIENT_LIST;
 
+void SetTime(
+    BACNET_DATE *bdate,
+    BACNET_TIME *btime);
     
 /* encode service */
 int timesync_utc_encode_apdu(

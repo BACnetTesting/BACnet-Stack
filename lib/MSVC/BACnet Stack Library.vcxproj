@@ -1,6 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug - For FDR testing|Win32">
+      <Configuration>Debug - For FDR testing</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug - For FDR testing|x64">
+      <Configuration>Debug - For FDR testing</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
@@ -29,6 +37,11 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug - For FDR testing|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
@@ -37,6 +50,11 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug - For FDR testing|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
@@ -53,7 +71,13 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="..\..\ports\win32\Microsoft Visual Studio\BACnet Solution Settings.props" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug - For FDR testing|Win32'" Label="PropertySheets">
+    <Import Project="..\..\ports\win32\Microsoft Visual Studio\BACnet Solution Settings.props" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="..\..\ports\win32\Microsoft Visual Studio\BACnet Solution Settings.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug - For FDR testing|x64'" Label="PropertySheets">
     <Import Project="..\..\ports\win32\Microsoft Visual Studio\BACnet Solution Settings.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -67,21 +91,42 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>..\..\demo\object;..\..\demo\handlers;..\..\ports\win32;..\..\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\bits\util;..\..\bits;..\..\demo\object;..\..\demo\handlers;..\..\ports\win32;..\..\include;..\..\bits\logging;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug - For FDR testing|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>..\..\bits\util;..\..\bits;..\..\demo\object;..\..\demo\handlers;..\..\ports\win32;..\..\include;..\..\bits\logging;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>..\..\bits\util;..\..\bits;..\..\demo\object;..\..\demo\handlers;..\..\ports\win32;..\..\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\bits\util;..\..\bits;..\..\demo\object;..\..\demo\handlers;..\..\ports\win32;..\..\include;..\..\bits\logging;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug - For FDR testing|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>..\..\bits\util;..\..\bits;..\..\demo\object;..\..\demo\handlers;..\..\ports\win32;..\..\include;..\..\bits\logging;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>..\..\demo\object;..\..\demo\handlers;..\..\ports\win32;..\..\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\bits\util;..\..\bits;..\..\demo\object;..\..\demo\handlers;..\..\ports\win32;..\..\include;..\..\bits\logging;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>..\..\bits\util;..\..\bits;..\..\demo\object;..\..\demo\handlers;..\..\ports\win32;..\..\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\bits\util;..\..\bits;..\..\demo\object;..\..\demo\handlers;..\..\ports\win32;..\..\include;..\..\bits\logging;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug - For FDR testing|Win32'">
     <ClCompile>
       <PrecompiledHeader>
       </PrecompiledHeader>
@@ -102,6 +147,22 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions />
+      <CompileAs>CompileAsCpp</CompileAs>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug - For FDR testing|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>
+      </UndefinePreprocessorDefinitions>
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
     <Link>
@@ -152,10 +213,12 @@
     <ClCompile Include="..\..\bits\util\bacnetProc.c" />
     <ClCompile Include="..\..\bits\util\BACnetToString.c" />
     <ClCompile Include="..\..\bits\util\bitsDebug.c" />
+    <ClCompile Include="..\..\bits\util\btaDatalink.c" />
     <ClCompile Include="..\..\bits\util\btaDebug.c" />
     <ClCompile Include="..\..\bits\util\commandLine.c" />
     <ClCompile Include="..\..\bits\util\emm.c" />
     <ClCompile Include="..\..\bits\util\ese.c" />
+    <ClCompile Include="..\..\bits\util\FlashErr.c" />
     <ClCompile Include="..\..\bits\util\llist.c" />
     <ClCompile Include="..\..\bits\util\menuDiags.c" />
     <ClCompile Include="..\..\bits\util\misc.c" />
@@ -257,6 +320,7 @@
     <ClCompile Include="..\..\demo\object\trendlog.c" />
     <ClCompile Include="..\..\ports\win32\bip-init.c" />
     <ClCompile Include="..\..\ports\win32\dlmstp.c" />
+    <ClCompile Include="..\..\ports\win32\led.c" />
     <ClCompile Include="..\..\ports\win32\rs485.c" />
     <ClCompile Include="..\..\ports\win32\timer.c" />
     <ClCompile Include="..\..\src\abort.c" />
@@ -299,7 +363,6 @@
     <ClCompile Include="..\..\src\lighting.c" />
     <ClCompile Include="..\..\src\lso.c" />
     <ClCompile Include="..\..\src\memcopy.c" />
-    <ClCompile Include="..\..\src\mstp.c" />
     <ClCompile Include="..\..\src\mstptext.c" />
     <ClCompile Include="..\..\src\npdu.c" />
     <ClCompile Include="..\..\src\proplist.c" />
@@ -341,6 +404,40 @@
     <ClInclude Include="..\..\ConnectExUtil\ese.h" />
     <ClInclude Include="..\..\ConnectExUtil\linklist.h" />
     <ClInclude Include="..\..\ConnectExUtil\llist.h" />
+    <ClInclude Include="..\..\demo\object\access_credential.h" />
+    <ClInclude Include="..\..\demo\object\access_door.h" />
+    <ClInclude Include="..\..\demo\object\access_point.h" />
+    <ClInclude Include="..\..\demo\object\access_rights.h" />
+    <ClInclude Include="..\..\demo\object\access_user.h" />
+    <ClInclude Include="..\..\demo\object\access_zone.h" />
+    <ClInclude Include="..\..\demo\object\ai.h" />
+    <ClInclude Include="..\..\demo\object\alert_enrollment.h" />
+    <ClInclude Include="..\..\demo\object\ao.h" />
+    <ClInclude Include="..\..\demo\object\av.h" />
+    <ClInclude Include="..\..\demo\object\bacfile.h" />
+    <ClInclude Include="..\..\demo\object\bi.h" />
+    <ClInclude Include="..\..\demo\object\bo.h" />
+    <ClInclude Include="..\..\demo\object\bv.h" />
+    <ClInclude Include="..\..\demo\object\calendar.h" />
+    <ClInclude Include="..\..\demo\object\channel.h" />
+    <ClInclude Include="..\..\demo\object\command.h" />
+    <ClInclude Include="..\..\demo\object\credential_data_input.h" />
+    <ClInclude Include="..\..\demo\object\csv.h" />
+    <ClInclude Include="..\..\demo\object\device.h" />
+    <ClInclude Include="..\..\demo\object\iv.h" />
+    <ClInclude Include="..\..\demo\object\lc.h" />
+    <ClInclude Include="..\..\demo\object\lo.h" />
+    <ClInclude Include="..\..\demo\object\lsp.h" />
+    <ClInclude Include="..\..\demo\object\ms-input.h" />
+    <ClInclude Include="..\..\demo\object\ms-value.h" />
+    <ClInclude Include="..\..\demo\object\mso.h" />
+    <ClInclude Include="..\..\demo\object\msv.h" />
+    <ClInclude Include="..\..\demo\object\nc.h" />
+    <ClInclude Include="..\..\demo\object\netport.h" />
+    <ClInclude Include="..\..\demo\object\osv.h" />
+    <ClInclude Include="..\..\demo\object\piv.h" />
+    <ClInclude Include="..\..\demo\object\schedule.h" />
+    <ClInclude Include="..\..\demo\object\trendlog.h" />
     <ClInclude Include="..\..\include\abort.h" />
     <ClInclude Include="..\..\include\access_rule.h" />
     <ClInclude Include="..\..\include\address.h" />

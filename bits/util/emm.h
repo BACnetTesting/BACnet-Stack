@@ -53,17 +53,17 @@ void emm_free_provisional(void *p);
 void *emm_sys_malloc(uint8_t tag, uint16_t size);
 void *emm_sys_safe_malloc(uint8_t tag, uint16_t size);            // no 'deliberately fail mallocs' allowed here.
 void *emm_sys_cmalloc(uint8_t tag, uint16_t size);
-#define emm_dmalloc(tag,size) emm_sys_malloc(tag,size)
-#define emm_dcalloc(tag,size) emm_sys_calloc(tag,size)
-#define emm_smalloc(tag,size) emm_sys_safe_malloc(tag,size)
+#define emm_dmalloc(tag, size) emm_sys_malloc(tag, size)
+#define emm_dcalloc(tag, size) emm_sys_calloc(tag, size)
+#define emm_smalloc(tag, size) emm_sys_safe_malloc(tag, size)
 void DumpEmmTraceLog(void);
 #else
 void *emm_sys_malloc(uint16_t size);
 void *emm_sys_safe_malloc(uint16_t size);
 void *emm_sys_safe_calloc(uint16_t size);
-#define emm_dmalloc(tag,size) emm_sys_malloc(size)
-#define emm_smalloc(tag,size) emm_sys_safe_malloc(size)
-#define emm_scalloc(tag,size) emm_sys_safe_calloc(size)
+#define emm_dmalloc(tag, size) emm_sys_malloc(size)
+#define emm_smalloc(tag, size) emm_sys_safe_malloc(size)
+#define emm_scalloc(tag, size) emm_sys_safe_calloc(size)
 #define emm_calloc(size) emm_sys_safe_calloc(size)
 #endif
 

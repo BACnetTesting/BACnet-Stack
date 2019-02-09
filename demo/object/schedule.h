@@ -80,6 +80,33 @@ typedef struct bacnet_daily_schedule {
     uint16_t			ux_TimeValues ;
 } BACNET_DAILY_SCHEDULE;
 
+	/*
+	BACnetCalendarEntry ::= CHOICE {
+		date [0] Date,
+		dateRange [1] BACnetDateRange,
+		weekNDay [2] BACnetWeekNDay
+		}
+	*/
+
+/* redeclared from somewhere - commenting out for now ekh todo 1
+	typedef struct BACnetCalendarEntry
+	{
+		uint8_t	choice;
+	} BACNET_CALENDAR_ENTRY;
+#endif
+
+	BACnetSpecialEvent :: = SEQUENCE{
+	period CHOICE{
+	calendarEntry[0] BACnetCalendarEntry,
+	calendarReference[1] BACnetObjectIdentifier
+	},
+	listOfTimeValues[2] SEQUENCE OF BACnetTimeValue,
+	eventPriority[3] Unsigned(1..16)
+	}
+	*/
+    
+// todo EKH - Added these in from latest Karg stack for reference...
+
 
 /*
 	BACnetSpecialEvent ::= SEQUENCE {

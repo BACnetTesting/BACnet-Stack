@@ -53,13 +53,14 @@
 #include "reject.h"
 #include "bacerror.h"
 #include "rpm.h"
-#include "handlers.h"
-/* device object has custom handler for all objects */
+//#include "handlers.h"
+///* device object has custom handler for all objects */
 #include "device.h"
-// #include "proplist.h"
+//#include "proplist.h"
 #include "datalink.h"
 #include "txbuf.h"
 #include "bitsDebug.h"
+#include "datalink.h"
 
 /** @file h_rpm.c  Handles Read Property Multiple requests. */
 
@@ -126,7 +127,7 @@ static unsigned RPM_Object_Property_Count(
 
 /** Encode the RPM property returning the length of the encoding,
    or 0 if there is no room to fit the encoding.  */
-static int RPM_Encode_Property(
+int RPM_Encode_Property(
     uint8_t * apdu,
     uint16_t offset,
     uint16_t max_apdu,
@@ -146,6 +147,7 @@ static int RPM_Encode_Property(
         return BACNET_STATUS_ABORT;
     }
     apdu_len = len;
+    
 
     rpdata.error_class = ERROR_CLASS_OBJECT;
     rpdata.error_code = ERROR_CODE_UNKNOWN_OBJECT;

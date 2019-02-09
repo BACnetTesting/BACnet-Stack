@@ -1,4 +1,4 @@
-/*####COPYRIGHTBEGIN####
+/*
  -------------------------------------------
  Copyright (C) 2004 Steve Karg
 
@@ -30,8 +30,21 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+ 
+ 
+     Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+
+    July 1, 2017    BITS    Modifications to this file have been made in compliance
+                            to original licensing.
+
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *
+ ****************************************************************************************/
 
 #ifndef RS485_H
 #define RS485_H
@@ -39,31 +52,51 @@
 #include <stdint.h>
 #include "mstp.h"
 
-    void RS485_Set_Interface(
-        char *ifname);
-    const char *RS485_Interface(
-        void);
+void RS485_Set_Interface(
+    char *ifname);
 
-    void RS485_Initialize(
-        void);
+const char *RS485_Interface(
+    void);
 
-    void RS485_Send_Frame(
-        volatile struct mstp_port_struct_t *mstp_port,  /* port specific data */
-        uint8_t * buffer,       /* frame to send (up to 501 bytes of data) */
-        uint16_t nbytes);       /* number of bytes of data (up to 501) */
+void RS485_Initialize(
+    void);
 
-    void RS485_Check_UART_Data(
-        volatile struct mstp_port_struct_t *mstp_port); /* port specific data */
-    uint32_t RS485_Get_Port_Baud_Rate(
-        volatile struct mstp_port_struct_t *mstp_port);
-    uint32_t RS485_Get_Baud_Rate(
-        void);
-    bool RS485_Set_Baud_Rate(
-        uint32_t baud);
+void RS485_Send_Frame(
+    volatile struct mstp_port_struct_t *mstp_port,  /* port specific data */
+    uint8_t * buffer,       /* frame to send (up to 501 bytes of data) */
+    uint16_t nbytes);       /* number of bytes of data (up to 501) */
 
-    void RS485_Cleanup(
-        void);
-    void RS485_Print_Ports(
-        void);
+// returns true if we have received a character
+bool RS485_Check_UART_Data(
+    volatile struct mstp_port_struct_t *mstp_port);
+
+//uint32_t RS485_Get_Port_Baud_Rate(
+//    volatile struct mstp_port_struct_t *mstp_port);
+
+//uint32_t RS485_Get_Baud_Rate(
+//    void);
+
+//bool RS485_Set_Baud_Rate(
+//    uint32_t baud);
+
+bool rs485_byte_sent(
+    volatile struct mstp_port_struct_t *mstp_port);
+    
+void rs485_byte_send(
+    volatile struct mstp_port_struct_t *mstp_port,
+    uint8_t tx_byte);
+
+bool rs485_frame_sent(
+    volatile struct mstp_port_struct_t *mstp_port);
+
+void rs485_rts_enable(
+    volatile struct mstp_port_struct_t *mstp_port,
+    bool enable);
+
+void RS485_Cleanup(
+    void);
+
+bool rs485_turnaround_elapsed(
+    volatile struct mstp_port_struct_t *mstp_port);
 
 #endif

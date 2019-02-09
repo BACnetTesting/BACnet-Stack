@@ -6,6 +6,5 @@ for /D %%d in (*) do (
    cd ..                                           
 )                                                  
 
-if exist *.orig del /s /q *.orig 
-if exist *.b32 del /s /q *.b32 
-if exist *.o del /s /q *.o 
+del /s /q *.orig 
+del /s /q *.o 

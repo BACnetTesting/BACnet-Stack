@@ -378,10 +378,10 @@ int datalink_send_pdu(
     uint8_t * pdu,
     unsigned pdu_len)
 {
-    (void) dest;
-    (void) npci_data;
-    (void) pdu;
-    (void) pdu_len;
+    (void)dest;
+    (void)npci_data;
+    (void)pdu;
+    (void)pdu_len;
 
     return 0;
 }
@@ -390,7 +390,7 @@ int datalink_send_pdu(
 void datalink_get_broadcast_address(
     BACNET_ADDRESS * dest)
 {
-    (void) dest;
+    (void)dest;
 }
 
 void testTSM(
@@ -413,7 +413,7 @@ int main(
 
     ct_setStream(pTest, stdout);
     ct_run(pTest);
-    (void) ct_report(pTest);
+    (void)ct_report(pTest);
     ct_destroy(pTest);
 
     return 0;

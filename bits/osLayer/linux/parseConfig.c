@@ -29,13 +29,10 @@
 #include <libconfig.h>      /* read config files, from libconfig */
 #include <getopt.h>
 
-#include "bitsRouter.h"
 #include "bacstr.h"
 #include "osLayer.h"
 #include "device.h"
 
-ROUTER_PORT *headRouterport = NULL; /* pointer to list of router ports */
-extern ROUTER_PORT *applicationRouterPort;
 
 BACNET_CHARACTER_STRING My_Object_Name;
 uint32_t Object_Instance_Number;
@@ -46,6 +43,7 @@ extern char firstEthernet[20];
 
 bool read_config(char *filepath)
 {
+#if 0
     config_t cfg;
     config_setting_t *setting;
     // ROUTER_PORT *current = headRouterport;
@@ -195,7 +193,7 @@ bool read_config(char *filepath)
     //     printf("cmd file parse success\r\n");
 
     AlignApplicationWithPort();
-
+#endif
     return true;
 }
 
@@ -204,6 +202,7 @@ bool parse_cmd(
     int argc,
     char *argv[])
 {
+#if 0
     const char *optString = "hsc:D:q";                // trailing : means option requires parameter, :: optional parameter
     const char *bipString = "p:n:D:";
     const struct option Options[] = {
@@ -348,6 +347,6 @@ bool parse_cmd(
             break;
         }
     } while (opt > 0);
-
+#endif
     return true;
 }

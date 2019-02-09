@@ -48,7 +48,7 @@
 #define DATALINK_H
 
 #include "bacdef.h"
-
+#include "bitsDebug.h"
 
 void Init_Datalink_Thread( void )  ;
 
@@ -74,7 +74,12 @@ void Init_Datalink_Thread( void )  ;
 
 #elif defined(BACDL_MSTP)
 #include "dlmstp.h"
+#include "mstp.h"
 
+#define MAX_APDU    MAX_APDU_MSTP
+#define MAX_NPDU    MAX_NPDU_MSTP
+#define MAX_MPDU    MAX_MPDU_MSTP
+    
 #define datalink_init dlmstp_init
 #define datalink_send_pdu dlmstp_send_pdu
 #define datalink_receive dlmstp_receive
@@ -85,6 +90,10 @@ void Init_Datalink_Thread( void )  ;
 #elif defined(BACDL_BIP)
 #include "bip.h"
 #include "bvlc.h"
+
+#define MAX_NPDU    MAX_NPDU_IP
+// #define MAX_PDU     MAX_PDU_IP
+#define MAX_MPDU    MAX_MPDU_IP
 
 #define datalink_init bip_init
 #if defined(BBMD_ENABLED) && BBMD_ENABLED
@@ -118,6 +127,7 @@ extern void routed_get_my_address(
 #else /* Ie, BACDL_ALL */
 #include "npdu.h"
 
+#error
 #define MAX_HEADER (8)
 #define MAX_MPDU (MAX_HEADER+MAX_PDU)
 
@@ -165,10 +175,43 @@ extern void routed_get_my_address(
  *                     chosen at runtime from among these choices.
  * - Clause 10 POINT-TO-POINT (PTP) and Clause 11 EIA/CEA-709.1 ("LonTalk") LAN
  *   are not currently supported by this project.
-                                                                                                                                                                                              *//** @defgroup DLTemplates DataLink Template Functions
+ */
+ /** @defgroup DLTemplates DataLink Template Functions
  * @ingroup DataLink
  * Most of the functions in this group are function templates which are assigned
  * to a specific DataLink network layer implementation either at compile time or
  * at runtime.
  */
+ 
+ 
+ typedef struct _DLCB
+{
+#if ( BAC_DEBUG == 1 )
+    uint8_t signature ;
 #endif
+
+    bool                isDERresponse ;                      // is this packet due to an external DER (MSTP) or internal unsolicited (App) event?
+    uint16_t            bufMax;
+    uint16_t            optr;
+    uint8_t             *Handler_Transmit_Buffer;
+    
+    uint8_t     destMac;
+    /*
+    BACNET_MAC_ADDRESS  phyDest;
+    PORT_SUPPORT        *portParams;
+    */
+} DLCB ;
+
+#endif
+
+    DLCB *alloc_dlcb_sys(char tag, bool isResponse, uint8_t destMac );
+    void dlcb_free(DLCB *dlcb);
+
+#if ( BAC_DEBUG == 1 )
+    bool dlcb_check(DLCB *dlcb);
+#endif
+
+// renaming to allow tracing during debugging
+#define alloc_dlcb_response(tag, mac)        alloc_dlcb_sys(tag, true, mac)
+#define alloc_dlcb_new_message(tag, mac)     alloc_dlcb_sys(tag, false, mac)
+

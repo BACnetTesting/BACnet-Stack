@@ -19,10 +19,10 @@ that are migrated through the rest of the repository via automatic branch merges
 
                         ----------------------------------------------------------------
 
-The project is arranged in branches, each branch with additional functionality. Pick the branch that
-suits your application the best and start there.
+The project is arranged in phases, each phase has its branch with additional functionality.
+Pick the branch of the phase that suits your application the best and start there.
 
-## Branch name
+## Phase (branch) name
 ### Description
 
 ###Shadow of Steve Kargs stack
@@ -69,9 +69,15 @@ suits your application the best and start there.
         Common function calls
         Breaking out datalink into module
         Datalink, BACnet 'main' run in threads
+	Notes:
+		ST Micro / Discovery support is added here, and not considered a separate phase
 
                 ------
                 Status: 2017.10.01 Runs vs2017 - server, x64 debug
+
+###Feature Creep 2 - Consolidation
+	Intent was to commonise functions in readproperty and write property switches, but upon initial development, checks like array index as well as less than
+	expected common code, as well as the desire to reduce RAM for by using ROM made me cancel this approach 2018.10.24 
 
 ###MultipleDatalinks
     Added dlcb, removed Tx buffers
@@ -81,9 +87,6 @@ suits your application the best and start there.
 
         ------
         Status: 2017.09.30 Does not compile, just using as a "Hg merge" stepping-stone to "Full Routing"
-
-###ST (Discovery)
-    Discovery board implemented with multiple datalinks so RS485 or Ethernet can be utilized (either-or, NOT Routing!)
 
 Virtual Devices
     -- obsolete - there cannot be a concept of virtual devices without full routing.... Virtual Devices
@@ -96,7 +99,14 @@ Virtual Devices
     And _this_ is where the action happens. Virtual devices, multiple datalinks, routing.
     Note, the projects server, readprom, readpropm, whois etc are NOT SUPPORTED in this phase! Only "bitsRouter" and bits/utils (etc) are...
 
+
+
+
 # Compiling and sanity test under Ubuntu
+	See blog posting: https://www.bac-test.com/how-to-build-a-foss-bacnet-server-based-on-steve-kargs-sourceforge-project/
+	Quick notes:	Clone the repo
+					Make sure you have full dev environment: sudo apt-get install build-essential libconfig-dev
+					make
 
 ## Make sure all the tools are installed:
     sudo apt-get install gcc

@@ -57,6 +57,8 @@ uint    ll_GetCount(LLIST_HDR *cb ) ;
 bool    ll_Enqueue(LLIST_HDR *cb, void *newitem);
 void   *ll_Dequeue(LLIST_HDR *cb);
 void   *ll_Pluck(LLIST_HDR *llhdr, void *matchitem, bool (match)(void *listitem, void *matchitem));
+void   *ll_First(LLIST_HDR *llhdr);
+void   *ll_Next(LLIST_LB *lb);
 
 // gets a pointer to the nth item in the list - This pointer will no longer be protected by a critical section !!!
 void   *ll_GetPtr(LLIST_HDR *llhdr, const uint index);

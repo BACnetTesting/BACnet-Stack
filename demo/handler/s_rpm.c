@@ -53,10 +53,10 @@
 #include "datalink.h"
 #include "dcc.h"
 #include "rpm.h"
-/* some demo stuff needed */
-#include "handlers.h"
-#include "sbuf.h"
-#include "client.h"
+///* some demo stuff needed */
+//#include "handlers.h"
+//#include "sbuf.h"
+//#include "client.h"
 
 /** @file s_rpm.c  Send Read Property Multiple request. */
 
@@ -70,6 +70,8 @@
  *        properties to be read.
  * @return invoke id of outgoing message, or 0 if device is not bound or no tsm available
  */
+#ifdef RPM_A
+
 uint8_t Send_Read_Property_Multiple_Request(
     uint8_t * pdu,
     size_t max_pdu,
@@ -136,3 +138,5 @@ uint8_t Send_Read_Property_Multiple_Request(
 
     return invoke_id;
 }
+
+#endif

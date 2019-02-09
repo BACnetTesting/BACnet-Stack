@@ -1,6 +1,6 @@
-/*####COPYRIGHTBEGIN####
- -------------------------------------------
- Copyright (C) 2005 Steve Karg
+/****************************************************************************************
+
+ Copyright (C) 2006 Steve Karg
 
  This program is free software; you can redistribute it and/or
  modify it under the terms of the GNU General Public License
@@ -29,22 +29,22 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
-
- *****************************************************************************************
- *
- *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
- *
- *   July 1, 2017    BITS    Modifications to this file have been made in compliance
- *                           with original licensing.
- *
- *   This file contains changes made by BACnet Interoperability Testing
- *   Services, Inc. These changes are subject to the permissions,
- *   warranty terms and limitations above.
- *   For more information: info@bac-test.com
- *   For access to source code:  info@bac-test.com
- *          or      www.github.com/bacnettesting/bacnet-stack
- *
- ****************************************************************************************/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
 #include <stdint.h>     /* for standard integer types uint8_t etc. */
 #include <stdbool.h>    /* for the standard bool type. */
@@ -144,6 +144,7 @@ static int bip_decode_bip_address(
     return 6;
 }
 
+
 /** Function to send a packet out the BACnet/IP socket (Annex J).
  * @ingroup DLBIP
  *
@@ -162,10 +163,10 @@ int bip_send_pdu(
     )
 {
     struct sockaddr_in bip_dest;
-    uint8_t mtu[MAX_MPDU] = { 0 };
+    uint8_t mtu[MAX_MPDU_IP] = { 0 };
     int mtu_len = 0;
     int bytes_sent = 0;
-    /* addr and port in host format */
+    /* addr and port in network format */
     struct in_addr address;
     uint16_t port = 0;
 
@@ -200,7 +201,7 @@ int bip_send_pdu(
     }
     bip_dest.sin_addr.s_addr = address.s_addr;
     bip_dest.sin_port = port;
-    memset(&(bip_dest.sin_zero), '\0', 8);
+    memset(&(bip_dest.sin_zero), '\0', 8);      // todonext suspicious &
     mtu_len = 2;
     mtu_len +=
         encode_unsigned16(&mtu[mtu_len],
@@ -215,6 +216,7 @@ int bip_send_pdu(
 
     return bytes_sent;
 }
+
 
 /** Implementation of the receive() function for BACnet/IP; receives one
  * packet, verifies its BVLC header, and removes the BVLC header from
@@ -359,7 +361,8 @@ uint16_t bip_receive(
                 for (i = 0; i < pdu_len; i++) {
                     pdu[i] = pdu[4 + 6 + i];
                 }
-            } else {
+            }
+            else {
                 /* ignore packets that are too large */
                 /* clients should check my max-apdu first */
                 pdu_len = 0;
@@ -387,7 +390,6 @@ void bip_get_my_address(
             my_address->adr[i] = 0;
         }
     }
-
 }
 
 

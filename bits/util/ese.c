@@ -67,7 +67,7 @@ void ese_enqueue_uint8( uint8_t value)
 #endif
     
     // and if we want to flash something....
-    // FlashErr_enqueue(value);
+    FlashErr_enqueue(value);
 }
 
 void ese_enqueue( ESE value )

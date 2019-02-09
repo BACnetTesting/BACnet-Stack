@@ -1,4 +1,4 @@
-bah, it does not make sense to use xml format for this (just yet. see configSimple..)
+// bah, it does not make sense to use xml format for this (just yet. see configSimple..)
 
 /****************************************************************************************
 *
@@ -99,30 +99,30 @@ char *XMLStringPull(char *line, char *startTag, char *endTag)
 
 void parseFPMConfigFile()
 {
-	FILE *configFile;
-	char line[1024];
+    FILE *configFile;
+    char line[1024];
     char *address = NULL;
     char *mask = NULL ;
 
-	// MSTP Settings
-	char strBBMDaddressStart[] = "<bbmdAddress>";
-	char strBBMDaddressEnd[] = "</bbmdAddress>";
-	char strBroadcastDistrubutionMaskStart[] = "<broadcastDistrubutionMask>";
-	char strBroadcastDistrubutionMaskEnd[] = "</broadcastDistrubutionMask>";
+    // MSTP Settings
+    char strBBMDaddressStart[] = "<bbmdAddress>";
+    char strBBMDaddressEnd[] = "</bbmdAddress>";
+    char strBroadcastDistrubutionMaskStart[] = "<broadcastDistrubutionMask>";
+    char strBroadcastDistrubutionMaskEnd[] = "</broadcastDistrubutionMask>";
 
-	configFile = fopen( bbmdFilename, "r");
+    configFile = fopen( bbmdFilename, "r");
 
-	if(configFile != NULL)
-	{
+    if(configFile != NULL)
+    {
         dbTraffic(DB_NOTE, "Failed to open config file '%s'", bbmdFilename);
     }
     else
     {
-		printf("******* BACnet Gateway BBMD Settings *******\n");
+        printf("******* BACnet Gateway BBMD Settings *******\n");
 
-		while (!feof(configFile)) // read through the file until End of File
-		{
-			fgets(line, 1024, configFile); // grab one line from the file at a time
+        while (!feof(configFile)) // read through the file until End of File
+        {
+            fgets(line, 1024, configFile); // grab one line from the file at a time
 
             if (IsSubstring(line, strBBMDaddressStart))
             {
@@ -139,11 +139,11 @@ void parseFPMConfigFile()
             }
         }
 
-		printf("******* BACnet Gateway BBMD Settings *******\n\n");
+        printf("******* BACnet Gateway BBMD Settings *******\n\n");
 
-		fclose(configFile);
+        fclose(configFile);
 
-	}
+    }
 }
 
 

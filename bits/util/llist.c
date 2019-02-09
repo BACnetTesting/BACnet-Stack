@@ -23,6 +23,8 @@ along with this program.If not, see <http://www.gnu.org/licenses/>.
 
 *********************************************************************/
 
+#include <stdlib.h>     // for memset
+
 #if defined ( _MSC_VER  )
 // #include <windows.h>
 #include <memory.h>
@@ -32,13 +34,14 @@ along with this program.If not, see <http://www.gnu.org/licenses/>.
 #include "llist.h"
 #include "osLayer.h"
 #include "bitsDebug.h"
+#include "bitsUtil.h"
 
 static SemaDefine(llistMutex);
 
 void ll_Init(LLIST_HDR *llhdr, const uint max)
 {
-    SemaInit(llistMutex);
-    memset(llhdr, 0, sizeof(LLIST_HDR));
+    // SemaInit(llistMutex);
+    bits_memset(llhdr, 0, sizeof(LLIST_HDR));
     llhdr->max = max;
 }
 
@@ -54,10 +57,10 @@ uint ll_GetCount(LLIST_HDR *llhdr)
 
 bool ll_Enqueue(LLIST_HDR *llhdr, void *newitem)
 {
-    SemaWait(llistMutex);
+        //  SemaWait(llistMutex);
 
     if (llhdr->count >= llhdr->max) {
-        SemaFree(llistMutex);
+        // SemaFree(llistMutex);
         // todo3 throw a panic here?
         return false;
     }
@@ -75,20 +78,20 @@ bool ll_Enqueue(LLIST_HDR *llhdr, void *newitem)
         llhdr->last = newllb;
     }
     llhdr->count++;
-    SemaFree(llistMutex);
+        // SemaFree(llistMutex);
     return true;
 }
 
 
 void* ll_Dequeue(LLIST_HDR *llhdr)
 {
-    SemaWait(llistMutex);
+        // SemaWait(llistMutex);
     LLIST_LB *firstblk = llhdr->first;
 
     switch (llhdr->count) {
     case 0:
         // throw panic
-        SemaFree(llistMutex);
+         // SemaFree(llistMutex);
         return NULL;
 
     case 1:
@@ -102,7 +105,7 @@ void* ll_Dequeue(LLIST_HDR *llhdr)
     }
 
     llhdr->count--;
-    SemaFree(llistMutex);
+        // SemaFree(llistMutex);
     return firstblk;
 }
 
@@ -125,16 +128,25 @@ static void ll_Remove(LLIST_HDR *llhdr, LLIST_LB *toRemove)
     SemaFree(llistMutex);
 }
 
+void *ll_First(LLIST_HDR *llhdr)
+{
+    return llhdr->first;
+}
+
+void *ll_Next(LLIST_LB *lb)
+{
+    return lb->next ;
+}
 
 void* ll_Pluck(LLIST_HDR *llhdr, void *matchitem, bool(match)(void *listitem, void *matchitem))
 {
-    SemaWait(llistMutex);
+    // SemaWait(llistMutex);
 
     llhdr->prior = NULL;
 
     if (llhdr->count == 0) {
         // dont throw a panic, this will happen often while watching a queue for an item to arrive
-        SemaFree(llistMutex);
+         // SemaFree(llistMutex);
         return NULL;
     }
 
@@ -144,7 +156,7 @@ void* ll_Pluck(LLIST_HDR *llhdr, void *matchitem, bool(match)(void *listitem, vo
         if (match(examineblk, matchitem)) {
             // we have one, remove from list and return
             ll_Remove(llhdr, examineblk);
-            SemaFree(llistMutex);
+            // SemaFree(llistMutex);
             return examineblk;
         }
         llhdr->prior = examineblk;
@@ -152,7 +164,7 @@ void* ll_Pluck(LLIST_HDR *llhdr, void *matchitem, bool(match)(void *listitem, vo
     } while (examineblk != NULL);
 
 
-    SemaFree(llistMutex);
+    // SemaFree(llistMutex);
     return examineblk;
 }
 

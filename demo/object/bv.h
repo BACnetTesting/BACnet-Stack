@@ -42,38 +42,41 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "config.h"
 #include "bacdef.h"
 #include "rp.h"
 #include "wp.h"
 
 #include "BACnetObjectBinary.h"
 
+#if (INTRINSIC_REPORTING_B == 1)
+#include "nc.h"
+#endif
 typedef struct binary_value_descr {
 
     BACNET_OBJECT   common;         // must be first field in structure due to llist
 
-    BACNET_BINARY_PV    Present_Value;
     bool Out_Of_Service;
     BACNET_RELIABILITY Reliability;
-    BACNET_RELIABILITY reliabilityShadowValue ;
-    
-#if ( BACNET_SVC_COV_B == 1 )
+    BACNET_RELIABILITY shadowReliability;
+    BACNET_BINARY_PV   Present_Value;
+    BACNET_BINARY_PV   shadow_Present_Value;
+
     BACNET_EVENT_STATE Event_State;
-    bool Prior_Value;
+
+#if ( BACNET_SVC_COV_B == 1 )
+    BACNET_BINARY_PV Prior_Value;
     bool Changed;
     bool prior_OOS;
 #endif
 
-    BACNET_BINARY_PV priorityArrayValues[BACNET_MAX_PRIORITY];
-    bool priorityArrayFlags[BACNET_MAX_PRIORITY];
+    BACNET_BINARY_PV priorityArray[BACNET_MAX_PRIORITY];
+    uint16_t priorityFlags;
+    BACNET_BINARY_PV   Relinquish_Default;
 
 #if (INTRINSIC_REPORTING_B == 1)
     uint32_t Time_Delay;
     uint32_t Notification_Class;
-    float High_Limit;
-    float Low_Limit;
-    float Deadband;
-    unsigned Limit_Enable : 2;
     unsigned Event_Enable : 3;
     BACNET_NOTIFY_TYPE Notify_Type;
     ACKED_INFO Acked_Transitions[MAX_BACNET_EVENT_TRANSITION];
@@ -81,7 +84,8 @@ typedef struct binary_value_descr {
     /* time to generate event notification */
     uint32_t Remaining_Time_Delay;
     /* AckNotification informations */
-    ACK_NOTIFICATION Ack_notify_data;
+    ACK_NOTIFICATION    Ack_notify_data;
+    BACNET_BINARY_PV    alarmValue;
 #endif
 
 } BINARY_VALUE_DESCR;

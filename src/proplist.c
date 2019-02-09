@@ -1,5 +1,4 @@
-/*####COPYRIGHTBEGIN####
- -------------------------------------------
+/*-------------------------------------------
  Copyright (C) 2012 Steve Karg
 
  This program is free software; you can redistribute it and/or
@@ -826,6 +825,63 @@ static const BACNET_PROPERTY_ID Life_Safety_Point_Properties_Optional[] = {
     MAX_BACNET_PROPERTY_ID
 };
 
+#if 0 // from BTC
+        protected static PROPERTY_ID[] Loop_Properties_Required = new PROPERTY_ID[] {
+            PROPERTY_ID.PRESENT_VALUE,
+            PROPERTY_ID.STATUS_FLAGS,
+            PROPERTY_ID.EVENT_STATE,
+            PROPERTY_ID.OUT_OF_SERVICE,
+            PROPERTY_ID.OUTPUT_UNITS,
+            PROPERTY_ID.MANIPULATED_VARIABLE_REFERENCE,
+            PROPERTY_ID.CONTROLLED_VARIABLE_REFERENCE,
+            PROPERTY_ID.CONTROLLED_VARIABLE_VALUE,
+            PROPERTY_ID.DERIVATIVE_CONSTANT_UNITS,
+            PROPERTY_ID.SETPOINT_REFERENCE,
+            PROPERTY_ID.SETPOINT,
+            PROPERTY_ID.ACTION,
+            PROPERTY_ID.PRIORITY_FOR_WRITING,
+
+            };
+
+        private static List<BACNET_PROPERTY_ID> Loop_Properties_Optional = new List<BACNET_PROPERTY_ID>()
+        {
+            new BACNET_PROPERTY_ID ( PROPERTY_ID.DESCRIPTION),
+            new BACNET_PROPERTY_ID ( PROPERTY_ID.RELIABILITY),
+            new BACNET_PROPERTY_ID ( PROPERTY_ID.PROFILE_NAME),
+            new BACNET_PROPERTY_ID ( PROPERTY_ID.COV_INCREMENT, expectedDataType:typeof(BACnetDatatypeReal) ),
+            new BACNET_PROPERTY_ID ( PROPERTY_ID.DEADBAND, expectedDataType:typeof(BACnetDatatypeReal) ),
+            PROPERTY_ID.UPDATE_INTERVAL
+            PROPERTY_ID.PROPORTIONAL_CONSTANT
+            PROPERTY_ID.PROPORTIONAL_CONSTANT_UNITS
+            PROPERTY_ID.INTEGRAL_CONSTANT
+            PROPERTY_ID.INTEGRAL_CONSTANT_UNITS
+            PROPERTY_ID.DERIVATIVE_CONSTANT
+            PROPERTY_ID.DERIVATIVE_CONSTANT_UNITS
+            PROPERTY_ID.BIAS
+            PROPERTY_ID.MAXIMUM_OUTPUT
+            PROPERTY_ID.MINIMUM_OUTPUT
+            PROPERTY_ID.COV_INCREMENT
+            PROPERTY_ID.TIME_DELAY
+            PROPERTY_ID.NOTIFICATION_CLASS
+            PROPERTY_ID.ERROR_LIMIT
+            PROPERTY_ID.DEADBAND
+            PROPERTY_ID.EVENT_ENABLE
+            PROPERTY_ID.ACKED_TRANSITIONS
+            PROPERTY_ID.NOTIFY_TYPE
+            PROPERTY_ID.EVENT_TIME_STAMPS
+            PROPERTY_ID.EVENT_MESSAGE_TEXTS
+            PROPERTY_ID.EVENT_MESSAGE_TEXTS_CONFIG
+            PROPERTY_ID.EVENT_DETECTION_ENABLE
+            PROPERTY_ID.EVENT_ALGORITHM_INHIBIT
+            PROPERTY_ID.EVENT_ALGORITHM_INHIBIT_REF
+            PROPERTY_ID.TIME_DELAY_NORMAL
+            PROPERTY_ID.LOW_DIFF_LIMIT
+            PROPERTY_ID.TAGS
+            PROPERTY_ID.PROFILE_LOCATION
+            PROPERTY_ID.PROFILE_NAME
+        };
+#endif
+
 static const BACNET_PROPERTY_ID Multistate_Input_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
@@ -1628,7 +1684,7 @@ unsigned property_list_special_count(
  * BACNET_STATUS_ERROR on error.
  */
 int property_list_encode(
-    BACNET_READ_PROPERTY_DATA * rpdata,
+    BACNET_READ_PROPERTY_DATA *rpdata,
     const BACNET_PROPERTY_ID *pListRequired,
     const BACNET_PROPERTY_ID *pListOptional,
     const BACNET_PROPERTY_ID *pListProprietary)
@@ -1636,10 +1692,10 @@ int property_list_encode(
     int apdu_len = 0;   /* return value */
     uint8_t *apdu ;
     int max_apdu_len ;
-    uint32_t count = 0;
-    unsigned required_count = 0;
-    unsigned optional_count = 0;
-    unsigned proprietary_count = 0;
+    uint32_t count ;
+    unsigned required_count ;
+    unsigned optional_count ;
+    unsigned proprietary_count ;
     int len = 0;
     unsigned i = 0; /* loop index */
 
@@ -1654,12 +1710,15 @@ int property_list_encode(
     } else {
         count = 0;
     }
+
     if ((rpdata == NULL) || (rpdata->application_data == NULL) ||
         (rpdata->application_data_len == 0)) {
         return 0;
     }
     apdu = rpdata->application_data;
+
     max_apdu_len = rpdata->application_data_len;
+
     switch (rpdata->object_property) {
         case PROP_PROPERTY_LIST:
             if (rpdata->array_index == 0) {

@@ -27,20 +27,25 @@
 *
 *********************************************************************/
 
-#ifdef _MSC_VER
+#include "config.h"
+#include "osLayer.h"
+
+#ifdef OS_LAYER_WIN
 #include <wtypes.h>     // for Mutex Handle
 #endif
+
 #include <stdio.h>
 #include <time.h>
-
+#include "bitsUtil.h"
 #include "logging.h"
 
-#ifdef _MSC_VER
+#ifdef OS_LAYER_WIN
 HANDLE hIOMutex;
 #endif
 
 void log_puts_toFile(const char *tbuf)
 {
+    // todo3 - get a circular logfile system going
     time_t timeNow = time(NULL);
     tm *ltime = localtime(&timeNow);
 
@@ -48,15 +53,15 @@ void log_puts_toFile(const char *tbuf)
     strftime(timebuf, sizeof(timebuf), "%D %R", ltime);
 
     char filename[200];
-    strftime(filename, sizeof(filename), "BACnetInterface Log %F.log", ltime);
+    strftime(filename, sizeof(filename), "BACnetLog %F.log", ltime);
 
-    #ifdef _MSC_VER
+#ifdef OS_LAYER_WIN
     if (hIOMutex == NULL) hIOMutex = CreateMutex(NULL, FALSE, NULL);
     WaitForSingleObject(hIOMutex, INFINITE);
 #endif
 
     char nocrbuf[200];
-    size_t len = min(strlen(tbuf), sizeof(nocrbuf)-1);
+    size_t len = bits_min(bits_strlen(tbuf), sizeof(nocrbuf)-1);
     int cursor = 0;
     for (int i = 0; i < len; i++)
     {

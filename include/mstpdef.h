@@ -53,14 +53,18 @@
 
 /* MS/TP Frame Type */
 /* Frame Types 8 through 127 are reserved by ASHRAE. */
-#define FRAME_TYPE_TOKEN 0
-#define FRAME_TYPE_POLL_FOR_MASTER 1
-#define FRAME_TYPE_REPLY_TO_POLL_FOR_MASTER 2
-#define FRAME_TYPE_TEST_REQUEST 3
-#define FRAME_TYPE_TEST_RESPONSE 4
-#define FRAME_TYPE_BACNET_DATA_EXPECTING_REPLY 5
-#define FRAME_TYPE_BACNET_DATA_NOT_EXPECTING_REPLY 6
-#define FRAME_TYPE_REPLY_POSTPONED 7
+typedef enum
+{
+    FRAME_TYPE_TOKEN=0,
+    FRAME_TYPE_POLL_FOR_MASTER =1,
+    FRAME_TYPE_REPLY_TO_POLL_FOR_MASTER= 2,
+    FRAME_TYPE_TEST_REQUEST= 3,
+    FRAME_TYPE_TEST_RESPONSE =4,
+    FRAME_TYPE_BACNET_DATA_EXPECTING_REPLY= 5,
+    FRAME_TYPE_BACNET_DATA_NOT_EXPECTING_REPLY= 6,
+    FRAME_TYPE_REPLY_POSTPONED =7
+} FRAME_TYPE ;
+
 /* Frame Types 128 through 255: Proprietary Frames */
 /* These frames are available to vendors as proprietary (non-BACnet) frames. */
 /* The first two octets of the Data field shall specify the unique vendor */
@@ -135,7 +139,7 @@ typedef enum {
 /* 15 milliseconds. */
 #define Tusage_delay 15
 
-#define DEFAULT_MAX_INFO_FRAMES 1
+#define DEFAULT_MAX_INFO_FRAMES 127
 #define DEFAULT_MAX_MASTER 127
 #define DEFAULT_MAC_ADDRESS 127
 

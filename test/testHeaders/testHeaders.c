@@ -14,45 +14,29 @@
 
 */
 
-// #include "listmanip.h"
-// #include "device.h"
-// #include "bbmd.h"
-// #include "bvlc.h"
-// #include "msgqueue.h"
-// #include "bacdef.h"
-// #include "bacenum.h"
+// #include "handlers.h"
 // #include "npdu.h"
 // #include "linklist.h"
 // #include "portThread.h"
 // #include "net.h"
-// #include "bip.h"
 // #include "CEDebug.h"
 // #include "tsm.h"
-// #include "handlers.h"
 // #include "alarm_ack.h"
-// #include "rp.h"
-// #include "wp.h"
 // #include "client.h"
 // #include "event.h"
 // #include "config.h"
 // #include "bacstr.h"
 // #include "datetime.h"
-// #include "readrange.h"
-// #include "lso.h"
-// #include "timesync.h"
 // #include "msgqueue.h"
-// #include "dlmstp.h"
 // #include "bacaddr.h"
-
-// #include "datalink.h"
+// #include "BACnetObject.h"
 //#include "ai.h"
-//#include <stdint.h>
-//#include <stdbool.h>
-//#include "ringbuf.h"
-#include "bitsRouter.h"
-#include "ipcBACnetSide.h"
-
+// #include "ringbuf.h"
+// #include "bitsRouter.h"
+// #include "ipcBACnetSide.h"
+//  #include "ipcBACnetSide.h"
 // volatile uint8_t *buffer;
+// #include "BACnetObjectAnalog.h"
 
 int main()
 {

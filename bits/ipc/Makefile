@@ -9,7 +9,7 @@ DEBUGGING = -g -DDEBUG_ENABLED=1
 endif
 
 # put all the flags together
-CFLAGS := -Wall $(DEBUGGING) $(OPTIMIZATION) $(INCLUDES) $(DEFINES)
+CFLAGS := $(STANDARDS) -Wall $(DEBUGGING) $(OPTIMIZATION) $(INCLUDES) $(DEFINES)
 LFLAGS := -Wl,/usr/local/lib/libmosquitto.so.1
 
 .EXPORT_ALL_VARIABLES:

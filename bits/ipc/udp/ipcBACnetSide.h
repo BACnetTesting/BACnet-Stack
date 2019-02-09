@@ -30,6 +30,7 @@
 #pragma once
 
 #include "ipcCommon.h"
+#include "appApi.h"
 
 void ipc_callBackAnaUpdate(uint deviceID, IPC_OBJECT_TYPE objType, uint objInstance, IPC_PROPERTY_ID propId, float val);
 void ipc_callBackBinUpdate(uint deviceID, IPC_OBJECT_TYPE objType, uint objInstance, IPC_PROPERTY_ID propId, bool val);

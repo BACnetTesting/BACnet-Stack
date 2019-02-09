@@ -44,6 +44,7 @@
 #include <stdbool.h>
 #include "bacdcode.h"
 #include "bacapp.h"
+#include "datalink.h"
 
 /** @note: write property can have application tagged data, or context tagged data,
    or even complex data types (i.e. opening and closing tag around data).

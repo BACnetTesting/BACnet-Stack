@@ -57,8 +57,8 @@
 #include "wp.h"
 #include "lo.h"
 
-/* BACNET_CHANNEL_VALUE decodes WriteProperty service requests
-   Choose the datatypes that your application supports */
+ /* BACNET_CHANNEL_VALUE decodes WriteProperty service requests
+    Choose the datatypes that your application supports */
 #if !(defined(CHANNEL_NUMERIC) || \
     defined(CHANNEL_NULL) || \
     defined(CHANNEL_BOOLEAN) || \
@@ -157,8 +157,8 @@ int Channel_Read_Property(BACNET_READ_PROPERTY_DATA * rpdata);
 BACNET_CHANNEL_VALUE * Channel_Present_Value(uint32_t object_instance);
 
 bool Channel_Present_Value_Set(
-        BACNET_WRITE_PROPERTY_DATA * wp_data,
-        BACNET_APPLICATION_DATA_VALUE * value);
+    BACNET_WRITE_PROPERTY_DATA * wp_data,
+    BACNET_APPLICATION_DATA_VALUE * value);
 
 bool Channel_Out_Of_Service(uint32_t object_instance);
 void Channel_Out_Of_Service_Set(uint32_t object_instance,

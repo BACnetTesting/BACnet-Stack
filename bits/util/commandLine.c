@@ -64,6 +64,7 @@ char *CommandLineParameter(const int argc, char **argv, const char *parameter)
 }
 
 
+// moved to bitsUtil.c
 //bool ipep_address_parse(
 //    SOCKADDR_IN *ipep,
 //    const char *string )

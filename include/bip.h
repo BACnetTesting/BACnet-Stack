@@ -40,12 +40,8 @@
 #ifndef BIP_H
 #define BIP_H
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stddef.h>
-#include "bacdef.h"
 #include "npdu.h"
-#include "net.h"
+// #include "net.h"
 
 /* specific defines for BACnet/IP over Ethernet */
 
@@ -70,93 +66,114 @@ device may ignore the encoded value in favor of the value of this property, if i
     However. BACnet specifies a possible MAX_LPDU_IP of 1476, and many people use it (fragmented), so we need to accomodate these reassembled
     packets. Lets just shame those users who go to the limit, allow it, and for ourselves just set a lower threshold...
 */
-#define MAX_HEADER (1 + 1 + 2)
-#define MAX_MPDU (MAX_HEADER+MAX_PDU)
+
+#define MAX_APDU_IP     1476
+
+// bacdef.h MAX_NPCI is (21) bytes, see http://www.bacnetwiki.com/wiki/index.php?title=NPCI
+
+#define MAX_HEADER_IP   (1 + 1 + 2)
+
+#define MAX_NPDU_IP     (MAX_NPCI+MAX_APDU_IP)
+
+#define MAX_MPDU_IP     (MAX_HEADER_IP+MAX_NPDU_IP) // todo 1 change to MAX_LPDU_IP
+
+// MAX_MPDU_IP contains the UDP header, which we have no control over. 
 
 /*
-    Note that the result of 1492-10-22 is  1460. But BACnet was defined using BACnet/Ethernet
-    So we are stuck with that. If packets are build using 1476 bytes, they WILL fragment over IPv4 UDP, and 
+    See my calculations: https://docs.google.com/spreadsheets/d/1lHet3Dd_Qm6tAHOXjy0zL1QZMZQ-PiYPFlP9TjMofjg/edit#gid=0
+
+    Note that for BACnet/IP the LPDU calculation is 1500-20-8-4-21 = 1447.
+
+    But MAX_APDU here was defined using BACnet/Ethernet
+    So we are stuck with the original BACnet Committee of 1500-3-21 = 1476 for BACnet/IP.
+    
+    If packets are build using a max APDU 1476 bytes, they WILL fragment over IPv4 UDP, and 
     according to Maximum Transmission Unit (MTU) of the underlying layer, (looking at you IPv6 at 1280) 
     possibly sooner.
+
     https://en.wikipedia.org/wiki/Maximum_transmission_unit
     https://blog.apnic.net/2016/05/19/fragmenting-ipv6/
 */
 
 #define BVLL_TYPE_BACNET_IP (0x81)
 
+#if defined(BIP_DEBUG)
 extern bool BIP_Debug;
+#endif
 
-    /* note: define init, set_interface, and cleanup in your port */
-    /* on Linux, ifname is eth0, ath0, arc0, and others.
-       on Windows, ifname is the dotted ip address of the interface */
-    bool bip_init(
-        char *ifname);
+/* note: define init, set_interface, and cleanup in your port */
+/* on Linux, ifname is eth0, ath0, arc0, and others.
+   on Windows, ifname is the dotted ip address of the interface */
+bool bip_init(
+    const char *ifname);
 
-    void bip_set_interface(
-        const char *ifname);
+void bip_set_interface(
+    const char *ifname);
 
-    void bip_cleanup(
-        void);
+void bip_cleanup(
+    void);
 
-    /* common BACnet/IP functions */
-    void bip_set_socket(
-        int sock_fd);
-    int bip_socket(
-        void);
-    bool bip_valid(
-        void);
-    void bip_get_broadcast_address(
-        BACNET_ADDRESS * dest); /* destination address */
-    void bip_get_my_address(
-        BACNET_ADDRESS * my_address);
+/* common BACnet/IP functions */
+void bip_set_socket(
+    int sock_fd);
+int bip_socket(
+    void);
+bool bip_valid(
+    void);
+void bip_get_broadcast_address(
+    BACNET_ADDRESS * dest); /* destination address */
+void bip_get_my_address(
+    BACNET_ADDRESS * my_address);
 
-    /* function to send a packet out the BACnet/IP socket */
-    /* returns zero on success, non-zero on failure */
-    int bip_send_pdu(
-        BACNET_ADDRESS * dest,  /* destination address */
-        BACNET_NPCI_DATA * npci_data,   /* network information */
-        uint8_t * pdu,  /* any data to be sent - may be null */
-        unsigned pdu_len);      /* number of bytes of data */
+/* function to send a packet out the BACnet/IP socket */
+/* returns zero on success, non-zero on failure */
+int bip_send_pdu(
+    BACNET_ADDRESS * dest,  /* destination address */
+    BACNET_NPCI_DATA * npci_data,   /* network information */
+    uint8_t * pdu,  /* any data to be sent - may be null */
+    unsigned pdu_len);      /* number of bytes of data */
 
-    /* receives a BACnet/IP packet */
-    /* returns the number of octets in the PDU, or zero on failure */
-    uint16_t bip_receive(
-        BACNET_ADDRESS * src,   /* source address */
-        uint8_t * pdu,  /* PDU data */
-        uint16_t max_pdu,       /* amount of space available in the PDU  */
-        unsigned timeout);      /* milliseconds to wait for a packet */
+/* receives a BACnet/IP packet */
+/* returns the number of octets in the PDU, or zero on failure */
+uint16_t bip_receive(
+    BACNET_ADDRESS * src,   /* source address */
+    uint8_t * pdu,  /* PDU data */
+    uint16_t max_pdu,       /* amount of space available in the PDU  */
+    unsigned timeout);      /* milliseconds to wait for a packet */
 
-    /* use network byte order for setting */
-    void bip_set_port(
-        uint16_t port);
+/* use network byte order for setting */
+void bip_set_port(
+    uint16_t port);
 
-    bool bip_port_changed(void);
+bool bip_port_changed(void);
 
-    /* returns network byte order */
-    uint16_t bip_get_port(
-        void);
+/* returns network byte order */
+uint16_t bip_get_port(
+    void);
 
-    /* use network byte order for setting */
-    void bip_set_addr(
-        uint32_t net_address);
-    /* returns network byte order */
-    uint32_t bip_get_addr(
-        void);
+/* use network byte order for setting */
+void bip_set_addr(
+    uint32_t net_address);
 
-    /* use network byte order for setting */
-    void bip_set_broadcast_addr(
-        uint32_t net_address);
-    /* returns network byte order */
-    uint32_t bip_get_broadcast_addr(
-        void);
+/* returns network byte order */
+uint32_t bip_get_addr(
+    void);
 
-    /* gets an IP address by name, where name can be a
-       string that is an IP address in dotted form, or
-       a name that is a domain name
-       returns 0 if not found, or
-       an IP address in network byte order */
-    long bip_getaddrbyname(
-        const char *host_name);
+/* use network byte order for setting */
+void bip_set_broadcast_addr(
+    uint32_t net_address);
+
+/* returns network byte order */
+uint32_t bip_get_broadcast_addr(
+    void);
+
+/* gets an IP address by name, where name can be a
+   string that is an IP address in dotted form, or
+   a name that is a domain name
+   returns 0 if not found, or
+   an IP address in network byte order */
+long bip_getaddrbyname(
+    const char *host_name);
 
 
 /** @defgroup DLBIP BACnet/IP DataLink Network Layer

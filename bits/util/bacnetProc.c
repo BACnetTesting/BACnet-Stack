@@ -95,7 +95,9 @@ void InitBACnet(void) {
 
 	LockTransactionInit(stackLock);
 
-	Init_Datalink_Thread();
+	// - no longer - this is now called when Port Objects are created
+    // Init_Datalink_Thread();
+
 	Init_BACnetIdle_Thread();
 }
 
@@ -134,8 +136,8 @@ static void TickBACnetDevice(void) {
         // datalink model.
 #if defined(BACDL_BIP) && BBMD_ENABLED
 		bvlc_maintenance_timer( elapsed_seconds);
-#endif
 		dlenv_maintenance_timer((uint16_t) elapsed_seconds);
+#endif
 
 #if defined (LOAD_CONTROL)
 		Load_Control_State_Machine_Handler();
@@ -146,7 +148,7 @@ static void TickBACnetDevice(void) {
 #endif
 
 #if ( BACNET_CLIENT == 1 ) || ( BACNET_SVC_COV_B == 1 )
-		tsm_timer_milliseconds(elapsed_seconds * 1000);
+        tsm_timer_milliseconds(elapsed_seconds * 1000);
 #endif
 
 #ifdef todo2
@@ -173,6 +175,7 @@ static void TickBACnetDevice(void) {
 		address_cache_timer(address_binding_tmr);
 		address_binding_tmr = 0;
 	}
+
 #if (INTRINSIC_REPORTING_B==1)
 	/* try to find addresses of recipients */
 	recipient_scan_tmr += elapsed_seconds;

@@ -29,18 +29,28 @@
 //      http://elm-chan.org/fsw/strf/xprintf.html
 //      http://www.sparetimelabs.com/tinyprintf/tinyprintf.php
 
-//#ifdef _MSC_VER
-//#include <wtypes.h>
-//#endif
+// 2018.12.12 causes grief
+// #ifdef _MSC_VER
+// #include <wtypes.h>
+// #endif
 
 #include <stdio.h>
 #include <stdint.h>
 //#include <stdarg.h>
 //// #include "debug.h"
 //#include "debug.h"
-#include "logging/logging.h"
+#include "logging.h"
 #include "btaDebug.h"
 #include "bitsDebug.h"
+
+
+char ToHexadecimal(uint8_t val)
+{
+    if (val > 15) return '?';
+    if (val > 9) return 'A' + val - 10;
+    return '0' + val;
+}
+
 
 void hexdump(
     char *title,
@@ -106,7 +116,7 @@ void sys_panic_desc(const char *file, const int line, const char *description )
 {
     log_printf("Panic:%s, File:%s, line:%d\n", description, file, line);
     // recursing!
-    //    dbTraffic(DB_UNEXPECTED_ERROR, "Panic: %s at %s %d\n\r", description, file, line);
+    //    dbTraffic(DB_UNEXPECTED_ERROR, "Panic: %s at %s %d\r\n", description, file, line);
     // SendBTApanicInt( file, line );
 }
 
@@ -143,18 +153,14 @@ void sys_dbTraffic(DBD_DebugDomain domain, DB_LEVEL lev, const char *format, ...
 
     if (lev >= dbTrafficLevel) {
         va_start(ap, format);
-#if defined ( _MSC_VER  ) || defined ( __GNUC__ )
-        printf("\n\r");
-#endif
         vsprintf(tbuf, format, ap);
 
 #if defined ( _MSC_VER  ) || defined ( __GNUC__ )
-        printf("%s", tbuf);
-
+        printf("%s\n", tbuf);
+        
         FILE *fp = fopen("BACnet.log", "a");
         if (fp) {
-            fprintf(fp, "%s", tbuf );
-            fprintf(fp, "\n");
+            fprintf(fp, "%s\n", tbuf );
             fclose(fp);
         }
 #endif // _MSC_VER

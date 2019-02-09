@@ -25,6 +25,10 @@
 *
 ****************************************************************************************/
 
+#include "config.h"
+
+#if ( BITS_USE_IPC == 1 )
+
 #include <malloc.h>
 #include <stdio.h>
 #include <string.h>
@@ -50,7 +54,6 @@
 
 #include "logging.h"
 // #include "datalink.h"
-#include "bitsRouter.h"
 #include "ipcBACnetSide.h"
 #include "device.h"
 
@@ -95,22 +98,31 @@ void Create_Object( const uint devInstance, const IPC_OBJECT_TYPE objType, const
         obj = new AnalogOutputObject(objInstance, UNITS_KILOWATTS, name, description);
         dev->pDev->analogOutputs.push_back(obj);
         break;
+
+#if (BACNET_USE_OBJECT_ANALOG_VALUE == 1)
     case OBJ_TYPE_AV:
         obj = new AnalogValueObject(objInstance, UNITS_KILOWATTS, name, description);
         dev->pDev->analogValues.push_back(obj);
         break;
+#endif
+
     case OBJ_TYPE_BO:
         obj = new BinaryOutputObject(objInstance, name, description);
         dev->pDev->binaryOutputs.push_back(obj);
         break;
+
     case OBJ_TYPE_BV:
         obj = new BinaryValueObject(objInstance, name, description);
         dev->pDev->binaryValues.push_back(obj);
         break;
+        
+#if (BACNET_USE_OBJECT_NOTIFICATION_CLASS == 1)
     case OBJ_TYPE_NC:
         obj = new NotificationClass(objInstance, name, description);
         dev->pDev->notificationClasses.push_back(obj);
         break;
+#endif
+
     default:
         panic();
         break;
@@ -212,10 +224,10 @@ void ThreadListenFuncBACnetSide(void *lpParam)
             char iface[50];
             ipc_decode_string(buffer, &iptr, iface, sizeof(iface));
             if (bbmd) {
-                InitRouterport(portId, PF_BBMD, iface, networkNumber, IPport);
+                InitRouterport(portId, BPT_BBMD, iface, networkNumber, IPport);
             }
             else {
-                InitRouterport(portId, PF_BIP, iface, networkNumber, IPport);
+                InitRouterport(portId, BPT_BIP, iface, networkNumber, IPport);
             }
             break;
 
@@ -388,3 +400,5 @@ bool ipc_init(uint myPort, uint peerPort)
     return true;
 }
 #endif
+
+#endif // BITS_USE_IPC

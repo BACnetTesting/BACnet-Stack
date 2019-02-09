@@ -60,7 +60,7 @@ typedef struct BACnet_COV_Subscription_Flags {
 typedef struct {
     BACNET_COV_SUBSCRIPTION_FLAGS flag;
     int8_t dest_index;      // Has to be signed, tested for < 0 in places
-    uint8_t invokeID;   /* for confirmed COV */
+    uint8_t invokeID;       /* for confirmed COV */
     uint32_t subscriberProcessIdentifier;
     uint32_t lifetime;  /* optional */
     BACNET_OBJECT_ID monitoredObjectIdentifier;
@@ -140,11 +140,11 @@ int cov_subscribe_decode_service_request(
     unsigned apdu_len,
     BACNET_SUBSCRIBE_COV_DATA * data);
 
-    int cov_subscribe_encode_apdu(
-        uint8_t * apdu,
-        unsigned max_apdu_len,
-        uint8_t invoke_id,
-        BACNET_SUBSCRIBE_COV_DATA * data);
+int cov_subscribe_encode_apdu(
+    uint8_t * apdu,
+    unsigned max_apdu_len,
+    uint8_t invoke_id,
+    BACNET_SUBSCRIBE_COV_DATA * data);
 
 void cov_data_value_list_link(
     BACNET_COV_DATA *data,

@@ -1,24 +1,25 @@
-/*************************************************************************
- * Copyright (C) 2006 Steve Karg <skarg@users.sourceforge.net>
- *
- * Permission is hereby granted, free of charge, to any person obtaining
- * a copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to
- * the following conditions:
- *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
- * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+/**************************************************************************
+*
+* Copyright (C) 2005 Steve Karg <skarg@users.sourceforge.net>
+*
+* Permission is hereby granted, free of charge, to any person obtaining
+* a copy of this software and associated documentation files (the
+* "Software"), to deal in the Software without restriction, including
+* without limitation the rights to use, copy, modify, merge, publish,
+* distribute, sublicense, and/or sell copies of the Software, and to
+* permit persons to whom the Software is furnished to do so, subject to
+* the following conditions:
+*
+* The above copyright notice and this permission notice shall be included
+* in all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
 *****************************************************************************************
 *
@@ -181,53 +182,55 @@ static void print_usage(const char *filename) {
 }
 
 
-static void print_help(const char *filename) {
-	printf("Read a property from an object in a BACnet device\n"
-			"and print the value.\n"
-			"device-instance:\n"
-			"BACnet Device Object Instance number that you are\n"
-			"trying to communicate to.  This number will be used\n"
-			"to try and bind with the device using Who-Is and\n"
-			"I-Am services.  For example, if you were reading\n"
-			"Device Object 123, the device-instance would be 123.\n"
-			"\nobject-type:\n"
-			"Text for object type, e.g. AI, AO, Dev\n"
-			"\nobject-instance:\n"
-			"This is the object instance number of the object that\n"
-			"you are reading.  For example, if you were reading\n"
-			"Analog Output 2, the object-instance would be 2.\n"
-			"\nproperty:\n"
-			"Text for property, e.g. PV, Desc, Name\n"
-			"\nindex:\n"
-			"This integer parameter is the index number of an array.\n"
-			"If the property is an array, individual elements can\n"
-			"be read.  If this parameter is missing and the property\n"
-			"is an array, the entire array will be read.\n"
-			"Trailing options: -p local port\n"
-			"                  -b BBMD address\n"
-			"                  -r BBMD port\n"
-			"\nExample:\n"
-			"If you want read the Present-Value of Analog Output 101\n"
-			"in Device 123, you could send the following command:\n"
-			"%s 123 AI 101 PV\n", filename);
+static void print_help(const char *filename)
+{
+    printf("Read a property from an object in a BACnet device\n"
+        "and print the value.\n"
+        "device-instance:\n"
+        "BACnet Device Object Instance number that you are\n"
+        "trying to communicate to.  This number will be used\n"
+        "to try and bind with the device using Who-Is and\n"
+        "I-Am services.  For example, if you were reading\n"
+        "Device Object 123, the device-instance would be 123.\n"
+        "\nobject-type:\n"
+        "Text for object type, e.g. AI, AO, Dev\n"
+        "\nobject-instance:\n"
+        "This is the object instance number of the object that\n"
+        "you are reading.  For example, if you were reading\n"
+        "Analog Output 2, the object-instance would be 2.\n"
+        "\nproperty:\n"
+        "Text for property, e.g. PV, Desc, Name\n"
+        "\nindex:\n"
+        "This integer parameter is the index number of an array.\n"
+        "If the property is an array, individual elements can\n"
+        "be read.  If this parameter is missing and the property\n"
+        "is an array, the entire array will be read.\n"
+        "Trailing options: -p local port\n"
+        "                  -b BBMD address\n"
+        "                  -r BBMD port\n"
+        "\nExample:\n"
+        "If you want read the Present-Value of Analog Output 101\n"
+        "in Device 123, you could send the following command:\n"
+        "%s 123 AI 101 PV\n", filename);
 }
 
-int ParseCmd(int argc, char *argv[], char srch) {
-	int i = 1;
-	for (; i < argc - 1; i++) {
-		if ((argv[i][0] == '-' || argv[i][0] == '/') && argv[i][1] == srch) {
-			return i + 1;
-		}
-	}
-	return 0;
+int ParseCmd(int argc, char *argv[], char srch)
+{
+    int i = 1;
+    for (; i < argc - 1; i++) {
+        if ((argv[i][0] == '-' || argv[i][0] == '/') && argv[i][1] == srch) {
+            return i + 1;
+        }
+    }
+    return 0;
 }
 
-void SetOurEnv( char *ev, char *nev )
+void SetOurEnv(char *ev, char *nev)
 {
 #ifdef _MSC_VER
-		_putenv_s( ev, nev );
+    _putenv_s(ev, nev);
 #else
-		setenv( ev, nev, 1);
+    setenv(ev, nev, 1);
 #endif
 }
 
@@ -244,67 +247,67 @@ int main(int argc, char *argv[]) {
 	int argi = 0;
 	const char *filename ;
 
-	filename = filename_remove_path(argv[0]);
-	for (argi = 1; argi < argc; argi++) {
-		if (strcmp(argv[argi], "--help") == 0) {
-			print_usage(filename);
-			print_help(filename);
-			return 0;
-		}
-		if (strcmp(argv[argi], "--version") == 0) {
-			printf("%s %s\n", filename, BACNET_VERSION_TEXT);
-			printf(
-					"Copyright (C) 2014 by Steve Karg and others.\n"
-							"This is free software; see the source for copying conditions.\n"
-							"There is NO warranty; not even for MERCHANTABILITY or\n"
-							"FITNESS FOR A PARTICULAR PURPOSE.\n");
-			return 0;
-		}
-	}
-	if (argc < 5) {
-		print_usage(filename);
-		return 0;
-	}
+    filename = filename_remove_path(argv[0]);
+    for (argi = 1; argi < argc; argi++) {
+        if (strcmp(argv[argi], "--help") == 0) {
+            print_usage(filename);
+            print_help(filename);
+            return 0;
+        }
+        if (strcmp(argv[argi], "--version") == 0) {
+            printf("%s %s\n", filename, BACNET_VERSION_TEXT);
+            printf(
+                "Copyright (C) 2014 by Steve Karg and others.\n"
+                "This is free software; see the source for copying conditions.\n"
+                "There is NO warranty; not even for MERCHANTABILITY or\n"
+                "FITNESS FOR A PARTICULAR PURPOSE.\n");
+            return 0;
+        }
+    }
+    if (argc < 5) {
+        print_usage(filename);
+        return 0;
+    }
 
-	/* decode the command line parameters */
-	Target_Device_Object_Instance = strtol(argv[1], NULL, 0);
+    /* decode the command line parameters */
+    Target_Device_Object_Instance = strtol(argv[1], NULL, 0);
 
-	if (strcmp(argv[2], "AI") == 0)
-		Target_Object_Type = OBJECT_ANALOG_INPUT;
-	else if (strcmp(argv[2], "AO") == 0)
-		Target_Object_Type = OBJECT_ANALOG_OUTPUT;
-	else if (strcmp(argv[2], "AV") == 0)
-		Target_Object_Type = OBJECT_ANALOG_VALUE;
-	else if (strcmp(argv[2], "BI") == 0)
-		Target_Object_Type = OBJECT_BINARY_INPUT;
-	else if (strcmp(argv[2], "BO") == 0)
-		Target_Object_Type = OBJECT_BINARY_OUTPUT;
-	else if (strcmp(argv[2], "BV") == 0)
-		Target_Object_Type = OBJECT_BINARY_VALUE;
-	else if (strcmp(argv[2], "Dev") == 0)
-		Target_Object_Type = OBJECT_DEVICE;
-	else {
-		printf("Need to specify Object Type: Dev, AI, AO, AV, BI etc ...\n");
-		exit(1);
-	}
+    if (strcmp(argv[2], "AI") == 0)
+        Target_Object_Type = OBJECT_ANALOG_INPUT;
+    else if (strcmp(argv[2], "AO") == 0)
+        Target_Object_Type = OBJECT_ANALOG_OUTPUT;
+    else if (strcmp(argv[2], "AV") == 0)
+        Target_Object_Type = OBJECT_ANALOG_VALUE;
+    else if (strcmp(argv[2], "BI") == 0)
+        Target_Object_Type = OBJECT_BINARY_INPUT;
+    else if (strcmp(argv[2], "BO") == 0)
+        Target_Object_Type = OBJECT_BINARY_OUTPUT;
+    else if (strcmp(argv[2], "BV") == 0)
+        Target_Object_Type = OBJECT_BINARY_VALUE;
+    else if (strcmp(argv[2], "Dev") == 0)
+        Target_Object_Type = OBJECT_DEVICE;
+    else {
+        printf("Need to specify Object Type: Dev, AI, AO, AV, BI etc ...\n");
+        exit(1);
+    }
 
-	Target_Object_Instance = strtol(argv[3], NULL, 0);
+    Target_Object_Instance = strtol(argv[3], NULL, 0);
 
-	if (strcmp(argv[4], "PV") == 0)
-		Target_Object_Property = PROP_PRESENT_VALUE;
-	else if (strcmp(argv[4], "Name") == 0)
-		Target_Object_Property = PROP_OBJECT_NAME;
-	else if (strcmp(argv[4], "Desc") == 0)
-		Target_Object_Property = PROP_DESCRIPTION;
-	else if (strcmp(argv[4], "ObjList") == 0)
-		Target_Object_Property = PROP_OBJECT_LIST;
-	else {
-		printf("Need to specify Property : PV, Name, Desc ...\n");
-		exit(1);
-	}
+    if (strcmp(argv[4], "PV") == 0)
+        Target_Object_Property = PROP_PRESENT_VALUE;
+    else if (strcmp(argv[4], "Name") == 0)
+        Target_Object_Property = PROP_OBJECT_NAME;
+    else if (strcmp(argv[4], "Desc") == 0)
+        Target_Object_Property = PROP_DESCRIPTION;
+    else if (strcmp(argv[4], "ObjList") == 0)
+        Target_Object_Property = PROP_OBJECT_LIST;
+    else {
+        printf("Need to specify Property : PV, Name, Desc ...\n");
+        exit(1);
+    }
 
-	int portArg = ParseCmd(argc, argv, 'p');
-	if (portArg != 0) SetOurEnv("BACNET_IP_PORT", argv[portArg] );
+    int portArg = ParseCmd(argc, argv, 'p');
+    if (portArg != 0) SetOurEnv("BACNET_IP_PORT", argv[portArg]);
 
 	portArg = ParseCmd(argc, argv, 'b');
 	if (portArg != 0) SetOurEnv("BACNET_BBMD_ADDRESS", argv[portArg] );
@@ -381,7 +384,8 @@ int main(int argc, char *argv[]) {
 		last_seconds = current_seconds;
 	}
 
-	if (Error_Detected)
-		return 1;
-	return 0;
+    if (Error_Detected)
+        return 1;
+
+    return 0;
 }

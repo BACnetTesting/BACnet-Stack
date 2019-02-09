@@ -75,6 +75,8 @@ const char *BPT_ToString(BPT_TYPE pf)
 }
 #endif
 
+
+// Converts ASCII IPEP to network order IP Address and Port
 bool StringTo_IPEP (
     struct sockaddr_in  *ipep,
     const char *string)
@@ -101,17 +103,45 @@ bool StringTo_IPEP (
 }
 
 
+// returns ipaddr in network order 
+bool StringTo_IPaddr (
+    struct in_addr  *ipaddr,
+    const char *string)
+{
+    unsigned mac[4];
+    int count = 0;
+
+    count = sscanf(string, "%u.%u.%u.%u", &mac[0], &mac[1], &mac[2], &mac[3] );
+    if (count != 4) return false;
+
+    // ipaddr is in wire order, so take advantage of the fact we don't have to shuffle bytes, and we can ignore endian dependencies
+
+    ((uint8_t *)&ipaddr)[0] = mac[0];
+    ((uint8_t *)&ipaddr)[1] = mac[1];
+    ((uint8_t *)&ipaddr)[2] = mac[2];
+    ((uint8_t *)&ipaddr)[3] = mac[3];
+
+    return true;
+}
+
+
+const char *IPAddr_Port_ToString(char *string, const struct in_addr *ipaddr, const uint16_t nwoPort)
+{
+    sprintf(string, "%u.%u.%u.%u:%u",
+        ((uint8_t *)&ipaddr->s_addr)[0],
+        ((uint8_t *)&ipaddr->s_addr)[1],
+        ((uint8_t *)&ipaddr->s_addr)[2],
+        ((uint8_t *)&ipaddr->s_addr)[3],
+        ntohs(nwoPort) );
+    return string;
+}
+
+
 const char *IPEP_ToString (
     char *string,
     const struct sockaddr_in *ipep)
 {
-    sprintf(string, "%u.%u.%u.%u:%u",
-    		((uint8_t *)&ipep->sin_addr)[0],
-			((uint8_t *)&ipep->sin_addr)[1],
-			((uint8_t *)&ipep->sin_addr)[2],
-			((uint8_t *)&ipep->sin_addr)[3],
-			ntohs(ipep->sin_port));
-    return (const char *) string;
+    return IPAddr_Port_ToString(string, &ipep->sin_addr, ipep->sin_port);
 }
 
 

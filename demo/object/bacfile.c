@@ -37,32 +37,29 @@
 *
 ****************************************************************************************/
 
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
+// #include <stdbool.h>
+// #include <stdint.h>
+// #include <stdio.h>
+//#include <stdlib.h>
 #include <string.h>
-#include "config.h"
-#include "address.h"
-#include "bacdef.h"
-#include "bacapp.h"
-#include "datalink.h"
-#include "bacdcode.h"
+#include "config.h"     /* the custom stuff */
+
+//#include "address.h"
+//#include "bacdef.h"
+//#include "bacapp.h"
+//#include "datalink.h"
+// #include "bacdcode.h"
 #include "npdu.h"
-#include "apdu.h"
+//#include "apdu.h"
 #include "tsm.h"
-#include "device.h"
-#include "arf.h"
-#include "awf.h"
-#include "rp.h"
-#include "wp.h"
+//#include "device.h"
+//#include "arf.h"
+//#include "awf.h"
+//#include "rp.h"
+// #include "wp.h"
 #include "handlers.h"
 #include "bacfile.h"
-
-typedef struct {
-    uint32_t instance;
-    char *filename;
-} BACNET_FILE_LISTING;
+#include "bitsDebug.h"
 
 #ifndef FILE_RECORD_SIZE
 #define FILE_RECORD_SIZE MAX_OCTET_STRING_BYTES
@@ -76,7 +73,7 @@ static BACNET_FILE_LISTING BACnet_File_Listing[] = {
 };
 
 /* These three arrays are used by the ReadPropertyMultiple handler */
-static const BACNET_PROPERTY_ID bacfile_Properties_Required[] = {
+static const BACNET_PROPERTY_ID Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -89,14 +86,15 @@ static const BACNET_PROPERTY_ID bacfile_Properties_Required[] = {
     MAX_BACNET_PROPERTY_ID
 };
 
-static const BACNET_PROPERTY_ID bacfile_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Properties_Optional[] = {
     PROP_DESCRIPTION,
     MAX_BACNET_PROPERTY_ID
 };
 
-static const BACNET_PROPERTY_ID bacfile_Properties_Proprietary[] = {
+static const BACNET_PROPERTY_ID Properties_Proprietary[] = {
     MAX_BACNET_PROPERTY_ID
 };
+
 
 void BACfile_Property_Lists(
     const BACNET_PROPERTY_ID **pRequired,
@@ -104,12 +102,11 @@ void BACfile_Property_Lists(
     const BACNET_PROPERTY_ID **pProprietary)
 {
     if (pRequired)
-        *pRequired = bacfile_Properties_Required;
+        *pRequired = Properties_Required;
     if (pOptional)
-        *pOptional = bacfile_Properties_Optional;
+        *pOptional = Properties_Optional;
     if (pProprietary)
-        *pProprietary = bacfile_Properties_Proprietary;
-
+        *pProprietary = Properties_Proprietary;
 }
 
 static char *bacfile_name(
@@ -182,6 +179,18 @@ uint32_t bacfile_index_to_instance(
     return instance;
 }
 
+
+BACNET_FILE_LISTING *bacfile_Instance_To_Object(
+    uint32_t object_instance)
+{
+    // return (ANALOG_INPUT_DESCR *)Generic_Instance_To_Object(&AI_Descriptor_List, object_instance);
+    if (object_instance >= sizeof(BACnet_File_Listing) / sizeof(BACNET_FILE_LISTING) - 1 ) {
+        panic();
+        return 0;
+    }
+}
+
+
 static long fsize(
     FILE * pFile)
 {
@@ -216,36 +225,41 @@ unsigned bacfile_file_size(
     return file_size;
 }
 
-/* return the number of bytes used, or -1 on error */
+
+/* return apdu length, or BACNET_STATUS_ERROR on error */
 int bacfile_read_property(
-    BACNET_READ_PROPERTY_DATA * rpdata)
+    BACNET_READ_PROPERTY_DATA *rpdata)
 {
-    int apdu_len = 0;   /* return value */
+    int apdu_len ;   /* return value */
     char text_string[32] = { "" };
     BACNET_CHARACTER_STRING char_string;
     BACNET_DATE bdate;
     BACNET_TIME btime;
-    uint8_t *apdu = NULL;
+    uint8_t *apdu;
 
     if ((rpdata == NULL) || (rpdata->application_data == NULL) ||
         (rpdata->application_data_len == 0)) {
-        return 0;
+        return BACNET_STATUS_ERROR;
     }
+
     apdu = rpdata->application_data;
     switch (rpdata->object_property) {
-        case PROP_OBJECT_IDENTIFIER:
-            apdu_len =
-                encode_application_object_id(&apdu[0], OBJECT_FILE,
+    case PROP_OBJECT_IDENTIFIER:
+        apdu_len =
+            encode_application_object_id(&apdu[0],
+                OBJECT_FILE,
                 rpdata->object_instance);
-            break;
-        case PROP_OBJECT_NAME:
+        break;
+
+    case PROP_OBJECT_NAME:
             sprintf(text_string, "FILE %lu",
                 (unsigned long) rpdata->object_instance);
             characterstring_init_ansi(&char_string, text_string);
-            apdu_len =
-                encode_application_character_string(&apdu[0], &char_string);
-            break;
-        case PROP_OBJECT_TYPE:
+        apdu_len =
+            encode_application_character_string(&apdu[0], &char_string);
+        break;
+
+    case PROP_OBJECT_TYPE:
             apdu_len = encode_application_enumerated(&apdu[0], OBJECT_FILE);
             break;
         case PROP_DESCRIPTION:
@@ -298,15 +312,25 @@ int bacfile_read_property(
                 encode_application_enumerated(&apdu[0],
                 FILE_RECORD_AND_STREAM_ACCESS);
             break;
-        default:
-            rpdata->error_class = ERROR_CLASS_PROPERTY;
-            rpdata->error_code = ERROR_CODE_UNKNOWN_PROPERTY;
-            apdu_len = -1;
-            break;
+
+    case PROP_PROPERTY_LIST:
+        apdu_len = property_list_encode(
+            rpdata,
+            Properties_Required,
+            Properties_Optional,
+            Properties_Proprietary);
+        break;
+
+    default:
+        rpdata->error_class = ERROR_CLASS_PROPERTY;
+        rpdata->error_code = ERROR_CODE_UNKNOWN_PROPERTY;
+        apdu_len = BACNET_STATUS_ERROR;
+        break;
     }
 
     return apdu_len;
 }
+
 
 /* returns true if successful */
 bool bacfile_write_property(
@@ -369,21 +393,23 @@ bool bacfile_write_property(
                    to wp_data->object_instance */
             }
             break;
-        case PROP_OBJECT_IDENTIFIER:
-        case PROP_OBJECT_NAME:
-        case PROP_OBJECT_TYPE:
-        case PROP_DESCRIPTION:
-        case PROP_FILE_TYPE:
-        case PROP_MODIFICATION_DATE:
-        case PROP_READ_ONLY:
-        case PROP_FILE_ACCESS_METHOD:
-            wp_data->error_class = ERROR_CLASS_PROPERTY;
-            wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
-            break;
-        default:
-            wp_data->error_class = ERROR_CLASS_PROPERTY;
-            wp_data->error_code = ERROR_CODE_UNKNOWN_PROPERTY;
-            break;
+    case PROP_DESCRIPTION:
+    case PROP_OBJECT_IDENTIFIER:
+    case PROP_OBJECT_NAME:
+    case PROP_OBJECT_TYPE:
+    case PROP_FILE_TYPE:
+    case PROP_MODIFICATION_DATE:
+    case PROP_READ_ONLY:
+    case PROP_FILE_ACCESS_METHOD:
+    case PROP_PROPERTY_LIST:
+        wp_data->error_class = ERROR_CLASS_PROPERTY;
+        wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
+        break;
+
+    default:
+        wp_data->error_class = ERROR_CLASS_PROPERTY;
+        wp_data->error_code = ERROR_CODE_UNKNOWN_PROPERTY;
+        break;
     }
 
     return status;
@@ -422,7 +448,7 @@ uint32_t bacfile_instance_from_tsm(
     uint8_t *service_request = NULL;
     uint16_t service_request_len = 0;
     BACNET_ADDRESS dest;        /* where the original packet was destined */
-    uint8_t apdu[MAX_PDU] = { 0 };      /* original APDU packet */
+    uint8_t apdu[MAX_APDU] = { 0 };      /* original APDU packet */
     uint16_t apdu_len = 0;      /* original APDU packet length */
     int len = 0;        /* apdu header length */
     BACNET_ATOMIC_READ_FILE_DATA data ;

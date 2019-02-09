@@ -69,7 +69,7 @@ void bacnet_mac_copy(
     //}
     if (src->len != 1 && src->len != 0 && src->len != 6 && src->len != 2 ) 
     {
-      panic();    
+      panic();
       return ;
     }
 #else

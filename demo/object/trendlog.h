@@ -157,12 +157,13 @@ bool Trend_Log_Object_Name(
     uint32_t object_instance,
     BACNET_CHARACTER_STRING * object_name);
 
-    int Trend_Log_Read_Property(
-        BACNET_READ_PROPERTY_DATA * rpdata);
+int Trend_Log_Read_Property(
+    BACNET_READ_PROPERTY_DATA * rpdata);
 
-    bool Trend_Log_Write_Property(
-        BACNET_WRITE_PROPERTY_DATA * wp_data);
-    void Trend_Log_Init(
+bool Trend_Log_Write_Property(
+    BACNET_WRITE_PROPERTY_DATA * wp_data);
+
+void Trend_Log_Init(
         void);
 
 void TL_Insert_Status_Rec(
@@ -205,7 +206,7 @@ int rr_trend_log_encode(
     uint8_t * apdu,
     BACNET_READ_RANGE_DATA * pRequest);
 
-    void trend_log_timer(
-        uint16_t uSeconds);
+void trend_log_timer(
+    uint16_t uSeconds);
 
 #endif

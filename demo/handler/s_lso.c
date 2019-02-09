@@ -37,10 +37,10 @@
 *
 ****************************************************************************************/
 
-//#include <stddef.h>
+#include <stddef.h>
 #include <stdint.h>
-//#include <errno.h>
-//#include <string.h>
+// #include <errno.h>
+#include <string.h>
 //#include "config.h"
 //#include "txbuf.h"
 //#include "bacdef.h"
@@ -58,6 +58,7 @@
 #include "txbuf.h"
 #include "lso.h"
 //#include "client.h"
+#include "datalink.h"
 
 /** @file s_lso.c  Send BACnet Life Safety Operation message. */
 

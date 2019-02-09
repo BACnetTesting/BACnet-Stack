@@ -56,7 +56,7 @@
  (!defined(USE_CLASSADDR) || (USE_CLASSADDR == 0))
 #include <iphlpapi.h>
 #endif
-#include <windows.h>
+
 #include <winsock2.h>
 #include <ws2tcpip.h>
 

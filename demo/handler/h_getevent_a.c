@@ -52,6 +52,8 @@
  * Acked_Transitions property, which has at least one of the bits
  * (TO-OFFNORMAL, TO-FAULT, TONORMAL) set to FALSE.
  */
+#include "config.h"
+
 #include <assert.h>
 #include "config.h"
 #include "txbuf.h"
@@ -64,7 +66,9 @@
 #include "handlers.h"
 #include "getevent.h"
 
-/* 40 = min size of get event data in APDU */
+#if (INTRINSIC_REPORTING_B == 1)
+
+ /* 40 = min size of get event data in APDU */
 #define MAX_NUMBER_OF_EVENTS ((MAX_APDU / 40) + 1)
 
 /** Example function to handle a GetEvent ACK.
@@ -101,3 +105,5 @@ void get_event_ack_handler(
         /* FIXME: Add code to process get_event_data */
     }
 }
+
+#endif // #if (INTRINSIC_REPORTING == 1)
