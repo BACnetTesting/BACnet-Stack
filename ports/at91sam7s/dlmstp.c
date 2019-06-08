@@ -290,14 +290,6 @@ static bool dlmstp_compare_data_expecting_reply(
        confirmed, simple ack, abort, reject, error */
     reply.pdu_type = reply_pdu[offset] & 0xF0;
     switch (reply.pdu_type) {
-        case PDU_TYPE_CONFIRMED_SERVICE_REQUEST:
-            reply.invoke_id = reply_pdu[offset + 2];
-            /* segmented message? */
-            if (reply_pdu[offset] & BIT3)
-                reply.service_choice = reply_pdu[offset + 5];
-            else
-                reply.service_choice = reply_pdu[offset + 3];
-            break;
         case PDU_TYPE_SIMPLE_ACK:
             reply.invoke_id = reply_pdu[offset + 1];
             reply.service_choice = reply_pdu[offset + 2];
@@ -725,8 +717,12 @@ static bool MSTP_Master_Node_FSM(
                         break;
                     case FRAME_TYPE_POLL_FOR_MASTER:
                         /* ReceivedPFM */
-                        MSTP_Send_Frame(FRAME_TYPE_REPLY_TO_POLL_FOR_MASTER,
-                            SourceAddress, This_Station, NULL, 0);
+                        /* DestinationAddress is equal to TS */
+                        if (DestinationAddress == This_Station) {
+                            MSTP_Send_Frame(
+                                FRAME_TYPE_REPLY_TO_POLL_FOR_MASTER,
+                                SourceAddress, This_Station, NULL, 0);
+                        }
                         break;
                     case FRAME_TYPE_BACNET_DATA_NOT_EXPECTING_REPLY:
                         /* indicate successful reception to the higher layers */

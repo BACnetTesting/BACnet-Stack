@@ -63,6 +63,9 @@
 #include "ms-input.h"
 #include "mso.h"
 #include "msv.h"
+#if (BACNET_PROTOCOL_REVISION >= 17)
+#include "netport.h"
+#endif
 #include "osv.h"
 #include "piv.h"
 #include "schedule.h"
@@ -113,6 +116,23 @@ static object_functions_t My_Object_Table[] = {
             NULL /* COV */ ,
             NULL /* COV Clear */ ,
         NULL /* Intrinsic Reporting */ },
+#if (BACNET_PROTOCOL_REVISION >= 17)
+    {OBJECT_NETWORK_PORT,
+            Network_Port_Init,
+            Network_Port_Count,
+            Network_Port_Index_To_Instance,
+            Network_Port_Valid_Instance,
+            Network_Port_Object_Name,
+            Network_Port_Read_Property,
+            Network_Port_Write_Property,
+            Network_Port_Property_Lists,
+            NULL /* ReadRangeInfo */ ,
+            NULL /* Iterator */ ,
+            NULL /* Value_Lists */ ,
+            NULL /* COV */ ,
+            NULL /* COV Clear */ ,
+        NULL /* Intrinsic Reporting */ },
+#endif
     {OBJECT_ANALOG_INPUT,
             Analog_Input_Init,
             Analog_Input_Count,
@@ -336,9 +356,9 @@ static object_functions_t My_Object_Table[] = {
             Multistate_Value_Property_Lists,
             NULL /* ReadRangeInfo */ ,
             NULL /* Iterator */ ,
-            NULL /* Value_Lists */ ,
-            NULL /* COV */ ,
-            NULL /* COV Clear */ ,
+            Multistate_Value_Encode_Value_List,
+            Multistate_Value_Change_Of_Value,
+            Multistate_Value_Change_Of_Value_Clear,
         NULL /* Intrinsic Reporting */ },
     {OBJECT_TRENDLOG,
             Trend_Log_Init,
@@ -558,57 +578,6 @@ void Device_Objects_Property_List(
     return;
 }
 
-/** Commands a Device re-initialization, to a given state.
- * The request's password must match for the operation to succeed.
- * This implementation provides a framework, but doesn't
- * actually *DO* anything.
- * @note You could use a mix of states and passwords to multiple outcomes.
- * @note You probably want to restart *after* the simple ack has been sent
- *       from the return handler, so just set a local flag here.
- * @ingroup ObjIntf
- *
- * @param rd_data [in,out] The information from the RD request.
- *                         On failure, the error class and code will be set.
- * @return True if succeeds (password is correct), else False.
- */
-bool Device_Reinitialize(
-    BACNET_REINITIALIZE_DEVICE_DATA * rd_data)
-{
-    bool status = false;
-
-    if (characterstring_ansi_same(&rd_data->password, "Jesus")) {
-        switch (rd_data->state) {
-            case BACNET_REINIT_COLDSTART:
-            case BACNET_REINIT_WARMSTART:
-                dcc_set_status_duration(COMMUNICATION_ENABLE, 0);
-                break;
-            case BACNET_REINIT_STARTBACKUP:
-                break;
-            case BACNET_REINIT_ENDBACKUP:
-                break;
-            case BACNET_REINIT_STARTRESTORE:
-                break;
-            case BACNET_REINIT_ENDRESTORE:
-                break;
-            case BACNET_REINIT_ABORTRESTORE:
-                break;
-            default:
-                break;
-        }
-        /* Note: you could use a mix of state
-           and password to multiple things */
-        /* note: you probably want to restart *after* the
-           simple ack has been sent from the return handler
-           so just set a flag from here */
-        status = true;
-    } else {
-        rd_data->error_class = ERROR_CLASS_SECURITY;
-        rd_data->error_code = ERROR_CODE_PASSWORD_FAILURE;
-    }
-
-    return status;
-}
-
 /* These three arrays are used by the ReadPropertyMultiple handler */
 static const int Device_Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
@@ -725,6 +694,71 @@ static uint32_t Database_Revision = 0;
 /* Auto_Slave_Discovery */
 /* Slave_Address_Binding */
 /* Profile_Name */
+static BACNET_REINITIALIZED_STATE Reinitialize_State = BACNET_REINIT_IDLE;
+static const char *Reinit_Password = "filister";
+
+/** Commands a Device re-initialization, to a given state.
+ * The request's password must match for the operation to succeed.
+ * This implementation provides a framework, but doesn't
+ * actually *DO* anything.
+ * @note You could use a mix of states and passwords to multiple outcomes.
+ * @note You probably want to restart *after* the simple ack has been sent
+ *       from the return handler, so just set a local flag here.
+ * @ingroup ObjIntf
+ *
+ * @param rd_data [in,out] The information from the RD request.
+ *                         On failure, the error class and code will be set.
+ * @return True if succeeds (password is correct), else False.
+ */
+bool Device_Reinitialize(
+    BACNET_REINITIALIZE_DEVICE_DATA * rd_data)
+{
+    bool status = false;
+
+    /* Note: you could use a mix of state and password to multiple things */
+    if (characterstring_ansi_same(&rd_data->password, Reinit_Password)) {
+        switch (rd_data->state) {
+            case BACNET_REINIT_COLDSTART:
+            case BACNET_REINIT_WARMSTART:
+                dcc_set_status_duration(COMMUNICATION_ENABLE, 0);
+                /* note: you probably want to restart *after* the
+                   simple ack has been sent from the return handler
+                   so just set a flag from here */
+                Reinitialize_State = rd_data->state;
+                status = true;
+                break;
+            case BACNET_REINIT_STARTBACKUP:
+            case BACNET_REINIT_ENDBACKUP:
+            case BACNET_REINIT_STARTRESTORE:
+            case BACNET_REINIT_ENDRESTORE:
+            case BACNET_REINIT_ABORTRESTORE:
+                if (dcc_communication_disabled()) {
+                    rd_data->error_class = ERROR_CLASS_SERVICES;
+                    rd_data->error_code = ERROR_CODE_COMMUNICATION_DISABLED;
+                } else {
+                    rd_data->error_class = ERROR_CLASS_SERVICES;
+                    rd_data->error_code =
+                        ERROR_CODE_OPTIONAL_FUNCTIONALITY_NOT_SUPPORTED;
+                }
+                break;
+            default:
+                rd_data->error_class = ERROR_CLASS_SERVICES;
+                rd_data->error_code = ERROR_CODE_PARAMETER_OUT_OF_RANGE;
+                break;
+        }
+    } else {
+        rd_data->error_class = ERROR_CLASS_SECURITY;
+        rd_data->error_code = ERROR_CODE_PASSWORD_FAILURE;
+    }
+
+    return status;
+}
+
+BACNET_REINITIALIZED_STATE Device_Reinitialized_State(
+    void)
+{
+    return Reinitialize_State;
+}
 
 unsigned Device_Count(
     void)

@@ -31,17 +31,17 @@
  License.
  -------------------------------------------
 ####COPYRIGHTEND####*/
+/** @file datalink.c  Optional run-time assignment of datalink transport */
+#include "datalink.h"
+
+#if defined(BACDL_ALL) || defined FOR_DOXYGEN
 #include "ethernet.h"
 #include "bip.h"
+#include "bip6.h"
 #include "bvlc.h"
 #include "arcnet.h"
 #include "dlmstp.h"
-#include "datalink.h"
 #include <string.h>
-
-/** @file datalink.c  Optional run-time assignment of datalink transport */
-
-#if defined(BACDL_ALL) || defined FOR_DOXYGEN
 /* Function pointers - point to your datalink */
 
 /** Function template to Initialize the DataLink services at the given interface.
@@ -107,6 +107,20 @@ void datalink_set(
         datalink_cleanup = bip_cleanup;
         datalink_get_broadcast_address = bip_get_broadcast_address;
         datalink_get_my_address = bip_get_my_address;
+    } else if (strcasecmp("bip6", datalink_string) == 0) {
+        datalink_init = bip6_init;
+        datalink_send_pdu = bip6_send_pdu;
+        datalink_receive = bip6_receive;
+        datalink_cleanup = bip6_cleanup;
+        datalink_get_broadcast_address = bip6_get_broadcast_address;
+        datalink_get_my_address = bip6_get_my_address;
+    } else if (strcasecmp("bvlc6", datalink_string) == 0) {
+        datalink_init = bip6_init;
+        datalink_send_pdu = bvlc6_send_pdu;
+        datalink_receive = bvlc6_receive;
+        datalink_cleanup = bip6_cleanup;
+        datalink_get_broadcast_address = bip6_get_broadcast_address;
+        datalink_get_my_address = bip6_get_my_address;
     } else if (strcasecmp("ethernet", datalink_string) == 0) {
         datalink_init = ethernet_init;
         datalink_send_pdu = ethernet_send_pdu;
@@ -129,5 +143,50 @@ void datalink_set(
         datalink_get_broadcast_address = dlmstp_get_broadcast_address;
         datalink_get_my_address = dlmstp_get_my_address;
     }
+}
+#endif
+
+#if defined(BACDL_NONE)
+int datalink_send_pdu(
+    BACNET_ADDRESS * dest,
+    BACNET_NPDU_DATA * npdu_data,
+    uint8_t * pdu,
+    unsigned pdu_len)
+{
+    return 0;
+}
+
+uint16_t datalink_receive(
+    BACNET_ADDRESS * src,
+    uint8_t * pdu,
+    uint16_t max_pdu,
+    unsigned timeout)
+{
+    return 0;
+}
+
+void datalink_cleanup(
+    void)
+{
+}
+
+void datalink_get_broadcast_address(
+    BACNET_ADDRESS * dest)
+{
+}
+
+void datalink_get_my_address(
+    BACNET_ADDRESS * my_address)
+{
+}
+
+void datalink_set_interface(
+    char *ifname)
+{
+}
+
+void datalink_set(
+    char *datalink_string)
+{
 }
 #endif
