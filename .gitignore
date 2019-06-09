@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 *.idb
 *.tlog
 *.db
@@ -45,3 +46,11 @@ libbacnet.a
 /*.vpwhist
 /*.vtg
 *.dsp
+=======
+**/x64
+.settings
+
+*.user
+
+
+>>>>>>> origin/SourceForge_shadow
