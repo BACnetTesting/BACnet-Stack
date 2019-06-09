@@ -195,7 +195,7 @@ static void set_broadcast_address(
 
 /* on Windows, ifname is the dotted ip address of the interface */
 void bip_set_interface(
-    const char *ifname)
+    char *ifname)
 {
     struct in_addr address;
 
@@ -350,7 +350,7 @@ const char *winsock_error_code_text(
  *         else False if the socket functions fail.
  */
 bool bip_init(
-    const char *ifname)
+    char *ifname)
 {
     int rv = 0; /* return from socket lib calls */
     struct sockaddr_in sin ;
@@ -465,7 +465,7 @@ bool bip_init(
     sin.sin_port = bip_get_port();
     memset(&(sin.sin_zero), '\0', sizeof(sin.sin_zero));
     rv = bind(sock_fd, (const struct sockaddr *) &sin,
-              sizeof(struct sockaddr));
+        sizeof(struct sockaddr));
     if (rv < 0) {
         dbTraffic(DBD_ALL, DB_ERROR, "bip: failed to bind to %s port %hu\n",
             inet_ntoa(sin.sin_addr), ntohs(bip_get_port()));
@@ -476,7 +476,6 @@ bool bip_init(
 
     return true;
 }
-
 
 /** Cleanup and close out the BACnet/IP services by closing the socket.
  * @ingroup DLBIP

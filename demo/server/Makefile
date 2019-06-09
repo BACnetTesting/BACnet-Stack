@@ -64,8 +64,8 @@ ${BACNET_LIB_TARGET}:
 	( cd ${BACNET_LIB_DIR} ; $(MAKE) clean ; $(MAKE) )
 
 .c.o:
-	echo "mycflags=${CFLAGS}"
 	${CC} -c ${CFLAGS} $*.c -o $@
+	echo mycflags=${CFLAGS}
 
 depend:
 	rm -f .depend

@@ -40,12 +40,12 @@
 #ifndef LSO_H
 #define LSO_H
 
-//#include <stdint.h>
-//#include <stdbool.h>
-//#include "bacenum.h"
-//#include "bacdef.h"
-//#include "bacstr.h"
-#include "device.h"
+#include <stdint.h>
+#include <stdbool.h>
+#include "bacenum.h"
+#include "bacdef.h"
+#include "bacstr.h"
+
 
 /* Life Safety Operation Service */
 
@@ -68,10 +68,6 @@ int lso_decode_service_request(
     unsigned apdu_len,
     BACNET_LSO_DATA * data);
 
-uint8_t Send_Life_Safety_Operation_Data(
-    DEVICE_OBJECT_DATA *destDev,
-    uint32_t device_id,
-    BACNET_LSO_DATA * data);
 
 #ifdef TEST
 #include "ctest.h"

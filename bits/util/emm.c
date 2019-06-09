@@ -83,6 +83,12 @@
 #endif
 
 
+#if defined ( _MSC_VER  ) || defined ( __GNUC__ )
+#define OS_CREATERSEMA(a)
+#define OS_Use(a)
+#define OS_Unuse(a)
+#endif
+
 #if ( CHECK_FENCES == 1 )
 typedef struct {
   uint8_t   signature ;
@@ -187,13 +193,13 @@ static OS_RSEMA tracelogSema ;
 #if defined ( _MSC_VER  ) || defined ( __GNUC__ )
 void DumpEmmTraceLog(void)
 {
-    printf("\r\n\nEMM Trace log:");
+    printf("\n\r\nEMM Trace log:");
     for (int i = 0; i < tlAvailable; i++)
     {
-        printf("\r\n  %c  %3d", tracelog[i].tag, tracelog[i].len);
+        printf("\n\r  %c  %3d", tracelog[i].tag, tracelog[i].len);
     }
-    printf("\r\n Total Mallocs: %d", allocCount);
-    printf("\r\n");
+    printf("\n\r Total Mallocs: %d", allocCount);
+    printf("\n\r");
 }
 #endif
 #endif
@@ -494,7 +500,8 @@ void* emm_sys_safe_malloc(uint16_t size)
     // todo2 change this back to malloc, and TEST!
     ptr = (uint8_t *)calloc(size + sizeof(EMM_FENCE) * 2, 1);
 #else
-    ptr = (uint8_t *)malloc(size);
+    // todo2 change this back to malloc, and TEST!
+    ptr = (uint8_t *)calloc(size, 1);
 #endif
 
 
@@ -526,63 +533,6 @@ void* emm_sys_safe_malloc(uint16_t size)
     return ptr;
 #endif
 }
-
-
-#if ( EMMTRACELOG == 1 )
-void* emm_sys_safe_malloc(uint8_t tag, uint16_t size)
-#else
-void* emm_sys_safe_malloc2(uint16_t size)
-#endif
-{
-    uint8_t *ptr;
-
-#if ( BAC_DEBUG == 1 )
-    if (size > 0x0C00) {
-        panic();
-        return NULL;
-    }
-#else
-#error
-#endif
-
-    emmCount++;
-
-#if ( CHECK_FENCES == 1 )
-    // todo2 change this back to malloc, and TEST!
-    ptr = (uint8_t *)calloc(size + sizeof(EMM_FENCE) * 2, 1);
-#else
-    ptr = (uint8_t *)malloc(size);
-#endif
-
-
-#if (EMMTRACELOG == 1 )
-    if (ptr == NULL) {
-        uxFails++;
-        ese_enqueue(ese004_04_failed_to_malloc);
-    }
-    else {
-        TraceAlloc(tag, ptr, size);
-    }
-#endif
-
-#if ( CHECK_FENCES == 1 )
-    if (ptr == NULL) return NULL;
-    ((EMM_FENCE *)ptr)->length = size;
-    ((EMM_FENCE *)ptr)->signature = 'E';
-#if ( EMMTRACELOG == 1 )
-    ((EMM_FENCE *)ptr)->tag = tag;
-#endif
-    ((EMM_FENCE *)(ptr + size + sizeof(EMM_FENCE)))->length = size;
-    ((EMM_FENCE *)(ptr + size + sizeof(EMM_FENCE)))->signature = 'E';
-#if ( EMMTRACELOG == 1 )
-    ((EMM_FENCE *)(ptr + size + sizeof(EMM_FENCE)))->tag = tag;
-#endif
-    return ptr + sizeof(EMM_FENCE);
-#else
-    return ptr;
-#endif
-}
-
 
 unsigned staticcount;
 

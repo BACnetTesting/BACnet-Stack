@@ -168,27 +168,25 @@ int rr_decode_service_request(
     BACNET_READ_RANGE_DATA * rrdata)
 {
     unsigned len = 0;
-    unsigned TagLen ;
-    uint8_t tag_number ;
-    uint32_t len_value_type ;
+    unsigned TagLen = 0;
+    uint8_t tag_number = 0;
+    uint32_t len_value_type = 0;
     BACNET_OBJECT_TYPE type;  /* for decoding */
     uint32_t UnsignedTemp;
 
     /* check for value pointers */
     if (apdu_len && rrdata) {
         /* Tag 0: Object ID */
-        if (!decode_is_context_tag(&apdu[len++], 0)) {
+        if (!decode_is_context_tag(&apdu[len++], 0))
             return -1;
-        }
         len += decode_object_id(&apdu[len], &type, &rrdata->object_instance);
         rrdata->object_type = (BACNET_OBJECT_TYPE) type;
         /* Tag 1: Property ID */
         len +=
             decode_tag_number_and_value(&apdu[len], &tag_number,
-                                        &len_value_type);
-        if (tag_number != 1) {
+            &len_value_type);
+        if (tag_number != 1)
             return -1;
-        }
         len += decode_enumerated(&apdu[len], len_value_type, &UnsignedTemp);
         rrdata->object_property = (BACNET_PROPERTY_ID) UnsignedTemp;
         rrdata->Overhead = RR_OVERHEAD; /* Start with the fixed overhead */
@@ -376,20 +374,19 @@ int rr_ack_decode_service_request(
     int apdu_len,       /* total length of the apdu */
     BACNET_READ_RANGE_DATA * rrdata)
 {
-    uint8_t tag_number ;
-    uint32_t len_value_type ;
-    int tag_len ;    /* length of tag decode */
+    uint8_t tag_number = 0;
+    uint32_t len_value_type = 0;
+    int tag_len = 0;    /* length of tag decode */
     int len = 0;        /* total length of decodes */
     int start_len;
     BACNET_OBJECT_TYPE object ;        /* object type */
-    uint32_t property ;      /* for decoding */
-    uint32_t array_value;   /* for decoding */
+    uint32_t property = 0;      /* for decoding */
+    uint32_t array_value = 0;   /* for decoding */
 
     /* FIXME: check apdu_len against the len during decode   */
     /* Tag 0: Object ID */
-    if (!decode_is_context_tag(&apdu[0], 0)) {
+    if (!decode_is_context_tag(&apdu[0], 0))
         return -1;
-    }
     len = 1;
     len += decode_object_id(&apdu[len], &object, &rrdata->object_instance);
     rrdata->object_type = (BACNET_OBJECT_TYPE) object;
@@ -397,9 +394,8 @@ int rr_ack_decode_service_request(
     /* Tag 1: Property ID */
     len +=
         decode_tag_number_and_value(&apdu[len], &tag_number, &len_value_type);
-    if (tag_number != 1) {
+    if (tag_number != 1)
         return -1;
-    }
     len += decode_enumerated(&apdu[len], len_value_type, &property);
     rrdata->object_property = (BACNET_PROPERTY_ID) property;
 
@@ -410,26 +406,22 @@ int rr_ack_decode_service_request(
         len += tag_len;
         len += decode_unsigned(&apdu[len], len_value_type, &array_value);
         rrdata->array_index = array_value;
-    } 
-    else {
+    } else
         rrdata->array_index = BACNET_ARRAY_ALL;
-    }
 
     /* Tag 3: Result Flags */
     len +=
         decode_tag_number_and_value(&apdu[len], &tag_number, &len_value_type);
-    if (tag_number != 3) {
+    if (tag_number != 3)
         return -1;
-    }
 
     len += decode_bitstring(&apdu[len], len_value_type, &rrdata->ResultFlags);
 
     /* Tag 4: Item count */
     len +=
         decode_tag_number_and_value(&apdu[len], &tag_number, &len_value_type);
-    if (tag_number != 4) {
+    if (tag_number != 4)
         return -1;
-    }
 
     len += decode_unsigned(&apdu[len], len_value_type, &rrdata->ItemCount);
 
@@ -451,9 +443,8 @@ int rr_ack_decode_service_request(
                     decode_tag_number_and_value(&apdu[len], NULL,
                                                 &len_value_type);
                 len += len_value_type;  /* Skip over data value as well */
-                if (len >= apdu_len) {  /* APDU is exhausted so we have failed to find closing tag */
+                if (len >= apdu_len)    /* APDU is exhausted so we have failed to find closing tag */
                     return (-1);
-                }
             }
         }
     } else {
@@ -463,10 +454,9 @@ int rr_ack_decode_service_request(
         /* Tag 6: Item count */
         len +=
             decode_tag_number_and_value(&apdu[len], &tag_number,
-                                        &len_value_type);
-        if (tag_number != 6) {
+            &len_value_type);
+        if (tag_number != 6)
             return -1;
-        }
 
         len +=
             decode_unsigned(&apdu[len], len_value_type,

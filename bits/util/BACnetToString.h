@@ -33,9 +33,6 @@ const char *BACnetMacAddrToString(BACNET_MAC_ADDRESS *addr);
 //const char *BPT_ToString(BPT_TYPE pf);
 //BPT_TYPE StringTo_PF(const char *name);
 bool StringTo_IPEP(struct sockaddr_in *ipep, const char *string);
-bool StringTo_IPaddr(struct in_addr  *ipaddr, const char *string);
-
 const char *IPEP_ToString(char *string, const struct sockaddr_in *ipep);
-const char *IPAddr_ToString(char *string, const struct in_addr *ipaddr);
-const char *IPAddr_Port_ToString(char *string, const struct in_addr *ipaddr, const uint16_t nwoPort );
+const char *IPAddr_ToString(char *string, const struct in_addr *ipaddr);			// todo - not sure why I cant define IN_ADDR in linux
 

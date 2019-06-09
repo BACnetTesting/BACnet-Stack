@@ -54,9 +54,9 @@ DEBUGGING = -g3
 
 # EKH: 2018.08.21 - Forcing debug build to avoid 'optimized out' issue with bip-init.c
 BUILD=debug
-
+ 
 # C++ does not require missing prototypes WARNINGS = -Wall -Wmissing-prototypes
-# when ready to upgrade to c++ 6: https://gist.github.com/application2000/73fd6f4bf1be6600a2cf9f56315a2d91
+# when ready to upgrade to c++ 6: https://gist.github.com/application2000/73fd6f4bf1be6600a2cf9f56315a2d91 
 # WARNINGS = -Wall -Wmissing-prototypes -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wnull-dereference -Wold-style-cast -Wuseless-cast -Wjump-misses-init -Wdouble-promotion -Wshadow -Wformat=2
 WARNINGS = -Wall -Wextra -Wno-switch
 
@@ -70,7 +70,7 @@ DEFINES += -DBIP_DEBUG
 endif
 endif
 
-CFLAGS  = $(STANDARDS) $(WARNINGS) $(DEBUGGING) $(OPTIMIZATION) $(INCLUDES) $(DEFINES)
+CFLAGS  = $(WARNINGS) $(DEBUGGING) $(OPTIMIZATION) $(STANDARDS) $(INCLUDES) $(DEFINES)
 
 # Export the variables defined here to all subprocesses
 # (see http://www.gnu.org/software/automake/manual/make/Special-Targets.html)

@@ -181,7 +181,6 @@ BFLAGS += -DMAX_BINARY_OUTPUTS=8
 CFLAGS = $(DEFINES)
 CFLAGS += $(DEBUGGING)
 CFLAGS += $(INCLUDES)
-CFLAGS += $(STANDARDS) 
 # warnings
 CFLAGS += -Wall
 CFLAGS += -Wstrict-prototypes

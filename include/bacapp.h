@@ -112,13 +112,11 @@ typedef struct BACnet_Application_Data_Value {
     struct BACnet_Application_Data_Value *next;
 } BACNET_APPLICATION_DATA_VALUE;
 
-
 struct BACnet_Access_Error;
 typedef struct BACnet_Access_Error {
     BACNET_ERROR_CLASS error_class;
     BACNET_ERROR_CODE error_code;
 } BACNET_ACCESS_ERROR;
-
 
 struct BACnet_Property_Reference;
 typedef struct BACnet_Property_Reference {

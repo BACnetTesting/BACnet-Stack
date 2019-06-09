@@ -47,8 +47,11 @@
 ****************************************************************************************/
 
 #include "bacdcode.h"
+//#include "bacint.h"
+//#include "bacenum.h"
+#include "bits.h"
 #include "npdu.h"
-#include "bitsDebug.h"
+//#include "apdu.h"
 
 /** @file npdu.c  Encode/Decode NPDUs - Network Protocol Data Units */
 
@@ -269,11 +272,6 @@ is expected for the service being issued.
 
 /** Initialize an npci_data structure to good defaults.
  * The name is a misnomer, as it doesn't do any actual encoding here.
- *
- *    EKH: The "npdu_encode_npdu_data" name was a misnomer, and
- *    confusing, so I changed the function name to
- *    npdu_setup_npci_data
- *
  * @see npdu_encode_npdu_network if you need to set a network layer msg.
  *
  * @param npci_data [out] Returns a filled-out structure with information
@@ -427,15 +425,7 @@ int npci_decode(
              * BVLC_ORIGINAL_BROADCAST_NPDU) then don't stomp on that.
              */
             if (src->net != BACNET_BROADCAST_NETWORK)
-            {
                 src->net = 0;
-            }
-            else
-            {
-                // I do not understand under which conditions src->net will become equal to BACNET_BROADCAST_NETWORK
-                // so I am temporarily dropping a panic here to highlight the next time this occurs.
-                panic();
-            }
             src->len = 0;
             for (i = 0; i < MAX_MAC_LEN; i++) {
                 src->adr[i] = 0;

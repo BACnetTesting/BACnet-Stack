@@ -58,7 +58,6 @@
 #include "device.h"
 #include "debug.h"
 #include "bitsDebug.h"
-#include "datalink.h"
 
 /** @file h_alarm_ack.c  Handles Alarm Acknowledgment. */
 
@@ -165,7 +164,7 @@ void handler_alarm_ack(
                     service_data->invoke_id,
                     SERVICE_CONFIRMED_ACKNOWLEDGE_ALARM);
                 dbTraffic(DBD_ALL, DB_BTC_ERROR, "Alarm Acknowledge: " "Sending Simple Ack!\n");
-                break;
+            break;
 
             case -1:
                 len =
@@ -175,14 +174,14 @@ void handler_alarm_ack(
                     error_code);
                 dbTraffic(DBD_ALL, DB_BTC_ERROR, "Alarm Acknowledge: error %s!\n",
                     bactext_error_code_name(error_code));
-                break;
+            break;
 
             default:
                 len =
                     abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
                     service_data->invoke_id, ABORT_REASON_OTHER, true);
                 dbTraffic(DBD_ALL, DB_BTC_ERROR, "Alarm Acknowledge: abort other!\n");
-                break;
+            break;
         }
     } else {
         len =

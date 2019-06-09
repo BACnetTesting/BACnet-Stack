@@ -111,7 +111,7 @@ static uint8_t Number_Of_Retries = 3;
 
 /* a simple table for crossing the services supported */
 static BACNET_SERVICES_SUPPORTED
-confirmed_service_supported[MAX_BACNET_CONFIRMED_SERVICE] = {
+    confirmed_service_supported[MAX_BACNET_CONFIRMED_SERVICE] = {
     SERVICE_SUPPORTED_ACKNOWLEDGE_ALARM,
     SERVICE_SUPPORTED_CONFIRMED_COV_NOTIFICATION,
     SERVICE_SUPPORTED_CONFIRMED_EVENT_NOTIFICATION,
@@ -146,7 +146,7 @@ confirmed_service_supported[MAX_BACNET_CONFIRMED_SERVICE] = {
 
 /* a simple table for crossing the services supported */
 static BACNET_SERVICES_SUPPORTED
-unconfirmed_service_supported[MAX_BACNET_UNCONFIRMED_SERVICE] = {
+    unconfirmed_service_supported[MAX_BACNET_UNCONFIRMED_SERVICE] = {
     SERVICE_SUPPORTED_I_AM,
     SERVICE_SUPPORTED_I_HAVE,
     SERVICE_SUPPORTED_UNCONFIRMED_COV_NOTIFICATION,
@@ -183,7 +183,7 @@ void apdu_set_unrecognized_service_handler_handler(
 /* Unconfirmed Function Handlers */
 /* If they are not set, they are not handled */
 static unconfirmed_function
-Unconfirmed_Function[MAX_BACNET_UNCONFIRMED_SERVICE];
+    Unconfirmed_Function[MAX_BACNET_UNCONFIRMED_SERVICE];
 
 void apdu_set_unconfirmed_handler(
     BACNET_UNCONFIRMED_SERVICE service_choice,
@@ -259,7 +259,7 @@ bool apdu_service_supported_to_index(
         for (i = 0; i < MAX_BACNET_CONFIRMED_SERVICE; i++) {
             if (confirmed_service_supported[i] == service_supported) {
                 found = true;
-                *index = (size_t)i;
+                *index = (size_t) i;
                 *bIsConfirmed = true;
                 break;
             }
@@ -270,7 +270,7 @@ bool apdu_service_supported_to_index(
             for (i = 0; i < MAX_BACNET_UNCONFIRMED_SERVICE; i++) {
                 if (unconfirmed_service_supported[i] == service_supported) {
                     found = true;
-                    *index = (size_t)i;
+                    *index = (size_t) i;
                     break;
                 }
             }
@@ -347,7 +347,6 @@ void apdu_set_confirmed_ack_handler(
     }
 }
 
-// 'allow' these into the BACnet Stack Library - they are required by the command line tools
 #if ( BACNET_CLIENT == 1 )
 static error_function Error_Function[MAX_BACNET_CONFIRMED_SERVICE];
 
@@ -399,7 +398,7 @@ uint16_t apdu_decode_confirmed_service_request(
         service_data->sequence_number = apdu[len++];
         service_data->proposed_window_number = apdu[len++];
     }
-    *service_choice = (BACNET_CONFIRMED_SERVICE)apdu[len++];
+    *service_choice = (BACNET_CONFIRMED_SERVICE) apdu[len++];
     *service_request = &apdu[len];
     *service_request_len = apdu_len - len;
 

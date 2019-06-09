@@ -40,9 +40,9 @@
 #ifndef DCC_H
 #define DCC_H
 
-//#include <stdint.h>
-//#include <stdbool.h>
-//#include "bacenum.h"
+#include <stdint.h>
+#include <stdbool.h>
+#include "bacenum.h"
 #include "bacstr.h"
 
 /* return the status */
@@ -66,7 +66,7 @@ uint32_t dcc_duration_seconds(
   then seconds should be the number of seconds to tick away */
 void dcc_timer_seconds(
     uint32_t seconds);
-
+        
 /* setup the communication values */
 bool dcc_set_status_duration(
     BACNET_COMMUNICATION_ENABLE_DISABLE status,

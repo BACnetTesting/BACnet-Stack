@@ -34,7 +34,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include "appApi.h"
 
 #ifdef _MSC_VER
 typedef void(*ThreadFunction) (void *);
@@ -68,25 +67,25 @@ typedef enum
 
 } IPC_MSG_TYPE ;
 
-//typedef enum
-//{
-//    OBJ_TYPE_AI,
-//    OBJ_TYPE_AO,
-//    OBJ_TYPE_BI,
-//    OBJ_TYPE_BO,
-//    OBJ_TYPE_AV,
-//    OBJ_TYPE_BV,
-//    OBJ_TYPE_NC,
-//    OBJ_TYPE_Calendar,
-//    OBJ_TYPE_Schedule,
-//} IPC_OBJECT_TYPE ;
-//
-//typedef enum
-//{
-//    PROP_PV,
-//    PROP_DESC,
-//} IPC_PROPERTY_ID ;
-//
+typedef enum
+{
+    OBJ_TYPE_AI,
+    OBJ_TYPE_AO,
+    OBJ_TYPE_BI,
+    OBJ_TYPE_BO,
+    OBJ_TYPE_AV,
+    OBJ_TYPE_BV,
+    OBJ_TYPE_NC,
+    OBJ_TYPE_Calendar,
+    OBJ_TYPE_Schedule,
+} IPC_OBJECT_TYPE ;
+
+typedef enum
+{
+    PROP_PV,
+    PROP_DESC,
+} IPC_PROPERTY_ID ;
+
 typedef enum
 {
     IPCTT_FLOAT,

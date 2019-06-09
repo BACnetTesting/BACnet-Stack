@@ -37,9 +37,6 @@
 *
 ****************************************************************************************/
 
-// Just a note. BVLC (and bvlc.h) is required, and perfectly usable, in the absence of a BBMD.
-// Henceforth, bvlc.h has been modified and bbmd.h created to separate the requirements.
-
 #ifndef BVLC_H
 #define BVLC_H
 
@@ -77,22 +74,22 @@ struct sockaddr_in;     /* Defined elsewhere, needed here. */
 //    struct in_addr broadcast_mask;      /* in network format */
 //} BBMD_TABLE_ENTRY;
 
-uint16_t bvlc_receive(
-    BACNET_ADDRESS * src,   /* returns the source address */
-    uint8_t * npdu, /* returns the NPDU */
-    uint16_t max_npdu,      /* amount of space available in the NPDU  */
-    unsigned timeout);      /* number of milliseconds to wait for a packet */
+    uint16_t bvlc_receive(
+        BACNET_ADDRESS * src,   /* returns the source address */
+        uint8_t * npdu, /* returns the NPDU */
+        uint16_t max_npdu,      /* amount of space available in the NPDU  */
+        unsigned timeout);      /* number of milliseconds to wait for a packet */
 
-int bvlc_send_pdu(
-    BACNET_ADDRESS * dest,  /* destination address */
-    BACNET_NPCI_DATA * npci_data,   /* network information */
-    uint8_t * pdu,  /* any data to be sent - may be null */
-    unsigned pdu_len);
+    int bvlc_send_pdu(
+        BACNET_ADDRESS * dest,  /* destination address */
+        BACNET_NPCI_DATA * npci_data,   /* network information */
+        uint8_t * pdu,  /* any data to be sent - may be null */
+        unsigned pdu_len);
 
-int bvlc_send_mpdu(
-    struct sockaddr_in *dest,
-    uint8_t * mtu,
-    uint16_t mtu_len);
+    int bvlc_send_mpdu(
+        struct sockaddr_in *dest,
+        uint8_t * mtu,
+        uint16_t mtu_len);
 
 #if defined(BBMD_CLIENT_ENABLED) && BBMD_CLIENT_ENABLED
 int bvlc_encode_write_bdt_init(
@@ -117,19 +114,17 @@ int bvlc_encode_original_broadcast_npdu(
     uint8_t * npdu,
     unsigned npdu_length);
 #endif
+    int bvlc_encode_read_bdt(
+        uint8_t * pdu);
+    int bvlc_bbmd_read_bdt(
+        uint32_t bbmd_address,
+        uint16_t bbmd_port);
 
-int bvlc_encode_read_bdt(
-    uint8_t * pdu);
-
-int bvlc_bbmd_read_bdt(
-    uint32_t bbmd_address,
-    uint16_t bbmd_port);
-
-/* registers with a bbmd as a foreign device */
-int bvlc_register_with_bbmd(
-    uint32_t bbmd_address,  /* in network byte order */
-    uint16_t bbmd_port,     /* in network byte order */
-    uint16_t time_to_live_seconds);
+    /* registers with a bbmd as a foreign device */
+    int bvlc_register_with_bbmd(
+        uint32_t bbmd_address,  /* in network byte order */
+        uint16_t bbmd_port,     /* in network byte order */
+        uint16_t time_to_live_seconds);
 
 /* Note any BVLC_RESULT code, or NAK the BVLL message in the unsupported cases. */
 int bvlc_for_non_bbmd(

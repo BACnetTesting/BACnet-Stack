@@ -26,10 +26,6 @@
 /* Load Control Objects - customize for your use */
 /* from 135-2004-Addendum e */
 
-#include "config.h"     /* the custom stuff */
-
-#if (BACNET_USE_OBJECT_LOAD_CONTROL == 1)
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -39,6 +35,7 @@
 #include "bacdcode.h"
 #include "datetime.h"
 #include "bacenum.h"
+#include "config.h"     /* the custom stuff */
 #include "lc.h"
 #include "ao.h"
 #include "wp.h"
@@ -1508,6 +1505,3 @@ int main(
 }
 #endif /* TEST_LOAD_CONTROL */
 #endif /* TEST */
-
-
-#endif 0

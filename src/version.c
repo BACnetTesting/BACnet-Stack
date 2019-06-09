@@ -49,5 +49,6 @@
 // version.h collides with other OS version.h files, renamed.
 #include "bacversion.h"
 
-const char *BACnet_Version = BACNET_VERSION_TEXT;
+/** @file version.c  Sets the BACnet Version.   */
 
+const char *BACnet_Version = BACNET_VERSION_TEXT;

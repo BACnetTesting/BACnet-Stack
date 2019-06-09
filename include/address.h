@@ -40,10 +40,10 @@
 #ifndef ADDRESS_H
 #define ADDRESS_H
 
-//#include <stddef.h>
-//#include <stdint.h>
-//#include <stdbool.h>
-//#include "bacdef.h"
+#include <stddef.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include "bacdef.h"
 #include "readrange.h"
 
 
@@ -110,13 +110,9 @@ int address_list_encode(
     uint8_t * apdu,
 	unsigned apdu_len);
 
-#if  (LIST_MANIPULATION == 1)
-
 int rr_address_list_encode(
     uint8_t * apdu,
     BACNET_READ_RANGE_DATA * pRequest);
-
-#endif
 
 void address_set_device_TTL(
     uint32_t device_id,

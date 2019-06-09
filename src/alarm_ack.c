@@ -48,7 +48,7 @@
 
 #include "config.h"
 
-#if (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1) || (INTRINSIC_REPORTING_B == 1)
+#if (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1) || (INTRINSIC_REPORTING == 1)
 
 #include "alarm_ack.h"
 

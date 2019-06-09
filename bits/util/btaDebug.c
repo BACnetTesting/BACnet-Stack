@@ -25,12 +25,12 @@
 *
 ****************************************************************************************/
 
+#include <stdint.h>
 
 // in MSVC, winsock2.h must be included first
 #if defined(_MSC_VER)
-// #include <winsock2.h>
+#include <winsock2.h>
 #endif
-
 #if defined(__GNUC__)
 
 #include <netdb.h>
@@ -110,6 +110,14 @@ static struct sockaddr_in bcastAddress;
 char firstEthernet[20];
 #endif
 
+// forwards to shut GCC up
+//int encodeIPEP(unsigned char *buf, struct sockaddr_in *addr);
+//int encodeAddr(unsigned char *buf, struct in_addr *addr) ;
+//int encodeInt16(unsigned char *buf, uint16_t port) ;
+//int encodeInt32(unsigned char *buf, uint32_t *val) ;
+//void PrepareBTAheader(unsigned char *buffer, int fc) ;
+//void SendBTAmessage(char *message);
+//void SendBTApacketTxRx(int port_id, BACNET_MAC_ADDRESS *srcPhyMac, BACNET_MAC_ADDRESS *destPhyMac, uint8_t *pdu, int len, int flagtx);
 
 
 #if defined(__GNUC__)
@@ -211,7 +219,6 @@ void EstablishWorkingAdapter(void)
 }
 #endif
 
-#if ( ETHERNETDEBUG == 1 )
 // encodes ipendpoint into out buffer
 int encodeIPEP(unsigned char *buf, struct sockaddr_in *addr)
 {
@@ -219,7 +226,7 @@ int encodeIPEP(unsigned char *buf, struct sockaddr_in *addr)
     memcpy(&buf[4], &addr->sin_port, 2);
     return 6;
 }
-#endif
+
 
 #if 0
 int encodeAddr(unsigned char *buf, struct in_addr *addr)
@@ -232,14 +239,8 @@ int encodeAddr(unsigned char *buf, struct in_addr *addr)
 
 int encodeUInt16(uint8_t *buf, const uint16_t value)
 {
-    // I have no idea what endianess ST micro is... check it out
-#if BACNET_STACK_BIG_ENDIAN
-    buf[0] = ((uint8_t *)&value)[1];
-    buf[1] = ((uint8_t *)&value)[0];
-#else
-    buf[0] = ((uint8_t *)&value)[0];
-    buf[1] = ((uint8_t *)&value)[1];
-#endif
+    uint16_t nwoint = htons(value);
+    memcpy(buf, &nwoint, 2);
     return 2;
 }
 
@@ -385,7 +386,6 @@ void PrepareBTAheader(const BTApt fc, uint8_t *buffer)
     memcpy(&buffer[6], &tosendlong, 4);
 #endif
 
-#if ( ETHERNETDEBUG == 1 )
 #if ! defined ( _MSC_VER  ) 	// some linux
     struct timespec gettime_now;
 
@@ -396,7 +396,6 @@ void PrepareBTAheader(const BTApt fc, uint8_t *buffer)
     memcpy(&buffer[2], &tosendlong, 4);
     tosendlong = htonl(gettime_now.tv_nsec);
     memcpy(&buffer[6], &tosendlong, 4);
-#endif
 #endif
 
     // remote agent IP
@@ -427,11 +426,6 @@ void PrepareBTAheader(const BTApt fc, uint8_t *buffer)
 
 static struct sockaddr_in destIPEP;
 static bool clientIsKnown;
-
-bool BTA_Ready(void)
-{
-    return true;
-}
 
 #if _MSC_VER
 static void ProcessBTAclientMessage(uint8_t *buffer, int len,
@@ -495,8 +489,6 @@ static bool FindBTAport(void)
 }
 
 
-// Now in osLayer/btaDatalink.c 
-#if 0
 static void BTAlistenThread(void *params)
 {
     while (true)
@@ -507,7 +499,7 @@ static void BTAlistenThread(void *params)
         //    panic();
         //    return;
         //}
-  if ( ! BTAready() ) 
+
 //            /* Allow us to use the same socket for sending and receiving */
 //            /* This makes sure that the src port is correct when sending */
 //#ifdef _MSC_VER
@@ -570,9 +562,6 @@ static void BTAlistenThread(void *params)
                         Code, winsock_error_code_text(Code));
                     break;
                 }
-
-#if ( ETHERNETDEBUG == 1 )
-
 #else
                 panic();
 #endif  
@@ -813,16 +802,14 @@ void SendBTApayload(uint8_t *payload, const int sendlength)
 
     // todonext, when do we get to close this socket under normal conditions....
     // close(sockfd);
-#endif
 
     emm_free(payload);
 }
-#endif
 
 
 void SendBTAhexdump(const char *message, const void *buffer, const uint16_t len)
 {
-    if ( ! BTA_Ready() ) return ;
+    if (!BTAready()) return ;
     uint8_t *outbuf = (uint8_t *)emm_smalloc('b', MX_BTA_BUFFER);
     if (outbuf == NULL) return ;
     memset(outbuf, 0, MX_BTA_BUFFER);
@@ -846,7 +833,7 @@ void SendBTAhexdump(const char *message, const void *buffer, const uint16_t len)
 static void SendBTAtext(const BTApt pt, const char *message)
 {
     // do this check early to avoid unnecessary CPU
-    if ( ! BTA_Ready() )
+    if(!BTAready())
     {
         ese_enqueue_once(ese028_1C_Attempt_to_send_BTA_before_IP_ready);
         return ;
@@ -889,7 +876,7 @@ static void EncodeInt(char *tmessage, int *optr, int value)
 
 void SendBTApanicInt(const char *message, const int value)
 {
-  if ( ! BTA_Ready() ) return ;
+    if (!BTAready()) return ;
 
     char tmessage[MX_TMESSAGE];
     int len = strlen(message);
@@ -904,7 +891,7 @@ void SendBTApanicInt(const char *message, const int value)
 void SendBTAmessageF1(char *message, int value)
 {
     char tmessage[MX_TMESSAGE];
-  if ( ! BTA_Ready() ) return ;
+    if (!BTAready()) return ;
     int len = strlen(message);
     if (len > MX_TMESSAGE - 10) return ;
     strncpy(tmessage, message, MX_TMESSAGE);
@@ -915,10 +902,10 @@ void SendBTAmessageF1(char *message, int value)
     SendBTAmessage(tmessage);
 }
 
-void SendBTAmstpFrame( const uint8_t portId, const bool tx, const uint8_t *frame, uint16_t data_len )
+void SendBTAmstpFrame(const uint8_t *frame, const uint16_t data_len)
 {
     // do this check early to avoid unnecessary CPU
-  if ( ! BTA_Ready() ) return ;
+    if(!BTAready()) return;
 
     if (data_len > 512 || data_len < 2) {
         // a bit recursive? panic();
@@ -926,47 +913,33 @@ void SendBTAmstpFrame( const uint8_t portId, const bool tx, const uint8_t *frame
     }
 
     // we are not going to send the 55, ff,
-    // we are not going to send the 55, ff,
-    data_len -= 2 ;
+
     // unsigned char outbuf[MX_BTA_BUFFER];
     uint8_t *outbuf = (uint8_t *)emm_smalloc('c', MX_BTA_BUFFER);
     if (outbuf == NULL) return ;
 
     memset(outbuf, 0, MX_BTA_BUFFER);
     PrepareBTAheader(BTApt_MSTPframe, outbuf);
-    
-    outbuf[16] = tx ;
-    outbuf[17] = portId;
-    
-    int datalen = MIN( data_len, MX_BTA_BUFFER-BX_DATAOFFSET) ;
+
+    // we are not going to send the 55, ff, so subtract 2 from len
+    int datalen = MIN(data_len - 2, MX_BTA_BUFFER - BX_DATAOFFSET);
+
     memcpy((uint8_t *)&outbuf[BX_DATAOFFSET], &frame[2], datalen);
     SendBTApayload(outbuf, datalen + BX_DATAOFFSET);
 }
 
 // and if we don't have the header information
-void SendBTAmstpPayload(
-    const uint8_t portId,
-    const bool tx,
-    const uint16_t data_len,
-    const uint8_t function,
-    const uint8_t dest,
-    const uint8_t source,
-    const uint8_t *payload)
+void SendBTAmstpPayload(const uint8_t *payload, const uint16_t data_len,
+                        const uint8_t function, const uint8_t dest,
+                        const uint8_t source)
 {
-        if ( ! BTA_Ready() ) return;
+    if (!BTAready()) return;
 
     uint8_t *outbuf = (uint8_t *)emm_smalloc('p', MX_BTA_BUFFER);
     if (outbuf == NULL) return ;
 
     memset(outbuf, 0, MX_BTA_BUFFER);
-        
-    // BTA reporting packet frame structure can be found here: https://goo.gl/JixmbT
-        
     PrepareBTAheader(BTApt_MSTPframe, outbuf);
-        
-    outbuf[16] = tx ;
-    outbuf[17] = portId;
-        
     int datalen = MIN(data_len, MX_BTA_BUFFER - BX_DATAOFFSET - 6);
 
     // this sends a whole frame
@@ -997,7 +970,7 @@ static void SendBTApacketTxRx(const int port_id,
     bacnet_mac_copy(&localSrcPhyMac, srcPhyMac);
     bacnet_mac_copy(&localDestPhyMac, destPhyMac);
 
-#ifdef DEBUG_todo1
+#ifdef DEBUG
     if (!bacnet_mac_check(&localSrcPhyMac)) {
         panic();
         bacnet_mac_clear(&localSrcPhyMac);

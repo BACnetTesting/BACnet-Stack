@@ -43,10 +43,6 @@
 #ifndef AI_H
 #define AI_H
 
-#include "config.h"
-
-#if (BACNET_USE_OBJECT_ANALOG_INPUT == 1 )
-
 #include <stdbool.h>
 #include <stdint.h>
 #include "bacdef.h"
@@ -67,15 +63,14 @@ typedef struct analog_input_descr {
     BACNET_OBJECT   common;         // must be first field in structure due to llist
 
     float Present_Value;
-    float shadow_Present_Value;
     BACNET_ENGINEERING_UNITS Units;
 
     bool Out_Of_Service;
     BACNET_RELIABILITY Reliability;
-    BACNET_RELIABILITY shadowReliability;
-    BACNET_EVENT_STATE Event_State;                 // Event_State is a required property
+    BACNET_RELIABILITY reliabilityShadowValue ;
     
 #if (BACNET_SVC_COV_B == 1)
+    BACNET_EVENT_STATE Event_State;
     float Prior_Value;
     float COV_Increment;
     bool Changed;
@@ -190,6 +185,8 @@ void Analog_Input_COV_Increment_Set(
 #endif
 #endif
 
+/* note: header of Intrinsic_Reporting function is required
+   even when INTRINSIC_REPORTING is not defined */
 void Analog_Input_Intrinsic_Reporting(
     uint32_t object_instance);
 
@@ -200,8 +197,8 @@ int Analog_Input_Event_Information(
 
 int Analog_Input_Alarm_Ack(
     BACNET_ALARM_ACK_DATA * alarmack_data,
-    BACNET_ERROR_CLASS *error_class,
-    BACNET_ERROR_CODE *error_code);
+    BACNET_ERROR_CLASS * error_class,
+    BACNET_ERROR_CODE * error_code);
 
 // Deprecated since Rev 13   
 //int Analog_Input_Alarm_Summary(
@@ -211,7 +208,7 @@ int Analog_Input_Alarm_Ack(
 
 bool Analog_Input_Create(
     const uint32_t instance,
-    const char *name);
+    const char *name );
 
 void Analog_Input_Update(
 	const uint32_t instance,
@@ -239,5 +236,4 @@ void testAnalogInput(
     Test * pTest);
 #endif
 
-#endif // ifdef object_analog
 #endif /* AI_H */

@@ -45,7 +45,6 @@
 #include <stddef.h>
 #include "bacdef.h"
 #include "npdu.h"
-#include "datalink.h"
 
 /* note: TSM functionality is optional - only needed if we are
    doing client requests */
@@ -94,7 +93,7 @@ typedef struct BACnet_TSM_Data {
     /* the network layer info */
     BACNET_NPCI_DATA npci_data;
     /* copy of the APDU, should we need to send it again */
-    uint8_t apdu[MAX_NPDU];     // are we sure this is the APDU, not the NPDU (placing larger NPDU here until we get a chance to check. todo 0
+    uint8_t apdu[MAX_PDU];
     unsigned apdu_len;
 } BACNET_TSM_DATA;
 

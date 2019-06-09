@@ -132,7 +132,6 @@ void sys_dbTrafficSetLevel(DB_LEVEL lev);
 #endif
 
 
-char ToHexadecimal(uint8_t val);
 void hexdump( char *title, void *mem, int size) ;
 void ipdump(const char *title, unsigned char *mem);
 void DumpIpPort(const char *title, uint32_t ipAddr, uint16_t hoPort);

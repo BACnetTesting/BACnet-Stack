@@ -57,7 +57,7 @@
 
 /** @file datetime.c  Manipulate BACnet Date and Time values */
 
-/* define our epoch beginnings */
+/* define our epic beginnings */
 // in datetime.h #define BACNET_EPOCH_YEAR 1900
 /* 1/1/1900 is a Monday */
 #define BACNET_EPOCH_DOW BACNET_WEEKDAY_MONDAY
@@ -1519,7 +1519,7 @@ int main(
 #endif /* TEST */
 
 
-BACNET_DATE wildcard_date = { BACNET_EPOCH_YEAR + 0xFF, 0xFF, 0xFF, BACNET_WEEKDAY_ANY };
+BACNET_DATE wildcard_date = { 1900 + 0xFF, 0xFF, 0xFF, BACNET_WEEKDAY_ANY };
 BACNET_TIME wildcard_time = { 0xFF, 0xFF, 0xFF, 0xFF };
 
 bool daterange_date_is_valid(BACNET_DATE *date)
@@ -1527,12 +1527,10 @@ bool daterange_date_is_valid(BACNET_DATE *date)
     return datetime_date_is_valid(date) || datetime_compare_date(&wildcard_date, date) == 0;
 }
  
-
 bool daterange_is_valid(BACNET_DATE_RANGE *daterange)
 {
     return daterange_date_is_valid(&daterange->startdate) && daterange_date_is_valid(&daterange->enddate);
 }
-
 
 bool date_compare_weeknday(BACNET_DATE *d, BACNET_WEEKNDAY *w)
 {

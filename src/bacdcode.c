@@ -55,9 +55,9 @@
 #include "bacstr.h"
 #include "bacint.h"
 #include "bacreal.h"
-#include "datalink.h"
 
 /** @file bacdcode.c  Functions to encode/decode BACnet data types */
+
 
 /* max-segments-accepted
    B'000'      Unspecified number of segments accepted.
@@ -898,8 +898,8 @@ int encode_octet_string(
            to bounds check since it might not be the only data chunk */
         len = (int) octetstring_length(octet_string);
         value = octetstring_value(octet_string);
-        for (i = 0; i < len; i++) {
-            apdu[i] = value[i];
+            for (i = 0; i < len; i++) {
+                apdu[i] = value[i];
         }
     }
 
@@ -944,7 +944,7 @@ int encode_context_octet_string(
     if (apdu && octet_string) {
         apdu_len =
             encode_tag(&apdu[0], tag_number, true,
-                       octetstring_length(octet_string));
+            octetstring_length(octet_string));
         if ((apdu_len + octetstring_length(octet_string)) < MAX_APDU) {
             apdu_len += encode_octet_string(&apdu[apdu_len], octet_string);
         } else {
@@ -1050,7 +1050,7 @@ int encode_application_character_string(
         (int) characterstring_length(char_string) + 1 /* for encoding */ ;
     len =
         encode_tag(&apdu[0], BACNET_APPLICATION_TAG_CHARACTER_STRING, false,
-                   (uint32_t) string_len);
+        (uint32_t) string_len);
     if ((len + string_len) < MAX_APDU) {
         len += encode_bacnet_character_string(&apdu[len], char_string);
     } else {
@@ -1531,8 +1531,7 @@ int encode_context_double(
 
     return len;
 }
-#endif // BACAPP_DOUBLE
-
+#endif
 
 /* from clause 20.2.13 Encoding of a Time Value */
 /* and 20.2.1 General Rules for Encoding BACnet Tags */
@@ -3122,7 +3121,6 @@ static void testDateContextDecodes(
     ct_test(pTest, in.year == out.year);
 }
 
-#ifdef TEST_DECODE
 void test_BACDCode(
     Test * pTest)
 {
@@ -3191,6 +3189,7 @@ void test_BACDCode(
     assert(rc);
 }
 
+#ifdef TEST_DECODE
 int main(
     void)
 {

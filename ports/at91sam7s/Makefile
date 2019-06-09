@@ -35,7 +35,7 @@ INCLUDES += -I$(BACNET_OBJECT)
 INCLUDES += -I$(BACNET_HANDLER)
 #OPTIMIZATION = -O0
 OPTIMIZATION = -Os
-CFLAGS = $(STANDARDS) -fno-common $(INCLUDES) $(BACNET_FLAGS) -Wall -g
+CFLAGS = -fno-common $(INCLUDES) $(BACNET_FLAGS) -Wall -g
 CFLAGS += -mno-thumb-interwork
 # dead code removal
 CFLAGS += -fdata-sections -ffunction-sections

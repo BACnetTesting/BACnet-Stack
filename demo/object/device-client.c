@@ -83,7 +83,7 @@ static BACNET_CHARACTER_STRING My_Object_Name;
 static BACNET_DEVICE_STATUS System_Status = STATUS_OPERATIONAL;
 static const char *Vendor_Name = BACNET_VENDOR_NAME;
 static uint16_t Vendor_Identifier = BACNET_VENDOR_ID;
-static const char *Model_Name = "BITS Reference Stack Client";
+static const char *Model_Name = "BITS Reference Stack";
 static const char *Application_Software_Version = "1.0";
 static const char *Location = "USA";
 static const char *Description = "command line client";

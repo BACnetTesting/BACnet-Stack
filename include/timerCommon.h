@@ -55,31 +55,10 @@
 #define MAX_MILLISECOND_TIMERS 1
 #endif
 
-/* elapsed timer structure */
-typedef struct etimer {
-    uint32_t start;
-} ETIMER ;
-
-/* interval timer structure */
-struct itimer {
-    uint32_t start;
-    uint32_t interval;
-};
-
-
-void timer_elapsed_start(
-    struct etimer *t);
-
-uint32_t timer_elapsed_time(
-    struct etimer *t);
-
 // uint32_t timeGetTime(
 //    void);
 
 void timer_init(
-    void);
-
-uint32_t target_timer_milliseconds(
     void);
 
 uint32_t timer_milliseconds(

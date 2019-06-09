@@ -56,6 +56,7 @@
 //#include "bacenum.h"
 //#include "bacapp.h"
 #include "client.h"
+//// #include "config.h"
 #include "device.h"
 #include "event.h"
 #include "handlers.h"
@@ -65,12 +66,12 @@
 #include "logging/logging.h"
 #include "bitsDebug.h"
 
-#if (BACNET_USE_OBJECT_NOTIFICATION_CLASS == 1)
-
 #ifndef MAX_NOTIFICATION_CLASSES
 #define MAX_NOTIFICATION_CLASSES 2
 #endif
 
+
+#if (INTRINSIC_REPORTING_B == 1)
 
 static int Notification_Class_decode_destination(
     uint8_t* application_data,
@@ -801,7 +802,7 @@ void Notification_Class_common_reporting_function(
                 if (pBacDest->ConfirmedNotify == true)
                     Send_CEvent_Notify(device_id, event_data);
                 else if (address_get_by_device(device_id, &max_apdu, &dest))
-                    *Send_UEvent_Notify(Handler_Transmit_Buffer, event_data,
+                    Send_UEvent_Notify(Handler_Transmit_Buffer, event_data,
                         &dest);
             }
             else if (pBacDest->Recipient.RecipientType ==
@@ -869,6 +870,7 @@ void Notification_Class_find_recipient(
 
 // Returns false on failure
 bool Notification_Class_Add_List_Element(
+    DEVICE_OBJECT_DATA *pDev,
     BACNET_LIST_MANIPULATION_DATA * lmdata)
 {
     BACNET_DESTINATION	destination;
@@ -933,8 +935,61 @@ bool Notification_Class_Add_List_Element(
 }
 
 
+bool Notification_Class_Remove_List_Element(
+    BACNET_LIST_MANIPULATION_DATA * lmdata)
+{
+    BACNET_DESTINATION	destination;
+    BACNET_DESTINATION	recipient_list[NC_MAX_RECIPIENTS];
+    int					end = lmdata->application_max_data_len;
+    int					pos = 0;
+    int					len = 0;
+    //	int					idx = 0;
+    int					slot = 0;
+
+    if (lmdata->object_property != PROP_RECIPIENT_LIST) {
+        lmdata->error_code = ERROR_CODE_PROPERTY_IS_NOT_A_LIST;
+        lmdata->error_class = ERROR_CLASS_SERVICES;
+        return false;
+    }
+    /* make temporary copy of recipient list for manipulation */
+    memcpy(recipient_list, NC_Info[lmdata->object_instance].Recipient_List, sizeof(BACNET_DESTINATION) * NC_MAX_RECIPIENTS);
+
+    while (pos < end) {
+        /* decode the next list element */
+        len = Notification_Class_decode_destination(
+            lmdata->application_data + pos, end - pos, &destination,
+            &lmdata->error_class, &lmdata->error_code);
+        /* decoding error? */
+        if (len <= 0) return false;
+        /* increment offset into application data */
+        pos += len;
+        /* look for matching destination in recipient list */
+        for (slot = 0; slot < NC_MAX_RECIPIENTS; slot++) {
+            if (memcmp(&destination, &recipient_list[slot], sizeof(destination)) == 0) {
+                /* remove list element in working copy of recipient list */
+                memset(&recipient_list[slot], 0, sizeof(BACNET_DESTINATION));
+                break;
+            }
+        }
+        /* no matching list element found? */
+        if (slot >= NC_MAX_RECIPIENTS) {
+            lmdata->error_class = ERROR_CLASS_SERVICES;
+            lmdata->error_code = ERROR_CODE_LIST_ELEMENT_NOT_FOUND;
+            return false;
+        }
+        /* increment the failed element index */
+        lmdata->first_failed_element++;
+    }
+    /* commit the changes to the recipient list of this object instance */
+    memcpy(NC_Info[lmdata->object_instance].Recipient_List, recipient_list, sizeof(BACNET_DESTINATION) * NC_MAX_RECIPIENTS);
+    lmdata->application_data_len = pos;
+    return true;
+}
+
+
 // Returns false on failure
 bool Notification_Class_Remove_List_Element(
+    DEVICE_OBJECT_DATA *pDev,
     BACNET_LIST_MANIPULATION_DATA * lmdata)
 {
     BACNET_DESTINATION	destination;

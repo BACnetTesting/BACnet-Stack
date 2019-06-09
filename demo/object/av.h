@@ -45,42 +45,37 @@
 
 #if (BACNET_USE_OBJECT_ANALOG_VALUE == 1 )
 
+#include <stdbool.h>
+#include <stdint.h>
 #include "bacdef.h"
 #include "rp.h"
 #include "wp.h"
 
-#include "BACnetObjectAnalog.h"
-
 #if (INTRINSIC_REPORTING_B == 1)
 #include "nc.h"
-#include "getevent.h"
 #include "alarm_ack.h"
-// Deprecated since Rev 13    #include "get_alarm_sum.h"
+#include "getevent.h"
+#include "get_alarm_sum.h"
 #endif
 
+#include "BACnetObjectAnalog.h"
 
 typedef struct analog_value_descr {
 
-    BACNET_OBJECT   common;         // must be first field in structure due to llist
+    BACNET_OBJECT   common;
 
     BACNET_EVENT_STATE Event_State;
-    float Present_Value;
-    float shadow_Present_Value;
-    float Relinquish_Default ;
     BACNET_RELIABILITY Reliability;
-    BACNET_RELIABILITY shadowReliability;
-
+    
     bool Out_Of_Service;
-    uint8_t Units;
-
-#if (BACNET_SVC_COV_B == 1)
+    uint16_t Units;
+    float Present_Value;
+    
+#if ( BACNET_SVC_COV_B == 1 )
     float Prior_Value;
     float COV_Increment;
     bool Changed;
 #endif
-
-    uint16_t priorityFlags;
-    float priorityArray[BACNET_MAX_PRIORITY];
 
 #if (INTRINSIC_REPORTING_B == 1)
     uint32_t Time_Delay;
@@ -100,7 +95,6 @@ typedef struct analog_value_descr {
 #endif
 
 } ANALOG_VALUE_DESCR;
-
 
 
 void Analog_Value_Property_Lists(
@@ -172,7 +166,7 @@ bool Analog_Value_Change_Of_Value(
     uint32_t instance);
 
 void Analog_Value_Change_Of_Value_Clear(
-    const uint32_t instance);
+    uint32_t instance);
 
 bool Analog_Value_Encode_Value_List(
     uint32_t object_instance,
@@ -195,10 +189,10 @@ bool Analog_Value_Description_Set(
 
 BACNET_RELIABILITY Analog_Value_Reliability(
     uint32_t object_instance);
-
-//bool Analog_Value_Reliability_Set(
-//    uint32_t object_instance,
-//    BACNET_RELIABILITY value);
+    
+bool Analog_Value_Reliability_Set(
+    uint32_t object_instance,
+    BACNET_RELIABILITY value);
 
 uint16_t Analog_Value_Units(
     uint32_t instance);
@@ -227,13 +221,11 @@ int Analog_Value_Event_Information(
 
 int Analog_Value_Alarm_Ack(
     BACNET_ALARM_ACK_DATA * alarmack_data,
-    BACNET_ERROR_CLASS *error_class,
     BACNET_ERROR_CODE * error_code);
 
-// Deprecated since Rev 13   
-//int Analog_Value_Alarm_Summary(
-//    unsigned index,
-//    BACNET_GET_ALARM_SUMMARY_DATA * getalarm_data);
+int Analog_Value_Alarm_Summary(
+    unsigned objectIndex,
+    BACNET_GET_ALARM_SUMMARY_DATA * getalarm_data);
 #endif
 
 bool Analog_Value_Create(
@@ -245,8 +237,7 @@ void Analog_Value_Update(
 	const uint32_t instance,
 	const double value );
 
-float Analog_Value_Present_Value_from_Instance ( 
-    const uint32_t instance ) ;
+double Analog_Value_Present_Value_from_Instance ( const uint32_t instance ) ;
 
 bool Analog_Value_Delete(
     uint32_t object_instance);

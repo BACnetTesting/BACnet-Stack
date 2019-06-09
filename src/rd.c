@@ -100,21 +100,18 @@ int rd_decode_service_request(
     /* check for value pointers */
     if (apdu_len) {
         /* Tag 0: reinitializedStateOfDevice */
-        if (!decode_is_context_tag(&apdu[len], 0)) {
+        if (!decode_is_context_tag(&apdu[len], 0))
             return -1;
-        }
         len +=
             decode_tag_number_and_value(&apdu[len], &tag_number,
                                         &len_value_type);
         len += decode_enumerated(&apdu[len], len_value_type, &value);
-        if (state) {
+        if (state)
             *state = (BACNET_REINITIALIZED_STATE) value;
-        }
         /* Tag 1: password - optional */
         if (len < apdu_len) {
-            if (!decode_is_context_tag(&apdu[len], 1)) {
+            if (!decode_is_context_tag(&apdu[len], 1))
                 return -1;
-            }
             len +=
                 decode_tag_number_and_value(&apdu[len], &tag_number,
                                             &len_value_type);
@@ -141,18 +138,15 @@ int rd_decode_apdu(
     int len = 0;
     unsigned offset = 0;
 
-    if (!apdu) {
+    if (!apdu)
         return -1;
-    }
     /* optional checking - most likely was already done prior to this call */
-    if (apdu[0] != PDU_TYPE_CONFIRMED_SERVICE_REQUEST) {
+    if (apdu[0] != PDU_TYPE_CONFIRMED_SERVICE_REQUEST)
         return -1;
-    }
     /*  apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU); */
     *invoke_id = apdu[2];       /* invoke id - filled in by net layer */
-    if (apdu[3] != SERVICE_CONFIRMED_REINITIALIZE_DEVICE) {
+    if (apdu[3] != SERVICE_CONFIRMED_REINITIALIZE_DEVICE)
         return -1;
-    }
     offset = 4;
 
     if (apdu_len > offset) {

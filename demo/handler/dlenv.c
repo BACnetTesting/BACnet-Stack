@@ -1,4 +1,4 @@
-/****************************************************************************************
+/**************************************************************************
 *
 * Copyright (C) 2009 Steve Karg <skarg@users.sourceforge.net>
 *
@@ -62,7 +62,7 @@
 /* timer used to renew Foreign Device Registration */
 static uint16_t BBMD_Timer_Seconds;
 /* BBMD variables */
-static long bbmd_timetolive_seconds = 300;
+static long bbmd_timetolive_seconds = 60000;
 static long bbmd_port = 0xBAC0;
 static long bbmd_address = 0;
 static long bbmd_mask = 0xFFFFFFFF;
@@ -123,7 +123,6 @@ int dlenv_bbmd_result(
 }
 #endif
 
-
 /** Register as a Foreign Device with the designated BBMD.
  * @ingroup DataLink
  * The BBMD's address, port, and lease time must be provided by
@@ -139,13 +138,12 @@ int dlenv_bbmd_result(
  *         -1 if registration fails.
  */
 
-#if defined(BACDL_BIP)
-
 int dlenv_register_as_foreign_device(
     void)
 {
     int retval = 0;
 
+#if defined(BACDL_BIP)
     char *pEnv = NULL;
     unsigned a[4] = {0};
     char bbmd_env[32] = "";
@@ -182,11 +180,8 @@ int dlenv_register_as_foreign_device(
         dbTraffic(DBD_ALL, DB_ERROR, "FAILED to Register with BBMD at %s \n",
                 inet_ntoa(addr));
         BBMD_Timer_Seconds = (uint16_t) bbmd_timetolive_seconds;
-    } 
-    // oi00155
-    // BTC todo - For devices that enable/disble BBMD dynamically, test to make sure this mode does not cause false b'casts on local network.
-    else {
-        for (entry_number = 1; entry_number <= MAX_BBMD_ENTRIES; entry_number++) {
+    } else {
+        for (entry_number = 1; entry_number <= 128; entry_number++) {
             sprintf(bbmd_env,"BACNET_BDT_ADDR_%u", entry_number);
             pEnv = getenv(bbmd_env);
             if (pEnv) {
@@ -196,7 +191,7 @@ int dlenv_register_as_foreign_device(
                 bbmd_address = bip_get_addr();
             }
             if (bbmd_address) {
-                bbmd_port = 0xBAC0 ;
+                bbmd_port = 0xBAC0;
                 sprintf(bbmd_env,"BACNET_BDT_PORT_%u", entry_number);
                 pEnv = getenv(bbmd_env);
                 if (pEnv) {
@@ -206,7 +201,7 @@ int dlenv_register_as_foreign_device(
                     }
                 } else if (entry_number == 1) {
                     /* BDT 1 is self (note: can be overridden) */
-                    bbmd_port = ntohs( bip_get_port() ) ;
+                    bbmd_port = bip_get_port();
                 }
                 bbmd_mask = 0xFFFFFFFF;
                 sprintf(bbmd_env,"BACNET_BDT_MASK_%u", entry_number);
@@ -222,18 +217,16 @@ int dlenv_register_as_foreign_device(
                 }
                 BBMD_Table_Entry.valid = true;
                 BBMD_Table_Entry.dest_address.s_addr = bbmd_address;
-                BBMD_Table_Entry.dest_port = htons( bbmd_port );
+                BBMD_Table_Entry.dest_port = bbmd_port;
                 BBMD_Table_Entry.broadcast_mask.s_addr = bbmd_mask;
                 bvlc_add_bdt_entry_local(&BBMD_Table_Entry);
             }
         }
     }
-
     bbmd_result = retval;
+#endif
     return retval;
 }
-#endif
-
 
 #if (BACNET_PROTOCOL_REVISION >= 17)
 #if defined(BACDL_BIP)
@@ -252,20 +245,14 @@ static void dlenv_network_port_init(void)
     uint8_t prefix = 0;
 
     instance = Network_Port_Index_To_Instance(0);
-    NETWORK_PORT_DESCR *currentObject = Network_Port_Instance_To_Object(instance);
-    if (currentObject == NULL) {
-        panic();
-        return;
-    }
-
-    Network_Port_Name_Set(currentObject, "BACnet/IP Port");
-    Network_Port_Type_Set(currentObject, PORT_TYPE_BIP);
+    Network_Port_Name_Set(instance, "BACnet/IP Port");
+    Network_Port_Type_Set(instance, PORT_TYPE_BIP);
     port = bip_get_port();
-    Network_Port_BIP_Port_Set(currentObject, port);
+    Network_Port_BIP_Port_Set(instance, port);
     address = bip_get_addr();
     memcpy(&mac[0], &address, 4);
     memcpy(&mac[4], &port, 2);
-    Network_Port_MAC_Address_Set(currentObject, &mac[0], 6);
+    Network_Port_MAC_Address_Set(instance, &mac[0], 6);
     broadcast = bip_get_broadcast_addr();
     for (prefix = 0; prefix < 32; prefix++) {
         mask = htonl((0xFFFFFFFF << (32 - prefix)) & 0xFFFFFFFF);
@@ -274,7 +261,7 @@ static void dlenv_network_port_init(void)
             break;
         }
     }
-    Network_Port_IP_Subnet_Prefix_Set(currentObject, prefix);
+    Network_Port_IP_Subnet_Prefix_Set(instance, prefix);
 }
 #elif defined(BACDL_MSTP)
 /**
@@ -324,7 +311,6 @@ static void dlenv_network_port_init(void)
  * @param elapsed_seconds Number of seconds that have elapsed since last called.
  */
 
-#if defined(BBMD_ENABLED) && BBMD_ENABLED
 void dlenv_maintenance_timer(
     uint16_t elapsed_seconds)
 {
@@ -346,7 +332,6 @@ void dlenv_maintenance_timer(
     }
 #endif
 }
-#endif
 
 /** Initialize the DataLink configuration from Environment variables,
  * or else to defaults.

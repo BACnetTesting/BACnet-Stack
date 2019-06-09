@@ -152,7 +152,6 @@ int timesync_decode_service_request(
  *  @return How many bytes were encoded in the buffer, or
  *   BACNET_STATUS_ABORT if the response would not fit within the buffer.
  */
-#if BACNET_SVC_TS_A
 int timesync_encode_timesync_recipients(
     uint8_t * apdu,
     unsigned max_apdu,
@@ -222,7 +221,6 @@ int timesync_encode_timesync_recipients(
 
     return apdu_len;
 }
-#endif
 
 /** Handle a request to decode a list of timesync recipients.
  *
@@ -289,7 +287,7 @@ int timesync_decode_timesync_recipients(
             len =
                 decode_unsigned(&apdu[apdu_len], len_value_type,
                 &unsigned_value);
-            pRecipient->type.address.net = (uint16_t) unsigned_value;
+            pRecipient->type.address.net = unsigned_value;
             apdu_len += len;
             /* mac-address OCTET STRING */
             tag_len =

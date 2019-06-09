@@ -38,24 +38,32 @@
 *
 ****************************************************************************************/
 
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+
 #include "config.h"     /* the custom stuff */
 
 #if (BACNET_USE_OBJECT_ANALOG_VALUE == 1 )
 
-// #include "bacdef.h"
-// #include "bacdcode.h"
-// #include "bacenum.h"
+#include "bacdef.h"
+#include "bacdcode.h"
+#include "bacenum.h"
+#include "bacapp.h"
+#include "debug.h"
+#include "wp.h"
+#include "rp.h"
 #include "handlers.h"
 #include "av.h"
 #include "bitsDebug.h"
 #include "llist.h"
 #include "emm.h"
+#include "BACnetObject.h"
 
 #if (INTRINSIC_REPORTING_B == 1)
 #include "bactext.h"
 #include "device.h"
 #endif
-#include "datalink.h"
 
 LLIST_HDR AV_Descriptor_List;
 
@@ -65,10 +73,10 @@ static const BACNET_PROPERTY_ID Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
-    PROP_OUT_OF_SERVICE,
     PROP_PRESENT_VALUE,
     PROP_STATUS_FLAGS,
     PROP_EVENT_STATE,
+    PROP_OUT_OF_SERVICE,
     PROP_UNITS,
     MAX_BACNET_PROPERTY_ID
 };
@@ -77,29 +85,22 @@ static const BACNET_PROPERTY_ID Properties_Optional[] = {
     PROP_DESCRIPTION,
     PROP_RELIABILITY,
 
+#if ( BACNET_SVC_COV_B == 1 )
+    PROP_COV_INCREMENT,
+#endif
+
 #if (INTRINSIC_REPORTING_B == 1)
     PROP_TIME_DELAY,
     PROP_NOTIFICATION_CLASS,
-    PROP_EVENT_ENABLE,
-    PROP_ACKED_TRANSITIONS,
-    PROP_NOTIFY_TYPE,
-    PROP_EVENT_TIME_STAMPS,
-#if (BACNET_PROTOCOL_REVISION >= 13)
-    PROP_EVENT_DETECTION_ENABLE,
-#endif
     PROP_HIGH_LIMIT,
     PROP_LOW_LIMIT,
     PROP_DEADBAND,
     PROP_LIMIT_ENABLE,
+    PROP_EVENT_ENABLE,
+    PROP_ACKED_TRANSITIONS,
+    PROP_NOTIFY_TYPE,
+    PROP_EVENT_TIME_STAMPS,
 #endif
-
-    PROP_PRIORITY_ARRAY,
-    PROP_RELINQUISH_DEFAULT,
-
-#if (BACNET_SVC_COV_B == 1)
-    PROP_COV_INCREMENT,
-#endif
-
     MAX_BACNET_PROPERTY_ID
 };
 
@@ -108,56 +109,13 @@ static const BACNET_PROPERTY_ID Properties_Proprietary[] = {
 };
 
 
-void Analog_Value_Property_Lists(
-    const BACNET_PROPERTY_ID **pRequired,
-    const BACNET_PROPERTY_ID **pOptional,
-    const BACNET_PROPERTY_ID **pProprietary)
-{
-    // Do NOT be tempted to use property_list_required() - that is for supporting epics.c, and perhaps other Client operations, only
-    if (pRequired)
-        *pRequired = Properties_Required;
-    if (pOptional)
-        *pOptional = Properties_Optional;
-    if (pProprietary)
-        *pProprietary = Properties_Proprietary;
-}
-
-
-// Gets called once for each device
-// This only gets called once on startup, and has to initialize for ALL virtual devices. Todo 2 - rename to differentiate!
-void Analog_Value_Init(
-    void)
-{
-    ll_Init(&AV_Descriptor_List, 100);
-
-#if (INTRINSIC_REPORTING_B == 1)
-
-    /* Set handler for GetEventInformation function */
-    handler_get_event_information_set(
-        OBJECT_ANALOG_VALUE,
-        Analog_Value_Event_Information);
-
-    /* Set handler for AcknowledgeAlarm function */
-    handler_alarm_ack_set(
-        OBJECT_ANALOG_VALUE, 
-        Analog_Value_Alarm_Ack);
-        
-    /* Set handler for GetAlarmSummary Service */
-    // Deprecated since Rev 13   
-    /* Set handler for GetAlarmSummary Service */
-    //handler_get_alarm_summary_set(OBJECT_ANALOG_INPUT,
-    //    Analog_Input_Alarm_Summary);
-
-#endif
-}
-
 
 bool Analog_Value_Create(
     const uint32_t instance,
     const char *name,
     const BACNET_ENGINEERING_UNITS units)
 {
-    ANALOG_VALUE_DESCR *currentObject = (ANALOG_VALUE_DESCR *)emm_scalloc('a', sizeof(ANALOG_VALUE_DESCR));
+    ANALOG_VALUE_DESCR *currentObject = (ANALOG_VALUE_DESCR *)emm_smalloc('a', sizeof(ANALOG_VALUE_DESCR));
     if (currentObject == NULL) {
         panic();
         return false;
@@ -169,39 +127,64 @@ bool Analog_Value_Create(
 
     Generic_Object_Init(&currentObject->common, instance, name);
 
-    // Note that our structure is 0 initialized by calloc, so no zeroing operations are _required_.
-    // Some are here just for clarity.
+    currentObject->Present_Value = BINARY_ACTIVE ;
+    currentObject->Out_Of_Service = false;
     currentObject->Reliability = RELIABILITY_NO_FAULT_DETECTED;
-    currentObject->Units = UNITS_PERCENT;
 
 #if ( BACNET_SVC_COV_B == 1 )
+    currentObject->Prior_Value = BINARY_ACTIVE;
     currentObject->Changed = false;
-    currentObject->Prior_Value = 0.0f;
-    currentObject->COV_Increment = 1.0f;
 #endif
 
 #if (INTRINSIC_REPORTING_B == 1)
-    // todo 2 there is commonality here too that needs consolidation, optimization
     currentObject->Event_State = EVENT_STATE_NORMAL;
-    /* notification class not connected */
+        /* notification class not connected */
     currentObject->Notification_Class = BACNET_MAX_INSTANCE;
-
-    currentObject->Notify_Type = NOTIFY_ALARM;
-    currentObject->Ack_notify_data.EventState = EVENT_STATE_NORMAL;
-    currentObject->High_Limit = 100.0;
-    currentObject->Low_Limit = 0.0;
-    currentObject->Deadband = 1.0;
-    currentObject->Limit_Enable = 0;
-
     /* initialize Event time stamps using wildcards
-       and set Acked_transitions */
+    and set Acked_transitions */
     for (int j = 0; j < MAX_BACNET_EVENT_TRANSITION; j++) {
         datetime_wildcard_set(&currentObject->Event_Time_Stamps[j]);
         currentObject->Acked_Transitions[j].bIsAcked = true;
     }
 #endif
 
-    return true;
+    return true ;
+}
+
+
+void Analog_Value_Property_Lists(
+    const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary)
+{
+    if (pRequired) {
+        // Do NOT be tempted to use property_list_required() - that is for supporting epics.c, and perhaps other Client operations, only
+        *pRequired = Properties_Required;
+    }
+    if (pOptional)
+        *pOptional = Properties_Optional;
+    if (pProprietary)
+        *pProprietary = Properties_Proprietary;
+}
+
+
+// Gets called once for each device
+
+void Analog_Value_Init(
+    void)
+{
+#if (INTRINSIC_REPORTING_B2 == 1)
+    /* Set handler for GetEventInformation function */
+    handler_get_event_information_set(OBJECT_ANALOG_VALUE,
+        Analog_Value_Event_Information);
+    /* Set handler for AcknowledgeAlarm function */
+    handler_alarm_ack_set(OBJECT_ANALOG_VALUE, Analog_Value_Alarm_Ack);
+    /* Set handler for GetAlarmSummary Service */
+    handler_get_alarm_summary_set(OBJECT_ANALOG_VALUE,
+        Analog_Value_Alarm_Summary);
+#endif
+
+    ll_Init(&AV_Descriptor_List, 100);
 }
 
 
@@ -213,14 +196,17 @@ bool Analog_Value_Valid_Instance(
 }
 
 
+/* we simply have 0-n object instances.  Yours might be */
+/* more complex, and then count how many you have */
 unsigned Analog_Value_Count(
     void)
 {
     return AV_Descriptor_List.count ;
 }
 
-
-// This is used by the Device Object Function Table. Must have this signature.
+/* we simply have 0-n object instances.  Yours might be */
+/* more complex, and then you need to return the instance */
+/* that correlates to the correct index */
 uint32_t Analog_Value_Index_To_Instance(
     unsigned index)
 {
@@ -241,60 +227,32 @@ uint32_t Analog_Value_Index_To_Instance(
 //}
 
 
-static inline bool isOutOfService(ANALOG_VALUE_DESCR *currentObject)
-{
-    return currentObject->Out_Of_Service;
-}
-
-
-static inline bool isInAlarm(ANALOG_VALUE_DESCR *currentObject)
-{
-    return currentObject->Event_State != EVENT_STATE_NORMAL;
-}
-
-
-static BACNET_RELIABILITY Analog_Value_Reliability_Get(
-    ANALOG_VALUE_DESCR *currentObject)
-{
-    if (isOutOfService(currentObject)) {
-        return currentObject->shadowReliability ;
-    }
-
-    // In this reference stack, nobody ever actually sets reliability, we expect the Application to do so (along with PV).
-    return currentObject->Reliability;
-}
-
-
-static bool isInFault(
-    ANALOG_VALUE_DESCR *currentObject)
-{
-    return (Analog_Value_Reliability_Get(currentObject) != RELIABILITY_NO_FAULT_DETECTED);
-}
-
-
 ANALOG_VALUE_DESCR *Analog_Value_Instance_To_Object(
-    uint32_t object_instance)
+    uint32_t object_instance )
 {
     return (ANALOG_VALUE_DESCR *) Generic_Instance_To_Object(&AV_Descriptor_List, object_instance);
 }
 
 
-float Analog_Value_Present_Value_Get(
+float Analog_Value_Present_Value(
     ANALOG_VALUE_DESCR *currentObject)
 {
-    if (isOutOfService(currentObject)) {
-        return currentObject->shadow_Present_Value;
-    }
     return currentObject->Present_Value;
 }
 
-
-#if ( BACNET_SVC_COV_B == 1 )
-static void Analog_Value_COV_Detect_PV_Change(
-    ANALOG_VALUE_DESCR *currentObject,
+#if ( BACNET_SVC_COV_AI_B == 1 )
+static void Analog_Value_COV_Detect(unsigned int index,
     float value)
 {
-    if (fabs(value - currentObject->Prior_Value) >= currentObject->COV_Increment) {
+    float cov_delta;
+
+    if (currentObject->Prior_Value > value) {
+        cov_delta = currentObject->Prior_Value - value;
+    }
+    else {
+        cov_delta = value - currentObject->Prior_Value;
+    }
+    if (cov_delta >= currentObject->COV_Increment) {
         currentObject->Changed = true;
         currentObject->Prior_Value = value;
     }
@@ -302,160 +260,71 @@ static void Analog_Value_COV_Detect_PV_Change(
 #endif
 
 
-#if 0 // done below, properly
-static inline bool Analog_Value_Reliability_Set(
+void Analog_Value_Present_Value_Set(
     ANALOG_VALUE_DESCR *currentObject,
-    uint32_t reliability)
+    float value)
 {
-    if (currentObject->Out_Of_Service) {
-        // the BACnet way
-        currentObject->shadowReliability = (BACNET_RELIABILITY)reliability;
-        return true;
-    }
-    // writes, when not OOS, are not allowed
-    return false;
-}
+#if ( BACNET_SVC_COV_AV_B == 1 )
+    Analog_Value_COV_Detect(currentObject, value);
 #endif
-
-
-// Signature used by device mux
-/* note: the object name must be unique within this device */
-bool Analog_Value_Object_Name(
-    uint32_t object_instance,
-    BACNET_CHARACTER_STRING * object_name)
-{
-    return Generic_Instance_To_Object_Name(&AV_Descriptor_List, object_instance, object_name);
+    currentObject->Present_Value = value;
 }
 
 
-// todo 3 move to the generic module
-// Starting with the Relinquish Default, process through the Priority Array, overwriting with highest priority
-// and place the result in either the physical output register, or the shadow value, depending on the Out_of_Service flag.
-// If COV enabled, detect a COV change.
-static void SweepToPresentValue(
-    ANALOG_VALUE_DESCR *currentObject)
+void Analog_Value_Update (
+		const uint32_t instance,
+		const double value )
 {
-    float tvalue = currentObject->Relinquish_Default;
-    int i;
-    for (i = 0; i < BACNET_MAX_PRIORITY; i++) {
-        if (currentObject->priorityFlags & BIT(i)) {
-            tvalue = currentObject->priorityArray[i];
-            break;
-        }
-    }
-
-#if ( BACNET_SVC_COV_B == 1 )
-    Analog_Value_COV_Detect_PV_Change(currentObject, tvalue);
-#endif
-
-    if (currentObject->Out_Of_Service) {
-        currentObject->shadow_Present_Value = tvalue;
-    }
-    else {
-        currentObject->Present_Value = tvalue;
-    }
+    ANALOG_VALUE_DESCR *bacnetObject = Analog_Value_Instance_To_Object ( instance ) ;
+	if ( bacnetObject == NULL )
+	{
+		panic();
+		return;
+	}
+	bacnetObject->Present_Value = value ;
 }
 
 
-float Analog_Value_Present_Value_from_Instance (
-    const uint32_t instance)
+double Analog_Value_Present_Value_from_Instance (
+    const uint32_t instance )
 {
     ANALOG_VALUE_DESCR *currentObject = Analog_Value_Instance_To_Object(instance);
     if (currentObject == NULL) {
         panic();
-        return 0.0f;
+        return 0.0 ;
     }
-    if (currentObject->Out_Of_Service) {
-        return currentObject->shadow_Present_Value ;
-    }
-    else {
-        return currentObject->Present_Value ;
-    }
-}
-
-
-bool Analog_Value_Present_Value_Set(
-    ANALOG_VALUE_DESCR *currentObject,
-    float value,
-    unsigned priority)
-{
-    bool status = false;
-
-    if (priority && (priority <= BACNET_MAX_PRIORITY) &&
-        (priority != 6 /* reserved */) &&
-        (value >= 0.0) && (value <= 100.0)) {
-        currentObject->priorityArray[priority - 1] = value;
-        currentObject->priorityFlags |= BIT(priority - 1);
-        status = true;
-        // todo, if low priority written, confirm that the COV not triggered
-        SweepToPresentValue(currentObject);
-    }
-    return status;
-}
-
-
-bool Analog_Value_Relinquish_Default_Set(
-    ANALOG_VALUE_DESCR *currentObject,
-    BACNET_WRITE_PROPERTY_DATA *wp_data,
-    BACNET_APPLICATION_DATA_VALUE *value)
-{
-    if (!WP_ValidateTagType(wp_data, value, BACNET_APPLICATION_TAG_REAL)) return false;
-    // if range properties (etc) exist check valid ranges here
-    if (!WP_ValidateRangeReal(wp_data, value, 0.0, 100.0)) return false;
-    currentObject->Relinquish_Default = value->type.Real;
-    SweepToPresentValue(currentObject);
-    return true;
-}
-
-
-static inline bool Analog_Value_Reliability_Set(
-    ANALOG_VALUE_DESCR *currentObject,
-    BACNET_WRITE_PROPERTY_DATA *wp_data,
-    BACNET_APPLICATION_DATA_VALUE *value)
-{
-    if (!WP_ValidateEnumTypeAndRange(wp_data, value, RELIABILITY_PROPRIETARY_MAX)) return false;
-
-    bool status = WPValidateArgType(value, BACNET_APPLICATION_TAG_ENUMERATED,
-        &wp_data->error_class, &wp_data->error_code);
-    if (!status) return status;
-
-    if (currentObject->Out_Of_Service) {
-        currentObject->shadowReliability = (BACNET_RELIABILITY) value->type.Enumerated;
-        return true;
-    }
-    wp_data->error_class = ERROR_CLASS_PROPERTY;
-    wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
-    return false;
+    return currentObject->Present_Value ;
 }
 
 
 #if ( BACNET_SVC_COV_B == 1 )
 
-// This function reports to the BACnet stack if there has/has not been a change to the Present Value or status flags
-// therefore, unfortunately, we have to derive the pointers from the object_instance each time.
 bool Analog_Value_Change_Of_Value(
     uint32_t object_instance)
 {
-    ANALOG_VALUE_DESCR *currentObject = Analog_Value_Instance_To_Object(object_instance);
-    if (currentObject == NULL) {
-        panic();
-        return false;
-    }
-    return currentObject->Changed;
-}
+//    unsigned index;
+    bool changed = false;
 
+    panic();
+    //index = Analog_Value_Instance_To_Index(object_instance);
+    //if (index < MAX_ANALOG_VALUES) {
+    //    changed = AV_Descr[index].Changed;
+    //}
+
+    return changed;
+}
 
 void Analog_Value_Change_Of_Value_Clear(
-    const uint32_t instance)
+    uint32_t object_instance)
 {
-    ANALOG_VALUE_DESCR *currentObject = Analog_Value_Instance_To_Object(instance);
-    if (currentObject == NULL) {
-        panic();
-        return;
-    }
-    currentObject->Changed = false;
-}
+//    unsigned index;
 
+    panic();
+    //index = Analog_Value_Instance_To_Index(object_instance);
+    //if (index < MAX_ANALOG_VALUES) {
+    //    AV_Descr[index].Changed = false;
+    //}
+}
 
 /**
  * For a given object instance-number, loads the value_list with the COV data.
@@ -474,7 +343,6 @@ bool Analog_Value_Encode_Value_List(
     ANALOG_VALUE_DESCR *currentObject = Analog_Value_Instance_To_Object(object_instance);
     if (currentObject == NULL) {
         panic();
-        return false;
     }
 
     if (value_list) {
@@ -483,7 +351,7 @@ bool Analog_Value_Encode_Value_List(
         value_list->value.context_specific = false;
         value_list->value.tag = BACNET_APPLICATION_TAG_REAL;
         value_list->value.type.Real =
-            Analog_Value_Present_Value_Get(currentObject);
+            Analog_Value_Present_Value(currentObject);
         value_list->value.next = NULL;
         value_list->priority = BACNET_NO_PRIORITY;
         value_list = value_list->next;
@@ -493,111 +361,109 @@ bool Analog_Value_Encode_Value_List(
         value_list->propertyArrayIndex = BACNET_ARRAY_ALL;
         value_list->value.context_specific = false;
         value_list->value.tag = BACNET_APPLICATION_TAG_BIT_STRING;
-        value_list->value.next = NULL;
         bitstring_init(&value_list->value.type.Bit_String);
         bitstring_set_bit(&value_list->value.type.Bit_String,
-            STATUS_FLAG_IN_ALARM, isInAlarm(currentObject));
+            STATUS_FLAG_IN_ALARM, false);
         bitstring_set_bit(&value_list->value.type.Bit_String,
-            STATUS_FLAG_FAULT, isInFault(currentObject));
+            STATUS_FLAG_FAULT, false);
         bitstring_set_bit(&value_list->value.type.Bit_String,
             STATUS_FLAG_OVERRIDDEN, false);
-        bitstring_set_bit(&value_list->value.type.Bit_String,
-            STATUS_FLAG_OUT_OF_SERVICE, isOutOfService(currentObject));
+        if (currentObject->Out_Of_Service) {
+            bitstring_set_bit(&value_list->value.type.Bit_String,
+                STATUS_FLAG_OUT_OF_SERVICE, true);
+        }
+        else {
+            bitstring_set_bit(&value_list->value.type.Bit_String,
+                STATUS_FLAG_OUT_OF_SERVICE, false);
+        }
         value_list->value.next = NULL;
         value_list->priority = BACNET_NO_PRIORITY;
         value_list->next = NULL;
         status = true;
     }
-    // nope. this needs to be true e.g. on initial subscription. 
-    // status = currentObject->Changed;
 
     return status;
 }
 
+float Analog_Value_COV_Increment(
+    uint32_t object_instance)
+{
+    unsigned index = 0;
+    float value = 0;
+
+    panic();
+    //index = Analog_Value_Instance_To_Index(object_instance);
+    //if (index < MAX_ANALOG_VALUES) {
+    //    value = AV_Descr[index].COV_Increment;
+    //}
+
+    return value;
+}
+
 
 void Analog_Value_COV_Increment_Set(
-    ANALOG_VALUE_DESCR *currentObject,
+    uint32_t object_instance,
     float value)
 {
-    currentObject->COV_Increment = value;
-    if (fabs(Analog_Value_Present_Value_Get(currentObject) - currentObject->Prior_Value) > currentObject->COV_Increment) {
-        currentObject->Changed = true;
-    }
+    unsigned index = 0;
+
+    panic();
+    //index = Analog_Value_Instance_To_Index(object_instance);
+    //if (index < MAX_ANALOG_VALUES) {
+    //    AV_Descr[index].COV_Increment = value;
+    //    Analog_Value_COV_Detect(index, AV_Descr[index].Present_Value);
+    //}
 }
-#endif // ( BACNET_SVC_COV_B == 1 )
+#endif // BACNET_SVC_COV_AV_B == 1
 
 
-static bool Analog_Value_Present_Value_Relinquish(
-    ANALOG_VALUE_DESCR *currentObject,
-    unsigned priority)
+bool Analog_Value_Object_Name(
+    uint32_t object_instance,
+    BACNET_CHARACTER_STRING * object_name)
 {
-    if (priority && (priority <= BACNET_MAX_PRIORITY) &&
-        (priority != 6 /* reserved */)) {
-        currentObject->priorityFlags &= ~(1 << (priority - 1));
-        SweepToPresentValue(currentObject);
-        return true;
-    }
-
-    return false;
+    return Generic_Instance_To_Object_Name(&AV_Descriptor_List, object_instance, object_name);
 }
-
-// Not used anywhere, even in Karg Stack
-//float Analog_Input_COV_Increment(
-//    BINARY_OUTPUT_DESCR *currentObject )
-//{
-//    int index;
-//    float value = 0;
-//
-//    index = Analog_Input_Instance_To_Index(object_instance);
-//    if (index >= 0) {
-//        value = AI_Descr[index].COV_Increment;
-//    }
-//    else {
-//        panic();
-//    }
-//
-//    return value;
-//}
 
 
 static void Analog_Value_Out_Of_Service_Set(
     ANALOG_VALUE_DESCR *currentObject,
-    const bool oos_flag)
+    const bool value)
 {
-    // Is there actually a change? If not, then we don't have to do anything.
-    if (currentObject->Out_Of_Service == oos_flag) return;
-
 #if ( BACNET_SVC_COV_B == 1 )
-    currentObject->Changed = true;
+    if (currentObject->Out_Of_Service != value) {
+        currentObject->Changed = true;
+    }
 #endif
 
-    currentObject->Out_Of_Service = oos_flag;
+    currentObject->Out_Of_Service = value;
 }
 
 
 /* return apdu length, or BACNET_STATUS_ERROR on error */
 int Analog_Value_Read_Property(
-    BACNET_READ_PROPERTY_DATA *rpdata)
+    BACNET_READ_PROPERTY_DATA * rpdata)
 {
     int apdu_len = 0;   /* return value */
+    BACNET_BIT_STRING bit_string;
     BACNET_CHARACTER_STRING char_string;
-    uint8_t *apdu;
+    ANALOG_VALUE_DESCR *currentObject;
+    uint8_t *apdu ;
 
 #if (INTRINSIC_REPORTING_B == 1)
-    unsigned int i = 0;
+    unsigned i = 0;
     int len = 0;
 #endif
 
-#ifdef BAC_DEBUG
+    const BACNET_PROPERTY_ID *pRequired = NULL, *pOptional = NULL, *pProprietary = NULL;
+
     if ((rpdata == NULL) || (rpdata->application_data == NULL) ||
         (rpdata->application_data_len == 0)) {
         return BACNET_STATUS_ERROR;
     }
-#endif
 
-    ANALOG_VALUE_DESCR *currentObject = Analog_Value_Instance_To_Object(rpdata->object_instance);
+    currentObject = Analog_Value_Instance_To_Object(rpdata->object_instance);
     if (currentObject == NULL) {
-        panic();
+        // todo1 panic();
         return BACNET_STATUS_ERROR;
     }
 
@@ -606,41 +472,41 @@ int Analog_Value_Read_Property(
 
     case PROP_OBJECT_IDENTIFIER:
         apdu_len =
-            encode_application_object_id(&apdu[0],
-                OBJECT_ANALOG_VALUE,
+            encode_application_object_id(&apdu[0], OBJECT_ANALOG_VALUE,
                 rpdata->object_instance);
         break;
 
     case PROP_OBJECT_NAME:
     case PROP_DESCRIPTION:
-        Analog_Value_Object_Name(
-            rpdata->object_instance,
-            &char_string);
+        Analog_Value_Object_Name(rpdata->object_instance, &char_string);
         apdu_len =
             encode_application_character_string(&apdu[0], &char_string);
         break;
 
     case PROP_OBJECT_TYPE:
         apdu_len =
-            encode_application_enumerated(
-                apdu,
-                OBJECT_ANALOG_VALUE);
+            encode_application_enumerated(&apdu[0], OBJECT_ANALOG_VALUE);
         break;
 
     case PROP_PRESENT_VALUE:
         apdu_len =
-            encode_application_real(
-                apdu,
-                Analog_Value_Present_Value_Get(currentObject));
+            encode_application_real(&apdu[0],
+                Analog_Value_Present_Value(currentObject));
         break;
 
     case PROP_STATUS_FLAGS:
-        apdu_len =
-            encode_status_flags(
-                apdu,
-                isInAlarm(currentObject),
-                isInFault(currentObject),
-                isOutOfService(currentObject));
+        bitstring_init(&bit_string);
+#if (INTRINSIC_REPORTING_B == 1)
+        bitstring_set_bit(&bit_string, STATUS_FLAG_IN_ALARM,
+            currentObject->Event_State ? true : false);
+#else
+        bitstring_set_bit(&bit_string, STATUS_FLAG_IN_ALARM, false);
+#endif
+        bitstring_set_bit(&bit_string, STATUS_FLAG_FAULT, false);
+        bitstring_set_bit(&bit_string, STATUS_FLAG_OVERRIDDEN, false);
+        bitstring_set_bit(&bit_string, STATUS_FLAG_OUT_OF_SERVICE,
+            currentObject->Out_Of_Service);
+        apdu_len = encode_application_bitstring(&apdu[0], &bit_string);
         break;
 
     case PROP_EVENT_STATE:
@@ -654,26 +520,26 @@ int Analog_Value_Read_Property(
 #endif
         break;
 
-#if ( BACNET_PROTOCOL_REVISION >= 13 )
-#if ( INTRINSIC_REPORTING_B == 1 )
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
     case PROP_EVENT_DETECTION_ENABLE:
+#if ( INTRINSIC_REPORTING_B == 1 )
         apdu_len =
-            encode_application_boolean(&apdu[0], true);
-        break;
+            encode_application_enumerated(&apdu[0], true);
+#else
+        apdu_len =
+            encode_application_enumerated(&apdu[0], false);
 #endif
 #endif
 
     case PROP_RELIABILITY:
         apdu_len =
-            encode_application_enumerated(
-                apdu,
-                Analog_Value_Reliability_Get(currentObject));
+            encode_application_enumerated(&apdu[0],
+                currentObject->Reliability);
         break;
 
     case PROP_OUT_OF_SERVICE:
         apdu_len =
-            encode_application_boolean(
-                apdu,
+            encode_application_boolean(&apdu[0],
                 currentObject->Out_Of_Service);
         break;
 
@@ -681,6 +547,13 @@ int Analog_Value_Read_Property(
         apdu_len =
             encode_application_enumerated(&apdu[0], currentObject->Units);
         break;
+
+#if ( BACNET_SVC_COV_AV_B == 1 )
+    case PROP_COV_INCREMENT:
+        apdu_len = encode_application_real(&apdu[0],
+            currentObject->COV_Increment);
+        break;
+#endif // ( BACNET_SVC_COV_AV_B == 1 )
 
 #if (INTRINSIC_REPORTING_B == 1)
     case PROP_TIME_DELAY:
@@ -693,13 +566,6 @@ int Analog_Value_Read_Property(
             encode_application_unsigned(&apdu[0],
                 currentObject->Notification_Class);
         break;
-
-#if ( BACNET_SVC_COV_B == 1 )
-    case PROP_COV_INCREMENT:
-        apdu_len = encode_application_real(&apdu[0],
-            currentObject->COV_Increment);
-        break;
-#endif // ( BACNET_SVC_COV_B == 1 )
 
     case PROP_HIGH_LIMIT:
         apdu_len =
@@ -715,26 +581,43 @@ int Analog_Value_Read_Property(
         break;
 
     case PROP_LIMIT_ENABLE:
-        apdu_len = encode_application_bitstring2(
-            apdu,
-            (currentObject->Limit_Enable & EVENT_LOW_LIMIT_ENABLE) ? true : false,
-            (currentObject->Limit_Enable & EVENT_HIGH_LIMIT_ENABLE) ? true : false);
+        bitstring_init(&bit_string);
+        bitstring_set_bit(&bit_string, 0,
+            (currentObject->
+                Limit_Enable & EVENT_LOW_LIMIT_ENABLE) ? true : false);
+        bitstring_set_bit(&bit_string, 1,
+            (currentObject->
+                Limit_Enable & EVENT_HIGH_LIMIT_ENABLE) ? true : false);
+
+        apdu_len = encode_application_bitstring(&apdu[0], &bit_string);
         break;
 
     case PROP_EVENT_ENABLE:
-        apdu_len = encode_application_bitstring3(
-            apdu,
-            (currentObject->Event_Enable & EVENT_ENABLE_TO_OFFNORMAL) ? true : false,
-            (currentObject->Event_Enable & EVENT_ENABLE_TO_FAULT) ? true : false,
-            (currentObject->Event_Enable & EVENT_ENABLE_TO_NORMAL) ? true : false);
+        bitstring_init(&bit_string);
+        bitstring_set_bit(&bit_string, TRANSITION_TO_OFFNORMAL,
+            (currentObject->
+                Event_Enable & EVENT_ENABLE_TO_OFFNORMAL) ? true : false);
+        bitstring_set_bit(&bit_string, TRANSITION_TO_FAULT,
+            (currentObject->
+                Event_Enable & EVENT_ENABLE_TO_FAULT) ? true : false);
+        bitstring_set_bit(&bit_string, TRANSITION_TO_NORMAL,
+            (currentObject->
+                Event_Enable & EVENT_ENABLE_TO_NORMAL) ? true : false);
+
+        apdu_len = encode_application_bitstring(&apdu[0], &bit_string);
         break;
 
     case PROP_ACKED_TRANSITIONS:
-        apdu_len = encode_application_bitstring3(
-            apdu,
-            currentObject->Acked_Transitions[TRANSITION_TO_OFFNORMAL].bIsAcked,
-            currentObject->Acked_Transitions[TRANSITION_TO_FAULT].bIsAcked,
+        bitstring_init(&bit_string);
+        bitstring_set_bit(&bit_string, TRANSITION_TO_OFFNORMAL,
+            currentObject->Acked_Transitions[TRANSITION_TO_OFFNORMAL].
+            bIsAcked);
+        bitstring_set_bit(&bit_string, TRANSITION_TO_FAULT,
+            currentObject->Acked_Transitions[TRANSITION_TO_FAULT].bIsAcked);
+        bitstring_set_bit(&bit_string, TRANSITION_TO_NORMAL,
             currentObject->Acked_Transitions[TRANSITION_TO_NORMAL].bIsAcked);
+
+        apdu_len = encode_application_bitstring(&apdu[0], &bit_string);
         break;
 
     case PROP_NOTIFY_TYPE:
@@ -745,7 +628,6 @@ int Analog_Value_Read_Property(
 
     case PROP_EVENT_TIME_STAMPS:
         /* Array element zero is the number of elements in the array */
-        // todo3 - this can be consolidated across multiple objects
         if (rpdata->array_index == 0)
             apdu_len =
             encode_application_unsigned(&apdu[0],
@@ -753,8 +635,6 @@ int Analog_Value_Read_Property(
         /* if no index was specified, then try to encode the entire list */
         /* into one packet. */
         else if (rpdata->array_index == BACNET_ARRAY_ALL) {
-            int i, len;
-            apdu_len = 0;
             for (i = 0; i < MAX_BACNET_EVENT_TRANSITION; i++) {
                 len =
                     encode_opening_tag(&apdu[apdu_len],
@@ -770,9 +650,8 @@ int Analog_Value_Read_Property(
                         TIME_STAMP_DATETIME);
 
                 /* add it if we have room */
-                if ((apdu_len + len) < MAX_APDU) {
+                if ((apdu_len + len) < MAX_APDU)
                     apdu_len += len;
-                }
                 else {
                     rpdata->error_code =
                         ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
@@ -783,13 +662,13 @@ int Analog_Value_Read_Property(
         }
         else if (rpdata->array_index <= MAX_BACNET_EVENT_TRANSITION) {
             apdu_len =
-                encode_opening_tag(&apdu[0], TIME_STAMP_DATETIME);
+                encode_opening_tag(&apdu[apdu_len], TIME_STAMP_DATETIME);
             apdu_len +=
                 encode_application_date(&apdu[apdu_len],
-                    &currentObject->Event_Time_Stamps[rpdata->array_index-1].date);
+                    &currentObject->Event_Time_Stamps[rpdata->array_index].date);
             apdu_len +=
                 encode_application_time(&apdu[apdu_len],
-                    &currentObject->Event_Time_Stamps[rpdata->array_index-1].time);
+                    &currentObject->Event_Time_Stamps[rpdata->array_index].time);
             apdu_len +=
                 encode_closing_tag(&apdu[apdu_len], TIME_STAMP_DATETIME);
         }
@@ -799,68 +678,15 @@ int Analog_Value_Read_Property(
             apdu_len = BACNET_STATUS_ERROR;
         }
         break;
-
-#endif  // ( INTRINSIC_REPORTING_B == 1 )
-
-    case PROP_PRIORITY_ARRAY:
-        /* Array element zero is the number of elements in the array */
-        if (rpdata->array_index == 0)
-            apdu_len = encode_application_unsigned(&apdu[0], BACNET_MAX_PRIORITY);
-        /* if no index was specified, then try to encode the entire list */
-        /* into one packet. */
-        else if (rpdata->array_index == BACNET_ARRAY_ALL) {
-            unsigned i, len;
-            for (i = 0; i < BACNET_MAX_PRIORITY; i++) {
-                /* FIXME: check if we have room before adding it to APDU */
-
-                if (currentObject->priorityFlags & (1 << i))
-                    len = encode_application_real(
-                        &apdu[apdu_len],
-                        currentObject->priorityArray[i]);
-                else {
-                    len = encode_application_null(&apdu[apdu_len]);
-                }
-
-                /* add it if we have room */
-                if ((apdu_len + len) < MAX_APDU) {
-                    apdu_len += len;
-                }
-                else {
-                    rpdata->error_code = ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
-                    apdu_len = BACNET_STATUS_ABORT;
-                    break;
-                }
-            }
-        }
-        else {
-            if (rpdata->array_index <= BACNET_MAX_PRIORITY) {
-                if (currentObject->priorityFlags & (1 << (rpdata->array_index - 1))) {
-                    apdu_len = encode_application_real(&apdu[apdu_len], currentObject->priorityArray[rpdata->array_index - 1]);
-                }
-                else {
-                    apdu_len = encode_application_null(&apdu[apdu_len]);
-                }
-            }
-            else {
-                rpdata->error_class = ERROR_CLASS_PROPERTY;
-                rpdata->error_code = ERROR_CODE_INVALID_ARRAY_INDEX;
-                apdu_len = BACNET_STATUS_ERROR;
-            }
-        }
-        break;
-
-    case PROP_RELINQUISH_DEFAULT:
-        apdu_len = encode_application_real(
-            &apdu[0],
-            currentObject->Relinquish_Default);
-        break;
+#endif
 
     case PROP_PROPERTY_LIST:
+        Analog_Value_Property_Lists(&pRequired, &pOptional, &pProprietary);
         apdu_len = property_list_encode(
             rpdata,
-            Properties_Required,
-            Properties_Optional,
-            Properties_Proprietary);
+            pRequired,
+            pOptional,
+            pProprietary);
         break;
 
     default:
@@ -900,7 +726,7 @@ bool Analog_Value_Write_Property(
     len =
         bacapp_decode_application_data(wp_data->application_data,
             wp_data->application_data_len, &value);
-
+            
     /* FIXME: len < application_data_len: more data? */
     if (len < 0) {
         /* error while decoding - a value larger than we can handle */
@@ -923,46 +749,26 @@ bool Analog_Value_Write_Property(
 
     currentObject = Analog_Value_Instance_To_Object(wp_data->object_instance);
     if (currentObject == NULL) {
-        panic(); // this should never happen, doesnt the kernel pre-check existence?
-        wp_data->error_code = ERROR_CODE_NO_OBJECTS_OF_SPECIFIED_TYPE;
+        // todo1 panic();
         return false;
     }
 
     switch (wp_data->object_property) {
 
     case PROP_PRESENT_VALUE:
-        if (value.tag == BACNET_APPLICATION_TAG_REAL) {
-            /* Command priority 6 is reserved for use by Minimum On/Off
-               algorithm and may not be used for other purposes in any
-               object. */
-            status =
-                Analog_Value_Present_Value_Set(
-                    currentObject,
-                    value.type.Real, wp_data->priority);
-            if (wp_data->priority == 6) {
-                /* Command priority 6 is reserved for use by Minimum On/Off
-                   algorithm and may not be used for other purposes in any
-                   object. */
+        status =
+            WPValidateArgType(&value, BACNET_APPLICATION_TAG_REAL,
+                &wp_data->error_class, &wp_data->error_code);
+
+        if (status) {
+            if (currentObject->Out_Of_Service == true) {
+                Analog_Value_Present_Value_Set(currentObject,
+                    value.type.Real);
+            }
+            else {
                 wp_data->error_class = ERROR_CLASS_PROPERTY;
                 wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
-            }
-            else if (!status) {
-                wp_data->error_class = ERROR_CLASS_PROPERTY;
-                wp_data->error_code = ERROR_CODE_VALUE_OUT_OF_RANGE;
-            }
-        }
-        else {
-            status =
-                WPValidateArgType(&value, BACNET_APPLICATION_TAG_NULL,
-                    &wp_data->error_class, &wp_data->error_code);
-            if (status) {
-                status =
-                    Analog_Value_Present_Value_Relinquish(currentObject, wp_data->priority);
-                if (!status) {
-                    // todo 0 - what is this bogus (?) error condition?
-                    wp_data->error_class = ERROR_CLASS_PROPERTY;
-                    wp_data->error_code = ERROR_CODE_VALUE_OUT_OF_RANGE;
-                }
+                status = false;
             }
         }
         break;
@@ -978,14 +784,6 @@ bool Analog_Value_Write_Property(
         }
         break;
 
-    case PROP_RELIABILITY:
-        status =
-            Analog_Value_Reliability_Set(
-                currentObject,
-                wp_data,
-                &value);
-        break;
-
     case PROP_UNITS:
         status =
             WPValidateArgType(&value, BACNET_APPLICATION_TAG_ENUMERATED,
@@ -995,7 +793,7 @@ bool Analog_Value_Write_Property(
         }
         break;
 
-#if ( BACNET_SVC_COV_B == 1 )
+#if ( BACNET_SVC_COV_AV_B == 1 )
     case PROP_COV_INCREMENT:
         status =
             WPValidateArgType(&value, BACNET_APPLICATION_TAG_REAL,
@@ -1003,7 +801,7 @@ bool Analog_Value_Write_Property(
         if (status) {
             if (value.type.Real >= 0.0) {
                 Analog_Value_COV_Increment_Set(
-                    currentObject,
+                    wp_data->object_instance,
                     value.type.Real);
             }
             else {
@@ -1051,6 +849,7 @@ bool Analog_Value_Write_Property(
         status =
             WPValidateArgType(&value, BACNET_APPLICATION_TAG_REAL,
                 &wp_data->error_class, &wp_data->error_code);
+
         if (status) {
             currentObject->Low_Limit = value.type.Real;
         }
@@ -1123,40 +922,25 @@ bool Analog_Value_Write_Property(
 
         // todo 2 - BTC - I witnessed Tridium trying to write a NULL to RD. This is not legal. Create a test that exposes this.
         // todo 2 - BTS - Make a test to write a NaN to RD? (actually... nope. Who in their right mind would allow that?)
+        // For now, we do not allow writes to RD
 
-#if ( INTRINSIC_REPORTING_B == 1 && BACNET_PROTOCOL_REVISION >= 13 )
-    case PROP_EVENT_DETECTION_ENABLE:
-        status =
-            WPValidateArgType(&value, BACNET_APPLICATION_TAG_BOOLEAN,
-                &wp_data->error_class, &wp_data->error_code);
-        if (status) {
-            wp_data->error_class = ERROR_CLASS_PROPERTY;
-            wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
-            status = false;
-        }
-        break;
-#endif
-
-    case PROP_RELINQUISH_DEFAULT:
-        status = Analog_Value_Relinquish_Default_Set( 
-            currentObject,
-            wp_data,
-            &value);
-        break;
-
-    // todo 0 why did BTC not detect missing property list here?
-    case PROP_PROPERTY_LIST:
-    case PROP_DESCRIPTION:
     case PROP_OBJECT_IDENTIFIER:
     case PROP_OBJECT_NAME:
+    case PROP_DESCRIPTION:
     case PROP_OBJECT_TYPE:
     case PROP_STATUS_FLAGS:
     case PROP_EVENT_STATE:
+    case PROP_RELIABILITY:  // this should not be here btc todo1 - no such property for AV. How come BTC did not detect?
 #if (INTRINSIC_REPORTING_B == 1)
     case PROP_ACKED_TRANSITIONS:
     case PROP_EVENT_TIME_STAMPS:
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
+    case PROP_EVENT_DETECTION_ENABLE:
 #endif
+#endif
+    case PROP_PROPERTY_LIST:
     case PROP_PRIORITY_ARRAY:
+    case PROP_RELINQUISH_DEFAULT:
         wp_data->error_class = ERROR_CLASS_PROPERTY;
         wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
         break;
@@ -1171,34 +955,28 @@ bool Analog_Value_Write_Property(
 }
 
 
-#if (INTRINSIC_REPORTING_B == 1)
-
 void Analog_Value_Intrinsic_Reporting(
     uint32_t object_instance)
 {
+#if (INTRINSIC_REPORTING_B2 == 1)
     BACNET_EVENT_NOTIFICATION_DATA event_data;
     BACNET_CHARACTER_STRING msgText;
     ANALOG_VALUE_DESCR *currentObject;
     BACNET_EVENT_STATE FromState;
     BACNET_EVENT_STATE ToState;
-    float ExceededLimit;
-    float PresentVal;
+    float ExceededLimit = 0.0f;
+    float PresentVal = 0.0f;
     bool SendNotify = false;
 
 
-    currentObject = Analog_Value_Instance_To_Object(object_instance);
+    currentObject = ANALOG_VALUE_DESCR *find object t(&analogValues, object_instance));
     if (currentObject == NULL) {
         panic();
+    }
+    else {
         return;
     }
 
-    /*
-        13.2.2.1 Event-State-Detection State Machine
-
-        If the Event_Detection_Enable property is FALSE, then this state machine is not evaluated. In this case, no transitions shall
-        occur, Event_State shall be set to NORMAL, and Event_Time_Stamps, Event_Message_Texts and Acked_Transitions shall
-        be set to their respective initial conditions.
-    */
     /* check limits */
     if (!currentObject->Limit_Enable) {
         return;    /* limits are not configured */
@@ -1483,17 +1261,14 @@ void Analog_Value_Intrinsic_Reporting(
                 currentObject->Acked_Transitions[TRANSITION_TO_NORMAL].
                     Time_Stamp = event_data.timeStamp.value.dateTime;
                 break;
-
-            default:
-                panic();
             }
         }
     }
-}
 #endif /* (INTRINSIC_REPORTING_B == 1) */
+}
 
 
-#if (INTRINSIC_REPORTING_B == 1)
+#if (INTRINSIC_REPORTING_B2 == 1)
 int Analog_Value_Event_Information(
     unsigned index,
     BACNET_GET_EVENT_INFORMATION_DATA * getevent_data)
@@ -1569,17 +1344,14 @@ int Analog_Value_Event_Information(
 }
 
 
-/* return +1 if alarm was acknowledged
-   return -1 if any error occurred
-   return -2 abort */
 int Analog_Value_Alarm_Ack(
-    BACNET_ALARM_ACK_DATA *alarmack_data,
-    BACNET_ERROR_CLASS *error_class,
-    BACNET_ERROR_CODE *error_code)
+    BACNET_ALARM_ACK_DATA * alarmack_data,
+    BACNET_ERROR_CODE * error_code)
 {
-    // unsigned int object_index;
+    unsigned int object_index;
 
-    ANALOG_VALUE_DESCR *currentObject = Analog_Value_Instance_To_Object(alarmack_data->eventObjectIdentifier.instance);
+    AnalogValueObject *currentObject = static_cast<AnalogValueObject *> (BACnetObject::Instance_To_Object(&analogValues,
+        alarmack_data->eventObjectIdentifier.instance));
     if (currentObject == NULL) {
         *error_code = ERROR_CODE_UNKNOWN_OBJECT;
         return -1;
@@ -1751,13 +1523,13 @@ bool WPValidateArgType(
 void testAnalog_Value(
     Test * pTest)
 {
+    BACNET_READ_PROPERTY_DATA rpdata;
     uint8_t apdu[MAX_APDU] = { 0 };
     int len = 0;
     uint32_t len_value = 0;
     uint8_t tag_number = 0;
-    uint32_t decoded_instance = 0;
     uint16_t decoded_type = 0;
-    BACNET_READ_PROPERTY_DATA rpdata;
+    uint32_t decoded_instance = 0;
 
     Analog_Value_Init();
     rpdata.application_data = &apdu[0];
@@ -1773,6 +1545,7 @@ void testAnalog_Value(
     len = decode_object_id(&apdu[len], &decoded_type, &decoded_instance);
     ct_test(pTest, decoded_type == rpdata.object_type);
     ct_test(pTest, decoded_instance == rpdata.object_instance);
+
 }
 
 #ifdef TEST_ANALOG_VALUE

@@ -31,7 +31,6 @@
 #include "bacerror.h"
 #include "bacdevobjpropref.h"
 #include "access_rule.h"
-
 #include "rp.h"
 #include "wp.h"
 
@@ -52,7 +51,6 @@
         uint32_t global_identifier;
         BACNET_RELIABILITY reliability;
         bool enable;
-
         uint32_t negative_access_rules_count, positive_access_rules_count;
                  BACNET_ACCESS_RULE
             negative_access_rules[MAX_NEGATIVE_ACCESS_RIGHTS_RULES];
@@ -104,4 +102,3 @@
 #endif
 
 #endif
-

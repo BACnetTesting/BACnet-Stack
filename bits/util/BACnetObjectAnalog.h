@@ -52,7 +52,7 @@ public:
     float Present_Value;
     BACNET_ENGINEERING_UNITS Units;
 
-#if (INTRINSIC_REPORTING_B == 1)
+#if (INTRINSIC_REPORTING == 1)
     BACNET_EVENT_STATE Event_State;
     uint32_t Time_Delay;
     uint32_t Notification_Class;

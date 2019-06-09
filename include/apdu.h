@@ -193,19 +193,16 @@ uint16_t apdu_decode_confirmed_service_request(
 
 uint16_t apdu_timeout(
     void);
-
 void apdu_timeout_set(
     uint16_t value);
-
 uint8_t apdu_retries(
     void);
-
 void apdu_retries_set(
     uint8_t value);
 
 void apdu_handler(
     BACNET_ADDRESS * src,   /* source address */
-    uint8_t *apdu,         /* APDU data */
+    uint8_t * apdu, /* APDU data */
     uint16_t pdu_len);      /* for confirmed messages */
 
 #endif

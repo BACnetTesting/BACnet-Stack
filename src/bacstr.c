@@ -72,8 +72,8 @@ void bitstring_init(
 
 void bitstring_set_bit(
     BACNET_BIT_STRING * bit_string,
-    const uint8_t bit_number,
-    const bool value)
+    uint8_t bit_number,
+    bool value)
 {
     uint8_t byte_number = bit_number / 8;
     uint8_t bit_mask = 1;

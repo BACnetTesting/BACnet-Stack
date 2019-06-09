@@ -24,20 +24,6 @@
 * Generic ring buffer library for deeply embedded system.
 * See the unit tests for usage examples.
 *
-* The above copyright notice and this permission notice shall be included
-* in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*
-* Generic ring buffer library for deeply embedded system.
-* See the unit tests for usage examples.
-*
 *****************************************************************************************
 *
 *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
@@ -125,13 +111,10 @@ bool Ringbuf_Pop_Element(
 		
 bool Ringbuf_Put_Front(
     RING_BUFFER * b,
-    /* ring buffer structure */
     uint8_t * data_element);
-	
-/* pair of functions to use head memory directly */
-volatile uint8_t *Ringbuf_Data_Peek(RING_BUFFER * b);
 
-volatile uint8_t *Ringbuf_Peek_Next(
+/* pair of functions to use head memory directly */
+volatile uint8_t *Ringbuf_Data_Peek(
     RING_BUFFER * b);
 
 bool Ringbuf_Data_Put(RING_BUFFER * b, volatile uint8_t *data_element);

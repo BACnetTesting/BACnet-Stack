@@ -47,10 +47,6 @@
 ****************************************************************************************/
 
 #include <stdint.h>
-#include "bip.h"
-
-#if ( BACNET_SVC_COV_B == 1 )
-
 #include "bacenum.h"
 #include "bacdcode.h"
 #include "bacdef.h"
@@ -170,10 +166,9 @@ int ccov_notify_encode_apdu(
         if (len < 0) {
             /* return the error */
             apdu_len = len;
-        } 
-        else {
-            apdu_len += len;
-        }
+        } else {
+        apdu_len += len;
+    }
     }
 
     return apdu_len;
@@ -196,10 +191,9 @@ int ucov_notify_encode_apdu(
         if (len < 0) {
             /* return the error */
             apdu_len = len;
-        } 
-        else {
-            apdu_len += len;
-        }
+        } else {
+        apdu_len += len;
+    }
     }
 
     return apdu_len;
@@ -1120,4 +1114,3 @@ int main(
 }
 #endif /* TEST_COV */
 #endif /* TEST */
-#endif // ( BACNET_SVC_COV_B == 1 )

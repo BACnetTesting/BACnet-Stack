@@ -50,7 +50,6 @@
 #include "apdu.h"
 #include "npdu.h"
 #include "abort.h"
-#include "reject.h"
 #include "readrange.h"
 #include "device.h"
 #include "handlers.h"
@@ -65,7 +64,7 @@ static int Encode_RR_payload(
     uint8_t * apdu,
     BACNET_READ_RANGE_DATA * pRequest)
 {
-    int apdu_len = BACNET_STATUS_ERROR ;
+    int apdu_len = -1;
     rr_info_function info_fn_ptr = NULL;
     RR_PROP_INFO PropInfo;
 
@@ -76,41 +75,28 @@ static int Encode_RR_payload(
     /* handle each object type */
     info_fn_ptr = Device_Objects_RR_Info(pRequest->object_type);
 
-    if ((info_fn_ptr != NULL) ) {
-        if (info_fn_ptr(pRequest, &PropInfo) != false) {
-            /* We try and do some of the more generic error checking here to cut down on duplication of effort */
-            if ((pRequest->RequestType == RR_BY_POSITION) && (pRequest->Range.RefIndex == 0)) {     /* First index is 1 so can't accept 0 */
-                pRequest->error_code = ERROR_CODE_OTHER;    /* I couldn't see anything more appropriate so... */
-            }
-            else if (((PropInfo.RequestTypes & RR_ARRAY_OF_LISTS) == 0) &&
-                (pRequest->array_index != 0) &&
-                (pRequest->array_index != BACNET_ARRAY_ALL)) {
-                /* Array access attempted on a non array property */
-                pRequest->error_class = ERROR_CLASS_PROPERTY;
-                pRequest->error_code = ERROR_CODE_PROPERTY_IS_NOT_AN_ARRAY;
-            }
-            else if ((pRequest->RequestType != RR_READ_ALL) &&
-                ((PropInfo.RequestTypes & pRequest->RequestType) == 0)) {
-                /* By Time or By Sequence not supported - By Position is always required */
-                pRequest->error_code = ERROR_CODE_OTHER;    /* I couldn't see anything more appropriate so... */
-            }
-            else if ((pRequest->Count == 0) && (pRequest->RequestType != RR_READ_ALL)) {  /* Count cannot be zero */
-                pRequest->error_code = ERROR_CODE_OTHER;    /* I couldn't see anything more appropriate so... */
-            }
-            else if (PropInfo.Handler != NULL) {
-                apdu_len = PropInfo.Handler(apdu, pRequest);
-            }
-        }
-        else {
-            // info_fn_ptr may have set some other errors 
-            // leave apdu_len set to BACNET_STATUS_ERROR
+    if ((info_fn_ptr != NULL) && (info_fn_ptr(pRequest, &PropInfo) != false)) {
+        /* We try and do some of the more generic error checking here to cut down on duplication of effort */
+
+        if ((pRequest->RequestType == RR_BY_POSITION) && (pRequest->Range.RefIndex == 0)) {     /* First index is 1 so can't accept 0 */
+            pRequest->error_code = ERROR_CODE_OTHER;    /* I couldn't see anything more appropriate so... */
+        } else if (((PropInfo.RequestTypes & RR_ARRAY_OF_LISTS) == 0) &&
+                   (pRequest->array_index != 0) &&
+                   (pRequest->array_index != BACNET_ARRAY_ALL)) {
+            /* Array access attempted on a non array property */
+            pRequest->error_code = ERROR_CODE_PROPERTY_IS_NOT_AN_ARRAY;
+        } else if ((pRequest->RequestType != RR_READ_ALL) &&
+                   ((PropInfo.RequestTypes & pRequest->RequestType) == 0)) {
+            /* By Time or By Sequence not supported - By Position is always required */
+            pRequest->error_code = ERROR_CODE_OTHER;    /* I couldn't see anything more appropriate so... */
+        } else if ((pRequest->Count == 0) && (pRequest->RequestType != RR_READ_ALL)) {  /* Count cannot be zero */
+            pRequest->error_code = ERROR_CODE_OTHER;    /* I couldn't see anything more appropriate so... */
+        } else if (PropInfo.Handler != NULL) {
+            apdu_len = PropInfo.Handler(apdu, pRequest);
         }
     } else {
         /* Either we don't support RR for this property yet or it is not a list or array of lists */
-        // property is not a list error will be set in the object access module. here we can assume service not supported (maybe only for this object)
-        // pRequest->error_code = ERROR_CODE_PROPERTY_IS_NOT_A_LIST;
-        // unrecognized service is a Reject, not an error
-        return BACNET_STATUS_REJECT;
+        pRequest->error_code = ERROR_CODE_PROPERTY_IS_NOT_A_LIST;
     }
 
     return apdu_len;
@@ -183,7 +169,7 @@ void handler_read_range(
         error = false;
     }
     if (error) {
-        if (len == BACNET_STATUS_ABORT ) {
+        if (len == -2) {
             /* BACnet APDU too small to fit data, so proper response is Abort */
             len =
                 abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
@@ -192,14 +178,7 @@ void handler_read_range(
 #if PRINT_ENABLED
             fprintf(stderr, "RR: Reply too big to fit into APDU!\n");
 #endif
-        }
-        else if (len == BACNET_STATUS_REJECT) {
-            len =
-                reject_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-                    service_data->invoke_id,
-                    REJECT_REASON_UNRECOGNIZED_SERVICE);                        // the reject reason is a big assumption for now... 
-        }
-        else {
+        } else {
             len =
                 bacerror_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
                 service_data->invoke_id, SERVICE_CONFIRMED_READ_RANGE,
@@ -209,8 +188,7 @@ void handler_read_range(
 #endif
         }
     }
-
-RR_ABORT:
+  RR_ABORT:
     pdu_len += len;
     bytes_sent =
         datalink_send_pdu(src, &npci_data, &Handler_Transmit_Buffer[0],

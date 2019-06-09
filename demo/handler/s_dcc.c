@@ -70,8 +70,6 @@
  * @return The invokeID of the transmitted message, or 0 on failure.
  */
 
-#ifdef DCC_A
-
 uint8_t Send_Device_Communication_Control_Request(
     uint32_t device_id,
     uint16_t timeDuration,      /* 0=optional */
@@ -141,5 +139,3 @@ uint8_t Send_Device_Communication_Control_Request(
 
     return invoke_id;
 }
-
-#endif

@@ -29,6 +29,7 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
+
 *
 *****************************************************************************************
 *
@@ -59,7 +60,6 @@
 #include "readrange.h"
 #include "debug.h"
 #include "bactext.h"
-#include "datalink.h"
 
 /** @file address.c  Handle address binding */
 
@@ -336,8 +336,6 @@ bool address_mac_from_ascii(
     return status;
 }
 
-
-#if ( USE_FILE_CACHE == 1 )
 /* File format:
 DeviceID MAC SNET SADR MAX-APDU
 4194303 05 0 0 50
@@ -397,8 +395,6 @@ static void address_file_init(
     }
 
 }
-#endif // 0
-
 
 /****************************************************************************
  * Clear down the cache and make sure the full complement of entries are    *
@@ -417,7 +413,7 @@ void address_init(
         pMatch->Flags = 0;
         pMatch++;
     }
-#if ( USE_FILE_CACHE == 1 )
+#ifdef BACNET_ADDRESS_CACHE_FILE
     address_file_init(Address_Cache_Filename);
 #endif
 }
@@ -453,6 +449,7 @@ void address_init_partial(
 #if ( USE_FILE_CACHE == 1 )
     address_file_init(Address_Cache_Filename);
 #endif
+
 }
 
 
@@ -542,7 +539,6 @@ bool address_get_device_id(
 
     return found;
 }
-
 
 void address_add(
     uint32_t device_id,
@@ -852,8 +848,6 @@ int address_list_encode(
 
 #define ACACHE_MAX_ENC 17       /* Maximum size of encoded cache entry, see above */
 
-#if  (LIST_MANIPULATION == 1)
-
 int rr_address_list_encode(
     uint8_t * apdu,
     BACNET_READ_RANGE_DATA * pRequest)
@@ -997,9 +991,6 @@ int rr_address_list_encode(
 
     return (iLen);
 }
-
-#endif // #if  (LIST_MANIPULATION == 1)
-
 
 /****************************************************************************
  * Scan the cache and eliminate any expired entries. Should be called       *
@@ -1212,4 +1203,3 @@ int main(
 }
 #endif /* TEST_ADDRESS */
 #endif /* TEST */
-

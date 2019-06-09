@@ -26,80 +26,19 @@
 ****************************************************************************************/
 
 // #include <ctype.h>      // for toupper
-#ifdef OS_LAYER_WIN
 #include <conio.h>      // kbhit - for now
-#endif 
 #include "logging/logging.h"
 #include "bitsUtil.h"
 #include "osLayer.h"
-#include "BACnetToString.h"
+// #include "BACnetToString.h"
 #include "bitsDebug.h"
-#if defined(BBMD_ENABLED) && BBMD_ENABLED
-#include "bbmd.h"
-#endif
 
 bool showIPChandshake;
-
-#if defined(BBMD_ENABLED) && BBMD_ENABLED
-extern BBMD_TABLE_ENTRY BBMD_Table[MAX_BBMD_ENTRIES];
-extern FD_TABLE_ENTRY FD_Table[MAX_FD_ENTRIES];
-extern struct sockaddr_in Remote_BBMD;
-#endif
-
-#if defined(BBMD_ENABLED) && BBMD_ENABLED
-static void ShowBDT(void)
-{
-    bool entries = false;
-    log_printf("BBMD Device Table:");
-    for (int i = 0; i < MAX_BBMD_ENTRIES; i++)
-    {
-        BBMD_TABLE_ENTRY *bte = &BBMD_Table[i];
-        if (bte->valid)
-        {
-            entries = true;
-            char tstring[100];
-            log_printf("   %s", IPAddr_Port_ToString(tstring, &bte->dest_address, bte->dest_port));
-        }
-    }
-    if (!entries) log_printf("   No entries.");
-}
-
-static void ShowFDT(void)
-{
-    bool entries = false;
-
-    // show active FDRs
-    log_printf("Foreign Device Registrations:");
-    if ( Remote_BBMD.sin_addr.s_addr )
-    {
-        char tstring[100];
-        log_printf("   %s", IPEP_ToString(tstring, &Remote_BBMD ));
-    }
-    else
-    {
-        log_printf("   No entries.");
-    }
-
-    log_printf("Foreign Device Table:");
-    for (int i = 0; i < MAX_FD_ENTRIES; i++)
-    {
-        FD_TABLE_ENTRY *bte = &FD_Table[i];
-        if (bte->dest_address.s_addr)
-        {
-            entries = true;
-             char tstring[100];
-            log_printf("   %s,  TTL:%d", IPAddr_Port_ToString(tstring, &bte->dest_address, bte->dest_port), bte->time_to_live);
-        }
-    }
-    if (!entries) log_printf("   No entries.");
-}
-#endif
 
 static void ShowNextObject(void)
 {
     log_printf("Todo");
 }
-
 
 void ShowMenuHelp(void)
 {
@@ -107,51 +46,34 @@ void ShowMenuHelp(void)
     log_printf("Keys: Q)uit");
     log_printf("      O) Next Object");
     log_printf("      E) EMM trace log");
-    log_printf("      I) Show IPC handshake (%s)", showIPChandshake ? "On" : "Off");
+    log_printf("      I) Show IPC handshake (%s)", showIPChandshake ? "On" : "Off" );
     log_printf("      A) Address cache   T)SM cache");
     log_printf("      C) Create Test Configuration");
-#if defined(BBMD_ENABLED) && BBMD_ENABLED
-    log_printf("      B) Show BDT       F) Show FDT");
-#endif
     log_printf("");
 }
 
 
-bool doUserMenu(void)
-{
+bool doUserMenu(void) {
 
     // get a key and post it to redirected BITS input if appropriate
     if (osKBhit())
         bits_KeyInput(osGetch());
 
-    if (bits_kbhit())
-    {
+    if (bits_kbhit()) {
 
-        switch (bits_getch_toupper())
-        {
-
-#if defined(BBMD_ENABLED) && BBMD_ENABLED
-        case 'B':
-            ShowBDT();
-            break;
-
-        case 'F':
-            ShowFDT();
-            break;
-#endif
+        switch (bits_getch_toupper()) {
 
         case 'C':
             panic();
             // CreateTestConfiguration();
             log_printf("Objects created");
             break;
-
         case 'I':
             showIPChandshake = !showIPChandshake;
             ShowMenuHelp();
             break;
         case 'L':
-            //            ShowDatalinks();
+//            ShowDatalinks();
             break;
         case 'O':
             ShowNextObject();

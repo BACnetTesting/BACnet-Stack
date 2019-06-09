@@ -231,7 +231,7 @@ SRCS = ${CORE_SRC} ${PORT_SRC} ${HANDLER_SRC}
 OBJS = ${SRCS:.c=.o}
 
 # use local includes, but other values from calling Makefile
-CFLAGS  = $(STANDARDS) $(WARNINGS) $(DEBUGGING) $(OPTIMIZATION) $(INCLUDES) $(DEFINES)
+CFLAGS  = $(WARNINGS) $(DEBUGGING) $(OPTIMIZATION) $(STANDARDS) $(INCLUDES) $(DEFINES)
 
 all: $(LIBRARY)
 

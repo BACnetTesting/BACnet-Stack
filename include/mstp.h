@@ -45,14 +45,13 @@
 #include <stdbool.h>
 #include "mstpdef.h"
 #include "llist.h"
-#include "timerCommon.h"
+// #include "automac.h"
 #include "rs485.h"
 #include "osLayer.h"
-#include "dlmstp.h"
 
 #define BTA_DEBUG_MSTP
 
-typedef struct mstp_port_struct_t {
+struct mstp_port_struct_t {
     MSTP_RECEIVE_STATE receive_state;
     /* When a master node is powered up or reset, */
     /* it shall unconditionally enter the INITIALIZE state. */
@@ -60,36 +59,34 @@ typedef struct mstp_port_struct_t {
     /* A Boolean flag set to TRUE by the Receive State Machine  */
     /* if an error is detected during the reception of a frame.  */
     /* Set to FALSE by the Master or Slave Node state machine. */
-    uint8_t ReceiveError:1;
+    unsigned ReceiveError:1;
     /* There is data in the buffer */
-    uint8_t DataAvailable:1;
-    uint8_t ReceivedInvalidFrame:1;
+    unsigned DataAvailable:1;
+    unsigned ReceivedInvalidFrame:1;
     /* A Boolean flag set to TRUE by the Receive State Machine  */
     /* if a valid frame is received.  */
     /* Set to FALSE by the Master or Slave Node state machine. */
-    uint8_t ReceivedValidFrame:1;
+    unsigned ReceivedValidFrame:1;
     /* A Boolean flag set to TRUE by the Receive State Machine  */
     /* if a valid frame is received but it is not addressed to us.  */
     /* Set to FALSE by the Master or Slave Node state machine. */
-    uint8_t ReceivedValidFrameNotForUs:1;
+    unsigned ReceivedValidFrameNotForUs:1;
     /* A Boolean flag set to TRUE by the master machine if this node is the */
     /* only known master node. */
-    uint8_t SoleMaster:1;
+    unsigned SoleMaster:1;
     //    /* A Boolean flag set TRUE by the datalink if a
     //       packet has been received, but not processed. */
     uint8_t ReceivePacketPending:1;
     /* stores the latest received data */
-    uint8_t     DataRegister;
-    uint32_t    timestamp;
-
+    uint8_t DataRegister;
     /* Used to accumulate the CRC on the data field of a frame. */
     uint16_t DataCRC;
     /* Used to store the actual CRC from the data field. */
 
 #ifdef MSTP_ANALYZER
     // only used by MSTPCAP.C - can optimize out for most projects
-    // uint8_t DataCRCActualMSB;
-    // uint8_t DataCRCActualLSB;
+    uint8_t DataCRCActualMSB;
+    uint8_t DataCRCActualLSB;
     uint8_t HeaderCRCActual;
 #endif
 
@@ -109,11 +106,6 @@ typedef struct mstp_port_struct_t {
     uint8_t FrameCount;
     /* Used to accumulate the CRC on the header of a frame. */
     uint8_t HeaderCRC;
-    
-    /* Used to store the actual CRC from the header. */
-    // only used by MSTPCAP.C - can optimize out for most projects
-    // uint8_t HeaderCRCActual;
-    
     /* Used as an index by the Receive State Machine, up to a maximum value of */
     /* InputBufferSize. */
     uint32_t Index;
@@ -201,46 +193,14 @@ typedef struct mstp_port_struct_t {
     /* Note: the buffer is designed as a pointer since some compilers
        and microcontroller architectures have limits as to places to
        hold contiguous memory. */
+    uint8_t *OutputBuffer;
+    uint16_t OutputBufferSize;
 
-    uint8_t OutputBuffer[MAX_MPDU_MSTP];                   // this is a temp buffer to build MS/TP frame into
-    // uint16_t OutputBufferSize;
-    LLIST_HDR mstpOutputQueuePtr;
-
-    struct etimer silenceTimer ;
-    uint32_t    Baud_Rate;
-    
     /*Platform-specific port data */
     void *UserData;
 
     bool btaReceivedValidFrame;
-
-} mstp_port_struct ;
-
-
-typedef struct _DLCB DLCB;
-
-struct mstp_pdu_packet
-{
-    LLIST_LB    ll_lb;          // must be first
-
-    bool data_expecting_reply;
-    uint8_t destination_mac;
-    FRAME_TYPE specialFunction;     // For BMDA only
-    // uint16_t length;
-    // uint8_t buffer[MAX_MPDU_MSTP];
-    DLCB *dlcb;
 };
-
-// message on wire struct
-typedef struct 
-{
-    uint8_t source;
-    uint8_t dest;
-    uint8_t frameType;
-    uint32_t    firstByteTimestamp;
-    uint32_t    lastByteTimestamp;
-    bool valid;
-} MOW_TYPE;
 
 
 void MSTP_Init(
@@ -248,7 +208,6 @@ void MSTP_Init(
 
 void MSTP_Receive_Frame_FSM(
     volatile struct mstp_port_struct_t *mstp_port);
-
 
 bool MSTP_Master_Node_FSM(
     volatile struct mstp_port_struct_t *mstp_port);
@@ -299,15 +258,7 @@ uint16_t MSTP_Get_Reply(
     volatile struct mstp_port_struct_t *mstp_port,
 	unsigned timeout); /* milliseconds to wait for a packet */
 
-void SilenceTimerReset(volatile mstp_port_struct *mstp_port);
-uint32_t SilenceTimer(volatile mstp_port_struct *mstp_port);
-
-void dlmstp_tick(volatile struct mstp_port_struct_t *mstp_port); 
-
-void dllmstp_Send_Frame(
-    volatile struct mstp_port_struct_t *mstp_port,
-    uint8_t *data,                                    
-    uint16_t data_len);
-
+    void SendBTAmstpStats(
+        volatile struct mstp_port_struct_t * mstp_port);
 
 #endif

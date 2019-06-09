@@ -33,15 +33,12 @@
 #ifdef _MSC_VER
 #include <winsock2.h>
 #endif
-#include "osLayer.h"
 
 bool CommandLineParameterExists(const int argc, char **argv, const char *parameter);
 char *CommandLineParameter(const int argc, char **argv, const char *parameter);
 char bits_toupper(const char orig);
 size_t bits_strlen(const char *orig);
 void CreateTestConfiguration(void);
-void bits_memcpy(void *dest, const void *src, uint len);
-void bits_memset(void *dest, uint8_t val, uint len);
 
 //todo1
 //void ip_address_parse(
@@ -49,10 +46,9 @@ void bits_memset(void *dest, uint8_t val, uint len);
 //    int argc,
 //    char *argv[]) ;
 
-// Use string_ToIPEP
-//bool ipep_address_parse(
-//		struct sockaddr_in *ipep,
-//    const char *string);
+bool ipep_address_parse(
+		struct sockaddr_in *ipep,
+    const char *string);
 
 char *ipep_address_sprintf(
     char *string,

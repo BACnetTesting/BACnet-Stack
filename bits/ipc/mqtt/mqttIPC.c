@@ -52,11 +52,6 @@
  * 			comment out (#) WITH_UUID, WITH_SRV, WITH_DOCS
  * 		make
  * 		sudo make install
- 
- Good mosquitto references: 
- 
-    https://mosquitto.org/api/files/mosquitto-h.html
- 
  */
 
 #include <mosquitto.h>
@@ -195,7 +190,7 @@ static void my_message_callback(struct mosquitto *mosq, void *obj, const struct 
         if (isMatchCaseInsensitive(operation->valuestring, "Create Virtual Device"))
         {
             DEVICE_OBJECT_DATA *pdev = new DEVICE_OBJECT_DATA();
-            Device_Init_New(PF_VIRT, virtualDatalink, pdev, 112412, "devicename", "Virtual Device Description", NULL);
+            Device_Init_New(PF_VIRT, virtualDatalink, pdev, 112412, "GLPvirtualDevice1", "Virtual Device Description", NULL);
         }
         else if (isMatchCaseInsensitive(operation->valuestring, "Update Data"))
         {
@@ -286,12 +281,12 @@ int mqttIPCinit ( void )
 
     // to test receipt: mosquitto_sub -h test.mosquitto.org -t /bcp/0/rq/startConfig
     hello = "StartConfig" ;
-    mosquitto_publish( mosq, NULL, "#", strlen(hello)+1, hello, 0, 0 ) ;
+    mosquitto_publish( mosq, NULL, "bsp/0/bsx/rq", strlen(hello)+1, hello, 0, 0 ) ;
 #endif
 
     // subscribe
 
-    mosquitto_subscribe(mosq, NULL, "#", 0);
+    mosquitto_subscribe(mosq, NULL, "/bsp/0/#", 0);
 
     mosquitto_message_callback_set(mosq, my_message_callback);
 

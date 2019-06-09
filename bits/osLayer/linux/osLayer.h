@@ -8,7 +8,7 @@
 *   it under the terms of the GNU Lesser General Public License as published by
 *   the Free Software Foundation, either version 3 of the License, or
 *   (at your option) any later version.
-*
+
 *   This program is distributed in the hope that it will be useful,
 *   but WITHOUT ANY WARRANTY; without even the implied warranty of
 *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
@@ -30,17 +30,13 @@
 #pragma once
 
 #include <stdio.h>
+
 #include <pthread.h>
-
-#define osLayerLinux        // deprecated
-#define OS_LAYER_LINUX      
-
-#undef _MSC_VER
 
 typedef unsigned uint;
 
 typedef int bitsThreadVar;
-// void bitsCreateThread(void(*threadFunc)(void *arg), void *argListPtr);
+void bitsCreateThread(void(*threadFunc)(void *arg), void *argListPtr);
 
 #define bitsDetachThread(threadVar)
 #define bitsThreadFunction(threadFuncName,argList)  void (threadFuncName) ( void *argList )
@@ -58,20 +54,10 @@ typedef int bitsThreadVar;
 #define LockTransaction(mutexName) 			pthread_mutex_lock( &mutexName )
 #define UnlockTransaction(mutexName) 		pthread_mutex_unlock( &mutexName )
 
-
-#define SemaDefine(mutexName)               pthread_mutex_t mutexName = PTHREAD_MUTEX_INITIALIZER
-#define SemaWait(mutexName)                 pthread_mutex_lock( &mutexName )
-#define SemaFree(mutexName)                 pthread_mutex_unlock( &mutexName )
-
-
-#define bits_min(a,b) (((a) < (b)) ? (a) : (b))
-// #define max(a,b) (((a) > (b)) ? (a) : (b)) 
-
-
-//void *bitsCreateThread(
-//    bitsThreadVar threadId, 
-//    void *(*threadFunc)(void *arg),
-//	void *argListPtr); 
+void *bitsCreateThread(
+    bitsThreadVar threadId, 
+    void *(*threadFunc)(void *arg),
+	void *argListPtr);
 
 bool read_config(char *filepath) ;
 bool parse_cmd(int argc, char *argv[]) ;

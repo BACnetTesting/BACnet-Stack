@@ -70,8 +70,6 @@
 #include "client.h"
 #include "getevent.h"
 
-#if (INTRINSIC_REPORTING_B == 1)
-
 uint8_t Send_Get_Event_Information_Address(
     BACNET_ADDRESS *dest,
     uint16_t max_apdu,
@@ -145,5 +143,3 @@ uint8_t Send_Get_Event_Information(
 
     return invoke_id;
 }
-
-#endif

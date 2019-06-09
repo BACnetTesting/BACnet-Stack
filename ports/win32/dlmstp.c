@@ -55,7 +55,6 @@
 #include "bits.h"
 #include "ringbuf.h"
 #include "timer.h"
-#include "datalink.h"
 
 #define WIN32_LEAN_AND_MEAN
 #define STRICT 1
@@ -134,7 +133,7 @@ int dlmstp_send_pdu(
             Transmit_Packet.pdu[i] = pdu[i];
         }
         bacnet_address_copy(&Transmit_Packet.address, dest);
-        bytes_sent = pdu_len + MAX_MAC_HEADER_MSTP;
+        bytes_sent = pdu_len + MAX_HEADER;
         Transmit_Packet.ready = true;
     }
 
@@ -299,14 +298,14 @@ uint16_t MSTP_Get_Send(
     } else {
         destination = MSTP_BROADCAST_ADDRESS;
     }
-    if ((MAX_MAC_HEADER_MSTP + Transmit_Packet.pdu_len) > MAX_MPDU) {
+    if ((MAX_HEADER + Transmit_Packet.pdu_len) > MAX_MPDU) {
         return 0;
     }
     /* convert the PDU into the MSTP Frame */
-//     pdu_len = MSTP_Create_Frame(&mstp_port->OutputBuffer[0],    /* <-- loading this */
-// todo        mstp_port->OutputBufferSize, Transmit_Packet.frame_type, destination,
-//         mstp_port->This_Station, &Transmit_Packet.pdu[0],
-//         Transmit_Packet.pdu_len);
+    pdu_len = MSTP_Create_Frame(&mstp_port->OutputBuffer[0],    /* <-- loading this */
+        mstp_port->OutputBufferSize, Transmit_Packet.frame_type, destination,
+        mstp_port->This_Station, &Transmit_Packet.pdu[0],
+        Transmit_Packet.pdu_len);
     Transmit_Packet.ready = false;
 
     return pdu_len;
@@ -449,7 +448,7 @@ uint16_t MSTP_Get_Reply(
     } else {
         return 0;
     }
-    if ((MAX_MAC_HEADER_MSTP + Transmit_Packet.pdu_len) > MAX_MPDU) {
+    if ((MAX_HEADER + Transmit_Packet.pdu_len) > MAX_MPDU) {
         return 0;
     }
     /* is this the reply to the DER? */
@@ -461,10 +460,10 @@ uint16_t MSTP_Get_Reply(
     if (!matched)
         return 0;
     /* convert the PDU into the MSTP Frame */
-    //pdu_len = MSTP_Create_Frame(&mstp_port->OutputBuffer[0],    /* <-- loading this */
-    //    mstp_port->OutputBufferSize, Transmit_Packet.frame_type, destination,
-    //    mstp_port->This_Station, &Transmit_Packet.pdu[0],
-    //    Transmit_Packet.pdu_len);
+    pdu_len = MSTP_Create_Frame(&mstp_port->OutputBuffer[0],    /* <-- loading this */
+        mstp_port->OutputBufferSize, Transmit_Packet.frame_type, destination,
+        mstp_port->This_Station, &Transmit_Packet.pdu[0],
+        Transmit_Packet.pdu_len);
     Transmit_Packet.ready = false;
 
     return pdu_len;
@@ -484,6 +483,7 @@ void dlmstp_set_mac_address(
         if (mac_address > MSTP_Port.Nmax_master)
             dlmstp_set_max_master(mac_address);
     }
+
 }
 
 uint8_t dlmstp_mac_address(
@@ -618,8 +618,8 @@ bool dlmstp_init(
     RS485_Initialize();
     MSTP_Port.InputBuffer = &RxBuffer[0];
     MSTP_Port.InputBufferSize = sizeof(RxBuffer);
-    // MSTP_Port.OutputBuffer = &TxBuffer[0];
-    // MSTP_Port.OutputBufferSize = sizeof(TxBuffer);
+    MSTP_Port.OutputBuffer = &TxBuffer[0];
+    MSTP_Port.OutputBufferSize = sizeof(TxBuffer);
     //MSTP_Port.SilenceTimer = Timer_Silence;
     //MSTP_Port.SilenceTimerReset = Timer_Silence_Reset;
     MSTP_Init(&MSTP_Port);

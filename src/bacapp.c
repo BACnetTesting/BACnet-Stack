@@ -1594,7 +1594,6 @@ bool bacapp_parse_application_data(
             }
             break;
         case BACNET_APPLICATION_TAG_OBJECT_ID:
-            int tobject_type ;
             count = sscanf(argv, "%4d:%7d", &tobject_type, &instance);
             if (count == 2) {
                 value->type.Object_Id.type = (BACNET_OBJECT_TYPE)tobject_type;

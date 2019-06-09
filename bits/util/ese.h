@@ -34,13 +34,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define BITS_USE_FLASHERR   0
-
-#define MX_ESE 10
+#define MX_ESE  10      
 
 typedef enum {
     // remember to skip all decimal values with embedded '0's
-    ese001_01_startup=1,
+    ese001_01_startup = 1,
     ese002_02_fwd_pdu_length_too_short_spare,
     ese003_03_incoming_IP_congestion,
     ese004_04_failed_to_malloc,
@@ -68,8 +66,6 @@ typedef enum {
     ese028_1C_Attempt_to_send_BTA_before_IP_ready,
     ese029_1D_EMM_trace_table_miss,
     ese031_1F_EMM_spare = 31,
-    ese032_BTA_output_length_exceeded,
-    ese033_BTA_output_queue_full,
 } ESE;
 
 // extern bool sendTokenPassingFrames;
@@ -83,21 +79,9 @@ void ese_enqueue(ESE value);
 void ese_enqueue_once(ESE value);
 bool ese_available(void);
 uint8_t ese_dequeue(void);
-
-
-#if ( BITS_USE_FLASHERR == 1 )
-
 // todo - move to own header, make independent? (or merge into syserr?)
 void FlashErr1msTick(void);
 void FlashErr10msTick(void);
 void FlashErr_enqueue(uint8_t value);
 void FlashErr_enqueue_once(uint8_t value);
 void FlashErr_clear(void);
-
-#else
-
-// disable all FlashErr operations
-
-#define FlashErr_enqueue(a)      
-
-#endif

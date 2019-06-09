@@ -173,18 +173,15 @@ int bacapp_decode_context_access_rule(
 
         if (section_length == -1) {
             len = -1;
-        }
-        else {
+        } else {
             len += section_length;
             if (decode_is_closing_tag_number(&apdu[len], tag_number)) {
                 len++;
-            }
-            else {
+            } else {
                 len = -1;
             }
         }
-    }
-    else {
+    } else {
         len = -1;
     }
     return len;

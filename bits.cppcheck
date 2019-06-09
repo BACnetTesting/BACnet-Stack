@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="1">
-    <exclude>
-        <path name="E:/Dev/BITS Reference Stack/BITS Reference Stack - Feature Creep/bits/persist/sqlite/"/>
-    </exclude>
+    <paths>
+        <dir name="C:/dev/Kargs BACnet Stack/src"/>
+        <dir name="C:/dev/Kargs BACnet Stack/ports/win32"/>
+        <dir name="C:/dev/Kargs BACnet Stack/demo/server"/>
+        <dir name="C:/dev/Kargs BACnet Stack/demo/handler"/>
+        <dir name="C:/dev/Kargs BACnet Stack/demo/object"/>
+    </paths>
+    <libraries>
+        <library>windows</library>
+    </libraries>
+    <suppressions>
+        <suppression>selfAssignment</suppression>
+        <suppression>unusedLabel</suppression>
+        <suppression>variableScope</suppression>
+    </suppressions>
 </project>
