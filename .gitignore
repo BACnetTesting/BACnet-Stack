@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 *.idb
 *.tlog
 *.db
@@ -44,4 +45,16 @@ libbacnet.a
 /*.vpw
 /*.vpwhist
 /*.vtg
+<<<<<<< HEAD
 x64
+=======
+*.dsp
+=======
+**/x64
+.settings
+
+*.user
+
+
+>>>>>>> origin/SourceForge_shadow
+>>>>>>> origin/CompileMSVC
