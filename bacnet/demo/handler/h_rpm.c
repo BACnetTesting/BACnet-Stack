@@ -38,28 +38,18 @@
 *
 ****************************************************************************************/
 
-//#include <stddef.h>
 #include <stdint.h>
-//#include <stdio.h>
-//#include <string.h>
-//#include <errno.h>
-//#include "config.h"
 #include "memcopy.h"
-//#include "bacdef.h"
-//#include "bacdcode.h"
 #include "apdu.h"
-//#include "npdu.h"
 #include "abort.h"
 #include "reject.h"
 #include "bacerror.h"
 #include "rpm.h"
-#include "handlers.h"
-/* device object has custom handler for all objects */
 #include "device.h"
-// #include "proplist.h"
 #include "datalink.h"
 #include "txbuf.h"
 #include "bitsDebug.h"
+#include "datalink.h"
 
 /** @file h_rpm.c  Handles Read Property Multiple requests. */
 
@@ -126,7 +116,7 @@ static unsigned RPM_Object_Property_Count(
 
 /** Encode the RPM property returning the length of the encoding,
    or 0 if there is no room to fit the encoding.  */
-static int RPM_Encode_Property(
+int RPM_Encode_Property(
     uint8_t * apdu,
     uint16_t offset,
     uint16_t max_apdu,
@@ -423,7 +413,9 @@ void handler_read_property_multiple(
         /* too big for the sender - send an abort */
         rpmdata.error_code = ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
         error = BACNET_STATUS_ABORT;
+
         dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "RPM: Message too large.  Sending Abort!\n");
+
         goto RPM_FAILURE;
     }
 

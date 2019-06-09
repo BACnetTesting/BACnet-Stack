@@ -109,6 +109,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "fifo.h"
+#include "bitsDebug.h"
 
 /**
 * Returns the number of bytes in the FIFO
@@ -126,7 +127,8 @@ unsigned FIFO_Count(
         head = b->head;
         tail = b->tail;
         return head - tail;
-    } else {
+    }
+    else {
         return 0;
     }
 }
@@ -181,17 +183,17 @@ bool FIFO_Empty(
 *
 * @return byte of data, or zero if nothing in the list
 */
-uint8_t FIFO_Peek(
+volatile TS_CHAR *FIFO_Peek(
     FIFO_BUFFER const *b)
 {
     unsigned index;
 
     if (b) {
         index = b->tail % b->buffer_len;
-        return (b->buffer[index]);
+        return (&b->buffer[index]);
     }
 
-    return 0;
+    return NULL;
 }
 
 /**
@@ -204,19 +206,21 @@ uint8_t FIFO_Peek(
 *
 * @return the data
 */
-uint8_t FIFO_Get(
-    FIFO_BUFFER * b)
-{
-    uint8_t data_byte = 0;
-    unsigned index;
 
-    if (!FIFO_Empty(b)) {
-        index = b->tail % b->buffer_len;
-        data_byte = b->buffer[index];
-        b->tail++;
-    }
-    return data_byte;
-}
+// todo 2
+//uint8_t FIFO_Get(
+//    FIFO_BUFFER * b)
+//{
+//    uint8_t data_byte = 0;
+//    unsigned index;
+//
+//    if (!FIFO_Empty(b)) {
+//        index = b->tail % b->buffer_len;
+//        data_byte = b->buffer[index];
+//        b->tail++;
+//    }
+//    return data_byte;
+//}
 
 /**
 * Pulls one or more bytes from the front of the FIFO, and removes them
@@ -229,37 +233,37 @@ uint8_t FIFO_Get(
 *
 * @return      the number of bytes actually pulled from the FIFO
 */
-unsigned FIFO_Pull(
-    FIFO_BUFFER * b,
-    uint8_t * buffer,
-    unsigned length)
-{
-    unsigned count;
-    uint8_t data_byte;
-    unsigned index;
-
-    count = FIFO_Count(b);
-    if (count > length) {
-        /* adjust to limit the number of bytes pulled */
-        count = length;
-    }
-    if (length > count) {
-        /* adjust the return value */
-        length = count;
-    }
-    while (count) {
-        index = b->tail % b->buffer_len;
-        data_byte = b->buffer[index];
-        b->tail++;
-        if (buffer) {
-            *buffer = data_byte;
-            buffer++;
-        }
-        count--;
-    }
-
-    return length;
-}
+//unsigned FIFO_Pull(
+//    FIFO_BUFFER * b,
+//    TS_CHAR *buffer,
+//    unsigned length)
+//{
+//    unsigned count;
+//    TS_CHAR *data_byte;
+//    unsigned index;
+//
+//    count = FIFO_Count(b);
+//    if (count > length) {
+//        /* adjust to limit the number of bytes pulled */
+//        count = length;
+//    }
+//    if (length > count) {
+//        /* adjust the return value */
+//        length = count;
+//    }
+//    while (count) {
+//        index = b->tail % b->buffer_len;
+//        data_byte = b->buffer[index];
+//        b->tail++;
+//        if (buffer) {
+//            *buffer = data_byte;
+//            buffer++;
+//        }
+//        count--;
+//    }
+//
+//    return length;
+//}
 
 /**
 * Adds a byte of data to the FIFO
@@ -271,7 +275,7 @@ unsigned FIFO_Pull(
 */
 bool FIFO_Put(
     FIFO_BUFFER * b,
-    uint8_t data_byte)
+    TS_CHAR *data_byte)
 {
     bool status = false;        /* return value */
     unsigned index;
@@ -280,7 +284,10 @@ bool FIFO_Put(
         /* limit the buffer to prevent overwriting */
         if (!FIFO_Full(b)) {
             index = b->head % b->buffer_len;
-            b->buffer[index] = data_byte;
+            //            b->buffer[index].inbyte = data_byte->inbyte;
+            //            b->buffer[index].deltaTime = data_byte->deltaTime;
+            panic();
+//            b->buffer[index] = *data_byte;
             b->head++;
             status = true;
         }
@@ -298,28 +305,30 @@ bool FIFO_Put(
 *
 * @return true if space available and added, false if not added
 */
-bool FIFO_Add(
-    FIFO_BUFFER * b,
-    uint8_t * buffer,
-    unsigned count)
-{
-    bool status = false;        /* return value */
-    unsigned index;
-
-    /* limit the buffer to prevent overwriting */
-    if (FIFO_Available(b, count) && buffer) {
-        while (count) {
-            index = b->head % b->buffer_len;
-            b->buffer[index] = *buffer;
-            b->head++;
-            buffer++;
-            count--;
-        }
-        status = true;
-    }
-
-    return status;
-}
+//bool FIFO_Add(
+//    FIFO_BUFFER * b,
+//    TS_CHAR *buffer,
+//    unsigned count)
+//{
+//    bool status = false; /* return value */
+//    unsigned index;
+//
+//    /* limit the buffer to prevent overwriting */
+//    if (FIFO_Available(b, count) && buffer) {
+//        while (count) {
+//            index = b->head % b->buffer_len;
+//            //            b->buffer[index].inbyte = buffer->inbyte;
+//            //            b->buffer[index].deltaTime = buffer->deltaTime;
+//                        b->buffer[index] = buffer
+//            b->head++;
+//            buffer++;
+//            count--;
+//        }
+//        status = true;
+//    }
+//
+//    return status;
+//}
 
 /**
 * Flushes any data in the FIFO buffer
@@ -350,7 +359,7 @@ void FIFO_Flush(
 */
 void FIFO_Init(
     FIFO_BUFFER * b,
-    volatile uint8_t * buffer,
+    volatile TS_CHAR * buffer,
     unsigned buffer_len)
 {
     if (b && buffer && buffer_len) {

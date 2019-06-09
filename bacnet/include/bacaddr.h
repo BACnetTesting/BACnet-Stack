@@ -40,8 +40,6 @@
 #ifndef BACADDR_H
 #define BACADDR_H
 
-#include <stddef.h>
-#include <stdint.h>
 #include <stdbool.h>
 #include "bacdef.h"
 
@@ -49,11 +47,12 @@ void bacnet_mac_copy(
     BACNET_MAC_ADDRESS *target,
     const BACNET_MAC_ADDRESS *src);
 
-    void bacnet_address_copy(
-        BACNET_ADDRESS * dest,
-        BACNET_ADDRESS * src);
-    bool bacnet_address_same(
-        BACNET_ADDRESS * dest,
-        BACNET_ADDRESS * src);
+void bacnet_address_copy(
+    BACNET_ADDRESS * dest,
+    BACNET_ADDRESS * src);
+
+bool bacnet_address_same(
+    BACNET_ADDRESS * dest,
+    BACNET_ADDRESS * src);
 
 #endif

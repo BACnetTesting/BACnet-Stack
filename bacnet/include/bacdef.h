@@ -40,10 +40,12 @@
 #ifndef BACDEF_H
 #define BACDEF_H
 
+#include "configProj.h"
+
 #include <stddef.h>
 #include <stdint.h>
 #include "bacenum.h"
-#include "config.h"
+#include "bitsDebug.h"
 
 #if defined(_MSC_VER)
 /* Silence the warnings about unsafe versions of library functions */
@@ -55,9 +57,10 @@
 #define BACNET_PROTOCOL_VERSION 1
 /* Although this stack can implement a later revision,
  * sometimes another revision is desired */
-#ifndef BACNET_PROTOCOL_REVISION
-#define BACNET_PROTOCOL_REVISION 14
-#endif
+// moved to config.h to avoid circular .h file inclusion with bacdef.h bacenum.h
+//#ifndef BACNET_PROTOCOL_REVISION
+//#define BACNET_PROTOCOL_REVISION 14
+//#endif
 
 /* there are a few dependencies on the BACnet Protocol-Revision */
 #if (BACNET_PROTOCOL_REVISION == 0)
@@ -144,7 +147,8 @@
 #define BACNET_MIN_PRIORITY 1
 #define BACNET_MAX_PRIORITY 16
 
-#define BACNET_BROADCAST_NETWORK (0xFFFF)
+#define BACNET_BROADCAST_NETWORK (0xFFFFu)
+
 /* Any size MAC address should be allowed which is less than or
    equal to 7 bytes.  The IPv6 addresses are planned to be handled
    outside this area. */
@@ -156,6 +160,7 @@ struct BACnet_Device_Address {
     /* note: MAC for IP addresses uses 4 bytes for addr, 2 bytes for port */
     /* use de/encode_unsigned32/16 for re/storing the IP address */
     uint8_t mac[MAX_MAC_LEN];
+  
     /* DNET,DLEN,DADR or SNET,SLEN,SADR */
     /* the following are used if the device is behind a router */
     /* net = 0 indicates local */
@@ -170,6 +175,9 @@ typedef struct BACnet_Device_Address BACNET_ADDRESS;
 struct BACnet_MAC_Address {
     uint8_t len;        /* length of MAC address */
     uint8_t adr[MAX_MAC_LEN];
+#if ( BAC_DEBUG == 1 )
+    uint8_t signature;
+#endif
 };
 typedef struct BACnet_MAC_Address BACNET_MAC_ADDRESS;
 
@@ -181,8 +189,13 @@ typedef struct BACnet_Object_Id {
     uint32_t instance;
 } BACNET_OBJECT_ID;
 
-#define MAX_NPDU (1+1+2+1+MAX_MAC_LEN+2+1+MAX_MAC_LEN+1+1+2)
-#define MAX_PDU (MAX_APDU + MAX_NPDU)
+// See: http://www.bacnetwiki.com/wiki/index.php?title=NPCI
+// Note that although LON src can be 7, this will never be in combination of a dest of 6, always 2, so 7+2 < 6+6 for MAC length
+
+#define MAX_NPCI (1+1+2+1+6+2+1+6+1)        // 21
+
+
+// #define MAX_PDU (MAX_APDU + MAX_NPDU)
 
 #define BACNET_ID_VALUE(bacnet_object_instance, bacnet_object_type) ((((bacnet_object_type) & BACNET_MAX_OBJECT) << BACNET_INSTANCE_BITS) | ((bacnet_object_instance) & BACNET_MAX_INSTANCE))
 #define BACNET_INSTANCE(bacnet_object_id_num) ((bacnet_object_id_num)&BACNET_MAX_INSTANCE)

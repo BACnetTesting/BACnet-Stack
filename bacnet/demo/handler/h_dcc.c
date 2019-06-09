@@ -37,14 +37,7 @@
 *
 ****************************************************************************************/
 
-//#include <stddef.h>
-//#include <stdint.h>
-//#include <stdio.h>
-//#include <string.h>
-//#include <errno.h>
-//#include "config.h"
 #include "txbuf.h"
-//#include "bacdef.h"
 #include "bacdcode.h"
 #include "bacerror.h"
 #include "apdu.h"
@@ -52,14 +45,12 @@
 #include "abort.h"
 #include "reject.h"
 #include "dcc.h"
-// #include "handlers.h"
-// #include "device.h"
 #include "bitsDebug.h"
 #include "datalink.h"
 
 /** @file h_dcc.c  Handles Device Communication Control request. */
 
-static char My_Password[32] = "BITS01";
+static char My_Password[32] = "BACnet Testing 01";
 
 /** Sets (non-volatile hold) the password to be used for DCC requests.
  * @param new_password [in] The new DCC password, of up to 31 characters.
@@ -131,13 +122,13 @@ void handler_device_communication_control(
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len =
         npdu_encode_pdu(&Handler_Transmit_Buffer[0], src, &my_address,
-        &npci_data);
+            &npci_data);
     dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "DeviceCommunicationControl!\n");
     if (service_data->segmented_message) {
         len =
             abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-            service_data->invoke_id, ABORT_REASON_SEGMENTATION_NOT_SUPPORTED,
-            true);
+                service_data->invoke_id, ABORT_REASON_SEGMENTATION_NOT_SUPPORTED,
+                true);
         dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR,
             "DeviceCommunicationControl: "
             "Sending Abort - segmented message.\n");
@@ -146,17 +137,17 @@ void handler_device_communication_control(
     /* decode the service request only */
     len =
         dcc_decode_service_request(service_request, service_len, &timeDuration,
-        &state, &password);
+            &state, &password);
     if (len > 0)
         dbTraffic(DBD_ALL, DB_ERROR,
             "DeviceCommunicationControl: " "timeout=%u state=%u password=%s\n",
-            (unsigned) timeDuration, (unsigned) state,
+            (unsigned)timeDuration, (unsigned)state,
             characterstring_value(&password));
     /* bad decoding or something we didn't understand - send an abort */
     if (len < 0) {
         len =
             abort_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-            service_data->invoke_id, ABORT_REASON_OTHER, true);
+                service_data->invoke_id, ABORT_REASON_OTHER, true);
         dbTraffic(DBD_ALL, DB_ERROR,
             "DeviceCommunicationControl: "
             "Sending Abort - could not decode.\n");
@@ -165,7 +156,7 @@ void handler_device_communication_control(
     if (state >= MAX_BACNET_COMMUNICATION_ENABLE_DISABLE) {
         len =
             reject_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-            service_data->invoke_id, REJECT_REASON_UNDEFINED_ENUMERATION);
+                service_data->invoke_id, REJECT_REASON_UNDEFINED_ENUMERATION);
         dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR,
             "DeviceCommunicationControl: "
             "Sending Reject - undefined enumeration\n");
@@ -183,23 +174,24 @@ void handler_device_communication_control(
         if (characterstring_ansi_same(&password, My_Password)) {
             len =
                 encode_simple_ack(&Handler_Transmit_Buffer[pdu_len],
-                service_data->invoke_id,
-                SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL);
+                    service_data->invoke_id,
+                    SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL);
             dbTraffic(DBD_ALL, DB_INFO,
                 "DeviceCommunicationControl: " "Sending Simple Ack!\n");
             dcc_set_status_duration(state, timeDuration);
         } else {
             len =
                 bacerror_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-                service_data->invoke_id,
-                SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL,
-                ERROR_CLASS_SECURITY, ERROR_CODE_PASSWORD_FAILURE);
+                    service_data->invoke_id,
+                    SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL,
+                    ERROR_CLASS_SECURITY, ERROR_CODE_PASSWORD_FAILURE);
             dbTraffic(DBD_ALL, DB_ERROR,
                 "DeviceCommunicationControl: "
                 "Sending Error - password failure.\n");
         }
     }
-  DCC_ABORT:
+
+DCC_ABORT:
     pdu_len += len;
     len =
         datalink_send_pdu(src, &npci_data, &Handler_Transmit_Buffer[0],

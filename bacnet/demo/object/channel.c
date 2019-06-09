@@ -819,7 +819,7 @@ int Channel_Value_Encode(uint8_t *apdu, int apdu_max,
  */
 int Channel_Coerce_Data_Encode(
     uint8_t * apdu,
-    unsigned max_apdu,
+    uint16_t max_apdu,
     BACNET_APPLICATION_DATA_VALUE * value,
     BACNET_APPLICATION_TAG tag)
 {

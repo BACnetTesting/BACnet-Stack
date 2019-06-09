@@ -1,6 +1,6 @@
-/*####COPYRIGHTBEGIN####
- -------------------------------------------
- Copyright (C) 2005 Steve Karg
+/****************************************************************************************
+
+ Copyright (C) 2006 Steve Karg
 
  This program is free software; you can redistribute it and/or
  modify it under the terms of the GNU General Public License
@@ -29,36 +29,32 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
- *****************************************************************************************
- *
- *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
- *
- *   July 1, 2017    BITS    Modifications to this file have been made in compliance
- *                           with original licensing.
- *
- *   This file contains changes made by BACnet Interoperability Testing
- *   Services, Inc. These changes are subject to the permissions,
- *   warranty terms and limitations above.
- *   For more information: info@bac-test.com
- *   For access to source code:  info@bac-test.com
- *          or      www.github.com/bacnettesting/bacnet-stack
- *
- ****************************************************************************************/
-
-#include <stdint.h>     /* for standard integer types uint8_t etc. */
-#include <stdbool.h>    /* for the standard bool type. */
-
-#include "bacdcode.h"
 #include "bacint.h"
-#include "bip.h"
 #include "bvlc.h"
 #include "net.h"        /* custom per port */
-#if PRINT_ENABLED
-#include <stdio.h>      /* for standard i/o, like printing */
-#endif
 
-/** @file bip.c  Configuration and Operations for BACnet/IP */
+//#if PRINT_ENABLED
+//#include <stdio.h>      /* for standard i/o, like printing */
+//#endif
+#include "bacdef.h"
+#include "btaDebug.h"
 
 static int BIP_Socket = -1;
 /* port to use - stored in network byte order */
@@ -144,6 +140,7 @@ static int bip_decode_bip_address(
     return 6;
 }
 
+
 /** Function to send a packet out the BACnet/IP socket (Annex J).
  * @ingroup DLBIP
  *
@@ -162,12 +159,12 @@ int bip_send_pdu(
     )
 {
     struct sockaddr_in bip_dest;
-    uint8_t mtu[MAX_MPDU] = { 0 };
+    uint8_t mtu[MAX_MPDU_IP] = { 0 };
     int mtu_len = 0;
-    int bytes_sent = 0;
-    /* addr and port in host format */
+    int bytes_sent ;
+    /* addr and port in network format */
     struct in_addr address;
-    uint16_t port = 0;
+    uint16_t port;
 
     (void) npci_data;
     /* assumes that the driver has already been initialized */
@@ -198,15 +195,38 @@ int bip_send_pdu(
         /* invalid address */
         return -1;
     }
+
     bip_dest.sin_addr.s_addr = address.s_addr;
     bip_dest.sin_port = port;
-    memset(&(bip_dest.sin_zero), '\0', 8);
+    memset(&(bip_dest.sin_zero), '\0', 8);      // todonext suspicious &
     mtu_len = 2;
     mtu_len +=
         encode_unsigned16(&mtu[mtu_len],
         (uint16_t) (pdu_len + 4 /*inclusive */ ));
     memcpy(&mtu[mtu_len], pdu, pdu_len);
     mtu_len += pdu_len;
+
+#if 1
+    // BTA diagnostic stuff only
+    BACNET_MAC_ADDRESS dummySrcMAC = { 0 };
+    BACNET_MAC_ADDRESS dummyDstMAC = { 0 };
+
+    memcpy(dummyDstMAC.adr, &bip_dest.sin_addr, 4);
+    memcpy(&dummyDstMAC.adr[4], &bip_dest.sin_port, 2);
+    dummyDstMAC.len = 6;
+
+    // and in this case, the dst address is ourselves
+
+    uint32_t ourAddr = bip_get_addr();
+    uint16_t ourPort = bip_get_port();
+
+    memcpy(dummySrcMAC.adr, &ourAddr, 4);
+    memcpy(&dummySrcMAC.adr[4], &ourPort, 2);
+    dummySrcMAC.len = 6;
+
+    // Set portID (first parameter to dummy 'port 1'
+    SendBTApacketTx(1, &dummySrcMAC, &dummyDstMAC, mtu, mtu_len );
+#endif
 
     /* Send the packet */
     bytes_sent =
@@ -215,6 +235,7 @@ int bip_send_pdu(
 
     return bytes_sent;
 }
+
 
 /** Implementation of the receive() function for BACnet/IP; receives one
  * packet, verifies its BVLC header, and removes the BVLC header from
@@ -229,19 +250,19 @@ int bip_send_pdu(
  */
 uint16_t bip_receive(
     BACNET_ADDRESS * src,       /* source address */
-    uint8_t * pdu,              /* PDU data */
-    uint16_t max_pdu,           /* amount of space available in the PDU  */
+    uint8_t * npdu,             /* returns the NPDU */
+    uint16_t max_npdu,          /* amount of space available in the NPDU  */
     unsigned timeout)
 {
     int received_bytes = 0;
-    uint16_t pdu_len = 0;       /* return value */
+    uint16_t npdu_len = 0;      /* return value */
     fd_set read_fds;
     int max ;
     struct timeval select_timeout;
     struct sockaddr_in sin = { 0 };
     socklen_t sin_len = sizeof(sin);
     uint16_t i = 0;
-    int function ;
+    BACNET_BVLC_FUNCTION function ;
 
     /* Make sure the socket is open */
     if (BIP_Socket < 0)
@@ -263,41 +284,71 @@ uint16_t bip_receive(
     FD_SET(BIP_Socket, &read_fds);
     max = BIP_Socket;
     /* see if there is a packet for us */
-    if (select(max + 1, &read_fds, NULL, NULL, &select_timeout) > 0)
+    if (select(max + 1, &read_fds, NULL, NULL, &select_timeout) > 0) {
         received_bytes =
-            recvfrom(BIP_Socket, (char *) &pdu[0], max_pdu, 0,
+            recvfrom(BIP_Socket, (char *) &npdu[0], max_npdu, 0,
             (struct sockaddr *) &sin, &sin_len);
-    else
+    } 
+    else {
         return 0;
-
+    }
     /* See if there is a problem */
     if (received_bytes < 0) {
         return 0;
     }
 
     /* no problem, just no bytes */
-    if (received_bytes == 0)
+    if (received_bytes == 0) {
         return 0;
-
+    }
     /* the signature of a BACnet/IP packet */
-    if (pdu[0] != BVLL_TYPE_BACNET_IP)
+    if (npdu[0] != BVLL_TYPE_BACNET_IP) {
         return 0;
+        }
 
-    if (bvlc_for_non_bbmd(&sin, pdu, received_bytes) > 0) {
+    // ignore packets from ourself (broadcasts)
+    if (sin.sin_addr.s_addr == bip_get_addr() && sin.sin_port == bip_get_port())
+    {
+        return 0;
+    }
+
+    if (bvlc_for_non_bbmd(&sin, npdu, received_bytes) > 0) {
         /* Handled, usually with a NACK. */
 #if PRINT_ENABLED
         fprintf(stderr, "BIP: BVLC discarded!\n");
 #endif
         return 0;
-    }
+        }
+
+#if 1
+    // For BTA
+    BACNET_MAC_ADDRESS dummySrcMAC = { 0 };
+    BACNET_MAC_ADDRESS dummyDstMAC = { 0 };
+
+    memcpy(dummySrcMAC.adr, &sin.sin_addr, 4);
+    memcpy(&dummySrcMAC.adr[4], &sin.sin_port, 2);
+    dummySrcMAC.len = 6;
+
+    // and in this case, the dst address is ourselves
+
+    uint32_t ourAddr = bip_get_addr();
+    uint16_t ourPort = bip_get_port();
+
+    memcpy(dummyDstMAC.adr, &ourAddr, 4);
+    memcpy(&dummyDstMAC.adr[4], &ourPort, 2);
+    dummyDstMAC.len = 6;
+
+    // Set portID (first parameter to dummy 'port 1'
+    SendBTApacketRx(1, &dummySrcMAC, &dummyDstMAC, npdu, received_bytes);
+#endif
 
     function = bvlc_get_function_code();        /* aka, pdu[1] */
     if ((function == BVLC_ORIGINAL_UNICAST_NPDU) ||
         (function == BVLC_ORIGINAL_BROADCAST_NPDU)) {
-        /* ignore messages from me */
+        /* ignore messages from me */ // todo2 - this is redundant, see above
         if ((sin.sin_addr.s_addr == BIP_Address.s_addr) &&
             (sin.sin_port == BIP_Port)) {
-            pdu_len = 0;
+            npdu_len = 0;
 #if 0
             fprintf(stderr, "BIP: src is me. Discarded!\n");
 #endif
@@ -309,65 +360,74 @@ uint16_t bip_receive(
             /* FIXME: check destination address */
             /* see if it is broadcast or for us */
             /* decode the length of the PDU - length is inclusive of BVLC */
-            (void) decode_unsigned16(&pdu[2], &pdu_len);
+            (void) decode_unsigned16(&npdu[2], &npdu_len);
             /* subtract off the BVLC header */
-            pdu_len -= 4;
-            if (pdu_len < max_pdu) {
+            npdu_len -= 4;
+            if (npdu_len < max_npdu) {
 #if 0
                 fprintf(stderr, "BIP: NPDU[%hu]:", pdu_len);
 #endif
                 /* shift the buffer to return a valid PDU */
-                for (i = 0; i < pdu_len; i++) {
-                    pdu[i] = pdu[4 + i];
-#if 0
-                    fprintf(stderr, "%02X ", pdu[i]);
-#endif
+                for (i = 0; i < npdu_len; i++) {
+                    npdu[i] = npdu[4 + i];
                 }
-#if 0
-                fprintf(stderr, "\n");
-#endif
             }
             /* ignore packets that are too large */
             /* clients should check my max-apdu first */
             else {
-                pdu_len = 0;
+                    npdu_len = 0;
 #if PRINT_ENABLED
                 fprintf(stderr, "BIP: PDU too large. Discarded!.\n");
 #endif
             }
         }
     } else if (function == BVLC_FORWARDED_NPDU) {
-        memcpy(&sin.sin_addr.s_addr, &pdu[4], 4);
-        memcpy(&sin.sin_port, &pdu[8], 2);
+        
+        // extract originating endpoint
+        memcpy(&sin.sin_addr.s_addr, &npdu[4], 4);
+        memcpy(&sin.sin_port, &npdu[8], 2);
+        
+        // ignore messages from self
         if ((sin.sin_addr.s_addr == BIP_Address.s_addr) &&
             (sin.sin_port == BIP_Port)) {
             /* ignore messages from me */
-            pdu_len = 0;
-        } else {
-            /* data in src->mac[] is in network format */
-            src->mac_len = 6;
-            memcpy(&src->mac[0], &sin.sin_addr.s_addr, 4);
-            memcpy(&src->mac[4], &sin.sin_port, 2);
-            /* FIXME: check destination address */
-            /* see if it is broadcast or for us */
-            /* decode the length of the PDU - length is inclusive of BVLC */
-            (void) decode_unsigned16(&pdu[2], &pdu_len);
-            /* subtract off the BVLC header */
-            pdu_len -= 10;
-            if (pdu_len < max_pdu) {
-                /* shift the buffer to return a valid PDU */
-                for (i = 0; i < pdu_len; i++) {
-                    pdu[i] = pdu[4 + 6 + i];
-                }
-            } else {
-                /* ignore packets that are too large */
-                /* clients should check my max-apdu first */
-                pdu_len = 0;
+            npdu_len = 0;
+        } 
+        
+        // valid originating endpoint?
+        if(sin.sin_addr.s_addr == 0 || sin.sin_addr.s_addr == 0xffffffff)
+        {
+            dbTraffic(DBD_OOB_TRAFFIC,
+                DB_ERROR,
+                "BIP: Invalid originating address %u", sin.sin_addr.s_addr );
+            return 0 ;
+        }
+
+        /* data in src->mac[] is in network format */
+        src->mac_len = 6;
+        memcpy(&src->mac[0], &sin.sin_addr.s_addr, 4);
+        memcpy(&src->mac[4], &sin.sin_port, 2);
+        /* FIXME: check destination address */
+        /* see if it is broadcast or for us */
+        /* decode the length of the PDU - length is inclusive of BVLC */
+        (void) decode_unsigned16(&npdu[2], &npdu_len);
+        /* subtract off the BVLC header */
+        npdu_len -= 10;
+        if (npdu_len < max_npdu) {
+            /* shift the buffer to return a valid PDU */
+            for (i = 0; i < npdu_len; i++) {
+                npdu[i] = npdu[4 + 6 + i];
             }
         }
+        else {
+            /* ignore packets that are too large */
+            /* clients should check my max-apdu first */
+            npdu_len = 0;
+        }
+        
     }
 
-    return pdu_len;
+    return npdu_len;
 }
 
 
@@ -387,7 +447,6 @@ void bip_get_my_address(
             my_address->adr[i] = 0;
         }
     }
-
 }
 
 

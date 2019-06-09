@@ -40,11 +40,10 @@
 #ifndef TXBUF_H
 #define TXBUF_H
 
-#include <stddef.h>
 #include <stdint.h>
-#include "config.h"
 #include "datalink.h"
+#include "bacdef.h"
 
-extern uint8_t Handler_Transmit_Buffer[MAX_PDU];
+extern uint8_t Handler_Transmit_Buffer[MAX_NPDU];
 
 #endif

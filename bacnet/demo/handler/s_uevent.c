@@ -42,12 +42,15 @@
 //#include <errno.h>
 #include "event.h"
 #include "datalink.h"
-#include "client.h"
-#include "device.h"
+//#include "client.h"
+//#include "device.h"
+#include "config.h"
+
+#if (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1)
 
 /** @file s_uevent.c  Send an Unconfirmed Event Notification. */
 
-/** Sends an Unconfirmed Alarm/Event Notification.
+/** Sends an Unconfirmed Alarm/Alert/Event Notification.
  * @ingroup EVNOTFCN
  *
  * @param buffer [in,out] The buffer to build the message in for sending.
@@ -78,3 +81,6 @@ int Send_UEvent_Notify(
 
     return bytes_sent;
 }
+
+#endif  // (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1)
+

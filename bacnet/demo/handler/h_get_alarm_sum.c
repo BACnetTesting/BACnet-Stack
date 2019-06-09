@@ -42,7 +42,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "config.h"
+#include "configProj.h"
+
+#if (INTRINSIC_REPORTING_B == 1)
+
 #include "txbuf.h"
 #include "bacdef.h"
 #include "bacdcode.h"
@@ -51,6 +54,7 @@
 #include "npdu.h"
 #include "abort.h"
 #include "handlers.h"
+
 
 /** @file h_alarm_sum.c  Handles Get Alarm Summary request. */
 
@@ -174,3 +178,5 @@ GET_ALARM_SUMMARY_ABORT:
 #endif
 
 }
+
+#endif // (INTRINSIC_REPORTING_B == 1)

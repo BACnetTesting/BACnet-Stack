@@ -70,6 +70,8 @@
  * @return The invokeID of the transmitted message, or 0 on failure.
  */
 
+#ifdef DCC_A
+
 uint8_t Send_Device_Communication_Control_Request(
     uint32_t device_id,
     uint16_t timeDuration,      /* 0=optional */
@@ -78,7 +80,7 @@ uint8_t Send_Device_Communication_Control_Request(
 {       /* NULL=optional */
     BACNET_ADDRESS dest;
     BACNET_ADDRESS my_address;
-    unsigned max_apdu = 0;
+    uint16_t max_apdu = 0;
     uint8_t invoke_id = 0;
     bool status = false;
     int len = 0;
@@ -139,3 +141,5 @@ uint8_t Send_Device_Communication_Control_Request(
 
     return invoke_id;
 }
+
+#endif

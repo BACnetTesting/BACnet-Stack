@@ -46,6 +46,9 @@
 *
 ****************************************************************************************/
 
+#include "configProj.h"
+
+#if (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1)
 
 #include "assert.h"
 #include "timestamp.h"
@@ -393,3 +396,6 @@ int main(
 
 #endif /* TEST_TIME_STAMP */
 #endif /* TEST */
+
+#endif // (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1)
+

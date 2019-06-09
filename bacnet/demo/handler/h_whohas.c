@@ -42,7 +42,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include "config.h"
+#include "configProj.h"
 #include "txbuf.h"
 #include "bacdef.h"
 #include "bacdcode.h"
@@ -71,20 +71,23 @@ static void match_name_or_object(
         /* valid name in my device? */
         found =
             Device_Valid_Object_Name(&data->object.name, &object_type,
-            &object_instance);
+                &object_instance);
         if (found) {
-            Send_I_Have(Device_Object_Instance_Number(),
+            Send_I_Have(
+                Device_Object_Instance_Number(),
                 (BACNET_OBJECT_TYPE) object_type, object_instance,
                 &data->object.name);
         }
     } else {
         /* valid object_name copy in my device? */
         found =
-            Device_Object_Name_Copy((BACNET_OBJECT_TYPE) data->
-            object.identifier.type, data->object.identifier.instance,
-            &object_name);
+            Device_Object_Name_Copy(
+                (BACNET_OBJECT_TYPE) data->object.identifier.type,
+                data->object.identifier.instance,
+                &object_name);
         if (found) {
-            Send_I_Have(Device_Object_Instance_Number(),
+            Send_I_Have(
+                Device_Object_Instance_Number(),
                 (BACNET_OBJECT_TYPE) data->object.identifier.type,
                 data->object.identifier.instance, &object_name);
         }
@@ -126,8 +129,8 @@ void handler_who_has(
 
 
 #if ( BAC_ROUTING == 1 )      /* was for BAC_ROUTING - delete in 2/2012 if still unused */
-/* EKH: I restored this to BAC_ROUTING (from DEPRECATED) because I found that the server demo with the built-in
-		virtual Router did not insert the SADRs of the virtual devices on the virtual network without it */
+                        /* EKH: I restored this to BAC_ROUTING (from DEPRECATED) because I found that the server demo with the built-in
+                            virtual Router did not insert the SADRs of the virtual devices on the virtual network without it */
 
 /** Handler for Who-Has requests in the virtual routing setup,
  * with broadcast I-Have response.

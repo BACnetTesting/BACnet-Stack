@@ -88,7 +88,7 @@ struct address_entry {
     struct address_entry *next;
     uint8_t Flags;
     uint32_t device_id;
-    unsigned max_apdu;
+    uint16_t max_apdu;
     BACNET_ADDRESS address;
 };
 
@@ -132,7 +132,7 @@ bool bacnet_address_matches(
 
 void address_table_add(
     uint32_t device_id,
-    unsigned max_apdu,
+    uint16_t max_apdu,
     BACNET_ADDRESS * src)
 {
     struct address_entry *pMatch;

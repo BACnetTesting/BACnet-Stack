@@ -21,21 +21,36 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
-
-/* Positiveinteger Value Objects - customize for your use */
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2018 BACnet Interoperability Testing Services, Inc.
+*
+*   Oct 14, 2018    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+*  2018.10.14 EKH Diffed in hints from Analog Input for future reference
+*
+****************************************************************************************/
 
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
+#include "config.h"     /* the custom stuff */
+
 #include "bacdef.h"
 #include "bacdcode.h"
 #include "bacenum.h"
 #include "bacapp.h"
 #include "bactext.h"
-#include "config.h"     /* the custom stuff */
 #include "device.h"
 #include "handlers.h"
 #include "piv.h"
@@ -47,7 +62,8 @@
 POSITIVEINTEGER_VALUE_DESCR PIV_Descr[MAX_POSITIVEINTEGER_VALUES];
 
 /* These three arrays are used by the ReadPropertyMultiple handler */
-static const BACNET_PROPERTY_ID PositiveInteger_Value_Properties_Required[] = {
+
+static const BACNET_PROPERTY_ID Properties_Required[] = {
     PROP_OBJECT_IDENTIFIER,
     PROP_OBJECT_NAME,
     PROP_OBJECT_TYPE,
@@ -57,34 +73,46 @@ static const BACNET_PROPERTY_ID PositiveInteger_Value_Properties_Required[] = {
     MAX_BACNET_PROPERTY_ID
 };
 
-static const BACNET_PROPERTY_ID PositiveInteger_Value_Properties_Optional[] = {
+static const BACNET_PROPERTY_ID Properties_Optional[] = {
     PROP_OUT_OF_SERVICE,
+    PROP_DESCRIPTION,
+
+#if (BACNET_SVC_COV_B == 1)
+    PROP_COV_INCREMENT,
+#endif
+
     MAX_BACNET_PROPERTY_ID
 };
 
-static const BACNET_PROPERTY_ID PositiveInteger_Value_Properties_Proprietary[] = {
+static const BACNET_PROPERTY_ID Properties_Proprietary[] = {
     MAX_BACNET_PROPERTY_ID
 };
 
-void PositiveInteger_Value_Property_Lists(const BACNET_PROPERTY_ID **pRequired,
+
+void PositiveInteger_Value_Property_Lists(
+    const BACNET_PROPERTY_ID **pRequired,
     const BACNET_PROPERTY_ID **pOptional,
     const BACNET_PROPERTY_ID **pProprietary)
 {
     if (pRequired)
-        *pRequired = PositiveInteger_Value_Properties_Required;
+        *pRequired = Properties_Required;
     if (pOptional)
-        *pOptional = PositiveInteger_Value_Properties_Optional;
+        *pOptional = Properties_Optional;
     if (pProprietary)
-        *pProprietary = PositiveInteger_Value_Properties_Proprietary;
-
+        *pProprietary = Properties_Proprietary;
 }
 
-void PositiveInteger_Value_Init(void)
+
+// Gets called once for each device
+// This only gets called once on startup, and has to initialize for ALL virtual devices. Todo 2 - rename to differentiate!
+void PositiveInteger_Value_Init(
+    void)
 {
     unsigned i;
 
     for (i = 0; i < MAX_POSITIVEINTEGER_VALUES; i++) {
         memset(&PIV_Descr[i], 0x00, sizeof(POSITIVEINTEGER_VALUE_DESCR));
+        PIV_Descr[i].COV_Increment = 1;
     }
 }
 
@@ -98,6 +126,7 @@ bool PositiveInteger_Value_Valid_Instance(uint32_t object_instance)
 
     return false;
 }
+
 
 /* we simply have 0-n object instances.  Yours might be */
 /* more complex, and then count how many you have */
@@ -174,102 +203,115 @@ bool PositiveInteger_Value_Object_Name(uint32_t object_instance,
 
     if (object_instance < MAX_POSITIVEINTEGER_VALUES) {
         sprintf(text_string, "POSITIVEINTEGER VALUE %lu",
-            (unsigned long) object_instance);
+            (unsigned long)object_instance);
         status = characterstring_init_ansi(object_name, text_string);
     }
 
     return status;
 }
 
-/* return apdu len, or BACNET_STATUS_ERROR on error */
-int PositiveInteger_Value_Read_Property(BACNET_READ_PROPERTY_DATA * rpdata)
+
+/* return apdu length, or BACNET_STATUS_ERROR on error */
+int PositiveInteger_Value_Read_Property(
+    BACNET_READ_PROPERTY_DATA * rpdata)
 {
     int apdu_len = 0;   /* return value */
     BACNET_BIT_STRING bit_string;
     BACNET_CHARACTER_STRING char_string;
-    unsigned object_index = 0;
+    POSITIVEINTEGER_VALUE_DESCR *currentObject;
     bool state = false;
     uint8_t *apdu = NULL;
-    POSITIVEINTEGER_VALUE_DESCR *CurrentAV;
 
     if ((rpdata == NULL) || (rpdata->application_data == NULL) ||
         (rpdata->application_data_len == 0)) {
-        return 0;
+        return BACNET_STATUS_ERROR;
     }
 
     apdu = rpdata->application_data;
 
-    object_index =
+    unsigned object_index =
         PositiveInteger_Value_Instance_To_Index(rpdata->object_instance);
     if (object_index < MAX_POSITIVEINTEGER_VALUES)
-        CurrentAV = &PIV_Descr[object_index];
+        currentObject = &PIV_Descr[object_index];
     else
         return BACNET_STATUS_ERROR;
 
     switch (rpdata->object_property) {
-        case PROP_OBJECT_IDENTIFIER:
-            apdu_len =
-                encode_application_object_id(&apdu[0],
-                OBJECT_POSITIVE_INTEGER_VALUE, rpdata->object_instance);
-            break;
 
-        case PROP_OBJECT_NAME:
-            PositiveInteger_Value_Object_Name(rpdata->object_instance,
-                &char_string);
-            apdu_len =
-                encode_application_character_string(&apdu[0], &char_string);
-            break;
+    case PROP_OBJECT_IDENTIFIER:
+        apdu_len =
+            encode_application_object_id(&apdu[0],
+                OBJECT_POSITIVE_INTEGER_VALUE,
+                rpdata->object_instance);
+        break;
 
-        case PROP_OBJECT_TYPE:
-            apdu_len =
-                encode_application_enumerated(&apdu[0],
+    case PROP_OBJECT_NAME:
+    case PROP_DESCRIPTION:
+        PositiveInteger_Value_Object_Name(
+            rpdata->object_instance,
+            &char_string);
+        apdu_len =
+            encode_application_character_string(&apdu[0], &char_string);
+        break;
+
+    case PROP_OBJECT_TYPE:
+        apdu_len =
+            encode_application_enumerated(
+                &apdu[0],
                 OBJECT_POSITIVE_INTEGER_VALUE);
-            break;
+        break;
 
-        case PROP_PRESENT_VALUE:
-            apdu_len =
-                encode_application_unsigned(&apdu[0],
+    case PROP_PRESENT_VALUE:
+        apdu_len =
+            encode_application_unsigned(
+                &apdu[0],
                 PositiveInteger_Value_Present_Value(rpdata->object_instance));
-            break;
+        break;
 
-        case PROP_STATUS_FLAGS:
-            bitstring_init(&bit_string);
-            bitstring_set_bit(&bit_string, STATUS_FLAG_IN_ALARM, false);
-            bitstring_set_bit(&bit_string, STATUS_FLAG_FAULT, false);
-            bitstring_set_bit(&bit_string, STATUS_FLAG_OVERRIDDEN, false);
-            bitstring_set_bit(&bit_string, STATUS_FLAG_OUT_OF_SERVICE,
-                CurrentAV->Out_Of_Service);
+    case PROP_STATUS_FLAGS:
+        bitstring_init(&bit_string);
+        bitstring_set_bit(&bit_string, STATUS_FLAG_IN_ALARM, false);
+        bitstring_set_bit(&bit_string, STATUS_FLAG_FAULT, false);
+        bitstring_set_bit(&bit_string, STATUS_FLAG_OVERRIDDEN, false);
+        bitstring_set_bit(&bit_string, STATUS_FLAG_OUT_OF_SERVICE,
+            currentObject->Out_Of_Service);
 
-            apdu_len = encode_application_bitstring(&apdu[0], &bit_string);
-            break;
+        apdu_len = encode_application_bitstring(&apdu[0], &bit_string);
+        break;
 
-        case PROP_UNITS:
-            apdu_len =
-                encode_application_enumerated(&apdu[0], CurrentAV->Units);
-			break;
-			/* 	BACnet Testing Observed Incident oi00109
-				Positive Integer Value / Units returned wrong datatype - missing break.
-				Revealed by BACnet Test Client v1.8.16 ( www.bac-test.com/bacnet-test-client-download )
-					BITS: BIT00031
-					BC 135.1: 9.20.1.7
-					BC 135.1: 9.20.1.9
-				Any discussions can be directed to edward@bac-test.com
-				Please feel free to remove this comment when my changes have been reviewed 
-				by all interested parties. Say 6 months -> September 2016 */
+    case PROP_OUT_OF_SERVICE:
+        apdu_len =
+            encode_application_boolean(&apdu[0],
+                currentObject->Out_Of_Service);
+        break;
 
-        case PROP_OUT_OF_SERVICE:
-            state = CurrentAV->Out_Of_Service;
-            apdu_len = encode_application_boolean(&apdu[0], state);
-            break;
-        default:
-            rpdata->error_class = ERROR_CLASS_PROPERTY;
-            rpdata->error_code = ERROR_CODE_UNKNOWN_PROPERTY;
-            apdu_len = BACNET_STATUS_ERROR;
-            break;
+    case PROP_UNITS:
+        apdu_len =
+            encode_application_enumerated(&apdu[0], currentObject->Units);
+        break;
+
+#if ( BACNET_SVC_COV_B == 1 )
+    case PROP_COV_INCREMENT:
+        apdu_len = encode_application_unsigned(&apdu[0],
+            currentObject->COV_Increment);
+        break;
+#endif // ( BACNET_SVC_COV_B == 1 )
+
+    default:
+        rpdata->error_class = ERROR_CLASS_PROPERTY;
+        rpdata->error_code = ERROR_CODE_UNKNOWN_PROPERTY;
+        apdu_len = BACNET_STATUS_ERROR;
+        break;
     }
+
     /*  only array properties can have array options */
-    if ((apdu_len >= 0) && (rpdata->object_property != PROP_PRIORITY_ARRAY) &&
+    if ((apdu_len >= 0) &&
+        (rpdata->object_property != PROP_PRIORITY_ARRAY) &&
+        (rpdata->object_property != PROP_PROPERTY_LIST) &&  // todo other project that passed btc did not
+                                                            // have this. check it out
+#if (INTRINSIC_REPORTING_B == 1)
         (rpdata->object_property != PROP_EVENT_TIME_STAMPS) &&
+#endif
         (rpdata->array_index != BACNET_ARRAY_ALL)) {
         rpdata->error_class = ERROR_CLASS_PROPERTY;
         rpdata->error_code = ERROR_CODE_PROPERTY_IS_NOT_AN_ARRAY;
@@ -279,19 +321,22 @@ int PositiveInteger_Value_Read_Property(BACNET_READ_PROPERTY_DATA * rpdata)
     return apdu_len;
 }
 
+
 /* returns true if successful */
-bool PositiveInteger_Value_Write_Property(BACNET_WRITE_PROPERTY_DATA * wp_data)
+bool PositiveInteger_Value_Write_Property(
+    BACNET_WRITE_PROPERTY_DATA * wp_data)
 {
     bool status = false;        /* return value */
     unsigned int object_index = 0;
-    int len = 0;
+    int len;
     BACNET_APPLICATION_DATA_VALUE value;
-    POSITIVEINTEGER_VALUE_DESCR *CurrentAV;
+    POSITIVEINTEGER_VALUE_DESCR *currentObject;
 
-    /* decode the some of the request */
+    /* decode some of the request */
     len =
         bacapp_decode_application_data(wp_data->application_data,
-        wp_data->application_data_len, &value);
+            wp_data->application_data_len, &value);
+
     /* FIXME: len < application_data_len: more data? */
     if (len < 0) {
         /* error while decoding - a value larger than we can handle */
@@ -299,6 +344,7 @@ bool PositiveInteger_Value_Write_Property(BACNET_WRITE_PROPERTY_DATA * wp_data)
         wp_data->error_code = ERROR_CODE_VALUE_OUT_OF_RANGE;
         return false;
     }
+
     if ((wp_data->object_property != PROP_PRIORITY_ARRAY) &&
         (wp_data->object_property != PROP_EVENT_TIME_STAMPS) &&
         (wp_data->array_index != BACNET_ARRAY_ALL)) {
@@ -310,75 +356,84 @@ bool PositiveInteger_Value_Write_Property(BACNET_WRITE_PROPERTY_DATA * wp_data)
     object_index =
         PositiveInteger_Value_Instance_To_Index(wp_data->object_instance);
     if (object_index < MAX_POSITIVEINTEGER_VALUES)
-        CurrentAV = &PIV_Descr[object_index];
+        currentObject = &PIV_Descr[object_index];
     else
         return false;
 
     switch (wp_data->object_property) {
-        case PROP_PRESENT_VALUE:
-            if (value.tag == BACNET_APPLICATION_TAG_UNSIGNED_INT) {
+
+    case PROP_PRESENT_VALUE:
+        if (value.tag == BACNET_APPLICATION_TAG_UNSIGNED_INT) {
+            /* Command priority 6 is reserved for use by Minimum On/Off
+               algorithm and may not be used for other purposes in any
+               object. */
+            if (PositiveInteger_Value_Present_Value_Set(wp_data->
+                object_instance, value.type.Unsigned_Int,
+                wp_data->priority)) {
+                status = true;
+            }
+            else if (wp_data->priority == 6) {
                 /* Command priority 6 is reserved for use by Minimum On/Off
                    algorithm and may not be used for other purposes in any
                    object. */
-                if (PositiveInteger_Value_Present_Value_Set(wp_data->
-                        object_instance, value.type.Unsigned_Int,
-                        wp_data->priority)) {
-                    status = true;
-                } else if (wp_data->priority == 6) {
-                    /* Command priority 6 is reserved for use by Minimum On/Off
-                       algorithm and may not be used for other purposes in any
-                       object. */
-                    wp_data->error_class = ERROR_CLASS_PROPERTY;
-                    wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
-                } else {
-                    wp_data->error_class = ERROR_CLASS_PROPERTY;
-                    wp_data->error_code = ERROR_CODE_VALUE_OUT_OF_RANGE;
-                }
-            } else {
-                status = false;
+                wp_data->error_class = ERROR_CLASS_PROPERTY;
+                wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
+            }
+            else {
                 wp_data->error_class = ERROR_CLASS_PROPERTY;
                 wp_data->error_code = ERROR_CODE_VALUE_OUT_OF_RANGE;
             }
-            break;
+        }
+        else {
+            status = false;
+            wp_data->error_class = ERROR_CLASS_PROPERTY;
+            wp_data->error_code = ERROR_CODE_VALUE_OUT_OF_RANGE;
+        }
+        break;
 
-        case PROP_OUT_OF_SERVICE:
-            status =
-                WPValidateArgType(&value, BACNET_APPLICATION_TAG_BOOLEAN,
+    case PROP_OUT_OF_SERVICE:
+        status =
+            WPValidateArgType(&value, BACNET_APPLICATION_TAG_BOOLEAN,
                 &wp_data->error_class, &wp_data->error_code);
-            if (status) {
-                CurrentAV->Out_Of_Service = value.type.Boolean;
-            }
-            break;
+        if (status) {
+            currentObject->Out_Of_Service = value.type.Boolean;
+        }
+        break;
 
-        case PROP_OBJECT_IDENTIFIER:
-        case PROP_OBJECT_NAME:
-        case PROP_OBJECT_TYPE:
-        case PROP_STATUS_FLAGS:
-        case PROP_UNITS:
-            wp_data->error_class = ERROR_CLASS_PROPERTY;
-            wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
-            break;
-        default:
-            wp_data->error_class = ERROR_CLASS_PROPERTY;
-            wp_data->error_code = ERROR_CODE_UNKNOWN_PROPERTY;
-            break;
+    case PROP_OBJECT_IDENTIFIER:
+    case PROP_OBJECT_NAME:
+    case PROP_DESCRIPTION:
+    case PROP_OBJECT_TYPE:
+    case PROP_STATUS_FLAGS:
+    case PROP_UNITS:
+        wp_data->error_class = ERROR_CLASS_PROPERTY;
+        wp_data->error_code = ERROR_CODE_WRITE_ACCESS_DENIED;
+        break;
+
+    default:
+        wp_data->error_class = ERROR_CLASS_PROPERTY;
+        wp_data->error_code = ERROR_CODE_UNKNOWN_PROPERTY;
+        break;
     }
 
     return status;
 }
 
 
+#if (INTRINSIC_REPORTING_B == 1)
 void PositiveInteger_Value_Intrinsic_Reporting(
     uint32_t object_instance)
 {
 }
+#endif // Intrinsic reporting
 
 #ifdef TEST
 #include <assert.h>
 #include <string.h>
 #include "ctest.h"
 
-bool WPValidateArgType(BACNET_APPLICATION_DATA_VALUE * pValue,
+bool WPValidateArgType(
+    BACNET_APPLICATION_DATA_VALUE * pValue,
     uint8_t ucExpectedTag,
     BACNET_ERROR_CLASS * pErrorClass,
     BACNET_ERROR_CODE * pErrorCode)
@@ -415,7 +470,6 @@ void testPositiveInteger_Value(Test * pTest)
     len = decode_object_id(&apdu[len], &decoded_type, &decoded_instance);
     ct_test(pTest, decoded_type == rpdata.object_type);
     ct_test(pTest, decoded_instance == rpdata.object_instance);
-
 }
 
 #ifdef TEST_POSITIVEINTEGER_VALUE
@@ -431,7 +485,7 @@ int main(void)
 
     ct_setStream(pTest, stdout);
     ct_run(pTest);
-    (void) ct_report(pTest);
+    (void)ct_report(pTest);
     ct_destroy(pTest);
 
     return 0;

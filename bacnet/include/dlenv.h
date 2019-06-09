@@ -40,7 +40,6 @@
 #ifndef DLENV_H
 #define DLENV_H
 
-#include "datalink.h"
 
 void dlenv_init(
 	void);

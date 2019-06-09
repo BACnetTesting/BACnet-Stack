@@ -4,7 +4,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_PropertySheetDisplayName>BACnet Solution Settings</_PropertySheetDisplayName>
-    <IncludePath>E:\Dev\BITS Reference Stack\BITS Reference Stack - Feature Creep\bits\osLayer\win;..\..\bits\osLayer\win;..\..\..\bits\util;..\..\..\bits\config\csv;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\..\bits\osLayer\win;..\..\..\bits\include;..\..\..\bits\util;..\..\..\bits\config\csv;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>

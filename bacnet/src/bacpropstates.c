@@ -46,6 +46,10 @@
 *
 ****************************************************************************************/
 
+#include "configProj.h"
+
+#if ( BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1 )
+
 #include "bacdcode.h"
 #include "npdu.h"
 #include "timestamp.h"
@@ -457,3 +461,4 @@ int main(
 
 #endif /* TEST_PROP_STATES */
 #endif /* TEST */
+#endif // BACNET_ALERT_ENROLLMENT

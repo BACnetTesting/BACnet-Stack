@@ -44,9 +44,10 @@
 #ifdef __GNUC__
 #include <stdbool.h>
 #endif
+
 //#include <stddef.h>
 #include "bacdef.h"
-//#include "config.h"
+#include "configProj.h"
 #include "bacenum.h"
 
 // in bacdef.h (where Karg originally had it)
@@ -82,8 +83,8 @@ void bitstring_init(
 
 void bitstring_set_bit(
     BACNET_BIT_STRING * bit_string,
-    uint8_t bit_number,
-    bool value);
+    const uint8_t bit_number,
+    const bool value);
 
 bool bitstring_bit(
     BACNET_BIT_STRING * bit_string,
@@ -228,6 +229,7 @@ bool octetstring_truncate(
 uint8_t *octetstring_value(
     BACNET_OCTET_STRING * octet_string);
 /* Returns the length.*/
+
 size_t octetstring_length(
     BACNET_OCTET_STRING * octet_string);
 size_t octetstring_capacity(

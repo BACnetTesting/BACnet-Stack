@@ -37,24 +37,11 @@
 *
 ****************************************************************************************/
 
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-#include "config.h"
+#include "configProj.h"
 #include "txbuf.h"
-#include "bacdef.h"
-#include "bacdcode.h"
 #include "bacerror.h"
-#include "apdu.h"
-#include "npdu.h"
 #include "abort.h"
-#include "event.h"
-#include "getevent.h"
 #include "handlers.h"
-#include "debug.h"
-#include "bitsDebug.h"
 
 /** @file h_getevent.c  Handles Get Event Information request. */
 

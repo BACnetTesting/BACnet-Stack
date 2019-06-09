@@ -59,6 +59,7 @@ typedef struct BACnet_RPM_Data {
     uint32_t array_index;
     BACNET_ERROR_CLASS error_class;
     BACNET_ERROR_CODE error_code;
+    // we really, really should put Abort_reason in here
 } BACNET_RPM_DATA;
 
 struct BACnet_Read_Access_Data;

@@ -49,13 +49,15 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>     /* for strlen */
-#include "config.h"
+#include "configProj.h"
 #include "bacstr.h"
 #include "bits.h"
 #if PRINT_ENABLED
 #include <stdlib.h>     /* for strtol */
 #include <ctype.h>      /* for isalnum */
 #endif
+
+#include "emm.h"
 
 /** @file bacstr.c  Manipulate Bit/Char/Octet Strings */
 
@@ -72,8 +74,8 @@ void bitstring_init(
 
 void bitstring_set_bit(
     BACNET_BIT_STRING * bit_string,
-    uint8_t bit_number,
-    bool value)
+    const uint8_t bit_number,
+    const bool value)
 {
     uint8_t byte_number = bit_number / 8;
     uint8_t bit_mask = 1;
@@ -340,12 +342,31 @@ bool characterstring_init_ansi(
                                 value ? strlen(value) : 0);
 }
 
+
+BACNET_CHARACTER_STRING *characterstring_create_ansi(
+    const char *value)
+{
+    BACNET_CHARACTER_STRING *tstr = (BACNET_CHARACTER_STRING *)emm_smalloc('C', sizeof(BACNET_CHARACTER_STRING));
+    if (!tstr) return tstr;
+    bool status = characterstring_init_ansi(tstr, value);
+    if (!status)
+    {
+        emm_free(tstr);
+        return NULL;
+    }
+    return tstr;
+}
+
+
 bool characterstring_copy(
     BACNET_CHARACTER_STRING * dest,
     const BACNET_CHARACTER_STRING * src)
 {
-    return characterstring_init(dest, characterstring_encoding(src),
-                                characterstring_value(src), characterstring_length(src));
+    // todo btc - attempting to write a string that is too long should fail...
+    return characterstring_init(dest, 
+        characterstring_encoding(src),
+        characterstring_value(src), 
+        characterstring_length(src));
 }
 
 bool characterstring_ansi_copy(
@@ -477,13 +498,7 @@ bool characterstring_truncate(
 char *characterstring_value(
     const BACNET_CHARACTER_STRING * char_string)
 {
-    char *value = NULL;
-
-    if (char_string) {
-        value = (char *) char_string->value;
-    }
-
-    return value;
+    return (char *) char_string->value;
 }
 
 /* returns the length. */

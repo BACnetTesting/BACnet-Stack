@@ -37,26 +37,17 @@
 *
 ****************************************************************************************/
 
-//#include <stddef.h>
-//#include <stdint.h>
-//#include <stdio.h>
-//#include <string.h>
-//#include <errno.h>
-//#include "config.h"
+#include <string.h>
 #include "txbuf.h"
-//#include "bacdef.h"
-//#include "bacdcode.h"
 #include "bacerror.h"
-//#include "bacdevobjpropref.h"
 #include "apdu.h"
-//#include "npdu.h"
 #include "abort.h"
 #include "reject.h"
-//#include "rp.h"
 /* device object has custom handler for all objects */
 #include "device.h"
 #include "handlers.h"
 #include "bitsDebug.h"
+#include "datalink.h"
 
 /** @file h_rp.c  Handles Read Property requests. */
 
@@ -81,16 +72,16 @@
  *                          decoded from the APDU header of this message.
  */
 void handler_read_property(
-    uint8_t * service_request,
+    uint8_t *service_request,
     uint16_t service_len,
-    BACNET_ADDRESS * src,
-    BACNET_CONFIRMED_SERVICE_DATA * service_data)
+    BACNET_ADDRESS *src,
+    BACNET_CONFIRMED_SERVICE_DATA *service_data)
 {
     BACNET_READ_PROPERTY_DATA rpdata;
-    int len = 0;
+    int len ;
     int pdu_len = 0;
-    int apdu_len = -1;
-    int npdu_len = -1;
+    int apdu_len ;
+    int npdu_len ;
     BACNET_NPCI_DATA npci_data;
     bool error = true;  /* assume that there is an error */
     int bytes_sent = 0;
@@ -98,6 +89,7 @@ void handler_read_property(
 
     /* configure default error code as an abort since it is common */
     rpdata.error_code = ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
+
     /* encode the NPDU portion of the packet */
     datalink_get_my_address(&my_address);
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
@@ -120,6 +112,7 @@ void handler_read_property(
         dbTraffic(DBD_ALL, DB_ERROR, "RP: Bad Encoding.");
         goto RP_FAILURE;
     }
+
     /* Test for case of indefinite Device object instance */
     if ((rpdata.object_type == OBJECT_DEVICE) &&
         (rpdata.object_instance == BACNET_MAX_INSTANCE)) {
@@ -147,11 +140,13 @@ void handler_read_property(
             rpdata.error_code = ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
             len = BACNET_STATUS_ABORT;
             dbTraffic(DBD_ALL, DB_ERROR, "RP: Message too large."); // todo1 - btc, test 00029 raised an oveflow err here??? (stack crash etc.. something got corrupted!)
-        } else {
+        }
+        else {
             dbTraffic(DBD_ALL, DB_INFO, "RP: Sending Ack!");
             error = false;
         }
-    } else {
+    } 
+    else {
 #if PRINT_ENABLED
         fprintf(stderr, "RP: Device_Read_Property: ");
         if (len == BACNET_STATUS_ABORT) {
@@ -166,7 +161,7 @@ void handler_read_property(
 #endif
     }
 
-  RP_FAILURE:
+RP_FAILURE:
     if (error) {
         if (len == BACNET_STATUS_ABORT) {
             apdu_len =
@@ -174,13 +169,15 @@ void handler_read_property(
                 service_data->invoke_id,
                 abort_convert_error_code(rpdata.error_code), true);
             dbTraffic(DBD_ALL, DB_UNUSUAL_TRAFFIC, "RP: Sending Abort!");
-        } else if (len == BACNET_STATUS_ERROR) {
+        } 
+        else if (len == BACNET_STATUS_ERROR) {
             apdu_len =
                 bacerror_encode_apdu(&Handler_Transmit_Buffer[npdu_len],
                 service_data->invoke_id, SERVICE_CONFIRMED_READ_PROPERTY,
                 rpdata.error_class, rpdata.error_code);
             dbTraffic(DBD_ALL, DB_EXPECTED_ERROR_TRAFFIC, "RP: Sending Error!");
-        } else if (len == BACNET_STATUS_REJECT) {
+        }
+        else if (len == BACNET_STATUS_REJECT) {
             apdu_len =
                 reject_encode_apdu(&Handler_Transmit_Buffer[npdu_len],
                 service_data->invoke_id,

@@ -120,7 +120,7 @@ typedef enum {
 
 typedef int (
     *rr_handler_function) (
-        uint8_t * apdu,
+        uint8_t *apdu,
         BACNET_READ_RANGE_DATA * pRequest);
 
 /** Structure to return the type of requests a given object property can
@@ -140,7 +140,7 @@ typedef struct rrpropertyinfo {
  */
 typedef bool(
     *rr_info_function) (
-        BACNET_READ_RANGE_DATA * pRequest,      /* Info on the request */
+        BACNET_READ_RANGE_DATA *pRequest, /* Info on the request */
         RR_PROP_INFO * pInfo);  /* Where to write the response to */
 
 int rr_encode_apdu(

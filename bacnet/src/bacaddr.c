@@ -69,7 +69,7 @@ void bacnet_mac_copy(
     //}
     if (src->len != 1 && src->len != 0 && src->len != 6 && src->len != 2 ) 
     {
-      panic();    
+      panic();
       return ;
     }
 #else
@@ -77,6 +77,8 @@ void bacnet_mac_copy(
 #endif
     memcpy(dest, src, sizeof(BACNET_MAC_ADDRESS));
 }
+
+
 void bacnet_address_copy(
     BACNET_ADDRESS * dest,
     BACNET_ADDRESS * src)
@@ -95,6 +97,7 @@ void bacnet_address_copy(
         }
     }
 }
+
 
 bool bacnet_address_same(
     BACNET_ADDRESS * dest,

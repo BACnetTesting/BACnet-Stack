@@ -40,37 +40,47 @@
 #ifndef AO_H
 #define AO_H
 
-#include <stdbool.h>
-#include <stdint.h>
+#include "configProj.h"
 
-#include "config.h"
+#if (BACNET_USE_OBJECT_ANALOG_OUTPUT == 1 )
+
 #include "bacdef.h"
 #include "rp.h"
 #include "wp.h"
-#include "BACnetObject.h"
+
+#include "BACnetObjectAnalog.h"
 
 #if (INTRINSIC_REPORTING_B == 1)
 #include "nc.h"
 #include "getevent.h"
 #include "alarm_ack.h"
-#include "get_alarm_sum.h"
+// Deprecated since Rev 13    #include "get_alarm_sum.h"
 #endif
 
 
 typedef struct analog_output_descr {
 
-    BACNET_OBJECT   common;
+    BACNET_OBJECT   common;         // must be first field in structure due to llist
 
     BACNET_EVENT_STATE Event_State;
     float Present_Value;
+    float shadow_Present_Value;
     float Relinquish_Default ;
     BACNET_RELIABILITY Reliability;
+    BACNET_RELIABILITY shadowReliability;
+
     bool Out_Of_Service;
     uint8_t Units;
+
+#if (BACNET_SVC_COV_B == 1)
     float Prior_Value;
     float COV_Increment;
     bool Changed;
+    bool prior_OOS; // todo 0 - check OOS handling with COV
+#endif
 
+    uint16_t priorityFlags;
+    float priorityArray[BACNET_MAX_PRIORITY];
 
 #if (INTRINSIC_REPORTING_B == 1)
     uint32_t Time_Delay;
@@ -88,7 +98,9 @@ typedef struct analog_output_descr {
     /* AckNotification informations */
     ACK_NOTIFICATION Ack_notify_data;
 #endif
+
 } ANALOG_OUTPUT_DESCR;
+
 
 void Analog_Output_Property_Lists(
     const BACNET_PROPERTY_ID **pRequired,
@@ -113,33 +125,30 @@ bool Analog_Output_Object_Instance_Add(
 //float Analog_Output_Present_Value(
 //    uint32_t object_instance);
 
-unsigned Analog_Output_Present_Value_Priority(
-    uint32_t object_instance);
+//unsigned Analog_Output_Present_Value_Priority(
+//    uint32_t object_instance);
 
-bool Analog_Output_Present_Value_Set(
-    uint32_t object_instance,
-    float value,
-    unsigned priority);
+//bool Analog_Output_Present_Value_Set(
+//    uint32_t object_instance,
+//    float value,
+//    unsigned priority);
 
-bool Analog_Output_Present_Value_Relinquish(
-    uint32_t object_instance,
-    unsigned priority);
+//bool Analog_Output_Present_Value_Relinquish(
+//    uint32_t object_instance,
+//    unsigned priority);
 
 #if 0
 float Analog_Output_Relinquish_Default(
     uint32_t object_instance);
+#endif
+
 bool Analog_Output_Relinquish_Default_Set(
-    uint32_t object_instance,
-    float value);
-
-bool Analog_Output_Change_Of_Value(
-    uint32_t instance);
-
-void Analog_Output_Change_Of_Value_Clear(
-    uint32_t instance);
+    ANALOG_OUTPUT_DESCR *currentObject,
+    BACNET_WRITE_PROPERTY_DATA *wp_data,
+    BACNET_APPLICATION_DATA_VALUE *value);
 
 bool Analog_Output_Encode_Value_List(
-    uint32_t object_instance,
+    const uint32_t object_instance,
     BACNET_PROPERTY_VALUE * value_list);
 
 float Analog_Output_COV_Increment(
@@ -148,7 +157,6 @@ float Analog_Output_COV_Increment(
 void Analog_Output_COV_Increment_Set(
     uint32_t instance,
     float value);
-#endif
 
 bool Analog_Output_Object_Name(
     uint32_t object_instance,
@@ -181,8 +189,10 @@ bool Analog_Output_Units_Set(
 uint16_t Analog_Output_Units(
     uint32_t instance);
 
+#if (INTRINSIC_REPORTING_B == 1)
 void Analog_Output_Intrinsic_Reporting(
     uint32_t object_instance);
+#endif
 
 #if 0
 bool Analog_Output_Out_Of_Service(
@@ -201,17 +211,14 @@ bool Analog_Output_Write_Property(
 
 #if ( BACNET_SVC_COV_B == 1 )
 bool Analog_Output_Change_Of_Value(
-    uint32_t instance);
+    const uint32_t instance);
 
 void Analog_Output_Change_Of_Value_Clear(
-    uint32_t instance);
+    const uint32_t instance);
 
-bool Analog_Output_Encode_Value_List(
-    uint32_t object_instance,
-    BACNET_PROPERTY_VALUE * value_list);
 #endif
 
-double Analog_Output_Present_Value_from_Instance(
+float Analog_Output_Present_Value_from_Instance(
     const uint32_t instance);
 
 bool Analog_Output_Create(
@@ -246,8 +253,9 @@ int Analog_Output_Alarm_Ack(
 
 #ifdef TEST
 #include "ctest.h"
-    void testAnalogOutput(
+void testAnalogOutput(
     Test * pTest);
 #endif
 
 #endif
+#endif /* AO_H */

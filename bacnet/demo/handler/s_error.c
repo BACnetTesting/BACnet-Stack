@@ -41,7 +41,7 @@
 #include <stdint.h>
 //#include <errno.h>
 //#include <string.h>
-//#include "config.h"
+//#include "configProj.h"
 //#include "bacdef.h"
 //#include "bacdcode.h"
 //#include "bacenum.h"

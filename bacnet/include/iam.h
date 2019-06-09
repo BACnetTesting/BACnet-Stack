@@ -54,7 +54,7 @@ void Send_I_Am_Broadcast(
 int iam_encode_apdu(
     uint8_t * apdu,
     uint32_t device_id,
-    unsigned max_apdu,
+    uint16_t max_apdu,
     int segmentation,
     uint16_t vendor_id);
 

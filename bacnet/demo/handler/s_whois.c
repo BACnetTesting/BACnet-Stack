@@ -37,29 +37,15 @@
 *
 ****************************************************************************************/
 
-//#include <stddef.h>
-//#include <stdint.h>
-//#include <errno.h>
-//#include <string.h>
-//#include "config.h"
-//#include "txbuf.h"
-//#include "bacdef.h"
-//#include "bacdcode.h"
-//#include "address.h"
-//// #include "tsm.h"
-//#include "npdu.h"
-//#include "apdu.h"
-//#include "device.h"
 #include "datalink.h"
 #include "dcc.h"
 #include "whois.h"
-#include "bacenum.h"
-/* some demo stuff needed */
-#include "handlers.h"
 #include "txbuf.h"
 #include "client.h"
 
 /** @file s_whois.c  Send a Who-Is request. */
+
+extern volatile struct  mstp_port_struct_t *tx_mstp_port;
 
 /** Send a Who-Is request to a remote network for a specific device, a range,
  * or any device.
@@ -82,7 +68,7 @@ void Send_WhoIs_To_Network(
     BACNET_NPCI_DATA npci_data;
     BACNET_ADDRESS my_address;
 
-    datalink_get_my_address(&my_address);
+    datalink_get_my_address( &my_address);
     /* encode the NPDU portion of the packet */
     npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
 

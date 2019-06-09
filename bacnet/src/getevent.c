@@ -48,7 +48,7 @@
 
 #include <stdint.h>
 
-#include "config.h"
+#include "configProj.h"
 
 #if ( BACNET_USE_EVENT_HANDLING == 1 )
 

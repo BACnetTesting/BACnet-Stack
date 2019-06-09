@@ -62,18 +62,16 @@ int bacerror_encode_apdu(
     BACNET_ERROR_CLASS error_class,
     BACNET_ERROR_CODE error_code)
 {
-    int apdu_len = 0;   /* total length of the apdu, return value */
+    int apdu_len ;   /* total length of the apdu, return value */
 
-    if (apdu) {
-        apdu[0] = PDU_TYPE_ERROR;
-        apdu[1] = invoke_id;
-        apdu[2] = (uint8_t) service;
-        apdu_len = 3;
-        /* service parameters */
-        apdu_len +=
-            encode_application_enumerated(&apdu[apdu_len], error_class);
-        apdu_len += encode_application_enumerated(&apdu[apdu_len], error_code);
-    }
+    apdu[0] = PDU_TYPE_ERROR;
+    apdu[1] = invoke_id;
+    apdu[2] = (uint8_t) service;
+    apdu_len = 3;
+    /* service parameters */
+    apdu_len +=
+        encode_application_enumerated(&apdu[apdu_len], error_class);
+    apdu_len += encode_application_enumerated(&apdu[apdu_len], error_code);
 
     return apdu_len;
 }
@@ -87,9 +85,9 @@ int bacerror_decode_error_class_and_code(
     BACNET_ERROR_CODE * error_code)
 {
     int len = 0;
-    uint8_t tag_number = 0;
-    uint32_t len_value_type = 0;
-    uint32_t decoded_value = 0;
+    uint8_t tag_number ;
+    uint32_t len_value_type ;
+    uint32_t decoded_value ;
 
     if (apdu_len) {
         /* error class */

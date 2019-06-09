@@ -37,20 +37,6 @@
 *
 ****************************************************************************************/
 
-//#include <stddef.h>
-// #include <stdint.h>
-//#include <errno.h>
-//#include <string.h>
-//#include "config.h"
-//#include "bacdef.h"
-//#include "bacdcode.h"
-//#include "address.h"
-//#if ( BACNET_CLIENT == 1 )
-//#include "tsm.h"
-//#endif
-//#include "npdu.h"
-//#include "apdu.h"
-//#include "device.h"
 #include "datalink.h"
 #include "dcc.h"
 #include "ihave.h"
@@ -73,7 +59,7 @@ void Send_I_Have(
     uint32_t device_id,
     BACNET_OBJECT_TYPE object_type,
     uint32_t object_instance,
-    BACNET_CHARACTER_STRING * object_name)
+    BACNET_CHARACTER_STRING *object_name)
 {
     int len = 0;
     int pdu_len = 0;
@@ -85,8 +71,14 @@ void Send_I_Have(
 
     datalink_get_my_address(&my_address);
     /* if we are forbidden to send, don't send! */
-    if (!dcc_communication_enabled())
+    if (!dcc_communication_enabled()) {
         return;
+    }
+    /*The sending BACnet-user shall broadcast or unicast the I-Have unconfirmed request. If the I-Have is broadcast, this
+    broadcast may be on the local network only, a remote network only, or globally on all networks at the discretion of the
+    application. If the I-Have is being transmitted in response to a previously received Who-Has, then the I-Have shall be
+    transmitted in such a manner that the BACnet-user that sent the Who-Has will receive the resulting I-Have.*/
+
     /* Who-Has is a global broadcast */
     datalink_get_broadcast_address(&dest);
     /* encode the NPDU portion of the packet */

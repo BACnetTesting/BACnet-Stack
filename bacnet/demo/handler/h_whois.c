@@ -37,16 +37,7 @@
 *
 ****************************************************************************************/
 
-//#include <stddef.h>
-//#include <stdint.h>
-//#include <stdio.h>
-//#include <string.h>
-//#include <errno.h>
-//#include "config.h"
-//#include "bacdef.h"
-//#include "bacdcode.h"
 #include "whois.h"
-//#include "iam.h"
 #include "device.h"
 
 #include "client.h"
@@ -56,12 +47,12 @@
 /** @file h_whois.c  Handles Who-Is requests. */
 
 // responding with a broadcast is bad manners, so we will deprecate this function
-///** Handler for Who-Is requests, with broadcast I-Am response.
-// * @ingroup DMDDB
-// * @param service_request [in] The received message to be handled.
-// * @param service_len [in] Length of the service_request message.
-// * @param src [in] The BACNET_PATH of the message's source (ignored).
-// */
+/** Handler for Who-Is requests, with broadcast I-Am response.
+ * @ingroup DMDDB
+ * @param service_request [in] The received message to be handled.
+ * @param service_len [in] Length of the service_request message.
+ * @param src [in] The BACNET_ADDRESS of the message's source (ignored).
+ */
 //void handler_who_is(
 //    DEVICE_OBJECT_DATA *pDev,
 //    uint8_t * service_request,
@@ -126,17 +117,16 @@ void handler_who_is_unicast(
    virtual Router did not insert the SADRs of the virtual devices on the virtual network without it */
 
 
-   /** Local function to check Who-Is requests against our Device IDs.
-    * Will check the gateway (root Device) and all virtual routed
-    * Devices against the range and respond for each that matches.
-    *
-    * @param service_request [in] The received message to be handled.
-    * @param service_len [in] Length of the service_request message.
-    * @param src [in] The BACNET_ADDRESS of the message's source.
-    * @param is_unicast [in] True if should send unicast response(s)
-    * 			back to the src, else False if should broadcast response(s).
-    */
-
+/** Local function to check Who-Is requests against our Device IDs.
+ * Will check the gateway (root Device) and all virtual routed
+ * Devices against the range and respond for each that matches.
+ *
+ * @param service_request [in] The received message to be handled.
+ * @param service_len [in] Length of the service_request message.
+ * @param src [in] The BACNET_ADDRESS of the message's source.
+ * @param is_unicast [in] True if should send unicast response(s)
+ * 			back to the src, else False if should broadcast response(s).
+ */
 static void check_who_is_for_routing(
     uint8_t * service_request,
     uint16_t service_len,

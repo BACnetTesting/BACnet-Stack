@@ -49,6 +49,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "indtext.h"
+#include "bitsDebug.h"
 
 /** @file indtext.c  Maps text strings and indices of type INDTEXT_DATA */
 
@@ -123,8 +124,12 @@ bool indtext_by_istring(
         }
     }
 
-    if (found && found_index)
+    if (found && found_index) {
         *found_index = index;
+    }
+    else {
+    	panicstr( search_name ) ;
+    }
 
     return found;
 }

@@ -42,7 +42,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include "config.h"
+#include "configProj.h"
 #include "txbuf.h"
 #include "bacdef.h"
 #include "bacdcode.h"
@@ -204,7 +204,7 @@ bool WPValidateString(
 
 bool WPValidateArgType(
     BACNET_APPLICATION_DATA_VALUE * pValue,
-    uint8_t ucExpectedTag,
+    BACNET_APPLICATION_TAG ucExpectedTag,
     BACNET_ERROR_CLASS * pErrorClass,
     BACNET_ERROR_CODE * pErrorCode)
 {

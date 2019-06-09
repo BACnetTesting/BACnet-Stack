@@ -316,7 +316,7 @@ int main(
     };  /* address where message came from */
     uint16_t pdu_len = 0;
     unsigned timeout = 100;     /* milliseconds */
-    unsigned max_apdu = 0;
+    uint16_t max_apdu = 0;
     int args_remaining = 0, tag_value_arg = 0, arg_sets = 0;
     time_t elapsed_seconds = 0;
     time_t last_seconds = 0;

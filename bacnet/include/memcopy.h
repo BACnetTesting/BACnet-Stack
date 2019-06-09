@@ -42,6 +42,7 @@
 
 /* Functional Description: Memory copy function */
 
+// #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -49,12 +50,13 @@
 #include <stddef.h>		// for size_t
 #endif
 
-
 bool memcopylen(
     size_t offset,
     size_t max,
     size_t len);
-        
+
+/* copy len bytes from src to offset of dest if there is enough space. */
+/* returns 0 if there is not enough space, or the number of bytes copied. */
 size_t memcopy(
     void *dest,
     void *src,

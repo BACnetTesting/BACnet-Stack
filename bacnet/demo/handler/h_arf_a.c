@@ -39,7 +39,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "config.h"
+#include "configProj.h"
 #include "txbuf.h"
 #include "bacdef.h"
 #include "bacdcode.h"

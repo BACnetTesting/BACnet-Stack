@@ -51,7 +51,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "config.h"
+#include "configProj.h"
 #include "bacdef.h"
 #include "keylist.h"
 /* me! */

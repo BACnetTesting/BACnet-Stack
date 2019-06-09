@@ -45,27 +45,31 @@
 #include <stddef.h>
 
 /* unsigned value encoding and decoding */
-int encode_unsigned16(
+uint8_t encode_unsigned8(
+	uint8_t * apdu,
+	uint8_t value);
+
+uint8_t encode_unsigned16(
     uint8_t * apdu,
     uint16_t value);
 
-int decode_unsigned16(
+uint8_t decode_unsigned16(
     const uint8_t * apdu,
     uint16_t * value);
 
-int encode_unsigned24(
+uint8_t encode_unsigned24(
     uint8_t * apdu,
     uint32_t value);
 
-int decode_unsigned24(
+uint8_t decode_unsigned24(
     const uint8_t * apdu,
     uint32_t * value);
 
-int encode_unsigned32(
+uint8_t encode_unsigned32(
     uint8_t * apdu,
     uint32_t value);
 
-int decode_unsigned32(
+uint8_t decode_unsigned32(
     const uint8_t * apdu,
     uint32_t * value);
 
@@ -76,33 +80,38 @@ int decode_unsigned64(
 #endif
 
 /* signed value encoding and decoding */
-int encode_signed8(
+uint8_t encode_signed8(
     uint8_t * apdu,
     int8_t value);
 
-int decode_signed8(
+uint8_t decode_signed8(
     uint8_t * apdu,
     int32_t * value);
 
-int encode_signed16(
+uint8_t encode_signed16(
     uint8_t * apdu,
     int16_t value);
 
-int decode_signed16(
+uint8_t decode_signed16(
     uint8_t * apdu,
     int32_t * value);
-int encode_signed24(
+
+uint8_t encode_signed24(
     uint8_t * apdu,
     int32_t value);
-int decode_signed24(
+
+uint8_t decode_signed24(
     uint8_t * apdu,
     int32_t * value);
-int encode_signed32(
+
+uint8_t encode_signed32(
     uint8_t * apdu,
     int32_t value);
-int decode_signed32(
+
+uint8_t decode_signed32(
     uint8_t * apdu,
     int32_t * value);
+
 #ifdef UINT64_MAX
 int encode_unsigned64(
     uint8_t * buffer,

@@ -42,7 +42,7 @@
 #include <stdint.h>
 #include <errno.h>
 #include <string.h>
-#include "config.h"
+#include "configProj.h"
 #include "txbuf.h"
 #include "bacdef.h"
 #include "bacdcode.h"
@@ -79,7 +79,7 @@ uint8_t Send_Private_Transfer_Request(
 {       /* NULL=optional */
     BACNET_ADDRESS dest;
     BACNET_ADDRESS my_address;
-    unsigned max_apdu = 0;
+    uint16_t max_apdu = 0;
     uint8_t invoke_id = 0;
     bool status = false;
     int len = 0;

@@ -61,7 +61,7 @@
 int iam_encode_apdu(
     uint8_t * apdu,
     uint32_t device_id,
-    unsigned max_apdu,
+    uint16_t max_apdu,
     int segmentation,
     uint16_t vendor_id)
 {
@@ -190,7 +190,7 @@ void testIAm(
     uint8_t apdu[480] = { 0 };
     int len = 0;
     uint32_t device_id = 42;
-    unsigned max_apdu = 480;
+    uint16_t max_apdu = 480;
     int segmentation = SEGMENTATION_NONE;
     uint16_t vendor_id = 42;
     uint32_t test_device_id = 0;

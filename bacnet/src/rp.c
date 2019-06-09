@@ -52,8 +52,6 @@
 #include "bacdef.h"
 #include "rp.h"
 
-/** @file rp.c  Encode/Decode Read Property and RP ACKs */
-
 #if BACNET_SVC_RP_A
 /* encode service */
 int rp_encode_apdu(
@@ -112,7 +110,6 @@ int rp_decode_service_request(
     uint32_t property ;      /* for decoding */
     uint32_t array_value ;   /* for decoding */
 
-    /* check for value pointers */
         /* Must have at least 2 tags, an object id and a property identifier
          * of at least 1 byte in length to have any chance of parsing */
         if (apdu_len < 7) {
@@ -165,6 +162,7 @@ int rp_decode_service_request(
     return (int) len;
 }
 
+
 /* alternate method to encode the ack without extra buffer */
 int rp_ack_encode_apdu_init(
     uint8_t * apdu,
@@ -174,31 +172,29 @@ int rp_ack_encode_apdu_init(
     int len = 0;        /* length of each encoding */
     int apdu_len = 0;   /* total length of the apdu, return value */
 
-    if (apdu) {
-        apdu[0] = PDU_TYPE_COMPLEX_ACK; /* complex ACK service */
-        apdu[1] = invoke_id;    /* original invoke id from request */
-        apdu[2] = SERVICE_CONFIRMED_READ_PROPERTY;      /* service choice */
-        apdu_len = 3;
+    apdu[0] = PDU_TYPE_COMPLEX_ACK;             /* complex ACK service */
+    apdu[1] = invoke_id;                        /* original invoke id from request */
+    apdu[2] = SERVICE_CONFIRMED_READ_PROPERTY;  /* service choice */
+    apdu_len = 3;
 
-        /* service ack follows */
+    /* service ack follows */
+    len =
+        encode_context_object_id(&apdu[apdu_len], 0, rpdata->object_type,
+        rpdata->object_instance);
+    apdu_len += len;
+    len =
+        encode_context_enumerated(&apdu[apdu_len], 1,
+                                  rpdata->object_property);
+    apdu_len += len;
+    /* context 2 array index is optional */
+    if (rpdata->array_index != BACNET_ARRAY_ALL) {
         len =
-            encode_context_object_id(&apdu[apdu_len], 0, rpdata->object_type,
-            rpdata->object_instance);
-        apdu_len += len;
-        len =
-            encode_context_enumerated(&apdu[apdu_len], 1,
-                                      rpdata->object_property);
-        apdu_len += len;
-        /* context 2 array index is optional */
-        if (rpdata->array_index != BACNET_ARRAY_ALL) {
-            len =
-                encode_context_unsigned(&apdu[apdu_len], 2,
-                                        rpdata->array_index);
-            apdu_len += len;
-        }
-        len = encode_opening_tag(&apdu[apdu_len], 3);
+            encode_context_unsigned(&apdu[apdu_len], 2,
+                                    rpdata->array_index);
         apdu_len += len;
     }
+    len = encode_opening_tag(&apdu[apdu_len], 3);
+    apdu_len += len;
 
     return apdu_len;
 }

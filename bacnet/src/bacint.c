@@ -50,7 +50,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "config.h"
+#include "configProj.h"
 #include "bacint.h"
 
 /** @file bacint.c  Encode/Decode Integer Types */
@@ -63,7 +63,7 @@ uint8_t encode_unsigned8(
 	return 1;
 }
 
-int encode_unsigned16(
+uint8_t encode_unsigned16(
     uint8_t * apdu,
     uint16_t value)
 {
@@ -73,7 +73,7 @@ int encode_unsigned16(
     return 2;
 }
 
-int decode_unsigned16(
+uint8_t decode_unsigned16(
     const uint8_t * apdu,
     uint16_t * value)
 {
@@ -84,7 +84,7 @@ int decode_unsigned16(
     return 2;
 }
 
-int encode_unsigned24(
+uint8_t encode_unsigned24(
     uint8_t * apdu,
     uint32_t value)
 {
@@ -95,7 +95,8 @@ int encode_unsigned24(
     return 3;
 }
 
-int decode_unsigned24(
+
+uint8_t decode_unsigned24(
     const uint8_t * apdu,
     uint32_t * value)
 {
@@ -108,7 +109,7 @@ int decode_unsigned24(
     return 3;
 }
 
-int encode_unsigned32(
+uint8_t encode_unsigned32(
     uint8_t * apdu,
     uint32_t value)
 {
@@ -120,7 +121,7 @@ int encode_unsigned32(
     return 4;
 }
 
-int decode_unsigned32(
+uint8_t decode_unsigned32(
     const uint8_t * apdu,
     uint32_t * value)
 {
@@ -183,7 +184,7 @@ int decode_unsigned64(
 #endif
 
 #if BACNET_USE_SIGNED
-int encode_signed8(
+uint8_t encode_signed8(
     uint8_t * apdu,
     int8_t value)
 {
@@ -192,7 +193,7 @@ int encode_signed8(
     return 1;
 }
 
-int decode_signed8(
+uint8_t decode_signed8(
     uint8_t * apdu,
     int32_t * value)
 {
@@ -208,7 +209,7 @@ int decode_signed8(
     return 1;
 }
 
-int encode_signed16(
+uint8_t encode_signed16(
     uint8_t * apdu,
     int16_t value)
 {
@@ -218,7 +219,7 @@ int encode_signed16(
     return 2;
 }
 
-int decode_signed16(
+uint8_t decode_signed16(
     uint8_t * apdu,
     int32_t * value)
 {
@@ -235,7 +236,7 @@ int decode_signed16(
     return 2;
 }
 
-int encode_signed24(
+uint8_t encode_signed24(
     uint8_t * apdu,
     int32_t value)
 {
@@ -246,7 +247,7 @@ int encode_signed24(
     return 3;
 }
 
-int decode_signed24(
+uint8_t decode_signed24(
     uint8_t * apdu,
     int32_t * value)
 {
@@ -264,7 +265,7 @@ int decode_signed24(
     return 3;
 }
 
-int encode_signed32(
+uint8_t encode_signed32(
     uint8_t * apdu,
     int32_t value)
 {
@@ -276,7 +277,7 @@ int encode_signed32(
     return 4;
 }
 
-int decode_signed32(
+uint8_t decode_signed32(
     uint8_t * apdu,
     int32_t * value)
 {

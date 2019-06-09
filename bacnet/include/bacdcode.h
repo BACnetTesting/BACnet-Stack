@@ -64,11 +64,11 @@ int encode_tag(
 int encode_opening_tag(
     uint8_t * apdu,
     uint8_t tag_number);
-    
+
 int encode_closing_tag(
     uint8_t * apdu,
     uint8_t tag_number);
-    
+
 int decode_tag_number(
     const uint8_t * apdu,
     uint8_t * tag_number);
@@ -299,12 +299,12 @@ int decode_context_character_string(
 int encode_bacnet_unsigned(
     uint8_t * apdu,
     uint32_t value);
-    
+
 int encode_context_unsigned(
     uint8_t * apdu,
     uint8_t tag_number,
     uint32_t value);
-    
+
 int encode_application_unsigned(
     uint8_t * apdu,
     uint32_t value);

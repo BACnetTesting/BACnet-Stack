@@ -37,13 +37,11 @@
 *
 ****************************************************************************************/
 
-//#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include "config.h"
 #include "txbuf.h"
 #include "bacdef.h"
-// #include "bacdcode.h"
 #include "iam.h"
 #include "address.h"
 #include "handlers.h"

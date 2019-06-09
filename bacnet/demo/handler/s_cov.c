@@ -37,21 +37,12 @@
 *
 ****************************************************************************************/
 
-//#include <stddef.h>
-//#include <stdint.h>
-//#include <errno.h>
-//#include <string.h>
-//#include "config.h"
-//#include "bacdef.h"
-//#include "bacdcode.h"
 #include "address.h"
 #include "tsm.h"
 #include "dcc.h"
-//#include "npdu.h"
-//#include "apdu.h"
-// #include "device.h"
 #include "datalink.h"
 #include "cov.h"
+
 /* some demo stuff needed */
 #include "handlers.h"
 #include "txbuf.h"
@@ -117,8 +108,7 @@ int Send_UCOV_Notify(
     int bytes_sent = 0;
     BACNET_NPCI_DATA npci_data;
 
-    pdu_len = ucov_notify_encode_pdu(buffer, buffer_len, &dest, &npci_data,
-        cov_data);
+    pdu_len = ucov_notify_encode_pdu(buffer, buffer_len, &dest, &npci_data, cov_data);
     bytes_sent = datalink_send_pdu(&dest, &npci_data, &buffer[0], pdu_len);
 
     return bytes_sent;
@@ -138,7 +128,7 @@ uint8_t Send_COV_Subscribe(
 {
     BACNET_ADDRESS dest;
     BACNET_ADDRESS my_address;
-    unsigned max_apdu = 0;
+    uint16_t max_apdu = 0;
     uint8_t invoke_id = 0;
     bool status = false;
     int len = 0;

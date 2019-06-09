@@ -70,10 +70,14 @@ void debug_printf(
 
 
 #if defined ( _MSC_VER  )
+
 // Compiling with /Wall, but have to suppress the following, and then re-enable some after Microsoft includes.
+
 // Warnings disabled in property manager file "bacnet solutions settings.prop"
 // 4820; 4214; 4244; 4996; 4668; 4100; 4242; 4255; 4710; 4267; 4206; 4389; 4548;
+
 #pragma warning( error : 4255)    // function prototype not declared
+
 #endif
 
 #endif // DEBUG_H

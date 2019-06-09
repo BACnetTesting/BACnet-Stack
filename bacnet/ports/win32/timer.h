@@ -61,12 +61,14 @@ struct timeval *tp,
 
 void timer_init(
     void);
+
 uint32_t timer_milliseconds(
     unsigned index);
 
 bool timer_elapsed_milliseconds(
     unsigned index,
     uint32_t value);
+
 bool timer_elapsed_seconds(
     unsigned index,
     uint32_t value);

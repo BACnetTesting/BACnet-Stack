@@ -41,7 +41,7 @@
 #include <stdint.h>
 #include <errno.h>
 #include <string.h>
-#include "config.h"
+#include "configProj.h"
 #include "txbuf.h"
 #include "bacdef.h"
 #include "bacdcode.h"
@@ -63,6 +63,7 @@
 
 /* returns the invoke ID for confirmed request, or zero on failure */
 
+#if (INTRINSIC_REPORTING == 1)
 
 uint8_t Send_Alarm_Acknowledgement(
     uint32_t device_id,
@@ -70,7 +71,7 @@ uint8_t Send_Alarm_Acknowledgement(
 {
     BACNET_ADDRESS dest;
     BACNET_ADDRESS my_address;
-    unsigned max_apdu = 0;
+    uint16_t max_apdu = 0;
     uint8_t invoke_id = 0;
     bool status = false;
     int len = 0;
@@ -126,3 +127,5 @@ uint8_t Send_Alarm_Acknowledgement(
 
     return invoke_id;
 }
+
+#endif // #if (INTRINSIC_REPORTING == 1)

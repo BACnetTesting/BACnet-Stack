@@ -47,6 +47,10 @@
 ****************************************************************************************/
 
 #include <assert.h>
+#include "configProj.h"
+
+#if (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1)
+
 #include "event.h"
 #include "bacdcode.h"
 #include "npdu.h"
@@ -1607,3 +1611,6 @@ int main(
 
 #endif /* TEST_EVENT */
 #endif /* TEST */
+
+#endif // ( BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1 )
+

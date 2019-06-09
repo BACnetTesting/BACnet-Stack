@@ -43,7 +43,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+/* define our epoch beginnings */
 #define BACNET_EPOCH_YEAR 1900
+/* 1/1/1900 is a Monday */
+#define BACNET_EPOCH_DOW BACNET_WEEKDAY_MONDAY
+
 
 typedef enum BACnet_Weekday {
     BACNET_WEEKDAY_MONDAY = 1,

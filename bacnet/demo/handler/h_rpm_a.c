@@ -68,6 +68,8 @@
  * 			where the RPM data is to be stored.
  * @return The number of bytes decoded, or -1 on error
  */
+#ifdef RPM_A
+
 int rpm_ack_decode_service_request(
     uint8_t * apdu,
     int apdu_len,
@@ -222,9 +224,6 @@ void rpm_ack_print_data(
     BACNET_OBJECT_PROPERTY_VALUE object_value;  /* for bacapp printing */
     BACNET_PROPERTY_REFERENCE *listOfProperties;
     BACNET_APPLICATION_DATA_VALUE *value;
-#if PRINT_ENABLED
-    bool array_value = false;
-#endif
 
     if (rpm_data) {
 #if PRINT_ENABLED
@@ -379,3 +378,5 @@ void handler_read_property_multiple_ack(
         }
     }
 }
+
+#endif

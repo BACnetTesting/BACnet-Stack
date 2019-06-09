@@ -47,6 +47,10 @@
 ****************************************************************************************/
 
 #include <stdint.h>
+#include "configProj.h"
+
+#if ( BACNET_SVC_PRIVATE_TRANSFER )
+
 #include "bacenum.h"
 #include "bacdcode.h"
 #include "bacdef.h"
@@ -707,3 +711,5 @@ int main(
 }
 #endif /* TEST_READ_PROPERTY */
 #endif /* TEST */
+
+#endif // ( BACNET_SVC_PRIVATE_TRANSFER )

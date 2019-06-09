@@ -37,15 +37,7 @@
 *
 ****************************************************************************************/
 
-//#include <stdbool.h>
 #include <stdio.h>
-//#include <stdint.h>
-// #include "bacdef.h"
-//#include "bacdcode.h"
-//#include "bacint.h"
-//#include "bacenum.h"
-//#include "bits.h"
-//#include "npdu.h"
 #include "apdu.h"
 #include "handlers.h"
 #include "client.h"

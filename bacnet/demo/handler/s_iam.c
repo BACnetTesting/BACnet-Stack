@@ -37,21 +37,10 @@
 *
 ****************************************************************************************/
 
-//#include <stddef.h>
 #include <stdint.h>
-//#include <errno.h>
-//#include <string.h>
-//#include "config.h"
 #include "bacaddr.h"
 #include "bacdef.h"
-//#include "bacdcode.h"
-//#include "address.h"
-//#if ( BACNET_CLIENT == 1 )
-//#include "tsm.h"
-//#endif
-//#include "dcc.h"
 #include "npdu.h"
-//#include "apdu.h"
 #include "device.h"
 #include "datalink.h"
 #include "iam.h"

@@ -37,14 +37,17 @@
 *
 ****************************************************************************************/
 
+// Just a note. BVLC (and bvlc.h) is required, and perfectly usable, in the absence of a BBMD.
+// Henceforth, bvlc.h has been modified and bbmd.h created to separate the requirements.
+
 #pragma once 
 
+#include <stdint.h>
 //#include <stdio.h>
 #include "stdbool.h"
-#include "config.h"
+#include "configProj.h"
 
 #include "net.h"
-#include <stdint.h>
 //#include <stdlib.h>
 //#include <time.h>
 //#define WIN32_LEAN_AND_MEAN
@@ -106,8 +109,11 @@ int bvlc_get_bdt_local(
     const BBMD_TABLE_ENTRY** table);
 
 /* Invalidate all entries in the broadcast distribution table */
-void bbmd_clear_bdt_local(PORT_SUPPORT *portParams);
-void bbmd_clear_fdt_local(PORT_SUPPORT *portParams);    // todo3 - I dont think karg had this, add to BTC?
+void bbmd_clear_bdt_local(
+    PORT_SUPPORT *portParams);
+
+void bbmd_clear_fdt_local(
+    PORT_SUPPORT *portParams);    // todo3 - I dont think karg had this, add to BTC?
 
 /* Add new entry to broadcast distribution table. Returns true if the new
 * entry was added successfully */

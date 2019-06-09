@@ -42,6 +42,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "bacdef.h"
 
 BACNET_REJECT_REASON reject_convert_error_code(
     BACNET_ERROR_CODE error_code);

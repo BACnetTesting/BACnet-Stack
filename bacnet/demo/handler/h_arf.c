@@ -42,7 +42,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include "config.h"
+#include "configProj.h"
 #include "txbuf.h"
 #include "bacdef.h"
 #include "bacerror.h"

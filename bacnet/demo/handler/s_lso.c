@@ -37,10 +37,10 @@
 *
 ****************************************************************************************/
 
-//#include <stddef.h>
+#include <stddef.h>
 #include <stdint.h>
-//#include <errno.h>
-//#include <string.h>
+// #include <errno.h>
+#include <string.h>
 //#include "config.h"
 //#include "txbuf.h"
 //#include "bacdef.h"
@@ -58,6 +58,7 @@
 #include "txbuf.h"
 #include "lso.h"
 //#include "client.h"
+#include "datalink.h"
 
 /** @file s_lso.c  Send BACnet Life Safety Operation message. */
 
@@ -70,7 +71,7 @@ uint8_t Send_Life_Safety_Operation_Data(
 {
     BACNET_ADDRESS dest;
     BACNET_ADDRESS my_address;
-    unsigned max_apdu = 0;
+    uint16_t max_apdu = 0;
     uint8_t invoke_id = 0;
     bool status = false;
     int len = 0;

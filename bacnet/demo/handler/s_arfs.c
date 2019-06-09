@@ -41,7 +41,7 @@
 #include <stdint.h>
 #include <errno.h>
 #include <string.h>
-#include "config.h"
+#include "configProj.h"
 #include "txbuf.h"
 #include "bacdef.h"
 #include "bacdcode.h"
@@ -69,7 +69,7 @@ uint8_t Send_Atomic_Read_File_Stream(
     BACNET_ADDRESS dest;
     BACNET_ADDRESS my_address;
     BACNET_NPCI_DATA npci_data;
-    unsigned max_apdu = 0;
+    uint16_t max_apdu = 0;
     uint8_t invoke_id = 0;
     bool status = false;
     int len = 0;

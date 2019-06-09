@@ -55,6 +55,12 @@
     <Filter Include="Source Files\bits\osLayer\win">
       <UniqueIdentifier>{c99e873b-2eba-4bbb-b8a6-296d3d54ec8c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\include">
+      <UniqueIdentifier>{380a0d51-a10b-4372-8625-efd2732cd0a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\bits\include">
+      <UniqueIdentifier>{a5052aea-b2da-47b6-968c-bba71c0850ce}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\demo\handler\h_cov.c">
@@ -178,9 +184,6 @@
       <Filter>Source Files\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\memcopy.c">
-      <Filter>Source Files\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\mstp.c">
       <Filter>Source Files\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\mstptext.c">
@@ -528,9 +531,6 @@
     <ClCompile Include="..\..\demo\object\credential_data_input.c">
       <Filter>Source Files\demo\object</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\demo\object\device-client.c">
-      <Filter>Source Files\demo\object</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\demo\handler\h_bbmd6.c">
       <Filter>Source Files\demo\hander</Filter>
     </ClCompile>
@@ -582,11 +582,26 @@
     <ClCompile Include="..\..\demo\object\netport.c">
       <Filter>Source Files\demo\object</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\bits\util\FlashErr.c">
+      <Filter>Source Files\bits\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ports\win32\led.c">
+      <Filter>Source Files\ports\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\bits\osLayer\win\btaDatalinkUDP.c">
+      <Filter>Source Files\bits\osLayer\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\bits\util\ipUtil.c">
+      <Filter>Source Files\bits\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\bits\util\appApi.c">
+      <Filter>Source Files\bits\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\bits\util\bitsDatalink.c">
+      <Filter>Source Files\bits\util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\config.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\abort.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -872,7 +887,6 @@
     <ClInclude Include="..\..\ConnectExUtil\llist.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-<<<<<<< HEAD:lib/MSVC/BACnet Stack Library.vcxproj.filters
     <ClInclude Include="..\..\bits\util\BACnetToString.h">
       <Filter>Source Files\bits\util</Filter>
     </ClInclude>
@@ -912,19 +926,152 @@
     <ClInclude Include="..\..\bits\osLayer\win\osLayer.h">
       <Filter>Source Files\bits\osLayer\win</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\config.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\access_credential.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\access_door.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\access_point.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\access_rights.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\access_user.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\access_zone.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\ai.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\alert_enrollment.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\ao.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\av.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\bacfile.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\bi.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\bo.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\bv.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\calendar.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\channel.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\command.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\credential_data_input.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\csv.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\device.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\iv.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\lc.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\lo.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\lsp.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\ms-input.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\mso.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\msv.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\ms-value.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\nc.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\netport.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\osv.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\piv.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\schedule.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\demo\object\trendlog.h">
+      <Filter>Source Files\demo\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bits\util\btaInternal.h">
+      <Filter>Source Files\bits\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bits\include\bitsUtil.h">
+      <Filter>Source Files\bits\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bits\include\ledCommon.h">
+      <Filter>Source Files\bits\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bits\include\timerCommon.h">
+      <Filter>Source Files\bits\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\assigned_access_rights.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\authentication_factor.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\authentication_factor_format.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\bacbits.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\bacversion.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\configProj.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\credential_authentication_factor.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rs485common.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\timer.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\README.md" />
-=======
-    <ClInclude Include="..\..\ports\win32\net.h">
-      <Filter>Source Files\ports\win32</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\ports\win32\rs485.h">
-      <Filter>Source Files\ports\win32</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\ports\win32\timer.h">
-      <Filter>Source Files\ports\win32</Filter>
-    </ClInclude>
->>>>>>> origin/CompileMSVC:bacnet/lib/MSVC/BACnet Stack Library.vcxproj.filters
   </ItemGroup>
 </Project>

@@ -101,14 +101,14 @@ uint8_t Send_Read_Property_Request_Address(
         data.array_index = array_index;
         len =
             rp_encode_apdu(&Handler_Transmit_Buffer[pdu_len], invoke_id,
-            &data);
+                &data);
         pdu_len += len;
-        /* will it fit in the sender?
+        /* is it small enough for the the destination to receive?
            note: if there is a bottleneck router in between
            us and the destination, we won't know unless
            we have a way to check for that and update the
            max_apdu in the address binding table. */
-        if ((uint16_t) pdu_len < max_apdu) {
+        if ((uint16_t)pdu_len < max_apdu) {
             tsm_set_confirmed_unsegmented_transaction(invoke_id, dest,
                 &npci_data, &Handler_Transmit_Buffer[0], (uint16_t) pdu_len);
             bytes_sent =
@@ -155,9 +155,9 @@ uint8_t Send_Read_Property_Request(
     uint32_t array_index)
 {
     BACNET_ADDRESS dest = { 0 };
-    unsigned max_apdu = 0;
+    uint16_t max_apdu;
     uint8_t invoke_id = 0;
-    bool status = false;
+    bool status;
 
     /* is the device bound? */
     status = address_get_by_device(device_id, &max_apdu, &dest);

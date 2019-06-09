@@ -23,6 +23,15 @@
 *
 *****************************************************************************************
 *
+*   Modifications Copyright (C) 2016 ConnectEx, Inc
+*
+*   March 3, 2016    EKH    AddListElement / RemoveListElement
+*                           This file has been modified to support the AddListElement and RemoveListElement
+*                           services and the supporting code for these services by ConnectEx, Inc.
+*                           Questions regarding this can be directed to: info@connect-ex.com
+*
+*****************************************************************************************
+*
 *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
 *
 *   July 1, 2017    BITS    Modifications to this file have been made in compliance
@@ -36,15 +45,6 @@
 *          or      www.github.com/bacnettesting/bacnet-stack
 *
 ****************************************************************************************/
-
-/*
-
-2016.03.22  EKH     AddListElement / RemoveListElement
-    This file has been modified to support the AddListElement and RemoveListElement
-    services and the supporting code for these services by ConnectEx, Inc.
-    Questions regarding this can be directed to: info@connect-ex.com
-
-*/
 
 
 /** @file device.h Defines functions for handling all BACnet objects belonging
@@ -63,7 +63,9 @@
 #include "rp.h"
 #include "rpm.h"
 #include "readrange.h"
+#if ( BACNET_SVC_LIST_MANIPULATION_B == 1 )
 #include "listmanip.h"
+#endif
 
 /** Called so a BACnet object can perform any necessary initialization.
  * @ingroup ObjHelpers
@@ -88,7 +90,7 @@ typedef unsigned(
 typedef uint32_t(
     *object_index_to_instance_function)
     (
-    unsigned objectIndex);
+        unsigned objectIndex);
 
 /** Provides the BACnet Object_Name for a given object instance of this type.
  * @ingroup ObjHelpers
@@ -168,7 +170,7 @@ typedef void(
     *object_intrinsic_reporting_function) (
         uint32_t object_instance);
 
-#if ( BACNET_SVC_LIST_MANIPULATION_B == 1 )
+#if  (BACNET_SVC_LIST_MANIPULATION_B == 1)
 /** AddListElement helper function
 * @ingroup ObjHelpers
 * @param [in] Object instance.
@@ -281,9 +283,8 @@ typedef struct devObj_s {
 } DEVICE_OBJECT_DATA;
 
 
-
-void Device_Init(
-    object_functions_t * object_table);
+void Device_Object_Function_Tables_Init(
+    void);
 
 bool Device_Reinitialize(
     BACNET_REINITIALIZE_DEVICE_DATA * rd_data);
@@ -377,6 +378,7 @@ bool Device_Object_List_Identifier(
 
 unsigned Device_Count(
     void);
+
 uint32_t Device_Index_To_Instance(
         unsigned objectIndex);
 
@@ -392,6 +394,7 @@ bool Device_Object_Name_Copy(
     BACNET_OBJECT_TYPE object_type,
     uint32_t object_instance,
     BACNET_CHARACTER_STRING * object_name);
+
 bool Device_Object_Name_ANSI_Init(const char * object_name);
 char * Device_Object_Name_ANSI(void);
 
@@ -413,15 +416,17 @@ void Device_Set_Vendor_Identifier(
 
 const char *Device_Model_Name(
     void);
-bool Device_Set_Model_Name(
-    const char *name,
-    size_t length);
+
+//bool Device_Set_Model_Name(
+//    const char *name,
+//    size_t length);
 
 const char *Device_Firmware_Revision(
     void);
 
 const char *Device_Application_Software_Version(
     void);
+
 bool Device_Set_Application_Software_Version(
     const char *name,
     size_t length);
@@ -449,6 +454,7 @@ BACNET_SEGMENTATION Device_Segmentation_Supported(
 
 uint32_t Device_Database_Revision(
     void);
+
 void Device_Set_Database_Revision(
     uint32_t revision);
 
@@ -468,8 +474,8 @@ bool Device_Valid_Object_Id(
 	bool Device_Add_List_Element(
 		BACNET_LIST_MANIPULATION_DATA * lmdata);
 
-	bool Device_Remove_List_Element
-		(BACNET_LIST_MANIPULATION_DATA * lmdata);
+bool Device_Remove_List_Element(
+    BACNET_LIST_MANIPULATION_DATA * lmdata);
 #endif
 
 int Device_Read_Property(
@@ -493,7 +499,7 @@ void Device_local_reporting(
     void);
 #endif
 
-#if  (BACNET_SVC_LIST_MANIPULATION_B == 1)
+#if (BACNET_SVC_LIST_MANIPULATION_B == 1)
 //int Device_decode_address_binding(
 //    uint8_t * application_data,
 //    uint32_t application_data_len,
@@ -508,7 +514,7 @@ bool Device_Remove_List_Element_Local(
 #endif
 
 /* Prototypes for Routing functionality in the Device Object.
- * Enable by defining BAC_ROUTING in config.h and including gw_device.c
+ * Enable by defining BAC_ROUTING in configProj.h and including gw_device.c
  * in the build (lib/Makefile).
  */
 

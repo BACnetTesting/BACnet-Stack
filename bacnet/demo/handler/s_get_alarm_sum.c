@@ -90,10 +90,10 @@ uint8_t Send_Get_Alarm_Summary_Address(
 
         pdu_len =
             npdu_encode_pdu(&Handler_Transmit_Buffer[0], dest,
-            &my_address, &npci_data);
+                            &my_address, &npci_data);
         /* encode the APDU portion of the packet */
         len = get_alarm_summary_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-            invoke_id);
+                                            invoke_id);
 
         pdu_len += len;
         if ((uint16_t) pdu_len < max_apdu) {
@@ -129,7 +129,7 @@ uint8_t Send_Get_Alarm_Summary(
     uint32_t device_id)
 {
     BACNET_ADDRESS dest;
-    unsigned max_apdu = 0;
+    uint16_t max_apdu = 0;
     uint8_t invoke_id = 0;
     bool status = false;
 
@@ -137,7 +137,10 @@ uint8_t Send_Get_Alarm_Summary(
     status = address_get_by_device(device_id, &max_apdu, &dest);
     if (status) {
         invoke_id = Send_Get_Alarm_Summary_Address(
-            &dest, max_apdu);
+                        &dest, max_apdu);
+    } else {
+        invoke_id = 0 ;
+        // todo 5 - surely we can do better than this?
     }
 
     return invoke_id;

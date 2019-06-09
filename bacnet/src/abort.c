@@ -59,6 +59,9 @@
  * Anything not defined converts to ABORT_REASON_OTHER.
  * Will need reworking if it is required to return proprietary abort codes.
  */
+
+// todo 2 - a better approach will be to add an abort reason field in the WP_DATA or RP_DATA
+
 BACNET_ABORT_REASON abort_convert_error_code(
     BACNET_ERROR_CODE error_code)
 {
@@ -81,8 +84,11 @@ BACNET_ABORT_REASON abort_convert_error_code(
             abort_code = ABORT_REASON_PROPRIETARY_FIRST;
             break;
         case ERROR_CODE_ABORT_OTHER:
+            // 'other' is coded above
+            break;
         default:
-            abort_code = ABORT_REASON_OTHER;
+            // 'other' is coded above
+            dbTraffic(DBD_ALL, DB_UNEXPECTED_ERROR, "Unexpected Abort Reason %d", error_code );
             break;
     }
 

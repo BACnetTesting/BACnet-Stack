@@ -38,7 +38,7 @@
 ****************************************************************************************/
 
 #ifdef _MSC_VER
-//#include <conio.h>
+
 #include <direct.h>         // for cwd
 #endif
 
@@ -51,40 +51,37 @@
 
 //#include "server.h"
 #include "address.h"
-//#include "bacdef.h"
 #include "handlers.h"
 #include "client.h"             // todo4 - hate this.. remove one day
 #include "dlenv.h"
-//#include "bacdcode.h"
-//#include "npdu.h"
-//#include "apdu.h"
 #include "iam.h"
 #include "tsm.h"
-
-
 #include "device.h"
 #include "datalink.h"
-// #include "dcc.h"
 #include "filename.h"
-//#include "getevent.h"
-//#include "net.h"
 #include "txbuf.h"
-//#include "lc.h"
 #include "version.h"
-///* include the device object */
-//#include "device.h"
-//#include "trendlog.h"
-//#if (INTRINSIC_REPORTING_B == 1)
-//#include "nc.h"
-//#endif /* (INTRINSIC_REPORTING_B == 1) */
-//#if defined(BACFILE)
-//#include "bacfile.h"
-//#endif /* defined(BACFILE) */
 
+#include "netport.h"
 #include "ai.h"
 #include "ao.h"
 #include "av.h"
+#include "bi.h"
+#include "bo.h"
 #include "bv.h"
+
+#if ( BACNET_USE_OBJECT_MULTISTATE_INPUT == 1)
+#include "ms-input.h"
+#endif
+
+#if ( BACNET_USE_OBJECT_MULTISTATE_OUTPUT == 1)
+#include "mso.h"
+#endif
+
+#if ( BACNET_USE_OBJECT_MULTISTATE_VALUE == 1)
+#include "ms-value.h"
+#endif
+
 #include "calendar.h"
 #include "schedule.h"
 
@@ -92,18 +89,17 @@
 #include "btaDebug.h"
 #include "bitsUtil.h"
 
-
 extern const char *BACnet_Version;
 
 
 static void Init_Service_Handlers(
     void)
 {
-    Device_Init(NULL);
+    Device_Object_Function_Tables_Init();
     /* we need to handle who-is to support dynamic device binding */
     apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_WHO_IS,
         handler_who_is_unicast);
-    apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_WHO_HAS, 
+    apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_WHO_HAS,
         handler_who_has);
 
 #if 0
@@ -174,8 +170,9 @@ static void Init_Service_Handlers(
     /* handle communication so we can shutup when asked */
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL,
         handler_device_communication_control);
-    /* handle the data coming back from private requests */
+
 #if ( BACNET_SVC_PRIVATE_TRANSFER )
+    /* handle the data coming back from private requests */
     apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_PRIVATE_TRANSFER,
         handler_unconfirmed_private_transfer);
 #endif
@@ -183,19 +180,22 @@ static void Init_Service_Handlers(
 #if (INTRINSIC_REPORTING_B==1)
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_ACKNOWLEDGE_ALARM,
         handler_alarm_ack);
+#endif // (INTRINSIC_REPORTING_B == 1)
 
+#if ( BACNET_PROTOCOL_REVISION < 13 )
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_GET_ALARM_SUMMARY,
         handler_get_alarm_summary);
-#endif // (INTRINSIC_REPORTING_B == 1)
+#endif
 
 #if ( BACNET_USE_EVENT_HANDLING == 1 )
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_GET_EVENT_INFORMATION,
         handler_get_event_information);
-#endif
+#endif 
 
 #if (BACNET_TIME_MASTER == 1)
     handler_timesync_init();
 #endif
+
     // apdu_set_confirmed_handler(SERVICE_CONFIRMED_ADD_LIST_ELEMENT, handler_add_list_element);
     // apdu_set_confirmed_handler(SERVICE_CONFIRMED_REMOVE_LIST_ELEMENT, handler_remove_list_element);
 }
@@ -222,6 +222,7 @@ static void print_help(const char *filename)
         "%s 123 Fred\n", filename);
 }
 
+
 /** Main function of server demo.
  *
  * @see Device_Set_Object_Instance_Number, dlenv_init, Send_I_Am,
@@ -241,10 +242,10 @@ int main(
     // BACNET_ADDRESS src;         /* address where message came from */
     // uint16_t pdu_len;
     // unsigned timeout = 100;    /* milliseconds */
-    //time_t last_seconds;
-    //time_t current_seconds;
-    //uint32_t elapsed_seconds;
-    //uint32_t elapsed_milliseconds;
+    time_t last_seconds = time(NULL);
+    time_t current_seconds;
+    uint32_t elapsed_seconds;
+    uint32_t elapsed_milliseconds;
     //uint32_t address_binding_tmr = 0;
     //uint32_t recipient_scan_tmr;
 //#if (BACNET_TIME_MASTER == 1)
@@ -263,7 +264,6 @@ int main(
 #ifndef _MSC_VER
     free(cwd);
 #endif
-
 
     int argi;
     const char *filename;
@@ -303,39 +303,73 @@ int main(
         "BACnet Device ID: %u\n" "Max APDU: %d\n", BACnet_Version,
         Device_Object_Instance_Number(), MAX_APDU);
 
-//    /* load any static address bindings to show up
-//       in our device bindings list */
-//    address_init();
-//    Init_Service_Handlers();
-//    dlenv_init();
-//    atexit(datalink_cleanup);
-//    /* configure the timeout values */
-//    last_seconds = time(NULL);
-
-    Init_Service_Handlers();
+    //    /* load any static address bindings to show up
+    //       in our device bindings list */
+    //    address_init();
+    //    Init_Service_Handlers();
+    //    dlenv_init();
+    //    atexit(datalink_cleanup);
+    //    /* configure the timeout values */
+    //    last_seconds = time(NULL);
 
     InitBACnet();
 
+    Init_Service_Handlers();
+
+    // The (recent) Network_Port object is so entwined with the datalink,
+    // we now intialize datalinks when we create Network_Ports
+    Network_Port_Create(1, "IP Network Port");
+
+    // Create some Application Objects, dynamically
+
 #if ( BACNET_USE_OBJECT_ANALOG_INPUT == 1)
-    // Create some Objects, dynamically
-    Analog_Input_Create(1, "Ana Input 1"); // , UNITS_DEGREES_CELSIUS, 0.0 );
-    Analog_Input_Create(2, "Ana Input 2"); // , UNITS_DEGREES_CELSIUS, 0.0 );
+    Analog_Input_Create(1, "Ana Input 1", UNITS_DEGREES_CELSIUS); //, 0.0 );
+    Analog_Input_Create(2, "Ana Input 2", UNITS_DEGREES_CELSIUS); //, 0.0 );
 #endif
 
-    // todo1 etc
+#if ( BACNET_USE_OBJECT_ANALOG_OUTPUT == 1)
     Analog_Output_Create(1, "Ana Output 1"); // , UNITS_DEGREES_CELSIUS, 0.0 );
+#endif
 
-    Analog_Value_Create(1, "Ana Value 1", UNITS_PERCENT_RELATIVE_HUMIDITY );
+#if ( BACNET_USE_OBJECT_ANALOG_VALUE == 1)
+    Analog_Value_Create(1, "Ana Value 1", UNITS_PERCENT_RELATIVE_HUMIDITY);
+#endif
 
+#if ( BACNET_USE_OBJECT_BINARY_INPUT == 1)
+    Binary_Input_Create(1, "Bin Input 1");
+#endif
+
+#if ( BACNET_USE_OBJECT_BINARY_OUTPUT == 1)
+    Binary_Output_Create(1, "Bin Output 1");
+#endif
+
+#if ( BACNET_USE_OBJECT_BINARY_VALUE == 1)
     Binary_Value_Create(1, "Bin Value 1");
+#endif
 
+#if ( BACNET_USE_OBJECT_MULTISTATE_INPUT == 1)
+    Multistate_Input_Create(1, "MS Input 1");
+#endif
+
+#if ( BACNET_USE_OBJECT_MULTISTATE_OUTPUT == 1)
+    Multistate_Output_Create(1, "MS Output 1");
+#endif
+
+#if ( BACNET_USE_OBJECT_MULTISTATE_VALUE == 1)
+    Multistate_Value_Create(1, "MS Value 1");
+#endif
+
+#if ( BACNET_USE_OBJECT_CALENDAR == 1 )
     Calendar_Create(1, "Calendar 1");
     Calendar_Create(2, "Calendar 2");
     Calendar_Create(3, "Calendar 3");
+#endif 
 
+#if ( BACNET_USE_OBJECT_SCHEDULE == 1 )
     Schedule_Create(1, "Schedule 1");
     Schedule_Create(2, "Schedule 2");
     Schedule_Create(3, "Schedule 3");
+#endif
 
     /* broadcast an I-Am on startup */
     Send_I_Am(&Handler_Transmit_Buffer[0]);
@@ -347,77 +381,80 @@ int main(
 
         busy &= doUserMenu();
 
-    	// do application stuff
+        // do application stuff
         busy &= TickBACnet();
 
-//        /* input */
-//        current_seconds = time(NULL);
-//
-//        /* returns 0 bytes on timeout */
-//        pdu_len = datalink_receive(&src, &Rx_Buf[0], MAX_MPDU, timeout);
-//
-//        /* process */
-//        if (pdu_len) {
-//            npdu_handler(&src, &Rx_Buf[0], pdu_len);
-//        }
-//        /* at least one second has passed */
-//        elapsed_seconds = (uint32_t)(current_seconds - last_seconds);
-//        if (elapsed_seconds) {
-//            last_seconds = current_seconds;
-//            dcc_timer_seconds(elapsed_seconds);
-//#if defined(BACDL_BIP) && BBMD_ENABLED
-//            bvlc_maintenance_timer(elapsed_seconds);
-//#endif
-//            dlenv_maintenance_timer(elapsed_seconds);
+        /* input */
+        current_seconds = time(NULL);
 
-//#if 0 // todo3
-//            Load_Control_State_Machine_Handler();
-//#endif
-//            elapsed_milliseconds = elapsed_seconds * 1000;
-//#if ( BACNET_SVC_COV_B == 1 )
-//            handler_cov_timer_seconds(elapsed_seconds);
-//#endif
+        //        /* returns 0 bytes on timeout */
+        //        pdu_len = datalink_receive(&src, &Rx_Buf[0], MAX_MPDU, timeout);
+        //
+        //        /* process */
+        //        if (pdu_len) {
+        //            npdu_handler(&src, &Rx_Buf[0], pdu_len);
+        //        }
+
+                /* at least one second has passed */
+        elapsed_seconds = (uint32_t)(current_seconds - last_seconds);
+        if (elapsed_seconds) {
+            last_seconds = current_seconds;
+            //            dcc_timer_seconds(elapsed_seconds);
+
+            //#if defined(BACDL_BIP) && BBMD_ENABLED
+            //            bvlc_maintenance_timer(elapsed_seconds);
+            //#endif
+            dlenv_maintenance_timer(elapsed_seconds);
+
+            //#if 0 // todo3
+            //            Load_Control_State_Machine_Handler();
+            //#endif
+
+            elapsed_milliseconds = elapsed_seconds * 1000;
+#if ( BACNET_SVC_COV_B == 1 )
+            handler_cov_timer_seconds(elapsed_seconds);
+#endif
 
 #if ( BACNET_CLIENT == 1 ) || ( BACNET_SVC_COV_B == 1 )
-//            tsm_timer_milliseconds(elapsed_milliseconds);
+            tsm_timer_milliseconds(elapsed_milliseconds);
 #endif
-//
-//#if 0 // todo3
-//            trend_log_timer(elapsed_seconds);
-//#endif
-//
-//#if (INTRINSIC_REPORTING_B == 1)
-//            Device_local_reporting();
-//#endif
-//
-//#if (BACNET_TIME_MASTER == 1)
-//            Device_getCurrentDateTime(&bdatetime);
-//            handler_timesync_task(&bdatetime);
-//#endif
-//        }
 
-//#if ( BACNET_SVC_COV_B == 1 )
-//        handler_cov_task();
-//#endif
+            //#if 0 // todo3
+            //            trend_log_timer(elapsed_seconds);
+            //#endif
+            //
+            //#if (INTRINSIC_REPORTING_B == 1)
+            //            Device_local_reporting();
+            //#endif
+            //
+            //#if (BACNET_TIME_MASTER == 1)
+            //            Device_getCurrentDateTime(&bdatetime);
+            //            handler_timesync_task(&bdatetime);
+            //#endif
+        }
 
-//        /* scan cache address */
-//        address_binding_tmr += elapsed_seconds;
-//        if (address_binding_tmr >= 60) {
-//            address_cache_timer(address_binding_tmr);
-//            address_binding_tmr = 0;
-//        }
-//#if (INTRINSIC_REPORTING_B == 1 )
-//        /* try to find addresses of recipients */
-//        recipient_scan_tmr += elapsed_seconds;
-//        if (recipient_scan_tmr >= NC_RESCAN_RECIPIENTS_SECS) {
-//            Notification_Class_find_recipient();
-//            recipient_scan_tmr = 0;
-//        }
-//#endif
-        /* output */
+#if ( BACNET_SVC_COV_B == 1 )
+        handler_cov_task();
+#endif
 
-        /* blink LEDs, Turn on or off outputs, etc */
-        
+        //        /* scan cache address */
+        //        address_binding_tmr += elapsed_seconds;
+        //        if (address_binding_tmr >= 60) {
+        //            address_cache_timer(address_binding_tmr);
+        //            address_binding_tmr = 0;
+        //        }
+        //#if (INTRINSIC_REPORTING_B == 1 )
+        //        /* try to find addresses of recipients */
+        //        recipient_scan_tmr += elapsed_seconds;
+        //        if (recipient_scan_tmr >= NC_RESCAN_RECIPIENTS_SECS) {
+        //            Notification_Class_find_recipient();
+        //            recipient_scan_tmr = 0;
+        //        }
+        //#endif
+                /* output */
+
+                /* blink LEDs, Turn on or off outputs, etc */
+
         msSleep(10);
     }
 

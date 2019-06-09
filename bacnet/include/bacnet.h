@@ -44,7 +44,7 @@
 
 /* core files */
 #include "bacversion.h"
-#include "config.h"
+#include "configProj.h"
 #include "address.h"
 #include "apdu.h"
 #include "bacapp.h"

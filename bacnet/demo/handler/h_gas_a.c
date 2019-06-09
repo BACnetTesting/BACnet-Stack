@@ -51,7 +51,7 @@
 * not equal to NORMAL and a Notify_Type property whose value is ALARM.
 */
 #include <assert.h>
-#include "config.h"
+#include "configProj.h"
 #include "txbuf.h"
 #include "bacdef.h"
 #include "bacdcode.h"
@@ -71,6 +71,8 @@
  * @param service_data [in] The BACNET_CONFIRMED_SERVICE_DATA information
  * decoded from the APDU header of this message.
  */
+#if (INTRINSIC_REPORTING == 1)
+
 void get_alarm_summary_ack_handler(
     uint8_t * service_request,
     uint16_t service_len,
@@ -95,3 +97,5 @@ void get_alarm_summary_ack_handler(
         }
     }
 }
+
+#endif // #if (INTRINSIC_REPORTING == 1)

@@ -41,7 +41,7 @@
 #include <stdint.h>
 #include <errno.h>
 #include <string.h>
-#include "config.h"
+#include "configProj.h"
 #include "txbuf.h"
 #include "bacdef.h"
 #include "bacdcode.h"
@@ -132,8 +132,8 @@ void Send_TimeSyncUTC_Remote(
     BACNET_DATE * bdate,
     BACNET_TIME * btime)
 {
-    int len = 0;
-    int pdu_len = 0;
+    int len ;
+    int pdu_len ;
     int bytes_sent = 0;
     BACNET_NPCI_DATA npci_data;
     BACNET_ADDRESS my_address;
@@ -155,12 +155,7 @@ void Send_TimeSyncUTC_Remote(
     bytes_sent =
         datalink_send_pdu(dest, &npci_data, &Handler_Transmit_Buffer[0],
         pdu_len);
-#if PRINT_ENABLED
-    if (bytes_sent <= 0)
-        fprintf(stderr,
-            "Failed to Send UTC-Time-Synchronization Request (%s)!\n",
-            strerror(errno));
-#endif
+
 }
 
 /**

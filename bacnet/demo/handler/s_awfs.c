@@ -37,26 +37,14 @@
 *
 ****************************************************************************************/
 
-//#include <stddef.h>
 #include <stdint.h>
-//#include <errno.h>
-//#include <string.h>
-//#include "config.h"
-//#include "txbuf.h"
 #include "bacdef.h"
-//#include "bacdcode.h"
 #include "address.h"
 #include "tsm.h"
 #include "dcc.h"
-//#include "npdu.h"
-//#include "apdu.h"
-//#include "device.h"
 #include "datalink.h"
 #include "awf.h"
-///* some demo stuff needed */
-//#include "handlers.h"
 #include "txbuf.h"
-//#include "client.h"
 
 /** @file s_awfs.c  Send part of an Atomic Write File Stream request. */
 
@@ -69,7 +57,7 @@ uint8_t Send_Atomic_Write_File_Stream(
     BACNET_ADDRESS dest;
     BACNET_ADDRESS my_address;
     BACNET_NPCI_DATA npci_data;
-    unsigned max_apdu = 0;
+    uint16_t max_apdu = 0;
     uint8_t invoke_id = 0;
     bool status = false;
     int len = 0;

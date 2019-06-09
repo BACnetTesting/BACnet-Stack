@@ -40,10 +40,6 @@
 #ifndef ADDRESS_H
 #define ADDRESS_H
 
-#include <stddef.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include "bacdef.h"
 #include "readrange.h"
 
 
@@ -55,7 +51,7 @@ void address_init_partial(
 
 void address_add(
     uint32_t device_id,
-	unsigned max_apdu,
+	uint16_t max_apdu,
 	BACNET_ADDRESS * src);
 
 void address_remove_device(
@@ -63,7 +59,7 @@ void address_remove_device(
 
 bool address_get_by_device(
     uint32_t device_id,
-	unsigned *max_apdu,
+	uint16_t *max_apdu,
 	BACNET_ADDRESS * src);
 
 bool address_get_by_index(
@@ -103,16 +99,20 @@ bool address_device_bind_request(
 
 void address_add_binding(
     uint32_t device_id,
-	unsigned max_apdu,
+	uint16_t max_apdu,
 	BACNET_ADDRESS * src);
 
 int address_list_encode(
     uint8_t * apdu,
 	unsigned apdu_len);
 
+#if  (LIST_MANIPULATION == 1)
+
 int rr_address_list_encode(
     uint8_t * apdu,
     BACNET_READ_RANGE_DATA * pRequest);
+
+#endif
 
 void address_set_device_TTL(
     uint32_t device_id,

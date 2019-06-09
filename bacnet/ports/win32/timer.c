@@ -38,6 +38,7 @@
 *
 ****************************************************************************************/
 
+#if 0
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -215,6 +216,7 @@ uint32_t timer_reset(
     return timer_value;
 }
 
+// BITS code, now in osLayer.c
 //// ms since machine was started
 //uint32_t timer_get_time(void)
 //{
@@ -331,3 +333,4 @@ int main(
 
 }
 #endif
+#endif // 0

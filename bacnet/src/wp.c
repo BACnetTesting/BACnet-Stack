@@ -57,6 +57,7 @@
 /* encode service */
 int wp_encode_apdu(
     uint8_t * apdu,
+    uint16_t max_apdu,
     uint8_t invoke_id,
     BACNET_WRITE_PROPERTY_DATA * wpdata)
 {
@@ -65,7 +66,7 @@ int wp_encode_apdu(
 
     if (apdu) {
         apdu[0] = PDU_TYPE_CONFIRMED_SERVICE_REQUEST;
-        apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU);
+        apdu[1] = encode_max_segs_max_apdu(0, max_apdu );
         apdu[2] = invoke_id;
         apdu[3] = SERVICE_CONFIRMED_WRITE_PROPERTY;     /* service choice */
         apdu_len = 4;
@@ -233,7 +234,6 @@ void testWritePropertyTag(
     BACNET_WRITE_PROPERTY_DATA test_data = { 0 };
     BACNET_APPLICATION_DATA_VALUE test_value;
     uint8_t apdu[480] = { 0 };
-    int len = 0;
     int apdu_len = 0;
     uint8_t invoke_id = 128;
     uint8_t test_invoke_id = 0;
@@ -251,9 +251,8 @@ void testWritePropertyTag(
     ct_test(pTest, test_data.object_property == wpdata.object_property);
     ct_test(pTest, test_data.array_index == wpdata.array_index);
     /* decode the application value of the request */
-    len =
-        bacapp_decode_application_data(test_data.application_data,
-        test_data.application_data_len, &test_value);
+    bacapp_decode_application_data(test_data.application_data,
+                                   test_data.application_data_len, &test_value);
     ct_test(pTest, test_value.tag == value->tag);
     switch (test_value.tag) {
     case BACNET_APPLICATION_TAG_NULL:

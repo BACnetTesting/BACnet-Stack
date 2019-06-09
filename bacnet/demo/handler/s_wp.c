@@ -63,7 +63,7 @@ uint8_t Send_Write_Property_Request_Data(
 {
     BACNET_ADDRESS dest;
     BACNET_ADDRESS my_address;
-    unsigned max_apdu = 0;
+    uint16_t max_apdu = 0;
     uint8_t invoke_id = 0;
     bool status = false;
     int len = 0;
@@ -86,7 +86,7 @@ uint8_t Send_Write_Property_Request_Data(
         npdu_setup_npci_data(&npci_data, true, MESSAGE_PRIORITY_NORMAL);
         pdu_len =
             npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest, &my_address,
-            &npci_data);
+                &npci_data);
         /* encode the APDU portion of the packet */
         data.object_type = object_type;
         data.object_instance = object_instance;
@@ -96,9 +96,12 @@ uint8_t Send_Write_Property_Request_Data(
         memcpy(&data.application_data[0], &application_data[0],
             application_data_len);
         data.priority = priority;
+
+        // todo 2 - need to pass max_apdu downwards... 
         len =
             wp_encode_apdu(&Handler_Transmit_Buffer[pdu_len], invoke_id,
-            &data);
+                &data);
+
         pdu_len += len;
         /* will it fit in the sender?
            note: if there is a bottleneck router in between
@@ -162,7 +165,7 @@ uint8_t Send_Write_Property_Request(
 #if PRINT_ENABLED_DEBUG
         fprintf(stderr, "WriteProperty service: " "%s tag=%d\n",
             (object_value->context_specific ? "context" : "application"),
-            (int) (object_value->
+            (int)(object_value->
                 context_specific ? object_value->context_tag : object_value->
                 tag));
 #endif

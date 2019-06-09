@@ -52,6 +52,10 @@
 #include "txbuf.h"
 #include "client.h"
 
+#include "configProj.h"
+
+#if ( BACNET_USE_EVENT_HANDLING == 1 )
+
 /** @file s_cevent.c  Send a ConfirmedEventNotification Request. */
 
 /** Sends an Confirmed Alarm/Event Notification.
@@ -72,7 +76,7 @@ uint8_t Send_CEvent_Notify(
     BACNET_NPCI_DATA npci_data;
     BACNET_ADDRESS dest;
     BACNET_ADDRESS my_address;
-    unsigned max_apdu = 0;
+    uint16_t max_apdu = 0;
     bool status = false;
     uint8_t invoke_id = 0;
 
@@ -127,3 +131,6 @@ uint8_t Send_CEvent_Notify(
 
     return invoke_id;
 }
+
+#endif // #if (BACNET_USE_EVENT_HANDLING == 1)
+

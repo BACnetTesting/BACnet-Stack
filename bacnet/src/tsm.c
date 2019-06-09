@@ -1,7 +1,7 @@
-/*####COPYRIGHTBEGIN####
- -------------------------------------------
- Copyright (C) 2005 Steve Karg
- Corrections by Ferran Arumi, 2007, Barcelona, Spain
+/****************************************************************************************
+
+    Copyright (C) 2005 Steve Karg
+    Corrections by Ferran Arumi, 2007, Barcelona, Spain
 
  This program is free software; you can redistribute it and/or
  modify it under the terms of the GNU General Public License
@@ -47,20 +47,12 @@
 *
 ****************************************************************************************/
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stddef.h>
-#include "bits.h"
+#include "configProj.h"
+
 #include "apdu.h"
-#include "bacdef.h"
-#include "bacdcode.h"
-#include "bacenum.h"
 #include "tsm.h"
-#include "config.h"
-#include "datalink.h"
-#include "handlers.h"
-#include "address.h"
 #include "bacaddr.h"
+#include "osLayer.h"
 
 /** @file tsm.c  BACnet Transaction State Machine operations  */
 
@@ -81,6 +73,15 @@ static uint8_t Current_Invoke_ID = 1;
 
 static tsm_timeout_function Timeout_Function;
 
+static bits_mutex_define(tsmSema);
+
+
+void tsm_init(void)
+{
+    bits_mutex_init(tsmSema);
+}
+
+
 void tsm_set_timeout_handler(
     tsm_timeout_function pFunction)
 {
@@ -94,6 +95,8 @@ static uint8_t tsm_find_invokeID_index(
     unsigned i ;     /* counter */
     uint8_t index = MAX_TSM_TRANSACTIONS;       /* return value */
 
+    bits_mutex_lock(tsmSema);
+
     for (i = 0; i < MAX_TSM_TRANSACTIONS; i++) {
         if (TSM_List[i].InvokeID == invokeID) {
             index = (uint8_t) i;
@@ -101,14 +104,18 @@ static uint8_t tsm_find_invokeID_index(
         }
     }
 
+    bits_mutex_unlock(tsmSema);
+
     return index;
 }
 
 static uint8_t tsm_find_first_free_index(
     void)
 {
-    unsigned i ;     /* counter */
+    unsigned i;                                 /* counter */
     uint8_t index = MAX_TSM_TRANSACTIONS;       /* return value */
+
+    bits_mutex_lock(tsmSema);
 
     for (i = 0; i < MAX_TSM_TRANSACTIONS; i++) {
         if (TSM_List[i].InvokeID == 0) {
@@ -117,6 +124,8 @@ static uint8_t tsm_find_first_free_index(
         }
     }
 
+    bits_mutex_unlock(tsmSema);
+
     return index;
 }
 
@@ -124,7 +133,9 @@ bool tsm_transaction_available(
     void)
 {
     bool status = false;        /* return value */
-    unsigned int i ;     /* counter */
+    unsigned i ;
+
+    bits_mutex_lock(tsmSema);
 
     for (i=0; i < MAX_TSM_TRANSACTIONS; i++) {
         if (TSM_List[i].InvokeID == 0) {
@@ -134,6 +145,11 @@ bool tsm_transaction_available(
         }
     }
 
+    // todo2 - remove for release
+    // note though - if something goes wrong - client does not ack COV notification, this gets triggered. Investigate.
+    if (!status) panic();
+
+    bits_mutex_unlock(tsmSema);
     return status;
 }
 
@@ -141,7 +157,9 @@ uint8_t tsm_transaction_idle_count(
     void)
 {
     uint8_t count = 0;  /* return value */
-    unsigned i ;     /* counter */
+    unsigned i;
+
+    bits_mutex_lock(tsmSema);
 
     for (i = 0; i < MAX_TSM_TRANSACTIONS; i++) {
         if ((TSM_List[i].InvokeID == 0) &&
@@ -150,6 +168,8 @@ uint8_t tsm_transaction_idle_count(
             count++;
         }
     }
+
+    bits_mutex_unlock(tsmSema);
 
     return count;
 }
@@ -171,9 +191,11 @@ void tsm_invokeID_set(
 uint8_t tsm_next_free_invokeID(
     void)
 {
-    uint8_t index = 0;
+    uint8_t index;
     uint8_t invokeID = 0;
     bool found = false;
+
+    bits_mutex_lock(tsmSema);
 
     /* is there even space available? */
     if (tsm_transaction_available()) {
@@ -206,7 +228,7 @@ uint8_t tsm_next_free_invokeID(
             }
         }
     }
-
+    bits_mutex_unlock(tsmSema);
     return invokeID;
 }
 
@@ -219,6 +241,37 @@ void tsm_set_confirmed_unsegmented_transaction(
 {
     uint16_t j = 0;
     uint8_t index;
+
+    // make sure route is legal/ complete
+#if ( BAC_DEBUG_todo == 1 ) 
+    bool found = false;
+    for (ROUTER_PORT *rport = headRouterPort; rport != NULL; rport = (ROUTER_PORT *)rport->llist.next)
+    {
+        if (rport->port_support == dlcb->route.portParams)
+        {
+            found = true;
+            break;
+        }
+    }
+    if (!found)
+    {
+        // could still be app port
+        if (dlcb->route.portParams != applicationPort)
+        {
+            panic();
+            return;
+        }
+    }
+
+    // actually, we can only send to application port. This is a debug compile test 
+    if (dlcb->route.portParams != applicationPort)
+    {
+        panic();
+        return;
+    }
+#endif // debug
+
+    bits_mutex_lock(tsmSema);
 
     if (invokeID) {
         index = tsm_find_invokeID_index(invokeID);
@@ -238,7 +291,9 @@ void tsm_set_confirmed_unsegmented_transaction(
         }
     }
 
+    bits_mutex_unlock(tsmSema);
 }
+
 
 /* used to retrieve the transaction payload */
 /* if we wanted to find out what we sent (i.e. when we get an ack) */
@@ -252,6 +307,8 @@ bool tsm_get_transaction_pdu(
     uint16_t j = 0;
     uint8_t index;
     bool found = false;
+
+    bits_mutex_lock(tsmSema);
 
     if (invokeID) {
         index = tsm_find_invokeID_index(invokeID);
@@ -270,14 +327,18 @@ bool tsm_get_transaction_pdu(
         }
     }
 
+    bits_mutex_unlock(tsmSema);
     return found;
 }
+
 
 /* called once a millisecond or slower */
 void tsm_timer_milliseconds(
     uint16_t milliseconds)
 {
     unsigned i ;     /* counter */
+
+    bits_mutex_lock(tsmSema);
 
     for (i = 0; i < MAX_TSM_TRANSACTIONS; i++) {
         if (TSM_List[i].state == TSM_STATE_AWAIT_CONFIRMATION) {
@@ -301,13 +362,23 @@ void tsm_timer_milliseconds(
                     if (TSM_List[i].InvokeID != 0) {
                         if (Timeout_Function) {
                             Timeout_Function(TSM_List[i].InvokeID);
+                        // todo 2 - who created this, and why?? Timeout_Function(TSM_List[i].InvokeID);
                         }
                     }
+                    // EKH: I have made this mod. The Karg method requires the client to monitor the TSM progress.
+                    // A better way would have been to callback when finally done... we can do that.
+                    // For now, to review towards the end of the project, todo4, I am clearing the InvokeId too...
+                    // see tsm_free_invoke_id() TSM_List[i].InvokeID = 0;
+
+                    // 2017.02.20 Karg's latest now has a callback, but he does not use it, and anyway, he does not distinquish between a 'monitored'
+                    // transaction e.g. ReadProperty, WriteProperty, and an Event Notification, which is why I added 'autoClear'
                 }
             }
         }
     }
+    bits_mutex_unlock(tsmSema);
 }
+
 
 /* frees the invokeID and sets its state to IDLE */
 void tsm_free_invoke_id(
@@ -315,11 +386,18 @@ void tsm_free_invoke_id(
 {
     uint8_t index;
 
+    bits_mutex_lock(tsmSema);
+
     index = tsm_find_invokeID_index(invokeID);
     if (index < MAX_TSM_TRANSACTIONS) {
         TSM_List[index].state = TSM_STATE_IDLE;
         TSM_List[index].InvokeID = 0;
     }
+    else
+    {
+        panic();
+    }
+    bits_mutex_unlock(tsmSema);
 }
 
 /** Check if the invoke ID has been made free by the Transaction State Machine.
@@ -332,9 +410,15 @@ bool tsm_invoke_id_free(
     bool status = true;
     uint8_t index;
 
+    bits_mutex_lock(tsmSema);
+
     index = tsm_find_invokeID_index(invokeID);
-    if (index < MAX_TSM_TRANSACTIONS)
+    if (index < MAX_TSM_TRANSACTIONS) {
+        // no! this is just a check!! dlcb_free(TSM_List[index].dlcb2);
         status = false;
+    }
+
+    bits_mutex_unlock(tsmSema);
 
     return status;
 }
@@ -351,6 +435,8 @@ bool tsm_invoke_id_failed(
     bool status = false;
     uint8_t index;
 
+    bits_mutex_lock(tsmSema);
+
     index = tsm_find_invokeID_index(invokeID);
     if (index < MAX_TSM_TRANSACTIONS) {
         /* a valid invoke ID and the state is IDLE is a
@@ -358,6 +444,12 @@ bool tsm_invoke_id_failed(
         if (TSM_List[index].state == TSM_STATE_IDLE)
             status = true;
     }
+    else {
+        // EKH: If the invokeId could not be found, that too would be a failure, right?
+        status = true;
+    }
+
+    bits_mutex_unlock(tsmSema);
 
     return status;
 }
@@ -378,10 +470,10 @@ int datalink_send_pdu(
     uint8_t * pdu,
     unsigned pdu_len)
 {
-    (void) dest;
-    (void) npci_data;
-    (void) pdu;
-    (void) pdu_len;
+    (void)dest;
+    (void)npci_data;
+    (void)pdu;
+    (void)pdu_len;
 
     return 0;
 }
@@ -390,7 +482,7 @@ int datalink_send_pdu(
 void datalink_get_broadcast_address(
     BACNET_ADDRESS * dest)
 {
-    (void) dest;
+    (void)dest;
 }
 
 void testTSM(
@@ -413,7 +505,7 @@ int main(
 
     ct_setStream(pTest, stdout);
     ct_run(pTest);
-    (void) ct_report(pTest);
+    (void)ct_report(pTest);
     ct_destroy(pTest);
 
     return 0;
@@ -421,3 +513,4 @@ int main(
 #endif /* TEST_TSM */
 #endif /* TEST */
 #endif /* MAX_TSM_TRANSACTIONS */
+

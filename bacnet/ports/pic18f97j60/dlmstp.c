@@ -88,7 +88,7 @@ void dlmstp_cleanup(
 /* returns number of bytes sent on success, zero on failure */
 int dlmstp_send_pdu(
     BACNET_ADDRESS * dest,      /* destination address */
-    BACNET_NPDU_DATA * npdu_data,       /* network information */
+    BACNET_NPCI_DATA * npci_data,       /* network information */
     uint8_t * pdu,      /* any data to be sent - may be null */
     unsigned pdu_len)
 {       /* number of bytes of data */
@@ -99,7 +99,7 @@ int dlmstp_send_pdu(
     unsigned i = 0;     /* loop counter */
 
     if (MSTP_Port.TxReady == false) {
-        if (npdu_data->data_expecting_reply)
+        if (npci_data->data_expecting_reply)
             MSTP_Port.TxFrameType = FRAME_TYPE_BACNET_DATA_EXPECTING_REPLY;
         else
             MSTP_Port.TxFrameType = FRAME_TYPE_BACNET_DATA_NOT_EXPECTING_REPLY;

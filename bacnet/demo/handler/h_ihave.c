@@ -37,13 +37,7 @@
 *
 ****************************************************************************************/
 
-//#include <stddef.h>
-//#include <stdint.h>
-//#include <stdio.h>
-//#include "config.h"
 #include "txbuf.h"
-//#include "bacdef.h"
-//#include "bacdcode.h"
 #include "bactext.h"
 #include "ihave.h"
 #include "handlers.h"
