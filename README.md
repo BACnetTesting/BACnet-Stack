@@ -1,179 +1,114 @@
-# BACnet Stack 
+# Phases of BITS BACnet Reference Stack
 
-BACnet open source protocol stack for embedded systems, Linux, and Windows
-http://bacnet.sourceforge.net/
+This "BACnet Reference Stack" is based on Steve Karg's original work on SourceForge.
 
-Welcome to the wonderful world of BACnet and true device interoperability!
+It has been pummelled, fixed and upgraded to support various more advanced applications, as well as 
+matching the coding style and testing requirements of BACnet Interoperability Testing Services, Inc.
 
-Continuous Integration
-----------------------
+We only support a subset of the demonstrations and ports that the original stack provided, and where
+we do not support a function, we have removed the code in order to avoid ambiguity.
 
-This library uses automated continuous integration services
-to assist in automated compilation, validation, linting, security scanning,
-and unit testing to produce robust C code and BACnet functionality.
+In the spirit, and legal requirements, of the original open source licensing terms, the code changes
+have been commented and placed back in the public domain and can be found on GitHub at:
 
-[![Actions Status](https://github.com/bacnet-stack/bacnet-stack/workflows/CMake/badge.svg)](https://github.com/bacnet-stack/bacnet-stack/actions/workflows/main.yml) GitHub Workflow: CMake build of library and demo apps on Ubuntu, Windows and MacOS
+    https://github.com/BACnetTesting/BACnet-Stack
 
-[![Actions Status](https://github.com/bacnet-stack/bacnet-stack/workflows/GCC/badge.svg)](https://github.com/bacnet-stack/bacnet-stack/actions/workflows/gcc.yml) GitHub Workflow: Ubuntu Makefile GCC build of library, BACnet/IP demo apps with and without BBMD, BACnet/IPv6, BACnet Ethernet, and BACnet MSTP demo apps, gateway, router, router-ipv6, router-mstp, ARM ports (STM, Atmel), AVR ports, and BACnet/IP demo apps compiled with MinGW32.
+Any modifications to the original Steve Karg stack are made in a precedence from top to bottom below.
+Relevant changes are made as early as possible, but not so soon that they 'break' the flow of changes
+that are migrated through the rest of the repository via automatic branch merges.
 
-[![Actions Status](https://github.com/bacnet-stack/bacnet-stack/workflows/Quality/badge.svg)](https://github.com/bacnet-stack/bacnet-stack/actions/workflows/lint.yml) GitHub Workflow: scan-build (LLVM Clang Tools), cppcheck, codespell, unit tests and code coverage.
+                        ----------------------------------------------------------------
 
-[![Actions Status](https://github.com/bacnet-stack/bacnet-stack/workflows/CodeQL/badge.svg)](https://github.com/bacnet-stack/bacnet-stack/actions/workflows/codeql-analysis.yml) GitHub Workflow CodeQL Analysis
+The project is arranged in branches, each branch with additional functionality. Pick the branch that
+suits your application the best and start there.
 
-About this Project
-------------------
+## Branch name
+### Description
 
-This BACnet library provides a BACnet application layer, network layer and
-media access (MAC) layer communications services for an embedded system.
+Shadow of Steve Kargs stack
+    Straight copy of Steve's latest release from https://sourceforge.net/projects/bacnet/
 
-BACnet - A Data Communication Protocol for Building Automation and Control
-Networks - see bacnet.org. BACnet is a standard data communication protocol for
-Building Automation and Control Networks. BACnet is an open protocol, which
-means anyone can contribute to the standard, and anyone may use it. The only
-caveat is that the BACnet standard document itself is copyrighted by ASHRAE,
-and they sell the document to help defray costs of developing and maintaining
-the standard (just like IEEE or ANSI or ISO).
+###Compile MSVC
+    * Add MSVC projects, solution, NO FURTHER CHANGES apart from getting MSVC to compile.
+    * A note on the Microsoft solution layout (applies to this, and the rest of the branches)
+        * In ports\win32\Microsoft Visual Studio\ there is a Microsoft Visual Studio Solution file (*.sln)that contains multiple projects
+            * BACnet Stack Library project - common Stack Files
+            * Projects to build executables - e.g. readprop, server
+        * A common Visual Studion "properties" file ("BACnet Solution Settings.props") containing common settings, such as include paths, key #defines to be shared across all projects.
+        * Individual MVS project files contain more specific project settings
 
-For software developers, the BACnet protocol is a standard way to send and
-receive messages containing data that are understood by other BACnet
-compliant devices. The BACnet standard defines a standard way to communicate
-over various wires or radios, known as Data Link/Physical Layers: Ethernet, 
-EIA-485, EIA-232, ARCNET, and LonTalk. The BACnet standard also defines a 
-standard way to communicate using UDP, IP, HTTP (Web Services), and Websockets.
+###Global Renames
+	(This is not really a useful branch, use "Compile MSVC C++ branch as your starting point for BITS codebase")
+	BITS copyright message
+	NPDU -> NPCI
 
-This BACnet protocol stack implementation is specifically designed for the
-embedded BACnet appliance, using a GPL with exception license (like eCos),
-which means that any changes to the core code that are distributed are shared, 
-but the BACnet library can be linked to proprietary code without the proprietary 
-code becoming GPL. Note that some of the source files are designed as 
-skeleton or example or template files, and are not copyrighted as GPL.
+###Syntax Fixups
+	(This is not really a useful branch, use "Compile MSVC C++ branch as your starting point for BITS codebase")
+	Remove 'return'
+	Remove unnecessary initializations
+	{ }
 
-The text of the GPL exception included in each source file is as follows: 
+###Compile C++
+	Only uses C++ features for better type checking during compiles
+	One can switch between projects within solution to run different examples
 
-"As a special exception, if other files instantiate templates or use macros or
-inline functions from this file, or you compile this file and link it with
-other works to produce a work based on this file, this file does not by itself
-cause the resulting work to be covered by the GNU General Public License.
-However the source code for this file must still be made available in
-accordance with section (3) of the GNU General Public License."
+###Feature Creep
+	Intent:
+		Uses C++ Objects (only for BACnet Objects)
+		This is the last 'single datalink, non routing, non virtual device' configuration.
+	Removing
+		All references to UCI
+		Removing unsupported platforms
+		Removing 'old' printf tracing and debugging
+	Adding:
+		Better user menus on examples
+		Finer grained debug #defines (dbTraffic()) etc.
+        BITS utilities and 'helpers'
+        BTA support
+		Dynamic object creation
+		Common function calls
+		Breaking out datalink into module
+		Datalink, BACnet 'main' run in threads
 
-The code is written in C for portability, and includes unit tests (PC based
-unit tests). Since the code is designed to be portable, it compiles with GCC as
-well as other compilers, such as Clang or IAR.
+				------
+				Status: 2017.10.01 Runs vs2017 - server, x64 debug
 
-The BACnet protocol is an ASHRAE/ANSI/ISO standard, so this library adheres to
-that standard. BACnet has no royalties or licensing restrictions, and
-registration for a BACnet vendor ID is free.
+###MultipleDatalinks
+	Added dlcb, removed Tx buffers
+    Note: This has a VERY NARROW use-case. A server device with a serial port and an Ethernet port, and the plugged in port 'goes live'
+    All other dual-port applications have to be router applications..
+    If the intent is to choose at STARTUP then Steve Karg's original dlenv-commandline approach could be adapted.
 
-What the code does
-------------------
+		------
+		Status: 2017.09.30 Does not compile, just using as a "Hg merge" stepping-stone to "Full Routing"
 
-For an overview of this library architecture and how to use it, see
-https://sourceforge.net/p/bacnet/src/ci/master/tree/doc/README.developer
+Virtual Devices
+	-- obsolete - there cannot be a concept of virtual devices without full routing.... Virtual Devices
+	-- and the step between full routing (and one Application Entity) and full routing and one application entity and other virtual entities is so small we are not going to even bother. Roll it all up into "Full Routing" phase just before this one.
 
-This stack includes unit tests that can be run using the Makefile in the
-project root directory "make test".
-The unit tests can also be run using individual make invocations. 
-The unit tests run a PC and continue to do so with 
-every commit within the Continuous Integration environment.
+###Full Routing
+    And _this_ is where the action happens. Virtual devices, multiple datalinks, routing.
 
-The BACnet stack was functionally tested using a variety of tools
-as well as various controllers and workstations. It has been included
-in many products that successfully completed BTL testing.
 
-Using the Makefile in the project root directory, a dozen sample applications
-are created that run under Windows or Linux. They use the BACnet/IPv4 datalink
-layer for communication by default, but could be compiled to use BACnet IPv6, 
-Ethernet, ARCNET, or MS/TP.
+# Compiling and sanity test under Ubuntu
 
-Linux/Unix/Cygwin
+## Make sure all the tools are installed:
+    sudo apt-get install gcc
+    sudo apt-get install git
 
-    $ make clean all
+## Get the sources from the GitHub repository
+    git clone https://github.com/BACnetTesting/BACnet-Stack.git dev
 
-Windows MinGW Bash
+## Build the executables
+    cd dev
+    make clean all (note, there is a problem if you run make twice!)
 
-    $ make win32
+## Run the 'server' example
+    demo/server/bacserv
 
-Windows Command Line
+## Now that the server is running, go to another machine, and run a BACnet client and "discover"
+    or use the BACnet stack Who-Is
+    demo/whois/bacwi
 
-    c:\> build.bat
+for more information, email info@bac-test.com
 
-The BACnet stack can be compiled by a variety of compilers.  The most common
-free compiler is GCC (or MinGW under Windows).  The makefiles use GCC by
-default.
-
-The library is also instrumented to use [CMake](https://cmake.org/) which can
-generate a project or Makefiles for a variety of IDE or compiler. For example,
-to generate a Code::Blocks project:
-
-    $ mkdir build
-    $ cd build/
-    $ cmake .. -G"CodeBlocks - Unix Makefiles"
-    
-    c:\> mkdir build
-    c:\> cd build/
-    c:\> cmake .. -G"CodeBlocks - MinGW Makefiles"
-
-The unit tests also use CMake and may be run with the command sequence:
-
-    $ make test
-    
-The unit test framework uses a slightly modified ztest, and the tests are located
-in the test/ folder.  The unit test builder uses CMake, and the test coverage 
-uses LCOV.  The HTML results of the unit testing coverage are available starting 
-in the test/build/lcoverage/index.html file.
-
-The demo applications are all client applications that provide one main BACnet
-service, except the one server application and one gateway application, 
-a couple router applications, and a couple of MS/TP specific applications.
-Each application will accept command line parameters, and prints the output to 
-stdout or stderr.  The client applications are command line based and can 
-be used in scripts or for troubleshooting.  
-The demo applications make use of environment variables to 
-setup the network options.  See each individual demo for the options.
-
-There are also projects in the ports/ directory for ARM7, AVR, RTOS-32, PIC, 
-and others.  Each of those projects has a demo application for specific hardware.
-In the case of the ARM7 and AVR, their makefile works with GCC compilers and
-there are project files for IAR Embedded Workbench and Rowley Crossworks for ARM.
-
-Project Documentation
----------------------
-
-The project documentation is in the doc/ directory.  Similar documents are
-on the project website at <http://bacnet.sourceforge.net/>.
-
-Project Mailing List and Help
------------------------------
-
-If you want to contribute to this project and have some C coding skills,
-join us via https://github.com/bacnet-stack/bacnet-stack/
-or via https://sourceforge.net/p/bacnet/src/ and create a
-fork or branch, and eventually a pull request to have 
-your code considered for inclusion.
-
-If you find a bug in this project, please tell us about it at
-https://sourceforge.net/p/bacnet/bugs/
-or
-https://github.com/bacnet-stack/bacnet-stack/issues
-
-If you have a support request, you can post it at 
-https://sourceforge.net/p/bacnet/support-requests/
-
-If you have a feature request, you can post it at
-https://sourceforge.net/p/bacnet/feature-requests/
-
-If you have a problem getting this library to work for
-your device, or have a BACnet question, join the developers mailing list at:
-http://lists.sourceforge.net/mailman/listinfo/bacnet-developers
-or post the question to the Open Discussion, Developers, or Help forums at
-https://sourceforge.net/p/bacnet/discussion/
-
-I hope that you get your BACnet Device working!
-
-Steve Karg, Birmingham, Alabama USA
-skarg@users.sourceforge.net
-
-ASHRAE® and BACnet® are registered trademarks of the 
-American Society of Heating, Refrigerating and Air-Conditioning Engineers, Inc.
-180 Technology Parkway NW, Peachtree Corners, Georgia 30092 US.
