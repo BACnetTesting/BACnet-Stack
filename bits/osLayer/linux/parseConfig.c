@@ -193,7 +193,7 @@ bool read_config(char *filepath)
     //     printf("cmd file parse success\r\n");
 
     AlignApplicationWithPort();
-#endif
+#endif
     return true;
 }
 

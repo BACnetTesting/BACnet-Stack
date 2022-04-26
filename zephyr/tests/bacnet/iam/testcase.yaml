@@ -1,0 +1,6 @@
+tests:
+  bacnet.iam:
+    tags: bacnet
+  bacnet.iam.unit:
+    tags: bacnet
+    type: unit

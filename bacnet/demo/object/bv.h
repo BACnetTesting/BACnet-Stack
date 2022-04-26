@@ -53,7 +53,7 @@
 
 #if (INTRINSIC_REPORTING_B == 1)
 #include "nc.h"
-#endif
+#endif
 typedef struct binary_value_descr {
 
     BACNET_OBJECT   common;         // must be first field in structure due to llist

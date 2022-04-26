@@ -1,0 +1,6 @@
+tests:
+  bacnet.basic.object.ms-input:
+    tags: bacnet
+  bacnet.basic.object.ms-input.unit:
+    tags: bacnet
+    type: unit
