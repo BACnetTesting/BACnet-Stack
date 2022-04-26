@@ -1,34 +1,50 @@
 /**************************************************************************
-*
-* Copyright (C) 2012 Steve Karg <skarg@users.sourceforge.net>
-*
-* Permission is hereby granted, free of charge, to any person obtaining
-* a copy of this software and associated documentation files (the
-* "Software"), to deal in the Software without restriction, including
-* without limitation the rights to use, copy, modify, merge, publish,
-* distribute, sublicense, and/or sell copies of the Software, and to
-* permit persons to whom the Software is furnished to do so, subject to
-* the following conditions:
-*
-* The above copyright notice and this permission notice shall be included
-* in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*********************************************************************/
+ *
+ * Copyright (C) 2012 Steve Karg <skarg@users.sourceforge.net>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
 #ifndef WRITEPROPERTY_H
 #define WRITEPROPERTY_H
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "bacnet/bacnet_stack_exports.h"
 #include "bacnet/bacdcode.h"
-#include "bacnet/bacapp.h"
+#include "bacapp.h"
+#include "bacnet/datalink/bip.h"
 
 /** @note: write property can have application tagged data, or context tagged data,
    or even complex data types (i.e. opening and closing tag around data).
@@ -41,8 +57,8 @@ typedef struct BACnet_Write_Property_Data {
     BACNET_PROPERTY_ID object_property;
     /* use BACNET_ARRAY_ALL when not setting */
     BACNET_ARRAY_INDEX array_index;
-    uint8_t application_data[MAX_APDU];
-    int application_data_len;
+    uint8_t application_data[MAX_LPDU_IP];
+    uint16_t application_data_len;
     uint8_t priority;   /* use BACNET_NO_PRIORITY if no priority */
     BACNET_ERROR_CLASS error_class;
     BACNET_ERROR_CODE error_code;
@@ -58,47 +74,42 @@ typedef struct BACnet_Write_Property_Data {
  * @return The length of the apdu encoded or -1 for error or
  *         -2 for abort message.
  */
+
+typedef struct devObj_s DEVICE_OBJECT_DATA;
+
 typedef bool(
     *write_property_function) (
+        DEVICE_OBJECT_DATA *pDev,
+        BACNET_WRITE_PROPERTY_DATA * wp_data);
+
+/* encode service */
+int wp_encode_apdu(
+    uint8_t * apdu,
+    uint16_t max_apdu,
+    uint8_t invoke_id,
     BACNET_WRITE_PROPERTY_DATA * wp_data);
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+/* decode the service request only */
+int wp_decode_service_request(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    BACNET_WRITE_PROPERTY_DATA * wp_data);
 
-    /* encode service */
-    BACNET_STACK_EXPORT
-    int wp_encode_apdu(
-        uint8_t * apdu,
-        uint8_t invoke_id,
-        BACNET_WRITE_PROPERTY_DATA * wp_data);
+#ifdef BAC_TEST
+#include "ctest.h"
+int wp_decode_apdu(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    uint8_t * invoke_id,
+    BACNET_WRITE_PROPERTY_DATA * wp_data);
 
-    /* decode the service request only */
-    BACNET_STACK_EXPORT
-    int wp_decode_service_request(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        BACNET_WRITE_PROPERTY_DATA * wp_data);
+void testWriteProperty(
+    Test * pTest);
+void testWritePropertyTag(
+    Test * pTest,
+    BACNET_APPLICATION_DATA_VALUE * value);
+#endif
 
-    BACNET_STACK_EXPORT
-    bool write_property_type_valid(
-        BACNET_WRITE_PROPERTY_DATA * wp_data,
-        BACNET_APPLICATION_DATA_VALUE * value,
-        uint8_t expected_tag);
-    BACNET_STACK_EXPORT
-    bool write_property_string_valid(
-        BACNET_WRITE_PROPERTY_DATA * wp_data,
-        BACNET_APPLICATION_DATA_VALUE * value,
-        int len_max);
-    BACNET_STACK_EXPORT
-    bool write_property_empty_string_valid(
-        BACNET_WRITE_PROPERTY_DATA * wp_data,
-        BACNET_APPLICATION_DATA_VALUE * value,
-        int len_max);
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 /** @defgroup DSWP Data Sharing - Write Property Service (DS-WP)
  * @ingroup DataShare
  * 15.9 WriteProperty Service <br>

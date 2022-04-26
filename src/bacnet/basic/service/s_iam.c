@@ -21,24 +21,29 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- *********************************************************************/
-#include <stddef.h>
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
 #include <stdint.h>
-#include <errno.h>
-#include <string.h>
-#include "bacnet/config.h"
+#include "bacnet/bacaddr.h"
 #include "bacnet/bacdef.h"
-#include "bacnet/bacdcode.h"
-#include "bacnet/dcc.h"
 #include "bacnet/npdu.h"
-#include "bacnet/apdu.h"
-#include "bacnet/iam.h"
-/* some demo stuff needed */
-#include "bacnet/basic/binding/address.h"
-#include "bacnet/basic/tsm/tsm.h"
 #include "bacnet/basic/object/device.h"
-#include "bacnet/datalink/datalink.h"
-#include "bacnet/basic/services.h"
+//#include "datalink.h"
+#include "bacnet/iam.h"
 
 /** @file s_iam.c  Send an I-Am message. */
 
@@ -49,76 +54,82 @@
  * @param segmentation [in] #BACNET_SEGMENTATION enumeration
  * @param vendor_id [in] BACnet vendor ID 0-65535
  */
-void Send_I_Am_To_Network(BACNET_ADDRESS *target_address,
-    uint32_t device_id,
-    unsigned int max_apdu,
-    int segmentation,
-    uint16_t vendor_id)
-{
-    int len = 0;
-    int pdu_len = 0;
-    int bytes_sent = 0;
-    BACNET_NPDU_DATA npdu_data;
-    BACNET_ADDRESS my_address;
-
-    datalink_get_my_address(&my_address);
-    /* encode the NPDU portion of the packet */
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
-
-    pdu_len = npdu_encode_pdu(
-        &Handler_Transmit_Buffer[0], target_address, &my_address, &npdu_data);
-    /* encode the APDU portion of the packet */
-    /* encode the APDU portion of the packet */
-    len = iam_encode_apdu(&Handler_Transmit_Buffer[pdu_len], device_id,
-        max_apdu, segmentation, vendor_id);
-    pdu_len += len;
-    bytes_sent = datalink_send_pdu(
-        target_address, &npdu_data, &Handler_Transmit_Buffer[0], pdu_len);
-    if (bytes_sent <= 0) {
-#if PRINT_ENABLED
-        fprintf(stderr, "Failed to Send I-Am Request (%s)!\n", strerror(errno));
-#endif
-    }
-}
+//void Send_I_Am_To_Network(
+//    const DEVICE_OBJECT_DATA    *pDev,
+//    BACNET_ROUTE * dest,
+//    uint32_t device_id,
+//    uint16_t max_apdu,
+//    int segmentation,
+//    uint16_t vendor_id)
+//{
+//    int len = 0;
+//    int pdu_len = 0;
+//    BACNET_NPCI_DATA npci_data;
+//
+//    DLCB *dlcb = alloc_dlcb_application('r', dest);
+//    if (dlcb == NULL)
+//    {
+//        return;
+//    }
+//
+//    /* encode the NPDU portion of the packet */
+//    npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
+//
+//    pdu_len =
+//        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &dest->bacnetPath.glAdr,
+//            NULL, &npci_data);
+//    /* encode the APDU portion of the packet */
+//    /* encode the APDU portion of the packet */
+//    len =
+//        iam_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len],
+//            device_id, max_apdu, segmentation, vendor_id);
+//
+//    pdu_len += len;
+//    dlcb->optr = pdu_len;
+//    pDev->datalink->SendPdu(pDev->datalink, dlcb);
+//}
 
 /** Encode an I Am message to be broadcast.
  * @param buffer [in,out] The buffer to use for building the message.
  * @param dest [out] The destination address information.
- * @param npdu_data [out] The NPDU structure describing the message.
+ * @param npci_data [out] The NPDU structure describing the message.
  * @return The length of the message in buffer[].
  */
 int iam_encode_pdu(
-    uint8_t *buffer, BACNET_ADDRESS *dest, BACNET_NPDU_DATA *npdu_data)
+    const DEVICE_OBJECT_DATA *pDev,
+    DLCB *dlcb,
+    BACNET_GLOBAL_ADDRESS * dest,
+    BACNET_NPCI_DATA * npci_data)
 {
-    int len = 0;
-    int pdu_len = 0;
-    BACNET_ADDRESS my_address;
-    datalink_get_my_address(&my_address);
+    int len;
+    int pdu_len;
 
-    datalink_get_broadcast_address(dest);
     /* encode the NPDU portion of the packet */
-    npdu_encode_npdu_data(npdu_data, false, MESSAGE_PRIORITY_NORMAL);
-    pdu_len = npdu_encode_pdu(&buffer[0], dest, &my_address, npdu_data);
+    npdu_setup_npci_data(npci_data, false, MESSAGE_PRIORITY_NORMAL);
+    pdu_len = npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], dest, NULL, npci_data);
 
     /* encode the APDU portion of the packet */
-    len = iam_encode_apdu(&buffer[pdu_len], Device_Object_Instance_Number(),
-        MAX_APDU, SEGMENTATION_NONE, Device_Vendor_Identifier());
+    len =
+        iam_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len], Device_Object_Instance_Number(pDev),
+            MAX_APDU_IP, SEGMENTATION_NONE, Device_Vendor_Identifier());
     pdu_len += len;
 
     return pdu_len;
 }
+
 
 /** Broadcast an I Am message.
  * @ingroup DMDDB
  *
  * @param buffer [in] The buffer to use for building and sending the message.
  */
-void Send_I_Am(uint8_t *buffer)
+
+void Send_I_Am_Broadcast(
+    const DEVICE_OBJECT_DATA *pDev
+)
 {
-    int pdu_len = 0;
-    BACNET_ADDRESS dest;
-    int bytes_sent = 0;
-    BACNET_NPDU_DATA npdu_data;
+    BACNET_PATH dest;
+    BACNET_NPCI_DATA npci_data;
 
 #if 0
     /* note: there is discussion in the BACnet committee
@@ -127,22 +138,29 @@ void Send_I_Am(uint8_t *buffer)
        initiator loses the MAC address and routing info,
        they can never re-enable DCC because they can't
        find the device with WhoIs/I-Am */
-    /* are we are forbidden to send? */
+       /* are we are forbidden to send? */
     if (!dcc_communication_enabled())
         return 0;
 #endif
 
-    /* encode the data */
-    pdu_len = iam_encode_pdu(buffer, &dest, &npdu_data);
-    /* send data */
-    bytes_sent = datalink_send_pdu(&dest, &npdu_data, &buffer[0], pdu_len);
+    // dest.portParams = pDev->datalink ;
+    bacnet_path_set_broadcast_global(&dest);
 
-    if (bytes_sent <= 0) {
-#if PRINT_ENABLED
-        fprintf(stderr, "Failed to Send I-Am Reply (%s)!\n", strerror(errno));
-#endif
+    DLCB *dlcb = alloc_dlcb_application('u', &dest, pDev->datalink->max_lpdu );
+    if (dlcb == NULL)
+    {
+        return;
     }
+
+    npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
+
+    /* encode the data */
+    dlcb->optr = iam_encode_pdu(pDev, dlcb, &dest.glAdr, &npci_data);
+
+    /* send data */
+    pDev->datalink->SendPdu(pDev->datalink, dlcb);
 }
+
 
 /** Encode an I Am message to be unicast directly back to the src.
  *
@@ -150,34 +168,33 @@ void Send_I_Am(uint8_t *buffer)
  * @param src [in] The source address information. If the src address is not
  *                 given, the dest address will be a broadcast address.
  * @param dest [out] The destination address information.
- * @param npdu_data [out] The NPDU structure describing the message.
+ * @param npci_data [out] The NPDU structure describing the message.
  * @return The length of the message in buffer[].
  */
-int iam_unicast_encode_pdu(uint8_t *buffer,
-    BACNET_ADDRESS *src,
-    BACNET_ADDRESS *dest,
-    BACNET_NPDU_DATA *npdu_data)
-{
-    int npdu_len = 0;
-    int apdu_len = 0;
-    int pdu_len = 0;
-    BACNET_ADDRESS my_address;
-    /* The destination will be the same as the src, so copy it over. */
-    bacnet_address_copy(dest, src);
-    /* dest->net = 0; - no, must direct back to src->net to meet BTL tests */
 
-    datalink_get_my_address(&my_address);
+uint16_t iam_unicast_encode_pdu(
+    DEVICE_OBJECT_DATA *pDev,
+    DLCB * dlcb,
+    BACNET_GLOBAL_ADDRESS * dest,
+    BACNET_NPCI_DATA * npci_data)
+{
+    uint16_t npdu_len;
+    uint16_t apdu_len;
+
     /* encode the NPDU portion of the packet */
-    npdu_encode_npdu_data(npdu_data, false, MESSAGE_PRIORITY_NORMAL);
-    npdu_len = npdu_encode_pdu(&buffer[0], dest, &my_address, npdu_data);
+    npdu_setup_npci_data(npci_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_len = npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], dest, NULL, npci_data);
+
     /* encode the APDU portion of the packet */
     apdu_len =
-        iam_encode_apdu(&buffer[npdu_len], Device_Object_Instance_Number(),
-            MAX_APDU, SEGMENTATION_NONE, Device_Vendor_Identifier());
-    pdu_len = npdu_len + apdu_len;
+        iam_encode_apdu(&dlcb->Handler_Transmit_Buffer[npdu_len], Device_Object_Instance_Number(pDev),
+            MAX_APDU_IP, SEGMENTATION_NONE, Device_Vendor_Identifier());
 
-    return pdu_len;
+    // to think about - how is max_apdu handled wrt port object - different for different destinations? Indivisible?
+
+    return npdu_len + apdu_len;
 }
+
 
 /** Send an I-Am message by unicasting directly back to the src.
  * @ingroup DMDDB
@@ -190,12 +207,12 @@ int iam_unicast_encode_pdu(uint8_t *buffer,
  * @param buffer [in] The buffer to use for building and sending the message.
  * @param src [in] The source address information from service handler.
  */
-void Send_I_Am_Unicast(uint8_t *buffer, BACNET_ADDRESS *src)
+void Send_I_Am_Unicast(
+    DEVICE_OBJECT_DATA *pDev,
+    BACNET_ROUTE *dest)
 {
-    int pdu_len = 0;
-    BACNET_ADDRESS dest;
-    int bytes_sent = 0;
-    BACNET_NPDU_DATA npdu_data;
+    uint16_t pdu_len;
+    BACNET_NPCI_DATA npci_data;
 
 #if 0
     /* note: there is discussion in the BACnet committee
@@ -209,14 +226,15 @@ void Send_I_Am_Unicast(uint8_t *buffer, BACNET_ADDRESS *src)
         return 0;
 #endif
 
-    /* encode the data */
-    pdu_len = iam_unicast_encode_pdu(buffer, src, &dest, &npdu_data);
-    /* send data */
-    bytes_sent = datalink_send_pdu(&dest, &npdu_data, &buffer[0], pdu_len);
+    DLCB *dlcb = alloc_dlcb_response('r', &dest->bacnetPath, pDev->datalink->max_lpdu);
+    if (dlcb == NULL) return;
 
-    if (bytes_sent <= 0) {
-#if PRINT_ENABLED
-        fprintf(stderr, "Failed to Send I-Am Reply (%s)!\n", strerror(errno));
-#endif
-    }
+    /* encode the data */ // src is null, dest is the original source
+    pdu_len = iam_unicast_encode_pdu(pDev, dlcb, &dest->bacnetPath.glAdr, &npci_data);
+
+    /* send data */
+    dlcb->optr = pdu_len;
+    pDev->datalink->SendPdu(pDev->datalink, dlcb);
+
 }
+

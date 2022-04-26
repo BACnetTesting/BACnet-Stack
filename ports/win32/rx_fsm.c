@@ -53,55 +53,60 @@
 #include "crc.h"
 
 #ifndef max
-#define max(a, b) (((a)(b)) ? (a) : (b))
-#define min(a, b) (((a) < (b)) ? (a) : (b))
+#define max(a,b) (((a) (b)) ? (a) : (b))
+#define min(a,b) (((a) < (b)) ? (a) : (b))
 #endif
 
 /* file format for libpcap/winpcap */
 /* from http://wiki.wireshark.org/Development/LibpcapFileFormat */
 typedef struct pcap_hdr_s {
-    uint32_t magic_number; /* magic number */
-    uint16_t version_major; /* major version number */
-    uint16_t version_minor; /* minor version number */
-    int32_t thiszone; /* GMT to local correction */
-    uint32_t sigfigs; /* accuracy of timestamps */
-    uint32_t snaplen; /* max length of captured packets, in octets */
-    uint32_t network; /* data link type */
+    uint32_t magic_number;      /* magic number */
+    uint16_t version_major;     /* major version number */
+    uint16_t version_minor;     /* minor version number */
+    int32_t thiszone;   /* GMT to local correction */
+    uint32_t sigfigs;   /* accuracy of timestamps */
+    uint32_t snaplen;   /* max length of captured packets, in octets */
+    uint32_t network;   /* data link type */
 } pcap_hdr_t;
 
 typedef struct pcaprec_hdr_s {
-    uint32_t ts_sec; /* timestamp seconds */
-    uint32_t ts_usec; /* timestamp microseconds */
-    uint32_t incl_len; /* number of octets of packet saved in file */
-    uint32_t orig_len; /* actual length of packet */
+    uint32_t ts_sec;    /* timestamp seconds */
+    uint32_t ts_usec;   /* timestamp microseconds */
+    uint32_t incl_len;  /* number of octets of packet saved in file */
+    uint32_t orig_len;  /* actual length of packet */
 } pcaprec_hdr_t;
 
 /* local port data - shared with RS-485 */
 volatile struct mstp_port_struct_t MSTP_Port;
-static uint8_t RxBuffer[DLMSTP_MPDU_MAX];
-static uint8_t TxBuffer[DLMSTP_MPDU_MAX];
+static uint8_t RxBuffer[MAX_MPDU];
+static uint8_t TxBuffer[MAX_MPDU];
 static uint16_t SilenceTime;
 #define INCREMENT_AND_LIMIT_UINT16(x) \
     {                                 \
         if (x < 0xFFFF)               \
             x++;                      \
     }
-static uint16_t Timer_Silence(void)
+    
+static uint16_t Timer_Silence(
+    void)
 {
     return SilenceTime;
 }
 
-static void Timer_Silence_Reset(void)
+static void Timer_Silence_Reset(
+    void)
 {
     SilenceTime = 0;
 }
 
-static void dlmstp_millisecond_timer(void)
+static void dlmstp_millisecond_timer(
+    void)
 {
     INCREMENT_AND_LIMIT_UINT16(SilenceTime);
 }
 
-void *milliseconds_task(void *pArg)
+void *milliseconds_task(
+    void *pArg)
 {
     (void)pArg;
     for (;;) {
@@ -113,7 +118,8 @@ void *milliseconds_task(void *pArg)
 }
 
 /* functions used by the MS/TP state machine to put or get data */
-uint16_t MSTP_Put_Receive(volatile struct mstp_port_struct_t *mstp_port)
+uint16_t MSTP_Put_Receive(
+    volatile struct mstp_port_struct_t *mstp_port)
 {
     (void)mstp_port;
 
@@ -123,18 +129,20 @@ uint16_t MSTP_Put_Receive(volatile struct mstp_port_struct_t *mstp_port)
 /* for the MS/TP state machine to use for getting data to send */
 /* Return: amount of PDU data */
 uint16_t MSTP_Get_Send(
-    volatile struct mstp_port_struct_t *mstp_port, unsigned timeout)
-{ /* milliseconds to wait for a packet */
-    (void)mstp_port;
-    (void)timeout;
+    volatile struct mstp_port_struct_t * mstp_port,
+    unsigned timeout)
+{       /* milliseconds to wait for a packet */
+    (void) mstp_port;
+    (void) timeout;
     return 0;
 }
 
 uint16_t MSTP_Get_Reply(
-    volatile struct mstp_port_struct_t *mstp_port, unsigned timeout)
-{ /* milliseconds to wait for a packet */
-    (void)mstp_port;
-    (void)timeout;
+    volatile struct mstp_port_struct_t * mstp_port,
+    unsigned timeout)
+{       /* milliseconds to wait for a packet */
+    (void) mstp_port;
+    (void) timeout;
     return 0;
 }
 
@@ -172,9 +180,10 @@ static void print_received_packet(
 #endif
 
 /* returns a delta timestamp */
-void timestamp(uint32_t *ts_sec, /* timestamp seconds since epoch (Unix) */
-    uint32_t *ts_usec)
-{ /* timestamp microseconds (unix) */
+void timestamp(
+    uint32_t * ts_sec,  /* timestamp seconds since epoch (Unix) */
+    uint32_t * ts_usec)
+{       /* timestamp microseconds (unix) */
     DWORD ticks = 0;
     static DWORD initial_ticks = 0;
     static time_t initial_seconds = 0;
@@ -201,15 +210,16 @@ static const char *Capture_Filename = "mstp.cap";
 static FILE *pFile = NULL; /* stream pointer */
 
 /* write packet to file in libpcap format */
-static void write_global_header(void)
+static void write_global_header(
+    void)
 {
     uint32_t magic_number = 0xa1b2c3d4; /* magic number */
     uint16_t version_major = 2; /* major version number */
     uint16_t version_minor = 4; /* minor version number */
-    int32_t thiszone = 0; /* GMT to local correction */
-    uint32_t sigfigs = 0; /* accuracy of timestamps */
-    uint32_t snaplen = 65535; /* max length of captured packets, in octets */
-    uint32_t network = 165; /* data link type */
+    int32_t thiszone = 0;       /* GMT to local correction */
+    uint32_t sigfigs = 0;       /* accuracy of timestamps */
+    uint32_t snaplen = 65535;   /* max length of captured packets, in octets */
+    uint32_t network = 165;     /* data link type */
 
     /* create a new file. */
     pFile = fopen(Capture_Filename, "wb");
@@ -227,13 +237,14 @@ static void write_global_header(void)
     }
 }
 
-static void write_received_packet(volatile struct mstp_port_struct_t *mstp_port)
+static void write_received_packet(
+    volatile struct mstp_port_struct_t *mstp_port)
 {
-    uint32_t ts_sec; /* timestamp seconds */
-    uint32_t ts_usec; /* timestamp microseconds */
-    uint32_t incl_len; /* number of octets of packet saved in file */
-    uint32_t orig_len; /* actual length of packet */
-    uint8_t header[8]; /* MS/TP header */
+    uint32_t ts_sec;    /* timestamp seconds */
+    uint32_t ts_usec;   /* timestamp microseconds */
+    uint32_t incl_len;  /* number of octets of packet saved in file */
+    uint32_t orig_len;  /* actual length of packet */
+    uint8_t header[8];  /* MS/TP header */
 
     if (pFile) {
         timestamp(&ts_sec, &ts_usec);
@@ -268,7 +279,8 @@ static void write_received_packet(volatile struct mstp_port_struct_t *mstp_port)
 
 static char *Network_Interface = NULL;
 
-static void cleanup(void)
+static void cleanup(
+    void)
 {
     if (pFile) {
         fflush(pFile); /* stream pointer */
@@ -278,7 +290,9 @@ static void cleanup(void)
 }
 
 /* simple test to packetize the data and print it */
-int main(int argc, char *argv[])
+int main(
+    int argc,
+    char *argv[])
 {
     volatile struct mstp_port_struct_t *mstp_port;
     int rc = 0;

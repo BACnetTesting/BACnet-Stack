@@ -67,24 +67,19 @@ static pthread_cond_t Received_Frame_Flag;
 static pthread_mutex_t Received_Frame_Mutex;
 static pthread_cond_t Master_Done_Flag;
 static pthread_mutex_t Master_Done_Mutex;
-static pthread_mutex_t Ring_Buffer_Mutex;
-static pthread_mutex_t Thread_Mutex;
-
-static pthread_t hThread;
-static bool run_thread;
 
 /*RT_TASK Receive_Task, Fsm_Task;*/
 /* local MS/TP port data - shared with RS-485 */
 static volatile struct mstp_port_struct_t MSTP_Port;
 /* buffers needed by mstp port struct */
-static uint8_t TxBuffer[DLMSTP_MPDU_MAX];
-static uint8_t RxBuffer[DLMSTP_MPDU_MAX];
+static uint8_t TxBuffer[MAX_MPDU];
+static uint8_t RxBuffer[MAX_MPDU];
 /* data structure for MS/TP PDU Queue */
 struct mstp_pdu_packet {
     bool data_expecting_reply;
     uint8_t destination_mac;
     uint16_t length;
-    uint8_t buffer[DLMSTP_MPDU_MAX];
+    uint8_t buffer[MAX_MPDU];
 };
 /* count must be a power of 2 for ringbuf library */
 #ifndef MSTP_PDU_PACKET_COUNT
@@ -189,17 +184,12 @@ static void get_abstime(struct timespec *abstime, unsigned long milliseconds)
 
 void dlmstp_cleanup(void)
 {
-    pthread_mutex_lock(&Thread_Mutex);
-    run_thread = false;
-    pthread_mutex_unlock(&Thread_Mutex);
-    pthread_join (hThread, NULL);
     pthread_cond_destroy(&Received_Frame_Flag);
     pthread_cond_destroy(&Receive_Packet_Flag);
     pthread_cond_destroy(&Master_Done_Flag);
     pthread_mutex_destroy(&Received_Frame_Mutex);
     pthread_mutex_destroy(&Receive_Packet_Mutex);
     pthread_mutex_destroy(&Master_Done_Mutex);
-    pthread_mutex_destroy (&Ring_Buffer_Mutex);
 }
 
 /* returns number of bytes sent on success, zero on failure */
@@ -211,7 +201,7 @@ int dlmstp_send_pdu(BACNET_ADDRESS *dest, /* destination address */
     int bytes_sent = 0;
     struct mstp_pdu_packet *pkt;
     unsigned i = 0;
-    pthread_mutex_lock (&Ring_Buffer_Mutex);
+
     pkt = (struct mstp_pdu_packet *)Ringbuf_Data_Peek(&PDU_Queue);
     if (pkt) {
         pkt->data_expecting_reply = npdu_data->data_expecting_reply;
@@ -229,7 +219,6 @@ int dlmstp_send_pdu(BACNET_ADDRESS *dest, /* destination address */
             bytes_sent = pdu_len;
         }
     }
-    pthread_mutex_unlock (&Ring_Buffer_Mutex);
 
     return bytes_sent;
 }
@@ -272,11 +261,9 @@ static void *dlmstp_master_fsm_task(void *pArg)
 {
     uint32_t silence = 0;
     bool run_master = false;
-    bool thread_alive = true;
-    bool run_loop;
 
     (void)pArg;
-    while (thread_alive) {
+    for (;;) {
         if (MSTP_Port.ReceivedValidFrame == false &&
             MSTP_Port.ReceivedInvalidFrame == false) {
             RS485_Check_UART_Data(&MSTP_Port);
@@ -306,21 +293,13 @@ static void *dlmstp_master_fsm_task(void *pArg)
         }
         if (run_master) {
             if (MSTP_Port.This_Station <= 127) {
-                run_loop = true;
-                while (run_loop) {
+                while (MSTP_Master_Node_FSM(&MSTP_Port)) {
                     /* do nothing while immediate transitioning */
-                    run_loop = MSTP_Master_Node_FSM(&MSTP_Port);
-                    pthread_mutex_lock (&Thread_Mutex);
-                    if (!run_thread) run_loop = false;
-                    pthread_mutex_unlock (&Thread_Mutex);
                 }
             } else if (MSTP_Port.This_Station < 255) {
                 MSTP_Slave_Node_FSM(&MSTP_Port);
             }
         }
-        pthread_mutex_lock (&Thread_Mutex);
-        thread_alive = run_thread;
-        pthread_mutex_unlock (&Thread_Mutex);
     }
 
     return NULL;
@@ -389,9 +368,7 @@ uint16_t MSTP_Get_Send(
     struct mstp_pdu_packet *pkt;
 
     (void)timeout;
-    pthread_mutex_lock (&Ring_Buffer_Mutex);
     if (Ringbuf_Empty(&PDU_Queue)) {
-        pthread_mutex_unlock (&Ring_Buffer_Mutex);
         return 0;
     }
     pkt = (struct mstp_pdu_packet *)Ringbuf_Peek(&PDU_Queue);
@@ -406,7 +383,6 @@ uint16_t MSTP_Get_Send(
             mstp_port->OutputBufferSize, frame_type, pkt->destination_mac,
             mstp_port->This_Station, (uint8_t *)&pkt->buffer[0], pkt->length);
     (void)Ringbuf_Pop(&PDU_Queue, NULL);
-    pthread_mutex_unlock (&Ring_Buffer_Mutex);
 
     return pdu_len;
 }
@@ -731,9 +707,6 @@ bool dlmstp_init(char *ifname)
         exit(1);
     }
 
-    pthread_mutex_init (&Ring_Buffer_Mutex, NULL);
-    pthread_mutex_init (&Thread_Mutex, NULL);
-
     /* initialize PDU queue */
     Ringbuf_Init(&PDU_Queue, (uint8_t *)&PDU_Buffer,
         sizeof(struct mstp_pdu_packet), MSTP_PDU_PACKET_COUNT);
@@ -779,7 +752,6 @@ bool dlmstp_init(char *ifname)
     /*    if (rv != 0) {
        fprintf(stderr, "Failed to start recive FSM task\n");
        } */
-    run_thread = true;
     rv = pthread_create(&hThread, NULL, dlmstp_master_fsm_task, NULL);
     if (rv != 0) {
         fprintf(stderr, "Failed to start Master Node FSM task\n");
@@ -825,4 +797,3 @@ int main(int argc, char *argv[])
     return 0;
 }
 #endif
-

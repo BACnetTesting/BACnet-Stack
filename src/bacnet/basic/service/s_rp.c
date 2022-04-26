@@ -21,142 +21,172 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- *********************************************************************/
-#include <stddef.h>
-#include <stdint.h>
-#include <errno.h>
-#include <string.h>
-#include "bacnet/config.h"
-#include "bacnet/bacdef.h"
-#include "bacnet/bacdcode.h"
-#include "bacnet/npdu.h"
-#include "bacnet/apdu.h"
-#include "bacnet/dcc.h"
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
+#include "configProj.h"
+
+#if ( BACNET_CLIENT == 1 )
+
+#include "address.h"
+#include "dcc.h"
 #include "bacnet/rp.h"
-/* some demo stuff needed */
-#include "bacnet/basic/object/device.h"
-#include "bacnet/datalink/datalink.h"
-#include "bacnet/basic/binding/address.h"
-#include "bacnet/basic/tsm/tsm.h"
-#include "bacnet/basic/services.h"
+//#include "debug.h"
+#include "client.h"
+#include "multipleDatalink.h"
+#include "bitsRouter.h"
 
 /** @file s_rp.c  Send Read Property request. */
 
 /** Sends a Read Property request
  * @ingroup DSRP
  *
- * @param dest [in] BACNET_ADDRESS of the destination device
+ * @param dest [in] BACNET_PATH of the destination device
  * @param max_apdu [in]
  * @param object_type [in]  Type of the object whose property is to be read.
  * @param object_instance [in] Instance # of the object to be read.
- * @param object_property [in] Property to be read, but not ALL, REQUIRED, or
- * OPTIONAL.
+ * @param object_property [in] Property to be read, but not ALL, REQUIRED, or OPTIONAL.
  * @param array_index [in] Optional: if the Property is an array,
  *   - 0 for the array size
  *   - 1 to n for individual array members
  *   - BACNET_ARRAY_ALL (~0) for the full array to be read.
- * @return invoke id of outgoing message, or 0 if device is not bound or no tsm
- * available
+ * @return invoke id of outgoing message, or 0 if device is not bound or no tsm available
  */
-uint8_t Send_Read_Property_Request_Address(BACNET_ADDRESS *dest,
+
+uint8_t Send_Read_Property_Request_Address(
+    DEVICE_OBJECT_DATA *pDev,
+    BACNET_PATH * bacnetPath,
     uint16_t max_apdu,
     BACNET_OBJECT_TYPE object_type,
     uint32_t object_instance,
     BACNET_PROPERTY_ID object_property,
     uint32_t array_index)
 {
-    BACNET_ADDRESS my_address;
-    uint8_t invoke_id = 0;
-    int len = 0;
-    int pdu_len = 0;
-    int bytes_sent = 0;
+    //BACNET_PATH my_address;
+    uint8_t invoke_id ;
+    int len ;
+    int pdu_len ;
     BACNET_READ_PROPERTY_DATA data;
-    BACNET_NPDU_DATA npdu_data;
+    BACNET_NPCI_DATA npci_data;
 
-    if (!dcc_communication_enabled()) {
+    if (!dcc_communication_enabled(pDev)) {
         return 0;
     }
-    if (!dest) {
+
+    DLCB *dlcb = alloc_dlcb_application('a', bacnetPath, pDev->datalink->max_lpdu);
+    if (dlcb == NULL)
+    {
         return 0;
     }
+
     /* is there a tsm available? */
-    invoke_id = tsm_next_free_invokeID();
+    invoke_id = tsm_next_free_invokeID(routerApplicationEntity);
     if (invoke_id) {
+
         /* encode the NPDU portion of the packet */
-        datalink_get_my_address(&my_address);
-        npdu_encode_npdu_data(&npdu_data, true, MESSAGE_PRIORITY_NORMAL);
-        pdu_len = npdu_encode_pdu(
-            &Handler_Transmit_Buffer[0], dest, &my_address, &npdu_data);
+        //datalink_get_my_address(&my_address);
+        npdu_setup_npci_data(&npci_data, true, MESSAGE_PRIORITY_NORMAL);
+        pdu_len =
+            npdu_encode_pdu(
+                dlcb->Handler_Transmit_Buffer, 
+                &dlcb->bacnetPath.glAdr, 
+                NULL,
+                &npci_data);
         /* encode the APDU portion of the packet */
         data.object_type = object_type;
         data.object_instance = object_instance;
         data.object_property = object_property;
-        data.array_index = array_index;
+        data.array_index = array_index; // todo 0 - must be signed.. to indicate no array index for scalar BACnet properties
+
         len =
-            rp_encode_apdu(&Handler_Transmit_Buffer[pdu_len], invoke_id, &data);
+            rp_encode_apdu(
+                &dlcb->Handler_Transmit_Buffer[pdu_len],
+                invoke_id,
+                &data);
+
         pdu_len += len;
-        /* will it fit in the sender?
+        /* is it small enough for the the destination to receive?
            note: if there is a bottleneck router in between
            us and the destination, we won't know unless
            we have a way to check for that and update the
            max_apdu in the address binding table. */
         if ((uint16_t)pdu_len < max_apdu) {
-            tsm_set_confirmed_unsegmented_transaction(invoke_id, dest,
-                &npdu_data, &Handler_Transmit_Buffer[0], (uint16_t)pdu_len);
-            bytes_sent = datalink_send_pdu(
-                dest, &npdu_data, &Handler_Transmit_Buffer[0], pdu_len);
-            if (bytes_sent <= 0) {
-#if PRINT_ENABLED
-                fprintf(stderr, "Failed to Send ReadProperty Request (%s)!\n",
-                    strerror(errno));
-#endif
-            }
-        } else {
-            tsm_free_invoke_id(invoke_id);
-            invoke_id = 0;
-#if PRINT_ENABLED
-            fprintf(stderr,
-                "Failed to Send ReadProperty Request "
-                "(exceeds destination maximum APDU)!\n");
-#endif
+            dlcb->optr = pdu_len;
+            tsm_set_confirmed_unsegmented_transaction(pDev, invoke_id, NULL, dlcb);
+            pDev->datalink->SendPdu(pDev->datalink, dlcb);
+
+            dbMessage(DBD_ClientSide, DB_NORMAL_TRAFFIC, "Sending read, [%p] IID:%03d", pDev, invoke_id);
         }
+        else {
+            tsm_free_invoke_id(pDev, invoke_id);
+            invoke_id = 0;
+            dbMessage(DBD_ALL, DB_ERROR,
+                "Failed to Send ReadProperty Request "
+                "(exceeds destination maximum APDU)!");
+        }
+    }
+    else
+    {
+        dlcb_free(dlcb);
     }
 
     return invoke_id;
 }
 
+
+#if 0
 /** Sends a Read Property request.
  * @ingroup DSRP
  *
  * @param device_id [in] ID of the destination device
  * @param object_type [in]  Type of the object whose property is to be read.
  * @param object_instance [in] Instance # of the object to be read.
- * @param object_property [in] Property to be read, but not ALL, REQUIRED, or
- * OPTIONAL.
+ * @param object_property [in] Property to be read, but not ALL, REQUIRED, or OPTIONAL.
  * @param array_index [in] Optional: if the Property is an array,
  *   - 0 for the array size
  *   - 1 to n for individual array members
  *   - BACNET_ARRAY_ALL (~0) for the full array to be read.
- * @return invoke id of outgoing message, or 0 if device is not bound or no tsm
- * available
+ * @return invoke id of outgoing message, or 0 if device is not bound or no tsm available
  */
-uint8_t Send_Read_Property_Request(uint32_t device_id, /* destination device */
+uint8_t Send_Read_Property_Request(
+    PORT_SUPPORT *portParams,
+    DEVICE_OBJECT_DATA *sendingDev,
+    uint32_t device_id, /* destination device */
     BACNET_OBJECT_TYPE object_type,
     uint32_t object_instance,
     BACNET_PROPERTY_ID object_property,
     uint32_t array_index)
 {
-    BACNET_ADDRESS dest = { 0 };
-    unsigned max_apdu = 0;
+    BACNET_ROUTE dest;
+    uint16_t max_apdu;
     uint8_t invoke_id = 0;
-    bool status = false;
+    bool status;
 
     /* is the device bound? */
     status = address_get_by_device(device_id, &max_apdu, &dest);
     if (status) {
-        invoke_id = Send_Read_Property_Request_Address(&dest, max_apdu,
-            object_type, object_instance, object_property, array_index);
+        invoke_id = Send_Read_Property_Request_Address(
+            &dest,
+            sendingDev, max_apdu, object_type,
+            object_instance, object_property,
+            array_index);
     }
 
     return invoke_id;
 }
+
+#endif // if 0
+#endif

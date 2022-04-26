@@ -1,26 +1,42 @@
 /**************************************************************************
-*
-* Copyright (C) 2008 John Minack
-*
-* Permission is hereby granted, free of charge, to any person obtaining
-* a copy of this software and associated documentation files (the
-* "Software"), to deal in the Software without restriction, including
-* without limitation the rights to use, copy, modify, merge, publish,
-* distribute, sublicense, and/or sell copies of the Software, and to
-* permit persons to whom the Software is furnished to do so, subject to
-* the following conditions:
-*
-* The above copyright notice and this permission notice shall be included
-* in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*********************************************************************/
+ *
+ * Copyright (C) 2008 John Minack
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
 #ifndef BACNET_EVENT_H_
 #define BACNET_EVENT_H_
 
@@ -32,21 +48,15 @@
 #include "bacnet/timestamp.h"
 #include "bacnet/bacpropstates.h"
 #include "bacnet/bacdevobjpropref.h"
-#include "bacnet/authentication_factor.h"
 
 typedef enum {
     CHANGE_OF_VALUE_BITS,
     CHANGE_OF_VALUE_REAL
 } CHANGE_OF_VALUE_TYPE;
 
-typedef enum {
-    COMMAND_FAILURE_BINARY_PV,
-    COMMAND_FAILURE_UNSIGNED
-} COMMAND_FAILURE_TYPE;
-
 /*
-** Based on UnconfirmedEventNotification-Request
-*/
+ ** Based on UnconfirmedEventNotification-Request
+ */
 
 typedef struct BACnet_Event_Notification_Data {
     uint32_t processIdentifier;
@@ -93,20 +103,10 @@ typedef struct BACnet_Event_Notification_Data {
             BACNET_BIT_STRING statusFlags;
         } changeOfValue;
         /*
-          ** EVENT_COMMAND_FAILURE
-          */
-        struct {
-            union {
-                BACNET_BINARY_PV binaryValue;
-                BACNET_UNSIGNED_INTEGER unsignedValue;
-            } commandValue;
-            COMMAND_FAILURE_TYPE tag;
-            BACNET_BIT_STRING statusFlags;
-            union {
-                BACNET_BINARY_PV binaryValue;
-                BACNET_UNSIGNED_INTEGER unsignedValue;
-            } feedbackValue;
-        } commandFailure;
+         ** EVENT_COMMAND_FAILURE
+         **
+         ** Not Supported!
+         */
         /*
          ** EVENT_FLOATING_LIMIT
          */
@@ -143,6 +143,14 @@ typedef struct BACnet_Event_Notification_Data {
          ** EVENT_BUFFER_READY
          */
         struct {
+            uint16_t                        vendorId;
+            unsigned                        extendedEventType;      // Vendor choice
+            BACNET_APPLICATION_DATA_VALUE   value;
+        } extended;
+        /*
+         ** EVENT_BUFFER_READY
+         */
+        struct {
             BACNET_DEVICE_OBJECT_PROPERTY_REFERENCE bufferProperty;
             uint32_t previousNotification;
             uint32_t currentNotification;
@@ -155,32 +163,19 @@ typedef struct BACnet_Event_Notification_Data {
             BACNET_BIT_STRING statusFlags;
             uint32_t exceededLimit;
         } unsignedRange;
-        /*
-         ** EVENT_ACCESS_EVENT
-         */
-        struct {
-            BACNET_ACCESS_EVENT accessEvent;
-            BACNET_BIT_STRING statusFlags;
-            BACNET_UNSIGNED_INTEGER accessEventTag;
-            BACNET_TIMESTAMP accessEventTime;
-            BACNET_DEVICE_OBJECT_REFERENCE accessCredential;
-            BACNET_AUTHENTICATION_FACTOR authenticationFactor;
-            /* OPTIONAL - Set authenticationFactor.format_type to
-               AUTHENTICATION_FACTOR_MAX if not being used */
-        } accessEvent;
     } notificationParams;
 } BACNET_EVENT_NOTIFICATION_DATA;
 
 
-#ifdef __cplusplus
+#ifdef __cplusplus_disable
 extern "C" {
-#endif /* __cplusplus */
+#endif /* __cplusplus_disable */
 
 /***************************************************
-**
-** Creates a Confirmed Event Notification APDU
-**
-****************************************************/
+ **
+ ** Creates a Confirmed Event Notification APDU
+ **
+ ****************************************************/
     BACNET_STACK_EXPORT
     int cevent_notify_encode_apdu(
         uint8_t * apdu,
@@ -188,30 +183,30 @@ extern "C" {
         BACNET_EVENT_NOTIFICATION_DATA * data);
 
 /***************************************************
-**
-** Creates an Unconfirmed Event Notification APDU
-**
-****************************************************/
+ **
+ ** Creates an Unconfirmed Event Notification APDU
+ **
+ ****************************************************/
     BACNET_STACK_EXPORT
     int uevent_notify_encode_apdu(
         uint8_t * apdu,
         BACNET_EVENT_NOTIFICATION_DATA * data);
 
 /***************************************************
-**
-** Encodes the service data part of Event Notification
-**
-****************************************************/
+ **
+ ** Encodes the service data part of Event Notification
+ **
+ ****************************************************/
     BACNET_STACK_EXPORT
     int event_notify_encode_service_request(
         uint8_t * apdu,
         BACNET_EVENT_NOTIFICATION_DATA * data);
 
 /***************************************************
-**
-** Decodes the service data part of Event Notification
-**
-****************************************************/
+ **
+ ** Decodes the service data part of Event Notification
+ **
+ ****************************************************/
     BACNET_STACK_EXPORT
     int event_notify_decode_service_request(
         uint8_t * apdu,
@@ -219,20 +214,20 @@ extern "C" {
         BACNET_EVENT_NOTIFICATION_DATA * data);
 
 /***************************************************
-**
-** Sends an Unconfirmed Event Notification to a dest
-**
-****************************************************/
+ **
+ ** Sends an Unconfirmed Event Notifcation to a dest
+ **
+ ****************************************************/
     BACNET_STACK_EXPORT
-    int uevent_notify_send(
-        uint8_t * buffer,
-        BACNET_EVENT_NOTIFICATION_DATA * data,
-        BACNET_ADDRESS * dest);
+int uevent_notify_send(
+    uint8_t * buffer,
+    BACNET_EVENT_NOTIFICATION_DATA * data,
+    BACNET_PATH * dest);
 
 
-#ifdef __cplusplus
+#ifdef __cplusplus_disable
 }
-#endif /* __cplusplus */
+#endif /* __cplusplus_disable */
 /** @defgroup ALMEVNT Alarm and Event Management BIBBs
  * These BIBBs prescribe the BACnet capabilities required to interoperably
  * perform the alarm and event management functions enumerated in 22.2.1.2

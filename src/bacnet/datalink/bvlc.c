@@ -1,5 +1,5 @@
-/*####COPYRIGHTBEGIN####
- -------------------------------------------
+/****************************************************************************************
+
  Copyright (C) 2020 Steve Karg
 
  This program is free software; you can redistribute it and/or
@@ -29,2594 +29,2549 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
-
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include "bacnet/bacenum.h"
-#include "bacnet/bacdcode.h"
-#include "bacnet/bacint.h"
-#include "bacnet/bacdef.h"
-#include "bacnet/datalink/bvlc.h"
-
-/**
- * @brief Encode the BVLC header
  *
- * @param pdu - buffer to store the encoding
- * @param pdu_size - size of the buffer to store encoding
- * @param message_type - BVLL Messages
- * @param length - number of bytes for this message type
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
+//#include <stdint.h>
+//#include <stdbool.h>
+//#include <stdlib.h>
+
+#include "bacnet/datalink/bvlc.h"
+//#include "bacnet/bacenum.h"
+//#include "bacnet/bacdcode.h"
+//#include "bacnet/bacint.h"
+//#include "bacnet/bacdef.h"
+//#include "bacnet/datalink/bvlc.h"
+#include "bacnet/bits/util/multipleDatalink.h"
+//#include "bacnet/basic/sys/sbuf.h"
+#include "bacnet/datalink/bip.h"
+#include "eLib/util/btaDebug.h"
+#include "bacnet/bits/util/BACnetToString.h"
+
+/** @file bvlc.c  Handle the BACnet Virtual Link Control (BVLC),
+ * which includes: BACnet Broadcast Management Device,
+ * Broadcast Distribution Table, and
+ * Foreign Device Registration.
+ */
+
+/** result from a client request */
+BACNET_BVLC_RESULT BVLC_Result_Code = BVLC_RESULT_SUCCESSFUL_COMPLETION;
+
+/** The current BVLC Function Code being handled. */
+BACNET_BVLC_FUNCTION BVLC_Function_Code = BVLC_RESULT;  /* A safe default */
+
+/* Define BBMD_ENABLED to get the functions that a
+ * BBMD needs to handle its services.
+ * Separately, define BBMD_CLIENT_ENABLED to get the
+ * functions that allow a client to manage a BBMD.
+ */
+#if defined(BBMD_ENABLED) && (BBMD_ENABLED == 1)
+
+static int SendMPDU(const PORT_SUPPORT *portParams, const BACNET_BVLC_FUNCTION function, const uint32_t nHostAddr, const uint16_t nPort, const DLCB *dlcb );
+
+#define BBMD_BACKUP_FILE BACnet_BDT_table
+
+char *PortSupportToString(const PORT_SUPPORT *ps)
+{
+    // todo 0 - static review
+    static char stringbuf[1000];
+    char tbuf[200];
+    const char *type = "Error";
+
+    switch (ps->portType)
+    {
+    case BPT_BBMD:
+        type = "BBMD";
+        break;
+    case BPT_BIP:
+        type = "BIP";
+        break;
+    case BPT_VIRT:
+        type = "Virtual";
+        break;
+    case BPT_APP:
+        type = "App";
+        break;
+#if (BACDL_MSTP == 1)
+    case BPT_MSTP:
+        type = "MSTP";
+        break;
+#endif
+#if (BACDL_FD == 1)
+    case BPT_FD:
+        type = "FD";
+        break;
+#endif
+    default:
+        panic();
+        break;
+    }
+
+    sprintf(stringbuf, "[%d] %s: %s:%d", ps->datalinkId, type, NwoIPAddrToString(tbuf, ps->datalink.bipParams.nwoLocal_addr), ntohs(ps->datalink.bipParams.nwoPort));
+    return stringbuf;
+}
+
+
+void ShowFDtable(
+    PORT_SUPPORT *portParams)
+{
+    unsigned int i;
+    printf("\n   Foreign Device Registrations for port ID: %2d, Type: %s:\n", portParams->datalinkId, PortSupportToString(portParams));
+    for (i = 0; i < MAX_FD_ENTRIES; i++) {
+        if (portParams->datalink.bipParams.FD_Table[i].valid) {
+            printf("      ");
+            DumpIpPort("Dest Addr", portParams->datalink.bipParams.FD_Table[i].dest_address.s_addr, ntohs(portParams->datalink.bipParams.FD_Table[i].dest_port));
+            dbMessage(DBD_BBMD, DB_NOTE, " TTL:%d Rem:%5d Valid:%d\n",
+                portParams->datalink.bipParams.FD_Table[i].time_to_live,
+                portParams->datalink.bipParams.FD_Table[i].seconds_remaining,
+                portParams->datalink.bipParams.FD_Table[i].valid);
+        }
+    }
+}
+
+extern PORT_SUPPORT *datalinkSupportHead;
+
+void ShowFDtables(void)
+{
+    printf("\nForeign Device Tables:");
+    PORT_SUPPORT *ps = datalinkSupportHead;
+    while (ps != NULL)
+    {
+        if (ps->portType == BPT_BBMD)
+        {
+            ShowFDtable(ps);
+        }
+        ps = (PORT_SUPPORT *)ps->llist.next;
+    }
+}
+
+/* Define BBMD_BACKUP_FILE if the contents of the BDT
+ * (broadcast distribution table) are to be stored in 
+ * a backup file, so the contents are not lost across
+ * power failures, shutdowns, etc...
+ * (this is required behaviour as defined in BACnet standard).
+ * 
+ * BBMD_BACKUP_FILE should be set to the file name
+ * in which to store the BDT.
+ */
+// #define BBMD_BACKUP_FILE BACnet_BDT_table
+#if defined(BBMD_BACKUP_FILE)
+
+#define tostr(a) str(a)
+#define str(a) #a
+
+void bvlc_bdt_backup_local(
+    void) 
+{
+    // todo 0 - static review
+    static FILE *bdt_file_ptr = NULL;
+    
+    /* only try opening the file if not already opened previously */
+    if (!bdt_file_ptr)
+        bdt_file_ptr = fopen(tostr(BBMD_BACKUP_FILE),"wb");
+    
+    /* if error opening file for writing -> silently abort */
+    if (!bdt_file_ptr)
+        return;
+
+#if 0        
+    fseek(bdt_file_ptr, 0, SEEK_SET);
+    fwrite(BBMD_Table, sizeof(BBMD_TABLE_ENTRY), MAX_BBMD_ENTRIES, bdt_file_ptr); 
+    fflush(bdt_file_ptr);
+#endif
+}
+
+void bvlc_bdt_restore_local(
+    void) 
+{
+    // todo 0 - static review
+    static FILE *bdt_file_ptr = NULL;
+    
+    /* only try opening the file if not already opened previously */
+    if (!bdt_file_ptr)
+        bdt_file_ptr = fopen(tostr(BBMD_BACKUP_FILE),"rb");
+    
+    /* if error opening file for reading -> silently abort */
+    if (!bdt_file_ptr)
+        return;
+        
+    fseek(bdt_file_ptr, 0, SEEK_SET);
+    {
+        BBMD_TABLE_ENTRY BBMD_Table_tmp[MAX_BBMD_ENTRIES];
+        size_t entries = 0;
+        
+        entries = fread(BBMD_Table_tmp, sizeof(BBMD_TABLE_ENTRY), MAX_BBMD_ENTRIES, bdt_file_ptr); 
+        if (entries == MAX_BBMD_ENTRIES)
+        {
+#if 0
+            /* success reading the BDT table. */
+            memcpy(BBMD_Table, BBMD_Table_tmp, sizeof(BBMD_TABLE_ENTRY) * MAX_BBMD_ENTRIES);
+#endif
+        }
+    }
+}
+#else
+// void bvlc_bdt_backup_local (void) {}
+// void bvlc_bdt_restore_local(void) {}
+#endif
+
+/** A timer function that is called about once a second.
+ *
+ * @param seconds - number of elapsed seconds since the last call
+ */
+void bvlc_maintenance_timer(
+    PORT_SUPPORT *portParams,
+    time_t seconds)
+{
+    unsigned i;
+
+    for (i = 0; i < MAX_FD_ENTRIES; i++) {
+        if (portParams->datalink.bipParams.FD_Table[i].valid) {
+            if (portParams->datalink.bipParams.FD_Table[i].seconds_remaining) {
+                if (portParams->datalink.bipParams.FD_Table[i].seconds_remaining < seconds) {
+                    portParams->datalink.bipParams.FD_Table[i].seconds_remaining = 0;
+                }
+                else {
+                    portParams->datalink.bipParams.FD_Table[i].seconds_remaining -= seconds;
+                }
+                if (portParams->datalink.bipParams.FD_Table[i].seconds_remaining == 0) {
+                    portParams->datalink.bipParams.FD_Table[i].valid = false;
+                }
+            }
+        }
+    }
+}
+
+/** Copy the source internet address to the BACnet address
+ *
+ * FIXME: IPv6?
+ *
+ * @param src - returns the BACnet source address
+ * @param sin - source address in network order
+ *
+ * @return number of bytes decoded
+ */
+static void bvlc_internet_to_bacnet_mac_address(
+    BACNET_MAC_ADDRESS *src,
+    struct sockaddr_in *sin)
+{
+    memcpy(&src->bytes[0], &sin->sin_addr.s_addr, 4);
+    memcpy(&src->bytes[4], &sin->sin_port, 2);
+    src->len = (uint8_t)6;
+
+#if ( BAC_DEBUG == 1)
+    src->signature = 'M';
+#endif
+}
+
+
+/** Encode the address entry.  Used for both read and write entries.
+ *
+ * Addressing within B/IP Networks
+ * In the case of B/IP networks, six octets consisting of the four-octet
+ * IP address followed by a two-octet UDP port number (both of
+ * which shall be transmitted most significant octet first).
+ * Note: for local storage, the storage order is NETWORK byte order.
+ * Note: BACnet unsigned is encoded as most significant octet.
+ *
+ * @param pdu - buffer to extract encoded address
+ * @param address - address in network order
+ * @param port - UDP port number in network order
  *
  * @return number of bytes encoded
  */
-int bvlc_encode_header(
-    uint8_t *pdu, uint16_t pdu_size, uint8_t message_type, uint16_t length)
+static int bvlc_encode_bip_address(
+    uint8_t * pdu,
+    const struct in_addr *address,
+    const uint16_t port)
 {
-    int bytes_encoded = 0;
+    int len = 0;
 
-    if (pdu && (pdu_size >= 2)) {
+    if (pdu) {
+        memcpy(&pdu[0], &address->s_addr, 4);
+        memcpy(&pdu[4], &port, 2);
+        len = 6;
+    }
+
+    return len;
+}
+
+///** Decode the address entry.  Used for both read and write entries.
+// *
+// * @param pdu - buffer to extract encoded address
+// * @param address - address in network order
+// * @param port - UDP port number in network order
+// *
+// * @return number of bytes decoded
+// */
+//static int bvlc_decode_bip_address(
+//    const uint8_t * pdu,
+//    struct in_addr *address,
+//    uint16_t * port)
+//{
+//    memcpy(&address->s_addr, &pdu[0], 4);
+//    memcpy(port, &pdu[4], 2);
+//
+//    return 6 ;
+//}
+
+/** Encode the address entry.  Used for both read and write entries.
+ *
+ * @param pdu - buffer to store the encoding
+ * @param address - address in network order
+ * @param port - UDP port number in network order
+ * @param mask - address mask in network order
+ *
+ * @return number of bytes encoded
+ */
+static int bvlc_encode_address_entry(
+    uint8_t * pdu,
+    struct in_addr *address,
+    uint16_t port,      /* in network byte order */
+    struct in_addr *mask)
+{
+    int len = 0;
+
+    if (pdu) {
+        len = bvlc_encode_bip_address(pdu, address, port);
+        memcpy(&pdu[len], &mask->s_addr, 4);
+        len += 4;
+    }
+
+    return len;
+}
+#endif
+
+/** Encode the BVLC Result message
+ *
+ * @param pdu - buffer to store the encoding
+ * @param result_code - BVLC result code
+ *
+ * @return number of bytes encoded
+ */
+static int bvlc_encode_bvlc_result(
+    uint8_t * pdu,
+    BACNET_BVLC_RESULT result_code)
+{
+    if (pdu) {
         pdu[0] = BVLL_TYPE_BACNET_IP;
-        pdu[1] = message_type;
+        pdu[1] = BVLC_RESULT;
         /* The 2-octet BVLC Length field is the length, in octets,
            of the entire BVLL message, including the two octets of the
            length field itself, most significant octet first. */
-        encode_unsigned16(&pdu[2], length);
-        bytes_encoded = 4;
+        encode_unsigned16(&pdu[2], 6);
+        encode_unsigned16(&pdu[4], (uint16_t) result_code);
     }
 
-    return bytes_encoded;
+    return 6;
 }
 
-/**
- * @brief Decode the BVLC Result message
- *
- * @param pdu - buffer from which to decode the message
- * @param pdu_len - length of the buffer that needs decoding
- * @param message_type - BVLL Messages
- * @param message_length - number of bytes for this message type
- *
- * @return number of bytes decoded
- */
-int bvlc_decode_header(uint8_t *pdu,
-    uint16_t pdu_len,
-    uint8_t *message_type,
-    uint16_t *message_length)
-{
-    int bytes_consumed = 0;
-
-    if (pdu && (pdu_len >= 4)) {
-        if (pdu[0] == BVLL_TYPE_BACNET_IP) {
-            if (message_type) {
-                *message_type = pdu[1];
-            }
-            if (message_length) {
-                decode_unsigned16(&pdu[2], message_length);
-            }
-            bytes_consumed = 4;
-        }
-    }
-
-    return bytes_consumed;
-}
-
-/**
- * @brief J.2.1 BVLC-Result: Encode
- *
- * This message provides a mechanism to acknowledge the result
- * of those BVLL service requests that require an acknowledgment,
- * whether successful (ACK) or unsuccessful (NAK).
+#if (BACDL_BBMD == 1)
+#if defined(BBMD_CLIENT_ENABLED) && BBMD_CLIENT_ENABLED
+/** Encode the initial part of the Read-Broadcast-Distribution-Table message
  *
  * @param pdu - buffer to store the encoding
- * @param pdu_size - size of the buffer to store encoding
- * @param result_code - BVLC result code
+ * @param entries - number of BDT entries
  *
  * @return number of bytes encoded
+ */
+int bvlc_encode_write_bdt_init(
+    uint8_t * pdu,
+    unsigned entries)
+{
+    int len = 0;
+    uint16_t BVLC_length = 0;
+
+    if (pdu) {
+        pdu[0] = BVLL_TYPE_BACNET_IP;
+        pdu[1] = BVLC_WRITE_BROADCAST_DISTRIBUTION_TABLE;
+        /* The 2-octet BVLC Length field is the length, in octets,
+           of the entire BVLL message, including the two octets of the
+           length field itself, most significant octet first. */
+        BVLC_length = 4 + (uint16_t) (entries * 10);
+        encode_unsigned16(&pdu[2], BVLC_length);
+        len = 4;
+    }
+
+    return len;
+}
+#endif
+
+/** Encode a Read-Broadcast-Distribution-Table message
  *
- * BVLC Type:     1-octet   X'81'   BVLL for BACnet/IPv4
- * BVLC Function: 1-octet   X'00'   BVLC-Result
- * BVLC Length:   2-octets  X'0006' Length of the BVLL message
- * Result Code:   2-octets  X'0000' Successful completion
- *                          X'0010' Write-Broadcast-Distribution-Table NAK
- *                          X'0020' Read-Broadcast-Distribution-Table NAK
- *                          X'0030' Register-Foreign-Device NAK
- *                          X'0040' Read-Foreign-Device-Table NAK
- *                          X'0050' Delete-Foreign-Device-Table-Entry NAK
- *                          X'0060' Distribute-Broadcast-To-Network NAK
- */
-int bvlc_encode_result(uint8_t *pdu, uint16_t pdu_size, uint16_t result_code)
-{
-    int bytes_encoded = 0;
-    const uint16_t length = 6;
-
-    if (pdu && (pdu_size >= length)) {
-        bytes_encoded = bvlc_encode_header(pdu, pdu_size, BVLC_RESULT, length);
-        if (bytes_encoded == 4) {
-            encode_unsigned16(&pdu[4], result_code);
-            bytes_encoded = (int)length;
-        }
-    }
-
-    return bytes_encoded;
-}
-
-/**
- * @brief Decode the BVLC Result message, after header is decoded
+ * @param pdu - buffer to store the encoding
  *
- * @param pdu - buffer from which to decode the message
- * @param pdu_len - length of the buffer that needs decoding
- * @param result_code - BVLC result code
+ * @return number of bytes encoded
+ */
+int bvlc_encode_read_bdt(
+    uint8_t * pdu)
+{
+    int len = 0;
+
+    if (pdu) {
+        pdu[0] = BVLL_TYPE_BACNET_IP;
+        pdu[1] = BVLC_READ_BROADCAST_DIST_TABLE;
+        /* The 2-octet BVLC Length field is the length, in octets,
+           of the entire BVLL message, including the two octets of the
+           length field itself, most significant octet first. */
+        encode_unsigned16(&pdu[2], 4);
+        len = 4;
+    }
+
+    return len;
+}
+
+/**
+ * Read the Read-Broadcast-Distribution-Table of a BBMD
  *
- * @return number of bytes decoded
+ * @param bbmd_address - IPv4 address (long) of BBMD to read,
+ *  in network byte order.
+ * @param bbmd_port - Network port of BBMD to read, in network byte order
+ * @return Upon successful completion, returns the number of bytes sent.
+ *  Otherwise, -1 shall be returned and errno set to indicate the error.
  */
-int bvlc_decode_result(uint8_t *pdu, uint16_t pdu_len, uint16_t *result_code)
+#if 0
+int bvlc_bbmd_read_bdt(
+    PORT_SUPPORT *portParams,
+    uint32_t bbmd_address,
+    uint16_t bbmd_port)
 {
-    int bytes_consumed = 0;
-    const uint16_t length = 2;
+    uint8_t mtu[MAX_LPDU_IP] = { 0 };   // todo 4 malloc?
+    uint16_t mtu_len;
+    int rv = 0;
+    struct sockaddr_in bbmd = { 0 };
 
-    if (pdu && (pdu_len >= length)) {
-        if (result_code) {
-            decode_unsigned16(&pdu[0], result_code);
-        }
-        bytes_consumed = (int)length;
+    mtu_len = bvlc_encode_read_bdt(mtu);
+    if (mtu_len > 0) {
+        bbmd.sin_addr.s_addr = bbmd_address;
+        bbmd.sin_port = bbmd_port;
+        rv = bvlc_send_mpdu(&bbmd, &mtu[0], mtu_len);
     }
 
-    return bytes_consumed;
+    return rv;
 }
+#endif
 
-/**
- * @brief Copy the BVLC Broadcast Distribution Mask
- * @param dst - BVLC Broadcast Distribution Mask that will be filled with src
- * @param src - BVLC Broadcast Distribution Mask that will be copied into dst
- * @return true if the mask was copied
- */
-bool bvlc_broadcast_distribution_mask_copy(
-    BACNET_IP_BROADCAST_DISTRIBUTION_MASK *dst,
-    BACNET_IP_BROADCAST_DISTRIBUTION_MASK *src)
-{
-    bool status = false;
-    unsigned int i = 0;
-
-    if (src && dst) {
-        for (i = 0; i < IP_ADDRESS_MAX; i++) {
-            dst->address[i] = src->address[i];
-        }
-        status = true;
-    }
-
-    return status;
-}
-
-/**
- * @brief Compare the BVLC Broadcast Distribution Masks
- * @param dst - BVLC Broadcast Distribution Mask that will be compared to src
- * @param src - BVLC Broadcast Distribution Mask that will be compared to dst
- * @return true if the masks are different
- */
-bool bvlc_broadcast_distribution_mask_different(
-    BACNET_IP_BROADCAST_DISTRIBUTION_MASK *dst,
-    BACNET_IP_BROADCAST_DISTRIBUTION_MASK *src)
-{
-    bool status = false;
-    unsigned int i = 0;
-
-    if (src && dst) {
-        for (i = 0; i < IP_ADDRESS_MAX; i++) {
-            if (dst->address[i] != src->address[i]) {
-                status = true;
-            }
-        }
-    }
-
-    return status;
-}
-
-/**
- * @brief Compare the Broadcast-Distribution-Table entry
- * @param dst - Broadcast-Distribution-Table entry that will be compared to src
- * @param src - Broadcast-Distribution-Table entry that will be compared to dst
- * @return true if the addresses are different
- */
-bool bvlc_broadcast_distribution_table_entry_different(
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *dst,
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *src)
-{
-    bool status = false;
-
-    if (src && dst) {
-        status = bvlc_address_different(&dst->dest_address, &src->dest_address);
-        if (!status) {
-            status = bvlc_broadcast_distribution_mask_different(
-                &dst->broadcast_mask, &src->broadcast_mask);
-        }
-    }
-
-    return status;
-}
-
-/**
- * @brief Copy the Broadcast-Distribution-Table entry
- * @param dst - Broadcast-Distribution-Table entry that will be filled with src
- * @param src - Broadcast-Distribution-Table entry that will be copied into dst
- * @return true if the address was copied
- */
-bool bvlc_broadcast_distribution_table_entry_copy(
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *dst,
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *src)
-{
-    bool status = false;
-
-    if (src && dst) {
-        status = bvlc_address_copy(&dst->dest_address, &src->dest_address);
-        if (status) {
-            status = bvlc_broadcast_distribution_mask_copy(
-                &dst->broadcast_mask, &src->broadcast_mask);
-        }
-    }
-
-    return status;
-}
-
-/**
- * @brief Count the number of valid Write-Broadcast-Distribution-Table entries
+#if defined(BBMD_ENABLED) && BBMD_ENABLED
+/** Encode the initial part of the Read BDT Ack message
  *
- * @param bdt_list - first element in array BDT entries
- * @return number of elements of BDT entries that are valid
- */
-uint16_t bvlc_broadcast_distribution_table_valid_count(
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *bdt_list)
-{
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *bdt_entry = NULL;
-    uint16_t bdt_entry_count = 0;
-
-    /* count the number of entries */
-    bdt_entry = bdt_list;
-    while (bdt_entry) {
-        if (bdt_entry->valid) {
-            bdt_entry_count++;
-        }
-        bdt_entry = bdt_entry->next;
-    }
-
-    return bdt_entry_count;
-}
-
-/**
- * @brief Clear all Write-Broadcast-Distribution-Table entries
- * @param bdt_list - first element in array BDT entries
- */
-void bvlc_broadcast_distribution_table_valid_clear(
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *bdt_list)
-{
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *bdt_entry;
-
-    /* count the number of entries */
-    bdt_entry = bdt_list;
-    while (bdt_entry) {
-        bdt_entry->valid = false;
-        bdt_entry = bdt_entry->next;
-    }
-}
-
-/**
- * @brief Count the total number of Write-Broadcast-Distribution-Table entries
+ * @param pdu - buffer to store the encoding
+ * @param entries - number of BDT entries
  *
- * @param bdt_list - first element in array BDT entries
- * @return number of elements of BDT entries
+ * @return number of bytes encoded
  */
-uint16_t bvlc_broadcast_distribution_table_count(
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *bdt_list)
+static int bvlc_encode_read_bdt_ack_init(
+    uint8_t * pdu,
+    unsigned entries)
 {
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *bdt_entry = NULL;
-    uint16_t bdt_entry_count = 0;
+    int len = 0;
+    uint16_t BVLC_length = 0;
 
-    /* count the number of entries */
-    bdt_entry = bdt_list;
-    while (bdt_entry) {
-        bdt_entry_count++;
-        bdt_entry = bdt_entry->next;
+    if (pdu) {
+        pdu[0] = BVLL_TYPE_BACNET_IP;
+        pdu[1] = BVLC_READ_BROADCAST_DIST_TABLE_ACK;
+        /* The 2-octet BVLC Length field is the length, in octets,
+           of the entire BVLL message, including the two octets of the
+           length field itself, most significant octet first. */
+        BVLC_length = 4 + (uint16_t)(entries * 10);
+        encode_unsigned16(&pdu[2], BVLC_length);
+        len = 4;
     }
 
-    return bdt_entry_count;
+    return len;
 }
 
-/**
- * @brief Convert Write-Broadcast-Distribution-Table entry array
- *  into linked list.
+/** Encode a Read BDT Ack message
  *
- * @param bdt_list - first element in array BDT entries
- * @param bdt_array_size - number of array elements of BDT entries
+ * @param pdu - buffer to store the encoding
+ * @param max_pdu - size of the buffer to store the encoding
+ *
+ * @return number of bytes encoded
  */
-void bvlc_broadcast_distribution_table_link_array(
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *bdt_list,
-    const size_t bdt_array_size)
+static int bvlc_encode_read_bdt_ack(
+    PORT_SUPPORT *portParams,
+    uint8_t * pdu,
+    uint16_t max_pdu)
 {
-    size_t i = 0;
+    int pdu_len = 0;    /* return value */
+    int len = 0;
+    unsigned count = 0;
+    unsigned i;
 
-    for (i = 0; i < bdt_array_size; i++) {
-        if (i > 0) {
-            bdt_list[i - 1].next = &bdt_list[i];
+    for (i = 0; i < MAX_BBMD_ENTRIES; i++) {
+        if (portParams->datalink.bipParams.BBMD_Table[i].valid) {
+            count++;
         }
-        bdt_list[i].next = NULL;
     }
-}
-
-/**
- * @brief Append an entry to the Broadcast-Distribution-Table
- * @param bdt_list - first entry in list of BDT entries
- * @param bdt_new - new entry to append to list of BDT entries
- * @return true if the Broadcast-Distribution-Table entry was appended
- */
-bool bvlc_broadcast_distribution_table_entry_append(
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *bdt_list,
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *bdt_new)
-{
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *bdt_entry = NULL;
-    bool status = false;
-
-    bdt_entry = bdt_list;
-    while (bdt_entry) {
-        if (bdt_entry->valid) {
-            if (!bvlc_broadcast_distribution_table_entry_different(
-                    bdt_entry, bdt_new)) {
-                status = true;
+    len = bvlc_encode_read_bdt_ack_init(&pdu[0], count);
+    pdu_len += len;
+    for (i = 0; i < MAX_BBMD_ENTRIES; i++) {
+        if (portParams->datalink.bipParams.BBMD_Table[i].valid) {
+            /* too much to send */
+            if ((pdu_len + 10) > max_pdu) {
+                pdu_len = 0;
                 break;
             }
-        } else {
-            /* first empty slot! Assume the remaining are empty. */
-            status = true;
-            /* Copy new entry to the empty slot */
-            bvlc_broadcast_distribution_table_entry_copy(bdt_entry, bdt_new);
-            bdt_entry->valid = true;
-            break;
+            len =
+                bvlc_encode_address_entry(
+                    &pdu[pdu_len],
+                    &portParams->datalink.bipParams.BBMD_Table[i].dest_address,
+                    portParams->datalink.bipParams.BBMD_Table[i].dest_port,
+                    &portParams->datalink.bipParams.BBMD_Table[i].broadcast_mask);
+            pdu_len += len;
         }
-        bdt_entry = bdt_entry->next;
     }
 
-    return status;
+    return pdu_len;
 }
 
-/**
- * @brief Set an entry to the Broadcast-Distribution-Table
- * @param bdt_entry - first element in list of BDT entries
- * @param addr - B/IPv4 address to match, along with mask
- * @param mask - BVLC Broadcast Distribution Mask to match, along with addr
- * @return true if the Broadcast Distribution entry was set
- */
-bool bvlc_broadcast_distribution_table_entry_set(
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *bdt_entry,
-    BACNET_IP_ADDRESS *addr,
-    BACNET_IP_BROADCAST_DISTRIBUTION_MASK *mask)
-{
-    bool status = false;
-
-    if (bdt_entry && addr && mask) {
-        status = bvlc_address_copy(&bdt_entry->dest_address, addr);
-        if (status) {
-            status = bvlc_broadcast_distribution_mask_copy(
-                &bdt_entry->broadcast_mask, mask);
-        }
-    }
-
-    return status;
-}
-
-/**
- * @brief Set the Broadcast-Distribution-Table entry distribution mask
- * @param mask - broadcast distribution mask
- * @param broadcast_mask - 32-bit broadcast mask in host byte order
- * @return true if the broadcast distribution was set
- */
-bool bvlc_broadcast_distribution_mask_from_host(
-    BACNET_IP_BROADCAST_DISTRIBUTION_MASK *mask, uint32_t broadcast_mask)
-{
-    bool status = false;
-
-    if (mask) {
-        encode_unsigned32(mask->address, broadcast_mask);
-        status = true;
-    }
-
-    return status;
-}
-
-/**
- * @brief Get the Broadcast-Distribution-Table entry distribution mask
- * @param broadcast_mask - 32-bit broadcast mask in host byte order
- * @param mask - broadcast distribution mask
- * @return true if the broadcast distribution was retrieved
- */
-bool bvlc_broadcast_distribution_mask_to_host(
-    uint32_t *broadcast_mask, BACNET_IP_BROADCAST_DISTRIBUTION_MASK *mask)
-{
-    bool status = false;
-
-    if (broadcast_mask && mask) {
-        decode_unsigned32(mask->address, broadcast_mask);
-        status = true;
-    }
-
-    return status;
-}
-
-/**
- * @brief Set the Broadcast-Distribution-Table entry distribution mask
- * @param mask - broadcast distribution mask
- * @param addr0 - broadcast distribution mask octet
- * @param addr1 - broadcast distribution mask octet
- * @param addr2 - broadcast distribution mask octet
- * @param addr3 - broadcast distribution mask octet
- */
-void bvlc_broadcast_distribution_mask_set(
-    BACNET_IP_BROADCAST_DISTRIBUTION_MASK *mask,
-    uint8_t addr0,
-    uint8_t addr1,
-    uint8_t addr2,
-    uint8_t addr3)
-{
-    if (mask) {
-        mask->address[0] = addr0;
-        mask->address[1] = addr1;
-        mask->address[2] = addr2;
-        mask->address[3] = addr3;
-    }
-}
-
-/**
- * @brief Get the Broadcast-Distribution-Table entry distribution mask
- * @param mask - broadcast distribution mask
- * @param addr0 - broadcast distribution mask octet
- * @param addr1 - broadcast distribution mask octet
- * @param addr2 - broadcast distribution mask octet
- * @param addr3 - broadcast distribution mask octet
- */
-void bvlc_broadcast_distribution_mask_get(
-    BACNET_IP_BROADCAST_DISTRIBUTION_MASK *mask,
-    uint8_t *addr0,
-    uint8_t *addr1,
-    uint8_t *addr2,
-    uint8_t *addr3)
-{
-    if (mask) {
-        if (addr0) {
-            *addr0 = mask->address[0];
-        }
-        if (addr1) {
-            *addr1 = mask->address[1];
-        }
-        if (addr2) {
-            *addr2 = mask->address[2];
-        }
-        if (addr3) {
-            *addr3 = mask->address[3];
-        }
-    }
-}
-
-/**
- * @brief Set the B/IP address for a Forwarded-NPDU message
- *
- * The B/IP address to which the Forwarded-NPDU message is
- * sent is formed by inverting the broadcast distribution
- * mask in the BDT entry and logically ORing it with the
- * BBMD address of the same entry.
- *
- * @param addr - B/IPv4 address to match, along with mask
- * @param bdt_entry - The BDT entry containing an address and mask
- * @return true if the B/IPv4 address was set
- */
-bool bvlc_broadcast_distribution_table_entry_forward_address(
-    BACNET_IP_ADDRESS *addr,
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *bdt_entry)
-{
-    bool status = false;
-
-    if (bdt_entry && addr) {
-        status = bvlc_address_mask(
-            addr, &bdt_entry->dest_address, &bdt_entry->broadcast_mask);
-    }
-
-    return status;
-}
-
-/**
- * @brief Encode the Broadcast-Distribution-Table for Network Port object
- *
- *    BACnetLIST of BACnetBDTEntry
- *
- *    BACnetBDTEntry ::= SEQUENCE {
- *       bbmd-address [0] BACnetHostNPort,
- *           BACnetHostNPort ::= SEQUENCE {
- *               host [0] BACnetHostAddress,
- *                   BACnetHostAddress ::= CHOICE {
- *                       ip-address [1] OCTET STRING, -- 4 octets for B/IP
- *                   }
- *               port [1] Unsigned16
- *           }
- *        broadcast-mask [1] OCTET STRING
- *    }
- *
- * @param apdu - the APDU buffer
- * @param apdu_size - the APDU buffer size
- * @param bdt_head - head of the BDT linked list
- * @return length of the APDU buffer
- */
-int bvlc_broadcast_distribution_table_encode(uint8_t *apdu,
-    uint16_t apdu_size,
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *bdt_head)
-{
-    int len = 0;
-    int apdu_len = 0;
-    int entry_size = 0;
-    BACNET_OCTET_STRING octet_string;
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *bdt_entry;
-
-    bdt_entry = bdt_head;
-    while (bdt_entry) {
-        if (bdt_entry->valid) {
-            /* bbmd-address [0] BACnetHostNPort - opening */
-            len = encode_opening_tag(&apdu[apdu_len], 0);
-            apdu_len += len;
-            /*  host [0] BACnetHostAddress - opening */
-            len = encode_opening_tag(&apdu[apdu_len], 0);
-            apdu_len += len;
-            /* CHOICE - ip-address [1] OCTET STRING */
-            octetstring_init(&octet_string,
-                &bdt_entry->dest_address.address[0], IP_ADDRESS_MAX);
-            len = encode_context_octet_string(&apdu[apdu_len], 1,
-                &octet_string);
-            apdu_len += len;
-            /*  host [0] BACnetHostAddress - closing */
-            len = encode_closing_tag(&apdu[apdu_len], 0);
-            apdu_len += len;
-            /* port [1] Unsigned16 */
-            len = encode_context_unsigned(
-                &apdu[apdu_len], 1, bdt_entry->dest_address.port);
-            apdu_len += len;
-            /* bbmd-address [0] BACnetHostNPort - closing */
-            len = encode_closing_tag(&apdu[apdu_len], 0);
-            apdu_len += len;
-            /* broadcast-mask [1] OCTET STRING */
-            octetstring_init(&octet_string,
-                &bdt_entry->broadcast_mask.address[0], IP_ADDRESS_MAX);
-            len = encode_context_octet_string(&apdu[apdu_len], 1,
-                &octet_string);
-            apdu_len += len;
-        }
-        if (!entry_size) {
-            entry_size = apdu_len;
-        }
-        /* next entry */
-        bdt_entry = bdt_entry->next;
-        if ((apdu_len + entry_size) > apdu_size) {
-            /* check for available space */
-            break;
-        }
-    }
-
-    return apdu_len;
-}
-
-/**
- * @brief Decode the Broadcast-Distribution-Table for Network Port object
- * @param apdu - the APDU buffer
- * @param apdu_len - the APDU buffer length
- * @param bdt_head - head of a BDT linked list
- * @return length of the APDU buffer decoded, or ERROR, REJECT, or ABORT
- */
-int bvlc_broadcast_distribution_table_decode(uint8_t *apdu,
-    uint16_t apdu_len,
-    BACNET_ERROR_CODE *error_code,
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *bdt_head)
-{
-    int len = 0;
-    BACNET_OCTET_STRING octet_string = { 0 };
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *bdt_entry = NULL;
-    uint8_t tag_number = 0;
-    uint32_t len_value_type = 0;
-    BACNET_UNSIGNED_INTEGER unsigned_value = 0;
-
-    /* default reject code */
-    if (error_code) {
-        *error_code = ERROR_CODE_REJECT_MISSING_REQUIRED_PARAMETER;
-    }
-    /* check for value pointers */
-    if ((apdu_len == 0) || (!apdu)) {
-        return BACNET_STATUS_REJECT;
-    }
-    bdt_entry = bdt_head;
-    while (bdt_entry) {
-        /* bbmd-address [0] BACnetHostNPort - opening */
-        if (!decode_is_opening_tag_number(&apdu[len++], 0)) {
-            if (error_code) {
-                *error_code = ERROR_CODE_REJECT_INVALID_TAG;
-            }
-            return BACNET_STATUS_REJECT;
-        }
-        if (len > apdu_len) {
-            return BACNET_STATUS_REJECT;
-        }
-        /* host [0] BACnetHostAddress - opening */
-        if (!decode_is_opening_tag_number(&apdu[len++], 0)) {
-            if (error_code) {
-                *error_code = ERROR_CODE_REJECT_INVALID_TAG;
-            }
-            return BACNET_STATUS_REJECT;
-        }
-        if (len > apdu_len) {
-            return BACNET_STATUS_REJECT;
-        }
-        /* CHOICE - ip-address [1] OCTET STRING */
-        len += decode_tag_number_and_value(
-            &apdu[len], &tag_number, &len_value_type);
-        if (tag_number != 1) {
-            if (error_code) {
-                *error_code = ERROR_CODE_REJECT_INVALID_TAG;
-            }
-            return BACNET_STATUS_REJECT;
-        }
-        len += decode_octet_string(&apdu[len], len_value_type,
-            &octet_string);
-        if (len > apdu_len) {
-            return BACNET_STATUS_REJECT;
-        }
-        (void)octetstring_copy_value(&bdt_entry->dest_address.address[0],
-            IP_ADDRESS_MAX, &octet_string);
-        /*  host [0] BACnetHostAddress - closing */
-        if (!decode_is_closing_tag_number(&apdu[len++], 0)) {
-            if (error_code) {
-                *error_code = ERROR_CODE_REJECT_INVALID_TAG;
-            }
-            return BACNET_STATUS_REJECT;
-        }
-        if (len > apdu_len) {
-            return BACNET_STATUS_REJECT;
-        }
-        /* port [1] Unsigned16 */
-        len += decode_tag_number_and_value(
-            &apdu[len], &tag_number, &len_value_type);
-        if (tag_number != 1) {
-            if (error_code) {
-                *error_code = ERROR_CODE_REJECT_INVALID_TAG;
-            }
-            return BACNET_STATUS_REJECT;
-        }
-        len += decode_unsigned(&apdu[len], len_value_type, &unsigned_value);
-        if (len > apdu_len) {
-            return BACNET_STATUS_REJECT;
-        }
-        if (unsigned_value <= UINT16_MAX) {
-            bdt_entry->dest_address.port = unsigned_value;
-        } else {
-            if (error_code) {
-                *error_code = ERROR_CODE_REJECT_PARAMETER_OUT_OF_RANGE;
-            }
-            return BACNET_STATUS_REJECT;
-        }
-        /* bbmd-address [0] BACnetHostNPort - closing */
-        if (!decode_is_closing_tag_number(&apdu[len++], 0)) {
-            if (error_code) {
-                *error_code = ERROR_CODE_REJECT_INVALID_TAG;
-            }
-            return BACNET_STATUS_REJECT;
-        }
-        if (len > apdu_len) {
-            return BACNET_STATUS_REJECT;
-        }
-        /* broadcast-mask [1] OCTET STRING */
-        len += decode_tag_number_and_value(
-            &apdu[len], &tag_number, &len_value_type);
-        if (tag_number != 1) {
-            if (error_code) {
-                *error_code = ERROR_CODE_REJECT_INVALID_TAG;
-            }
-            return BACNET_STATUS_REJECT;
-        }
-        if (len > apdu_len) {
-            return BACNET_STATUS_REJECT;
-        }
-        len += decode_octet_string(&apdu[len], len_value_type,
-            &octet_string);
-        if (len > apdu_len) {
-            return BACNET_STATUS_REJECT;
-        }
-        (void)octetstring_copy_value(&bdt_entry->broadcast_mask.address[0],
-            IP_ADDRESS_MAX, &octet_string);
-        bdt_entry->valid = true;
-        /* next entry */
-        bdt_entry = bdt_entry->next;
-    }
-
-    return apdu_len;
-}
-
-/**
- * @brief J.2.2 Write-Broadcast-Distribution-Table: encode
- *
- * This message provides a mechanism for initializing or updating a
- * Broadcast Distribution Table (BDT) in a BACnet Broadcast Management
- * Device (BBMD).
+/** Encode a Forwarded NPDU message
  *
  * @param pdu - buffer to store the encoding
- * @param pdu_size - size of the buffer to store encoding
- * @param bdt_list - list of BDT entries
+ * @param sin - source address in network order
+ * @param npdu - NPDU to forward
+ * @param max_npdu - amount of space available in the NPDU
+ * @param npdu_length - size of the NPDU to forward
  *
  * @return number of bytes encoded
- *
- * BVLC Type:           1-octet  X'81' BVLL for BACnet/IP
- * BVLC Function:       1-octet  X'01' Write-Broadcast-Distribution-Table
- * BVLC Length:         2-octets    L  Length L, in octets, of the BVLL message
- * List of BDT Entries: N*10-octets
  */
-int bvlc_encode_write_broadcast_distribution_table(uint8_t *pdu,
-    uint16_t pdu_size,
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *bdt_list)
-{
-    int bytes_encoded = 0;
-    int len = 0;
-    uint16_t offset = 0;
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *bdt_entry = NULL;
-    uint16_t bdt_entry_count = 0;
-    uint16_t length = 0;
-
-    /* count the number of entries */
-    bdt_entry_count = bvlc_broadcast_distribution_table_valid_count(bdt_list);
-    length = 4 + (bdt_entry_count * BACNET_IP_BDT_ENTRY_SIZE);
-    if (pdu && (pdu_size >= length)) {
-        bytes_encoded = bvlc_encode_header(
-            pdu, pdu_size, BVLC_WRITE_BROADCAST_DISTRIBUTION_TABLE, length);
-        if (bytes_encoded == 4) {
-            offset = 4;
-            /* encode the entries */
-            bdt_entry = bdt_list;
-            while (bdt_entry) {
-                if (bdt_entry->valid) {
-                    len = bvlc_encode_broadcast_distribution_table_entry(
-                        &pdu[offset], pdu_size - offset, bdt_entry);
-                    offset += len;
-                }
-                bdt_entry = bdt_entry->next;
-            }
-            bytes_encoded = offset;
-        }
-    }
-
-    return bytes_encoded;
-}
-
-/**
- * @brief Decode the Write-Broadcast-Distribution-Table
- *
- * @param pdu - buffer from which to decode the message
- * @param pdu_len - length of the buffer that needs decoding
- * @param bdt_list - BDT Entry list
- *
- * @return number of bytes decoded
- */
-int bvlc_decode_write_broadcast_distribution_table(uint8_t *pdu,
-    uint16_t pdu_len,
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *bdt_list)
-{
-    int bytes_consumed = 0;
-    int len = 0;
-    uint16_t offset = 0;
-    uint16_t pdu_bytes = 0;
-    uint16_t bdt_entry_count = 0;
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *bdt_entry = NULL;
-    uint16_t list_len = 0;
-
-    /* count the number of available entries */
-    bdt_entry_count = bvlc_broadcast_distribution_table_count(bdt_list);
-    list_len = bdt_entry_count * BACNET_IP_BDT_ENTRY_SIZE;
-    /* will the entries fit */
-    if (pdu && (pdu_len <= list_len)) {
-        bdt_entry = bdt_list;
-        while (bdt_entry) {
-            pdu_bytes = pdu_len - offset;
-            if (pdu_bytes >= BACNET_IP_BDT_ENTRY_SIZE) {
-                len = bvlc_decode_broadcast_distribution_table_entry(
-                    &pdu[offset], pdu_bytes, bdt_entry);
-                if (len > 0) {
-                    bdt_entry->valid = true;
-                }
-                offset += len;
-            } else {
-                bdt_entry->valid = false;
-            }
-            bdt_entry = bdt_entry->next;
-        }
-        bytes_consumed = (int)offset;
-    }
-
-    return bytes_consumed;
-}
-
-/**
- * @brief J.2.3 Read-Broadcast-Distribution-Table: encode
- *
- * The message provides a mechanism for retrieving the contents of a BBMD's
- * BDT.
- *
- * @param pdu - buffer to store the encoding
- * @param pdu_size - size of the buffer to store encoding
- * @param bdt_list - list of BDT entries
- *
- * @return number of bytes encoded
- *
- * BVLC Type:           1-octet  X'81'   BVLL for BACnet/IP
- * BVLC Function:       1-octet  X'02'   Read-Broadcast-Distribution-Table
- * BVLC Length:         2-octets X'0004' Length, in octets, of the BVLL message
- */
-int bvlc_encode_read_broadcast_distribution_table(
-    uint8_t *pdu, uint16_t pdu_size)
-{
-    int bytes_encoded = 0;
-    uint16_t length = 1 + 1 + 2;
-
-    if (pdu && (pdu_size >= length)) {
-        bytes_encoded = bvlc_encode_header(
-            pdu, pdu_size, BVLC_READ_BROADCAST_DIST_TABLE, length);
-    }
-
-    return bytes_encoded;
-}
-
-/**
- * @brief J.2.4 Read-Broadcast-Distribution-Table-Ack: encode
- *
- * The message provides a mechanism for retrieving the contents of a BBMD's
- * BDT.
- *
- * @param pdu - buffer to store the encoding
- * @param pdu_size - size of the buffer to store encoding
- * @param bdt_list - list of BDT entries
- *
- * @return number of bytes encoded
- *
- * BVLC Type:           1-octet  X'81'   BVLL for BACnet/IP
- * BVLC Function:       1-octet  X'02'   Read-Broadcast-Distribution-Table
- * BVLC Length:         2-octets L       length, in octets, of the BVLL message
- * List of BDT Entries: N*10-octets
- */
-int bvlc_encode_read_broadcast_distribution_table_ack(uint8_t *pdu,
-    uint16_t pdu_size,
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *bdt_list)
-{
-    int bytes_encoded = 0;
-    int len = 0;
-    uint16_t offset = 0;
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *bdt_entry = NULL;
-    uint16_t bdt_entry_count = 0;
-    uint16_t length = 0;
-
-    /* count the number of entries */
-    bdt_entry_count = bvlc_broadcast_distribution_table_valid_count(bdt_list);
-    length = 4 + (bdt_entry_count * BACNET_IP_BDT_ENTRY_SIZE);
-    if (pdu && (pdu_size >= length)) {
-        bytes_encoded = bvlc_encode_header(
-            pdu, pdu_size, BVLC_READ_BROADCAST_DIST_TABLE_ACK, length);
-        if (bytes_encoded == 4) {
-            offset = 4;
-            /* encode the entries */
-            bdt_entry = bdt_list;
-            while (bdt_entry) {
-                if (bdt_entry->valid) {
-                    len = bvlc_encode_broadcast_distribution_table_entry(
-                        &pdu[offset], pdu_size - offset, bdt_entry);
-                    offset += len;
-                }
-                bdt_entry = bdt_entry->next;
-            }
-            bytes_encoded = (int)length;
-        }
-    }
-
-    return bytes_encoded;
-}
-
-/**
- * @brief Decode the Read-Broadcast-Distribution-Table-Ack
- *
- * @param pdu - buffer from which to decode the message
- * @param pdu_len - length of the buffer that needs decoding
- * @param bdt_list - list of BDT Entries to be overwritten
- *
- * @return number of bytes decoded
- */
-int bvlc_decode_read_broadcast_distribution_table_ack(uint8_t *pdu,
-    uint16_t pdu_len,
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *bdt_list)
-{
-    int bytes_consumed = 0;
-    int len = 0;
-    uint16_t offset = 0;
-    uint16_t pdu_bytes = 0;
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *bdt_entry = NULL;
-
-    if (pdu && (pdu_len >= BACNET_IP_BDT_ENTRY_SIZE)) {
-        bdt_entry = bdt_list;
-        while (bdt_entry) {
-            pdu_bytes = pdu_len - offset;
-            if (pdu_bytes >= BACNET_IP_BDT_ENTRY_SIZE) {
-                len = bvlc_decode_broadcast_distribution_table_entry(
-                    &pdu[offset], pdu_bytes, bdt_entry);
-                if (len > 0) {
-                    bdt_entry->valid = true;
-                }
-                offset += len;
-            } else {
-                bdt_entry->valid = false;
-            }
-            bdt_entry = bdt_entry->next;
-        }
-        bytes_consumed = (int)offset;
-    }
-
-    return bytes_consumed;
-}
-
-/**
- * @brief J.2.5 Forwarded-NPDU: Encode
- *
- * This BVLL message is used in broadcast messages from a BBMD
- * as well as in messages forwarded to registered foreign devices.
- * It contains the source address of the original node, or
- * if NAT is being used, the address with which the original node
- * is accessed, as well as the original BACnet NPDU
- *
- * @param pdu - buffer to store the encoding
- * @param pdu_size - size of the buffer to store encoding
- * @param bip_address - Original-Source-B/IPv4-Address
- * @param npdu - BACnet NPDU from Originating Device buffer
- * @param npdu_len - size of the BACnet NPDU buffer
- *
- * @return number of bytes encoded
- *
- * BVLC Type:                   1-octet   X'81'   BVLL for BACnet/IP
- * BVLC Function:               1-octet   X'04'   Forwarded-NPDU
- * BVLC Length:                 2-octets  L       Length of the BVLL message
- * B/IP Address of Originating Device:   6-octets
- * BACnet NPDU from Originating Device:  N-octets (N=L-10)
- */
-int bvlc_encode_forwarded_npdu(uint8_t *pdu,
-    uint16_t pdu_size,
-    BACNET_IP_ADDRESS *bip_address,
-    uint8_t *npdu,
-    uint16_t npdu_len)
-{
-    int bytes_encoded = 0;
-    uint16_t length = 1 + 1 + 2 + BIP_ADDRESS_MAX;
-    uint16_t i = 0;
-    uint16_t offset = 0;
-
-    length += npdu_len;
-    if (pdu && (pdu_size >= length)) {
-        bytes_encoded =
-            bvlc_encode_header(pdu, pdu_size, BVLC_FORWARDED_NPDU, length);
-        if (bytes_encoded == 4) {
-            offset = 4;
-            bvlc_encode_address(&pdu[offset], pdu_size - offset, bip_address);
-            offset += BIP_ADDRESS_MAX;
-            if (npdu && (length > 0)) {
-                for (i = 0; i < npdu_len; i++) {
-                    pdu[offset + i] = npdu[i];
-                }
-            }
-            bytes_encoded = (int)length;
-        }
-    }
-
-    return bytes_encoded;
-}
-
-/**
- * @brief Decode the BVLC Forwarded-NPDU message, after decoded header
- *
- * @param pdu - buffer from which to decode the message
- * @param pdu_len - length of the buffer that needs decoding
- * @param bip_address - Original-Source-B/IPv4-Address
- * @param npdu - BACnet NPDU buffer
- * @param npdu_size - size of the buffer for the decoded BACnet NPDU
- * @param npdu_len - decoded length of the BACnet NPDU buffer
- *
- * @return number of bytes decoded
- */
-int bvlc_decode_forwarded_npdu(uint8_t *pdu,
-    uint16_t pdu_len,
-    BACNET_IP_ADDRESS *bip_address,
-    uint8_t *npdu,
-    uint16_t npdu_size,
-    uint16_t *npdu_len)
-{
-    int bytes_consumed = 0;
-    uint16_t length = 0;
-    uint16_t i = 0;
-    uint16_t offset = 0;
-
-    if (pdu && (pdu_len >= BIP_ADDRESS_MAX)) {
-        if (bip_address) {
-            bvlc_decode_address(&pdu[offset], pdu_len - offset, bip_address);
-        }
-        offset += BIP_ADDRESS_MAX;
-        length = pdu_len - BIP_ADDRESS_MAX;
-        if (npdu && (length <= npdu_size)) {
-            for (i = 0; i < length; i++) {
-                npdu[i] = pdu[offset + i];
-            }
-        }
-        if (npdu_len) {
-            *npdu_len = length;
-        }
-        bytes_consumed = (int)pdu_len;
-    }
-
-    return bytes_consumed;
-}
-
-/**
- * @brief J.2.6 Register-Foreign-Device: encode
- *
- * This message allows a foreign device, as defined in Clause J.5.1,
- * to register with a BBMD for the purpose of receiving broadcast messages.
- *
- * @param pdu - buffer to store the encoding
- * @param pdu_size - size of the buffer to store encoding
- * @param ttl_seconds - Time-to-Live T, in seconds
- *
- * @return number of bytes encoded
- *
- * BVLC Type:                   1-octet   X'81'   BVLL for BACnet/IP
- * BVLC Function:               1-octet   X'05'   Register-Foreign-Device
- * BVLC Length:                 2-octets  X'0006' Length of the BVLL message
- * Time-to-Live:                2-octets  T       Time-to-Live T, in seconds
- */
-int bvlc_encode_register_foreign_device(
-    uint8_t *pdu, uint16_t pdu_size, uint16_t ttl_seconds)
-{
-    int bytes_encoded = 0;
-    const uint16_t length = 6;
-    uint16_t offset = 0;
-
-    if (pdu && (pdu_size >= length)) {
-        bytes_encoded = bvlc_encode_header(
-            pdu, pdu_size, BVLC_REGISTER_FOREIGN_DEVICE, length);
-        if (bytes_encoded == 4) {
-            offset = 4;
-            encode_unsigned16(&pdu[offset], ttl_seconds);
-            bytes_encoded = (int)length;
-        }
-    }
-
-    return bytes_encoded;
-}
-
-/**
- * @brief Decode the BVLC Register-Foreign-Device message, after decoded header
- *
- * @param pdu - buffer from which to decode the message
- * @param pdu_len - length of the buffer that needs decoding
- * @param ttl_seconds - Time-to-Live T, in seconds
- *
- * @return number of bytes decoded
- */
-int bvlc_decode_register_foreign_device(
-    uint8_t *pdu, uint16_t pdu_len, uint16_t *ttl_seconds)
-{
-    int bytes_consumed = 0;
-    const uint16_t length = 2;
-    uint16_t offset = 0;
-
-    if (pdu && (pdu_len >= length)) {
-        if (ttl_seconds) {
-            decode_unsigned16(&pdu[offset], ttl_seconds);
-        }
-        bytes_consumed = (int)length;
-    }
-
-    return bytes_consumed;
-}
-
-/**
- * @brief Encode the Foreign_Device-Table for Network Port object
- *
- *    BACnetLIST of BACnetFDTEntry
- *
- *    BACnetFDTEntry ::= SEQUENCE {
- *        bacnetip-address [0] OCTET STRING, -- 6-octet B/IP registrant address
- *        time-to-live [1] Unsigned16, -- time to live in seconds
- *        remaining-time-to-live [2] Unsigned16 -- remaining time in seconds
- *    }
- *
- * @param apdu - the APDU buffer
- * @param apdu_size - the APDU buffer size
- * @param fdt_head - head of the BDT linked list
- * @return length of the APDU buffer
- */
-int bvlc_foreign_device_table_encode(uint8_t *apdu,
-    uint16_t apdu_size,
-    BACNET_IP_FOREIGN_DEVICE_TABLE_ENTRY *fdt_head)
+static int bvlc_encode_forwarded_npdu(
+    uint8_t * pdu,
+    const struct sockaddr_in *sin,    /* source address in network order */
+    const uint8_t * npdu,
+    const uint16_t max_npdu,
+    const uint16_t npdu_length)
 {
     int len = 0;
-    int apdu_len = 0;
-    int entry_size = 0;
-    BACNET_OCTET_STRING octet_string = { 0 };
-    BACNET_IP_FOREIGN_DEVICE_TABLE_ENTRY *fdt_entry;
 
-    fdt_entry = fdt_head;
-    while (fdt_entry) {
-        if (fdt_entry->valid) {
-            /* bacnetip-address [0] OCTET STRING */
-            len = bvlc_encode_address(
-                octetstring_value(&octet_string),
-                octetstring_capacity(&octet_string),
-                &fdt_entry->dest_address);
-            octetstring_truncate(&octet_string, len);
-            len = encode_context_octet_string(
-                &apdu[apdu_len], 0, &octet_string);
-            apdu_len += len;
-            /* time-to-live [1] Unsigned16 */
-            len = encode_context_unsigned(
-                &apdu[apdu_len], 1, fdt_entry->ttl_seconds);
-            apdu_len += len;
-            /* remaining-time-to-live [2] Unsigned16 */
-            len = encode_context_unsigned(
-                &apdu[apdu_len], 2, fdt_entry->ttl_seconds_remaining);
-            apdu_len += len;
-        }
-        if (!entry_size) {
-            entry_size = apdu_len;
-        }
-        /* next entry */
-        fdt_entry = fdt_entry->next;
-        if ((apdu_len + entry_size) > apdu_size) {
-            /* check for available space */
-            break;
-        }
-    }
+    unsigned i; /* for loop counter */
 
-    return apdu_len;
-}
-
-
-
-/**
- * @brief J.2.7 Read-Foreign-Device-Table: encode
- *
- * The message provides a mechanism for retrieving the contents of a BBMD's
- * Foreign-Device-Table.
- *
- * @param pdu - buffer to store the encoding
- * @param pdu_size - size of the buffer to store encoding
- * @param bdt_list - list of FDT entries
- *
- * @return number of bytes encoded
- *
- * BVLC Type:           1-octet  X'81'   BVLL for BACnet/IP
- * BVLC Function:       1-octet  X'06'   Read-Foreign-Device-Table
- * BVLC Length:         2-octets X'0004' Length, in octets, of the BVLL message
- */
-int bvlc_encode_read_foreign_device_table(uint8_t *pdu, uint16_t pdu_size)
-{
-    int bytes_encoded = 0;
-    uint16_t length = 1 + 1 + 2;
-
-    if (pdu && (pdu_size >= length)) {
-        bytes_encoded = bvlc_encode_header(
-            pdu, pdu_size, BVLC_READ_FOREIGN_DEVICE_TABLE, length);
-    }
-
-    return bytes_encoded;
-}
-
-/**
- * @brief Compare the Foreign Device Table entry
- * @param entry1 - Foreign Device Table entry that will be compared to entry2
- * @param entry2 - Foreign Device Table entry that will be compared to entry1
- * @return true if the entries are different
- */
-bool bvlc_foreign_device_table_entry_different(
-    BACNET_IP_FOREIGN_DEVICE_TABLE_ENTRY *entry1,
-    BACNET_IP_FOREIGN_DEVICE_TABLE_ENTRY *entry2)
-{
-    if (entry1 && entry2) {
-        if (bvlc_address_different(
-                &entry1->dest_address, &entry2->dest_address)) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-/**
- * @brief Copy the Foreign Device Table entry
- * @param entry1 - Foreign Device Table entry that will be filled with entry2
- * @param entry2 - Foreign Device Table entry that will be copied into entry1
- * @return true if the Foreign Device Table entry was copied
- */
-bool bvlc_foreign_device_table_entry_copy(
-    BACNET_IP_FOREIGN_DEVICE_TABLE_ENTRY *entry1,
-    BACNET_IP_FOREIGN_DEVICE_TABLE_ENTRY *entry2)
-{
-    bool status = false;
-
-    if (entry1 && entry2) {
-        entry1->ttl_seconds = entry2->ttl_seconds;
-        entry1->ttl_seconds_remaining = entry2->ttl_seconds_remaining;
-        status =
-            bvlc_address_copy(&entry1->dest_address, &entry2->dest_address);
-    }
-
-    return status;
-}
-
-/**
- * @brief Foreign-Device-Table timer maintenance
- * @param fdt_list - first element in list of FDT entries
- * @param seconds - number of elapsed seconds since the last call
- */
-void bvlc_foreign_device_table_maintenance_timer(
-    BACNET_IP_FOREIGN_DEVICE_TABLE_ENTRY *fdt_list, uint16_t seconds)
-{
-    BACNET_IP_FOREIGN_DEVICE_TABLE_ENTRY *fdt_entry = NULL;
-
-    fdt_entry = fdt_list;
-    while (fdt_entry) {
-        if (fdt_entry->valid) {
-            if (fdt_entry->ttl_seconds_remaining) {
-                if (fdt_entry->ttl_seconds_remaining < seconds) {
-                    fdt_entry->ttl_seconds_remaining = 0;
-                } else {
-                    fdt_entry->ttl_seconds_remaining -= seconds;
-                }
-                if (fdt_entry->ttl_seconds_remaining == 0) {
-                    fdt_entry->valid = false;
-                }
+    if (pdu && sin && npdu) {
+        if ((npdu_length + 4 + 6) <= max_npdu) {
+            pdu[0] = BVLL_TYPE_BACNET_IP;
+            pdu[1] = BVLC_FORWARDED_NPDU;
+            /* The 2-octet BVLC Length field is the length, in octets,
+               of the entire BVLL message, including the two octets of the
+               length field itself, most significant octet first. */
+            encode_unsigned16(&pdu[2], (uint16_t) (4 + 6 + npdu_length));
+            len = 4;
+            /* 6-octet address encoding */
+            len +=
+                bvlc_encode_bip_address(&pdu[len], &sin->sin_addr,
+                    sin->sin_port);
+            for (i = 0; i < npdu_length; i++) {
+                pdu[len] = npdu[i];
+                len++;
             }
         }
-        fdt_entry = fdt_entry->next;
     }
+
+    return len;
+}
+#endif
+
+#if defined(BBMD_CLIENT_ENABLED) && BBMD_CLIENT_ENABLED
+/** Encode a Read Foreign Device Table message
+ *
+ * @param pdu - buffer to store the encoding
+ *
+ * @return number of bytes encoded
+ */
+int bvlc_encode_read_fdt(
+    uint8_t * pdu)
+{
+    int len = 0;
+
+    if (pdu) {
+        pdu[0] = BVLL_TYPE_BACNET_IP;
+        pdu[1] = BVLC_READ_FOREIGN_DEVICE_TABLE;
+        /* The 2-octet BVLC Length field is the length, in octets,
+           of the entire BVLL message, including the two octets of the
+           length field itself, most significant octet first. */
+        encode_unsigned16(&pdu[2], 4);
+        len = 4;
+    }
+
+    return len;
+}
+#endif
+
+
+#if defined(BBMD_ENABLED) && BBMD_ENABLED
+/** Encode the initial part of a Read Foreign Device Table Ack
+ *
+ * @param pdu - buffer to store the encoding
+ * @param entries - number of foreign device entries in this Ack.
+ *
+ * @return number of bytes encoded
+ */
+static int bvlc_encode_read_fdt_ack_init(
+    uint8_t * pdu,
+    unsigned entries)
+{
+    int len = 0;
+    uint16_t BVLC_length = 0;
+
+    if (pdu) {
+        pdu[0] = BVLL_TYPE_BACNET_IP;
+        pdu[1] = BVLC_READ_FOREIGN_DEVICE_TABLE_ACK;
+        /* The 2-octet BVLC Length field is the length, in octets,
+           of the entire BVLL message, including the two octets of the
+           length field itself, most significant octet first. */
+        BVLC_length = 4 + (uint16_t)(entries * 10);
+        encode_unsigned16(&pdu[2], BVLC_length);
+        len = 4;
+    }
+
+    return len;
 }
 
-/**
- * @brief Delete an entry in the Foreign-Device-Table
- * @param fdt_list - first element in list of FDT entries
- * @param addr - B/IPv4 address to be deleted
- * @return true if the Foreign Device entry was found and removed.
+/** Encode a Read Foreign Device Table Ack
+ *
+ * @param pdu - buffer to store the encoding
+ * @param max_pdu - number of bytes available to encode
+ *
+ * @return number of bytes encoded
  */
-bool bvlc_foreign_device_table_entry_delete(
-    BACNET_IP_FOREIGN_DEVICE_TABLE_ENTRY *fdt_list, BACNET_IP_ADDRESS *addr)
+static int bvlc_encode_read_fdt_ack(
+    PORT_SUPPORT *portParams,
+    uint8_t * pdu,
+    uint16_t max_pdu)
 {
-    BACNET_IP_FOREIGN_DEVICE_TABLE_ENTRY *fdt_entry = NULL;
-    bool status = false;
+    int pdu_len = 0;    /* return value */
+    int len = 0;
+    unsigned count = 0;
+    unsigned i;
+    uint16_t seconds_remaining = 0;
 
-    fdt_entry = fdt_list;
-    while (fdt_entry) {
-        if (fdt_entry->valid) {
-            if (!bvlc_address_different(&fdt_entry->dest_address, addr)) {
-                status = true;
-                fdt_entry->valid = false;
-                fdt_entry->ttl_seconds_remaining = 0;
+    for (i = 0; i < MAX_FD_ENTRIES; i++) {
+        if (portParams->datalink.bipParams.FD_Table[i].valid) {
+            count++;
+        }
+    }
+    len = bvlc_encode_read_fdt_ack_init(&pdu[0], count);
+    pdu_len += len;
+    for (i = 0; i < MAX_FD_ENTRIES; i++) {
+        if (portParams->datalink.bipParams.FD_Table[i].valid) {
+            /* too much to send */
+            if ((pdu_len + 10) > max_pdu) {
+                pdu_len = 0;
                 break;
             }
+            len =
+                bvlc_encode_bip_address(&pdu[pdu_len],
+                &portParams->datalink.bipParams.FD_Table[i].dest_address, portParams->datalink.bipParams.FD_Table[i].dest_port);
+            pdu_len += len;
+            len = encode_unsigned16(&pdu[pdu_len], portParams->datalink.bipParams.FD_Table[i].time_to_live);
+            pdu_len += len;
+            seconds_remaining = (uint16_t)portParams->datalink.bipParams.FD_Table[i].seconds_remaining;
+            len = encode_unsigned16(&pdu[pdu_len], seconds_remaining);
+            pdu_len += len;
         }
-        fdt_entry = fdt_entry->next;
+    }
+
+    return pdu_len;
+}
+#endif
+
+
+#if defined(BBMD_CLIENT_ENABLED) && BBMD_CLIENT_ENABLED
+/** Encode an Foreign Device Table entry
+ *
+ * @param pdu - buffer to store the encoding
+ * @param address - in network byte order
+ * @param port - in network byte order
+ *
+ * @return number of bytes encoded
+ */
+int bvlc_encode_delete_fdt_entry(
+    uint8_t * pdu,
+    uint32_t address,   /* in network byte order */
+    uint16_t port)
+{
+    int len = 0;
+
+    if (pdu) {
+        pdu[0] = BVLL_TYPE_BACNET_IP;
+        pdu[1] = BVLC_DELETE_FOREIGN_DEVICE_TABLE_ENTRY;
+        /* The 2-octet BVLC Length field is the length, in octets,
+           of the entire BVLL message, including the two octets of the
+           length field itself, most significant octet first. */
+        encode_unsigned16(&pdu[2], 10);
+        /* FDT Entry */
+        encode_unsigned32(&pdu[4], address);
+        encode_unsigned16(&pdu[8], port);
+        len = 10;
+    }
+
+    return len;
+}
+#endif
+
+#if defined(BBMD_CLIENT_ENABLED) && BBMD_CLIENT_ENABLED
+/** Encode an Original Unicast NPDU
+ *
+ * @param pdu - buffer to store the encoding
+ * @param npdu - NPDU portion of message
+ * @param npdu_length - number of bytes to encode
+ *
+ * @return number of bytes encoded
+ */
+int bvlc_encode_original_unicast_npdu(
+    uint8_t * pdu,
+    uint8_t * npdu,
+    unsigned npdu_length)
+{
+    int len = 0;        /* return value */
+    unsigned i = 0;     /* loop counter */
+    uint16_t BVLC_length = 0;
+
+    if (pdu) {
+        pdu[0] = BVLL_TYPE_BACNET_IP;
+        pdu[1] = BVLC_ORIGINAL_UNICAST_NPDU;
+        /* The 2-octet BVLC Length field is the length, in octets,
+           of the entire BVLL message, including the two octets of the
+           length field itself, most significant octet first. */
+        BVLC_length = 4 + (uint16_t) npdu_length;
+        len = encode_unsigned16(&pdu[2], BVLC_length) + 2;
+        for (i = 0; i < npdu_length; i++) {
+            pdu[len] = npdu[i];
+            len++;
+        }
+    }
+
+    return len;
+}
+#endif
+
+#if defined(BBMD_CLIENT_ENABLED) && BBMD_CLIENT_ENABLED
+/** Encode an Original Broadcast NPDU
+ *
+ * @param pdu - buffer to store the encoding
+ * @param npdu - NPDU portion of message
+ * @param npdu_length - number of bytes to encode
+ *
+ * @return number of bytes encoded
+ */
+int bvlc_encode_original_broadcast_npdu(
+    uint8_t * pdu,
+    uint8_t * npdu,
+    unsigned npdu_length)
+{
+    int len = 0;        /* return value */
+    unsigned i = 0;     /* loop counter */
+    uint16_t BVLC_length = 0;
+
+    if (pdu) {
+        pdu[0] = BVLL_TYPE_BACNET_IP;
+        pdu[1] = BVLC_ORIGINAL_BROADCAST_NPDU;
+        /* The 2-octet BVLC Length field is the length, in octets,
+           of the entire BVLL message, including the two octets of the
+           length field itself, most significant octet first. */
+        BVLC_length = 4 + (uint16_t) npdu_length;
+        len = encode_unsigned16(&pdu[2], BVLC_length) + 2;
+        for (i = 0; i < npdu_length; i++) {
+            pdu[len] = npdu[i];
+            len++;
+        }
+    }
+
+    return len;
+}
+#endif
+
+
+#if defined(BBMD_ENABLED) && BBMD_ENABLED
+/** Create a Broadcast Distribution Table from message
+ *
+ * @param npdu - message from which the devices are decoded
+ * @param npdu_length - number of bytes to decode
+ *
+ * @return true if all the entries fit in the table
+ */
+static bool bvlc_create_bdt(
+    PORT_SUPPORT *portParams,
+    uint8_t * npdu,
+    uint16_t npdu_length)
+{
+    bool status = false;
+    unsigned i;
+    uint16_t pdu_offset = 0;
+
+    for (i = 0; i < MAX_BBMD_ENTRIES; i++) {
+        if (npdu_length >= 10) {
+            portParams->datalink.bipParams.BBMD_Table[i].valid = true;
+            memcpy(&portParams->datalink.bipParams.BBMD_Table[i].dest_address.s_addr, &npdu[pdu_offset], 4);
+            pdu_offset += 4;
+            memcpy(&portParams->datalink.bipParams.BBMD_Table[i].dest_port, &npdu[pdu_offset], 2);
+            pdu_offset += 2;
+            memcpy(&portParams->datalink.bipParams.BBMD_Table[i].broadcast_mask.s_addr, &npdu[pdu_offset], 4);
+            pdu_offset += 4;
+            npdu_length -= (4 + 2 + 4);
+        }
+        else {
+            portParams->datalink.bipParams.BBMD_Table[i].valid = false;
+            portParams->datalink.bipParams.BBMD_Table[i].dest_address.s_addr = 0;
+            portParams->datalink.bipParams.BBMD_Table[i].dest_port = 0;
+            portParams->datalink.bipParams.BBMD_Table[i].broadcast_mask.s_addr = 0;
+        }
+    }
+    /* BDT changed! Save backup to file */
+    bvlc_bdt_backup_local();
+
+    /* did they all fit? */
+    if (npdu_length < 10) {
+        status = true;
     }
 
     return status;
 }
 
-/**
- * @brief Add an entry to the Foreign-Device-Table
- * @param fdt_list - first element in list of FDT entries
- * @param addr - B/IPv4 address to be added
- * @param ttl_seconds - Time-to-Live T, in seconds
- * @return true if the Foreign Device entry was added or already exists
+/** Register a Foreign Device in the Foreign Device Table
+ *
+ * @param sin - source address in network order
+ * @param time_to_live - time in seconds
+ *
+ * @return true if the Foreign Device was added
  */
-bool bvlc_foreign_device_table_entry_add(
-    BACNET_IP_FOREIGN_DEVICE_TABLE_ENTRY *fdt_list,
-    BACNET_IP_ADDRESS *addr,
-    uint16_t ttl_seconds)
+static bool bvlc_register_foreign_device(
+    PORT_SUPPORT *portParams,
+    struct sockaddr_in *sin,
+    uint16_t time_to_live_seconds )
 {
-    BACNET_IP_FOREIGN_DEVICE_TABLE_ENTRY *fdt_entry = NULL;
+    unsigned i;
     bool status = false;
 
-    fdt_entry = fdt_list;
-    while (fdt_entry) {
-        if (fdt_entry->valid) {
-            /* am I here already?  If so, update my time to live... */
-            if (!bvlc_address_different(&fdt_entry->dest_address, addr)) {
+    /* am I here already?  If so, update my time to live... */
+    for (i = 0; i < MAX_FD_ENTRIES; i++) {
+        if (portParams->datalink.bipParams.FD_Table[i].valid) {
+            if ((portParams->datalink.bipParams.FD_Table[i].dest_address.s_addr == sin->sin_addr.s_addr) &&
+                (portParams->datalink.bipParams.FD_Table[i].dest_port == sin->sin_port)) {
                 status = true;
-                fdt_entry->ttl_seconds = ttl_seconds;
-                /* Upon receipt of a BVLL Register-Foreign-Device message,
+                portParams->datalink.bipParams.FD_Table[i].time_to_live = time_to_live_seconds;
+                /*  Upon receipt of a BVLL Register-Foreign-Device message,
                    a BBMD shall start a timer with a value equal to the
                    Time-to-Live parameter supplied plus a fixed grace
                    period of 30 seconds. */
-                if (ttl_seconds < (UINT16_MAX - 30)) {
-                    fdt_entry->ttl_seconds_remaining = ttl_seconds + 30;
-                } else {
-                    fdt_entry->ttl_seconds_remaining = UINT16_MAX;
-                }
+                portParams->datalink.bipParams.FD_Table[i].seconds_remaining = time_to_live_seconds + 30;
                 break;
             }
         }
-        fdt_entry = fdt_entry->next;
     }
     if (!status) {
-        fdt_entry = fdt_list;
-        while (fdt_entry) {
-            if (!fdt_entry->valid) {
-                /* add to the first empty entry */
-                bvlc_address_copy(&fdt_entry->dest_address, addr);
-                fdt_entry->ttl_seconds = ttl_seconds;
-                if (ttl_seconds < (UINT16_MAX - 30)) {
-                    fdt_entry->ttl_seconds_remaining = ttl_seconds + 30;
-                } else {
-                    fdt_entry->ttl_seconds_remaining = UINT16_MAX;
-                }
-                fdt_entry->valid = true;
+        for (i = 0; i < MAX_FD_ENTRIES; i++) {
+            if (!portParams->datalink.bipParams.FD_Table[i].valid) {
+                portParams->datalink.bipParams.FD_Table[i].dest_address.s_addr = sin->sin_addr.s_addr;
+                portParams->datalink.bipParams.FD_Table[i].dest_port = sin->sin_port;
+                portParams->datalink.bipParams.FD_Table[i].time_to_live = time_to_live_seconds;
+                portParams->datalink.bipParams.FD_Table[i].seconds_remaining = time_to_live_seconds + 30;
+                portParams->datalink.bipParams.FD_Table[i].valid = true;
                 status = true;
                 break;
             }
-            fdt_entry = fdt_entry->next;
         }
     }
+
 
     return status;
 }
 
-/**
- * @brief Count the number of valid Foreign-Device-Table entries
- * @param fdt_list - first element in list of FDT entries
- * @return number of elements of FDT entries that are valid
- */
-uint16_t bvlc_foreign_device_table_valid_count(
-    BACNET_IP_FOREIGN_DEVICE_TABLE_ENTRY *fdt_list)
-{
-    BACNET_IP_FOREIGN_DEVICE_TABLE_ENTRY *fdt_entry = NULL;
-    uint16_t entry_count = 0;
 
-    /* count the number of entries */
-    fdt_entry = fdt_list;
-    while (fdt_entry) {
-        if (fdt_entry->valid) {
-            entry_count++;
+/** Delete a Foreign Device from the Foreign Device Table
+ *
+ * @param pdu - BACnet/IP address in PDU form
+ *
+ * @return true if the Foreign Device was found and removed.
+ */
+static bool bvlc_delete_foreign_device(
+    PORT_SUPPORT *portParams,
+    STATIC_BUFFER *sbuf)
+{
+    struct sockaddr_in sin = { 0 };     /* the ip address */
+
+    bool status = false;                /* return value */
+
+    unsigned i;
+
+    if (bits_sbuf_to_ipAddr_port(sbuf, &sin.sin_addr, &sin.sin_port))
+    {
+        for (i = 0; i < MAX_FD_ENTRIES; i++) {
+            if (portParams->datalink.bipParams.FD_Table[i].valid) {
+                if ((portParams->datalink.bipParams.FD_Table[i].dest_address.s_addr == sin.sin_addr.s_addr) &&
+                    (portParams->datalink.bipParams.FD_Table[i].dest_port == sin.sin_port)) {
+                    portParams->datalink.bipParams.FD_Table[i].valid = false;
+                    portParams->datalink.bipParams.FD_Table[i].seconds_remaining = 0;
+                    status = true;
+                    break;
+                }
+            }
         }
-        fdt_entry = fdt_entry->next;
+    }
+    else
+    {
+        panic();
     }
 
-    return entry_count;
+    return status;
 }
+#endif
+#endif
 
 /**
- * @brief Count the total number of Foreign-Device-Table entries
+ * The common send function for bvlc functions, using b/ip.
  *
- * @param bdt_list - first element in array BDT entries
- * @return number of elements of BDT entries
+ * @param dest - Points to a sockaddr_in structure containing the
+ *  destination address. The length and format of the address depend
+ *  on the address family of the socket (AF_INET).
+ *  The address is in network byte order.
+ * @param mtu - the bytes of data to send
+ * @param mtu_len - the number of bytes of data to send
+ * @return Upon successful completion, returns the number of bytes sent.
+ *  Otherwise, -1 shall be returned and errno set to indicate the error.
  */
-uint16_t bvlc_foreign_device_table_count(
-    BACNET_IP_FOREIGN_DEVICE_TABLE_ENTRY *fdt_list)
+static int bvlc_send_mpdu(
+    const PORT_SUPPORT *portParams,
+    const struct sockaddr_in *dest,
+    const uint8_t * mtu,
+    const uint16_t mtu_len)
 {
-    BACNET_IP_FOREIGN_DEVICE_TABLE_ENTRY *fdt_entry = NULL;
-    uint16_t entry_count = 0;
+    struct sockaddr_in bvlc_dest = { 0 };
 
-    /* count the number of entries */
-    fdt_entry = fdt_list;
-    while (fdt_entry) {
-        entry_count++;
-        fdt_entry = fdt_entry->next;
+    /* assumes that the driver has already been initialized */
+    if (portParams->datalink.bipParams.socket < 0) {
+        return 0;
     }
 
-    return entry_count;
+    bvlc_dest.sin_family = AF_INET;
+    bvlc_dest.sin_addr.s_addr = dest->sin_addr.s_addr;
+    bvlc_dest.sin_port = dest->sin_port;
+    memset(&(bvlc_dest.sin_zero), '\0', 8);
+
+    // BTA diagnostic stuff only
+    BACNET_MAC_ADDRESS dummySrcMAC ;
+    BACNET_MAC_ADDRESS dummyDstMAC ;
+
+    bits_ipAddr_port_to_bacnet_mac(&dummyDstMAC, bvlc_dest.sin_addr.s_addr, bvlc_dest.sin_port);
+    bits_ipAddr_port_to_bacnet_mac(&dummySrcMAC, portParams->datalink.bipParams.nwoLocal_addr, portParams->datalink.bipParams.nwoPort);
+
+    SendBTApacketTx(portParams->datalinkId, &dummySrcMAC, &dummyDstMAC, mtu, mtu_len);
+
+    /* Send the packet */
+    return sendto(portParams->datalink.bipParams.socket, (char *)mtu, mtu_len, 0,
+        (struct sockaddr *) &bvlc_dest, sizeof(struct sockaddr));
 }
 
-/**
- * @brief Convert Foreign-Device-Table entry array into linked list.
- *
- * @param fdt_list - first element in array FDT entries
- * @param array_size - number of array elements of FDT entries
- */
-void bvlc_foreign_device_table_link_array(
-    BACNET_IP_FOREIGN_DEVICE_TABLE_ENTRY *fdt_list, const size_t array_size)
-{
-    size_t i = 0;
 
-    for (i = 0; i < array_size; i++) {
-        if (i > 0) {
-            fdt_list[i - 1].next = &fdt_list[i];
+#if ( BACDL_BBMD == 1)
+#if defined(BBMD_ENABLED) && BBMD_ENABLED
+/** Sends all Broadcast Devices a Forwarded NPDU
+ *
+ * @param sin - source address in network order
+ * @param npdu - the NPDU
+ * @param max_npdu - amount of space available in the NPDU
+ * @param npdu_length - length of the NPDU
+ * @param original - was the message an original (not forwarded)
+ */
+static void bvlc_bdt_forward_npdu(
+    PORT_SUPPORT *portParams,
+    struct sockaddr_in *sin,
+    uint8_t * npdu,
+    uint16_t max_npdu,
+    uint16_t npdu_length,
+    bool original)
+{
+    uint8_t mtu[MAX_LPDU_IP] = { 0 };
+    uint16_t mtu_len;
+    unsigned i ;     /* loop counter */
+    struct sockaddr_in bip_dest = { 0 };
+
+    /* If we are forwarding an original broadcast message and the NAT
+     * handling is enabled, change the source address to NAT routers
+     * global IP address so the recipient can reply (local IP address
+     * is not accesible from internet side).
+     *
+     * If we are forwarding a message from peer BBMD or foreign device
+     * or the NAT handling is disabled, leave the source address as is.
+     */
+    if (portParams->datalink.bipParams.BVLC_NAT_Handling && original) {
+        // struct sockaddr_in nat_addr = *sin;
+        // nat_addr.sin_addr = BVLC_Global_Address;
+        mtu_len = (uint16_t)bvlc_encode_forwarded_npdu(&mtu[0],
+            &portParams->datalink.bipParams.BVLC_Global_Address, npdu, max_npdu, npdu_length);
+    }
+    else {
+        mtu_len = (uint16_t)bvlc_encode_forwarded_npdu(&mtu[0],
+            sin, npdu, max_npdu, npdu_length);
+    }
+
+    /* loop through the BDT and send one to each entry, except us */
+    for (i = 0; i < MAX_BBMD_ENTRIES; i++) {
+        if (portParams->datalink.bipParams.BBMD_Table[i].valid) {
+            /* The B/IP address to which the Forwarded-NPDU message is
+               sent is formed by inverting the broadcast distribution
+               mask in the BDT entry and logically ORing it with the
+               BBMD address of the same entry. */
+            bip_dest.sin_addr.s_addr =
+                ((~portParams->datalink.bipParams.BBMD_Table[i].broadcast_mask.
+                s_addr) | portParams->datalink.bipParams.BBMD_Table[i].dest_address.s_addr);
+            bip_dest.sin_port = portParams->datalink.bipParams.BBMD_Table[i].dest_port;
+
+            /* don't send to my broadcast address and same port */
+            if ((bip_dest.sin_addr.s_addr == bip_get_broadcast_ipAddr(portParams))
+                && (bip_dest.sin_port == bip_get_local_port(portParams))) {
+                continue;
+            }
+            /* don't send to my IP address and same port */
+            if ((bip_dest.sin_addr.s_addr == bip_get_addr(portParams)) &&
+                (bip_dest.sin_port == bip_get_local_port(portParams))) {
+                continue;
+            }
+            /* NAT router port forwards BACnet packets from global IP to us.
+             * Packets sent to that global IP by us would end up back, creating
+             * a loop.
+             */
+            if (portParams->datalink.bipParams.BVLC_NAT_Handling &&
+                (bip_dest.sin_addr.s_addr == portParams->datalink.bipParams.BVLC_Global_Address.sin_addr.s_addr) &&
+                (bip_dest.sin_port == portParams->datalink.bipParams.BVLC_Global_Address.sin_port)) {
+                continue;
+            }
+            bvlc_send_mpdu(portParams, &bip_dest, mtu, mtu_len);
+
+            dbMessage(DBD_ALL, DB_INFO, "BVLC: BDT Sent Forwarded-NPDU to %s:%04d",
+                inet_ntoa(bip_dest.sin_addr), ntohs(bip_dest.sin_port));
         }
-        fdt_list[i].next = NULL;
     }
 }
 
-/**
- * @brief J.2.8 Read-Foreign-Device-Table-Ack: encode
+
+/** Send a BVLL Forwarded-NPDU message on its local IP subnet using
+ * the local B/IP broadcast address as the destination address.
  *
- * This message returns the current contents of a BBMD's FDT to the requester.
- * An empty FDT shall be signified by a list of length zero.
- *
- * @param pdu - buffer to store the encoding
- * @param pdu_size - size of the buffer to store encoding
- * @param fdt_list - list of FDT entries
- *
- * @return number of bytes encoded
- *
- * BVLC Type:           1-octet  X'81'   BVLL for BACnet/IP
- * BVLC Function:       1-octet  X'07'   Read-Foreign-Device-Table-Ack
- * BVLC Length:         2-octets L       length, in octets, of the BVLL message
- * List of FDT Entries: N*10-octets
- *
- * N indicates the number of entries in the FDT whose contents are being
- * returned. Each returned entry consists of the 6-octet B/IP address of
- * the registrant; the 2-octet Time-to-Live value supplied at the time of
- * registration; and a 2-octet value representing the number of seconds
- * remaining before the BBMD will purge the registrant's FDT entry if no
- * re-registration occurs. The time remaining includes the 30-second grace
- * period as defined in Clause J.5.2.3.
+ * @param sin - source address in network order
+ * @param npdu - the NPDU
+ * @param max_npdu - amount of space available in the NPDU
+ * @param npdu_length - reported length of the NPDU
  */
-int bvlc_encode_read_foreign_device_table_ack(uint8_t *pdu,
-    uint16_t pdu_size,
-    BACNET_IP_FOREIGN_DEVICE_TABLE_ENTRY *fdt_list)
+static void bvlc_broadcast_npdu(
+    PORT_SUPPORT *portParams,
+    struct sockaddr_in *sin,
+    uint8_t * npdu,
+    uint16_t max_npdu,
+    uint16_t npdu_length)
 {
-    int bytes_encoded = 0;
+    uint8_t mtu[MAX_LPDU_IP] = { 0 };
+    uint16_t mtu_len = 0;
+    struct sockaddr_in bip_dest = { 0 };
+
+    // Use forwarded-NPDU per the spec J.4.5.
+    mtu_len =
+        (uint16_t) bvlc_encode_forwarded_npdu(
+            &mtu[0],
+            sin,
+            npdu,
+            max_npdu,
+            npdu_length);
+
+    bip_dest.sin_addr.s_addr = bip_get_broadcast_ipAddr(portParams);
+    bip_dest.sin_port = bip_get_local_port(portParams);
+
+    dbMessage(DBD_BBMD, DB_INFO, "BVLC: Sending Forwarded-NPDU as local broadcast on port %d.", ntohs(bip_dest.sin_port));
+
+    bvlc_send_mpdu(portParams, &bip_dest, mtu, mtu_len);
+}
+
+/** Sends all Foreign Devices a Forwarded NPDU
+ *
+ * @param sin - source address in network order
+ * @param npdu - returns the NPDU
+ * @param max_npdu - amount of space available in the NPDU
+ * @param npdu_length - reported length of the NPDU
+ * @param original - was the message an original (not forwarded)
+ */
+static void bvlc_fdt_forward_npdu(
+    const PORT_SUPPORT *portParams,
+    const struct sockaddr_in *sin,
+    const uint8_t * npdu,
+    const uint16_t max_npdu,
+    const uint16_t npdu_length,
+    const bool original)
+{
+    uint8_t mtu[MAX_LPDU_IP] = { 0 };
+    uint16_t mtu_len = 0;
+    unsigned i = 0;     /* loop counter */
+    struct sockaddr_in bip_dest = { 0 };
+
+    /* If we are forwarding an original broadcast message and the NAT
+     * handling is enabled, change the source address to NAT routers
+     * global IP address so the recipient can reply (local IP address
+     * is not accesible from internet side.
+     *
+     * If we are forwarding a message from peer BBMD or foreign device
+     * or the NAT handling is disabled, leave the source address as is.
+     */
+    if (portParams->datalink.bipParams.BVLC_NAT_Handling && original) {
+        // struct sockaddr_in nat_addr = *sin;
+        // nat_addr.sin_addr = BVLC_Global_Address;
+        mtu_len = (uint16_t)bvlc_encode_forwarded_npdu(&mtu[0],
+            &portParams->datalink.bipParams.BVLC_Global_Address, npdu, max_npdu, npdu_length);
+    }
+    else {
+        mtu_len = (uint16_t)bvlc_encode_forwarded_npdu(&mtu[0],
+            sin, npdu, max_npdu, npdu_length);
+    }
+
+    /* loop through the FDT and send one to each entry */
+    for (i = 0; i < MAX_FD_ENTRIES; i++) {
+        if (portParams->datalink.bipParams.FD_Table[i].valid && portParams->datalink.bipParams.FD_Table[i].seconds_remaining) {
+            bip_dest.sin_addr.s_addr = portParams->datalink.bipParams.FD_Table[i].dest_address.s_addr;
+            bip_dest.sin_port = portParams->datalink.bipParams.FD_Table[i].dest_port;
+            /* don't send to my ip address and same port */
+            if ((bip_dest.sin_addr.s_addr == bip_get_addr(portParams)) &&
+                (bip_dest.sin_port == bip_get_local_port(portParams))) {
+                continue;
+            }
+            /* don't send to src ip address and same port */
+            if ((bip_dest.sin_addr.s_addr == sin->sin_addr.s_addr) &&
+                (bip_dest.sin_port == sin->sin_port)) {
+                continue;
+            }
+            /* NAT router port forwards BACnet packets from global IP to us.
+             * Packets sent to that global IP by us would end up back, creating
+             * a loop.
+             */
+            if (portParams->datalink.bipParams.BVLC_NAT_Handling &&
+                (bip_dest.sin_addr.s_addr == portParams->datalink.bipParams.BVLC_Global_Address.sin_addr.s_addr) &&
+                (bip_dest.sin_port == portParams->datalink.bipParams.BVLC_Global_Address.sin_port)) {
+                continue;
+            }
+            dbMessage(DBD_BBMD, DB_INFO, "BVLL: Sending Forwarded-NPDU to FD %s:%d",
+                inet_ntoa(bip_dest.sin_addr), ntohs(bip_dest.sin_port));
+            bvlc_send_mpdu(portParams, &bip_dest, mtu, mtu_len);
+        }
+    }
+}
+#endif
+#endif
+
+
+/** Sends a BVLC Result
+ *
+ * @param dest - destination address
+ * @param result_code - result code to send
+ *
+ * @return number of bytes encoded to send
+ */
+static int bvlc_send_result(
+    const PORT_SUPPORT *portParams,
+    struct sockaddr_in *dest,   /* the destination address */
+    BACNET_BVLC_RESULT result_code)
+{
+    uint8_t mtu[MAX_LPDU_IP] = { 0 };
+    uint16_t mtu_len = 0;
+
+    mtu_len = (uint16_t)bvlc_encode_bvlc_result(&mtu[0], result_code);
+    if (mtu_len) {
+        bvlc_send_mpdu(portParams, dest, mtu, mtu_len);
+    }
+
+    return mtu_len;
+}
+
+
+#if ( BACDL_BBMD == 1)
+#if defined(BBMD_ENABLED) && BBMD_ENABLED
+/** Sends a Read Broadcast Device Table ACK
+ *
+ * @param dest - destination address
+ *
+ * @return number of bytes encoded to send
+ */
+static int bvlc_send_bdt(
+    PORT_SUPPORT *portParams,
+    struct sockaddr_in *dest)
+{
+    uint8_t mtu[MAX_LPDU_IP] = { 0 };
+    uint16_t mtu_len = 0;
+
+    mtu_len = (uint16_t)bvlc_encode_read_bdt_ack(portParams, &mtu[0], sizeof(mtu));
+    if (mtu_len) {
+        bvlc_send_mpdu(portParams, dest, &mtu[0], mtu_len);
+    }
+
+    return mtu_len;
+}
+
+
+/** Sends a Read Foreign Device Table ACK
+ *
+ * @param dest - destination address
+ *
+ * @return number of bytes encoded to send
+ */
+static int bvlc_send_fdt(
+    PORT_SUPPORT *portParams,
+    struct sockaddr_in *dest)
+{
+    uint8_t mtu[MAX_LPDU_IP] = { 0 };
+    uint16_t mtu_len = 0;
+
+    mtu_len = (uint16_t)bvlc_encode_read_fdt_ack(portParams, &mtu[0], sizeof(mtu));
+    if (mtu_len) {
+        bvlc_send_mpdu(portParams, dest, &mtu[0], mtu_len);
+    }
+
+    return mtu_len;
+}
+
+/** Determines if a BDT member has a unicast mask
+ *
+ * @param sin - BDT member that is sought, network byte order address
+ *
+ * @return True if BDT member is found and has a unicast mask
+ */
+static bool bvlc_bdt_member_mask_is_unicast(
+    PORT_SUPPORT *portParams,
+    struct sockaddr_in *sin)
+{
+    bool unicast = false;
+    unsigned i;     /* loop counter */
+
+    for (i = 0; i < MAX_BBMD_ENTRIES; i++) {
+        if (portParams->datalink.bipParams.BBMD_Table[i].valid) {
+
+            /* Skip ourself*/
+            if ((portParams->datalink.bipParams.BBMD_Table[i].dest_address.s_addr == portParams->datalink.bipParams.nwoLocal_addr) &&
+                (portParams->datalink.bipParams.BBMD_Table[i].dest_port == bip_get_local_port(portParams))) {
+                continue;
+            }
+
+            /* find the source address in the table */
+            if ((portParams->datalink.bipParams.BBMD_Table[i].dest_address.s_addr == sin->sin_addr.s_addr) &&
+                (portParams->datalink.bipParams.BBMD_Table[i].dest_port == sin->sin_port)) {
+                /* unicast mask? */
+                if (portParams->datalink.bipParams.BBMD_Table[i].broadcast_mask.s_addr == 0xFFFFFFFFL) {
+                    unicast = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    return unicast;
+}
+
+// see http://stackoverflow.com/questions/2432493/how-to-detemine-which-network-interface-ip-address-will-be-used-to-send-a-pack 
+// for linux https://stackoverflow.com/questions/14398099/how-to-programatically-determine-which-source-ip-address-will-be-used-to-reach-a
+// this trick only works if we know the destination of the peer.... i.e. we should wait for a ping from BTA before trying to establish local address/interface..
+
+#if defined ( _MSC_VER  )
+void TryGetLocalAddress(struct sockaddr_in *sin)
+{
+    struct sockaddr_in ourAddr;
+    int ourLen = sizeof(ourAddr);
+
+    // not known, do a quick connect, check, disconnect
+    SOCKET newsock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (newsock < 0) {
+        panic();
+        return;
+    }
+
+    // quick connect to them
+    int err = connect(newsock, (struct sockaddr *)sin, sizeof(struct sockaddr));
+    if (err)
+    {
+        int err2 = WSAGetLastError();
+        printf("Err = %d\n", err2);
+        panic();
+        closesocket(newsock);
+        return;
+    }
+
+    // peek at us
+    err = getsockname(newsock, (struct sockaddr *)&ourAddr, &ourLen);
+    if (err)
+    {
+        int err2 = WSAGetLastError();
+        printf("Err = %d\n", err2);
+        panic();
+        closesocket(newsock);
+        return;
+    }
+
+    closesocket(newsock);
+    *sin = ourAddr ;
+}
+#endif
+
+#if 0
+// move to bip-init.c - which is platform specific
+
+void CheckLocalAddressKnown(PORT_SUPPORT *portParams, struct sockaddr_in *sin)
+{
+    if (portParams->datalink.bipParams.nwoLocal_addr == 0)
+    {
+        struct sockaddr_in ourAddr;
+        int ourLen = sizeof(ourAddr);
+        int err;
+
+#if 0
+        // peek at us
+        err = getsockname(portParams->datalink.bipParams.socket, (struct sockaddr *)&ourAddr, &ourLen);
+        if (err)
+        {
+            int err2 = WSAGetLastError();
+            printf("Err = %d\n", err2);
+            panic();
+            return;
+        }
+
+        // simply connect to the startion sending to us. The OS will bind our socket to that interface.
+        // If we send to another IP address on the same subnet later, we will be OK
+        err = connect(portParams->datalink.bipParams.socket, (struct sockaddr *)sin, sizeof(struct sockaddr));
+        if (err)
+        {
+            int err2 = WSAGetLastError();
+            printf("Err = %d\n", err2);
+            panic();
+            return;
+        }
+
+        // peek at us
+        err = getsockname(portParams->datalink.bipParams.socket, (struct sockaddr *)&ourAddr, &ourLen);
+        if (err)
+        {
+            int err2 = WSAGetLastError();
+            printf("Err = %d\n", err2 );
+            panic();
+            return;
+        }
+
+        // and unconnect, ignoring possible errors. See Stevens, pg 254
+        sin->sin_family = AF_UNSPEC;
+        connect(portParams->datalink.bipParams.socket, (struct sockaddr *)sin, sizeof(struct sockaddr));
+
+        portParams->datalink.bipParams.nwoLocal_addr = ourAddr.sin_addr.s_addr;
+        set_broadcast_address(portParams, portParams->datalink.bipParams.nwoLocal_addr);
+#endif 
+
+#if defined ( _MSC_VER )
+        // not known, do a quick connect, check, disconnect
+        int newsock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+        if (newsock < 0) {
+            panic();
+            return;
+        }
+
+        // quick connect to them
+        err = connect(newsock, (struct sockaddr *)sin, sizeof(struct sockaddr));
+        if (err)
+        {
+            int err2 = WSAGetLastError();
+            printf("Err = %d\n", err2);
+            panic();
+            closesocket(newsock);
+            return;
+        }
+
+        // peek at us
+        err = getsockname(newsock, (struct sockaddr *)&ourAddr, &ourLen);
+        if (err)
+        {
+            int err2 = WSAGetLastError();
+            printf("Err = %d\n", err2 );
+            panic();
+            closesocket(newsock);
+            return;
+        }
+
+        closesocket(newsock);
+        portParams->datalink.bipParams.nwoLocal_addr = ourAddr.sin_addr.s_addr;
+
+        set_broadcast_address(portParams, portParams->datalink.bipParams.nwoLocal_addr);
+
+        // AND... since we are doing this mainly because we are on a multi-interfaced machine, we need to "lock down" our IP endpoint so we 
+        // are forever deaf to traffic on the other adapters, else we will end up representing ourselves as multiple devices in some situations. 
+        // e.g. someone does a 255.255.255.255 broadcast and gets responses from our one node on different adapters... which would be a bad thing, right?
+        closesocket(portParams->datalink.bipParams.socket);
+        
+        // reopen socket, this time binding to the IP address for the interface
+        portParams->datalink.bipParams.socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+        if (portParams->datalink.bipParams.socket < 0) {
+            fprintf(stderr, "bip: failed to allocate a socket.\n");
+            return ;
+        }
+        /* Allow us to use the same socket for sending and receiving */
+        /* This makes sure that the src port is correct when sending */
+        int value = 1;
+        err = setsockopt(portParams->datalink.bipParams.socket, SOL_SOCKET, SO_REUSEADDR, (char *)&value,
+            sizeof(value));
+        if (err < 0) {
+            fprintf(stderr, "bip: failed to set REUSEADDR socket option.\n");
+            closesocket(portParams->datalink.bipParams.socket);
+            portParams->datalink.bipParams.socket = -1;
+            return ;
+        }
+        /* Enables transmission and receipt of broadcast messages on the socket. */
+        err = setsockopt(portParams->datalink.bipParams.socket, SOL_SOCKET, SO_BROADCAST, (char *)&value,
+            sizeof(value));
+        if (err < 0) {
+            fprintf(stderr, "bip: failed to set BROADCAST socket option.\n");
+            closesocket(portParams->datalink.bipParams.socket);
+            portParams->datalink.bipParams.socket = -1;
+            return ;
+        }
+
+        ourAddr.sin_port = portParams->datalink.bipParams.nwoPort;
+
+        err = bind(portParams->datalink.bipParams.socket, (struct sockaddr *)&ourAddr, sizeof(struct sockaddr) );
+        if (err)
+        {
+            int err2 = WSAGetLastError();
+            const char *errmsg = winsock_error_code_text(err2);
+            printf("Err = %s\n", errmsg);
+            panic();
+            closesocket(newsock);
+            return;
+        }
+#endif
+
+    }
+}
+#endif // _MSC_VER
+#endif
+
+
+/** Receive a packet from the BACnet/IP socket (Annex J)
+ *
+ * @param src - returns the source address
+ * @param npdu - returns the NPDU
+ * @param max_npdu - amount of space available in the NPDU
+ * @param timeout - number of milliseconds to wait for a packet
+ *
+ * @return Number of bytes received, or 0 if none or timeout.
+ */
+uint16_t bbmd_receive(
+    PORT_SUPPORT *portParams,
+    BACNET_MAC_ADDRESS *src,
+    uint8_t * npdu,
+    uint16_t max_npdu)
+{
+    uint16_t npdu_len ;      /* return value */
+    fd_set read_fds;
+    SOCKET max;
+    struct timeval select_timeout;
+	struct sockaddr_in sin; // = { 0 };
+	struct sockaddr_in original_sin; // = { 0 };
+	struct sockaddr_in dest; //  = { 0 };
+    STATIC_BUFFER sbuf;
+
+#if _MSC_VER
+    socklen_t sin_len = sizeof(sin);
+#elif __GNUC__
+    socklen_t sin_len = sizeof(sin);
+#endif
+    int received_bytes ;
+    uint16_t result_code ;
+    uint16_t i ;
+    bool status = false;
+    uint16_t time_to_live ;
+
+    /* Make sure the socket is open */
+    if (portParams->datalink.bipParams.socket < 0) {
+        return 0;
+    }
+
+    /* we could just use a non-blocking socket, but that consumes all
+       the CPU time.  We can use a timeout; it is only supported as
+       a select. */
+    select_timeout.tv_sec = 0;
+    select_timeout.tv_usec = 10000;
+
+    FD_ZERO(&read_fds);
+    FD_SET(portParams->datalink.bipParams.socket, &read_fds);
+    max = portParams->datalink.bipParams.socket;
+    /* see if there is a packet for us */
+    if (select(max + 1, &read_fds, NULL, NULL, &select_timeout) > 0) {
+        received_bytes =
+            recvfrom(portParams->datalink.bipParams.socket, (char *)&npdu[0], max_npdu, 0,
+            (struct sockaddr *) &sin, &sin_len);
+    }
+    else {
+        return 0;
+    }
+    /* See if there is a problem */
+    if (received_bytes < 0) {
+        return 0;
+    }
+    /* no problem, just no bytes */
+    if (received_bytes == 0) {
+        return 0;
+    }
+
+    // if we don't yet know the adapter IP address, now that we have received a packet, a) if we were not connected before (cable, DHCP etc), 
+    // we must now surely be! Also, having received a packet, we would be able to derive the IP address of the subnet the packet came in on
+    // as well... but this last is a future todo 3
+    
+#if defined ( OS_LAYER_WIN  )
+    CheckLocalAddressKnown( portParams, &sin);
+#elif defined ( OS_LAYER_LINUX )
+    if (portParams->datalink.bipParams.nwoLocal_addr == 0)
+    {
+        /* See: cr10941947194794 */
+        bip_set_interface(portParams, portParams->ifName);
+    }
+#else
+#error 
+#endif
+
+    /* the signature of a BACnet/IP packet */
+    if (npdu[0] != BVLL_TYPE_BACNET_IP) {
+        return 0;
+    }
+
+    // ignore packets from ourself (broadcasts)
+    if (sin.sin_addr.s_addr == portParams->datalink.bipParams.nwoLocal_addr && sin.sin_port == portParams->datalink.bipParams.nwoPort)
+    {
+        return 0;
+    }
+
+    BACNET_MAC_ADDRESS dummySrcMAC ;
+    BACNET_MAC_ADDRESS dummyDstMAC ;
+
+    bits_ipAddr_port_to_bacnet_mac(&dummyDstMAC, portParams->datalink.bipParams.nwoLocal_addr, portParams->datalink.bipParams.nwoPort);
+
+    bits_ipAddr_port_to_bacnet_mac(&dummySrcMAC, sin.sin_addr.s_addr, sin.sin_port);
+
+    SendBTApacketRx(portParams->datalinkId, &dummySrcMAC, &dummyDstMAC, npdu, received_bytes);
+
+
+    BVLC_Function_Code = (BACNET_BVLC_FUNCTION)npdu[1];
+    /* decode the length of the PDU - length is inclusive of BVLC */
+    (void)decode_unsigned16(&npdu[2], &npdu_len);
+
+    if ((npdu_len < 4) || (npdu_len > (max_npdu-4))) {
+        return 0;
+    }
+
+    /* subtract off the BVLC header */
+    npdu_len -= 4;
+
+    // 2019.10.20 start using static buffer for safety
+    sbuf.count = npdu_len;
+    sbuf.data = npdu;
+    sbuf.processed = 0;
+
+    switch (BVLC_Function_Code) {
+    case BVLC_RESULT:
+        /* Upon receipt of a BVLC-Result message containing a result code
+           of X'0000' indicating the successful completion of the
+           registration, a foreign device shall start a timer with a value
+           equal to the Time-to-Live parameter of the preceding Register-
+           Foreign-Device message. At the expiration of the timer, the
+           foreign device shall re-register with the BBMD by sending a BVLL
+           Register-Foreign-Device message */
+        /* Clients can now get this result */
+        (void)decode_unsigned16(&npdu[4], &result_code);
+        BVLC_Result_Code = (BACNET_BVLC_RESULT)result_code;
+        dbMessage(DBD_ALL, DB_DEBUG, "BVLC: Result Code=%d", BVLC_Result_Code);
+        /* not an NPDU */
+        npdu_len = 0;
+        break;
+
+    case BVLC_WRITE_BROADCAST_DISTRIBUTION_TABLE:
+        dbMessage(DBD_ALL, DB_ERROR, "BVLC: Received Write-BDT.");
+        /* Upon receipt of a BVLL Write-Broadcast-Distribution-Table
+           message, a BBMD shall attempt to create or replace its BDT,
+           depending on whether or not a BDT has previously existed.
+           If the creation or replacement of the BDT is successful, the BBMD
+           shall return a BVLC-Result message to the originating device with
+           a result code of X'0000'. Otherwise, the BBMD shall return a
+           BVLC-Result message to the originating device with a result code
+           of X'0010' indicating that the write attempt has failed. */
+        status = bvlc_create_bdt(portParams, &npdu[4], npdu_len);
+        if (status) {
+            bvlc_send_result(portParams, &sin, BVLC_RESULT_SUCCESSFUL_COMPLETION);
+        }
+        else {
+            bvlc_send_result(portParams, &sin,
+                BVLC_RESULT_WRITE_BROADCAST_DISTRIBUTION_TABLE_NAK);
+        }
+        /* not an NPDU */
+        npdu_len = 0;
+        break;
+
+    case BVLC_READ_BROADCAST_DIST_TABLE:
+        dbMessage(DBD_ALL, DB_ERROR, "BVLC: Received Read-BDT.");
+        /* Upon receipt of a BVLL Read-Broadcast-Distribution-Table
+           message, a BBMD shall load the contents of its BDT into a BVLL
+           Read-Broadcast-Distribution-Table-Ack message and send it to the
+           originating device. If the BBMD is unable to perform the
+           read of its BDT, it shall return a BVLC-Result message to the
+           originating device with a result code of X'0020' indicating that
+           the read attempt has failed. */
+        if (bvlc_send_bdt(portParams, &sin) <= 0) {
+            bvlc_send_result(portParams, &sin,
+                BVLC_RESULT_READ_BROADCAST_DISTRIBUTION_TABLE_NAK);
+        }
+        /* not an NPDU */
+        npdu_len = 0;
+        break;
+
+    case BVLC_READ_BROADCAST_DIST_TABLE_ACK:
+        dbMessage(DBD_ALL, DB_ERROR, "BVLC: Received Read-BDT-Ack.");
+        /* FIXME: complete the code for client side read */
+        /* not an NPDU */
+        npdu_len = 0;
+        break;
+
+    case BVLC_FORWARDED_NPDU:
+        /* If the message arrived via directed broadcast,
+           or if the source is a device located on the same IP subnet,
+           a situation which can occur if two or more BBMDs are installed on the same IP subnet,
+           it was also received by the other devices on the BBMD's subnet.
+           In this case the BBMD merely retransmits the message directly to each foreign device currently in the BBMD's FDT.
+
+           Otherwise the message arrived via a unicast transmission and it has not yet been
+           received by the other devices on the BBMD's subnet. In this case,
+           the message is sent to the devices on the BBMD's subnet using the
+           B/IP broadcast address as well as to each foreign device
+           currently in the BBMD's FDT
+
+           A BBMD on a subnet with no other
+           BACnet devices may omit the broadcast using the B/IP
+           broadcast address. The method by which a BBMD determines whether
+           or not other BACnet devices are present is a local matter. */
+
+            if (npdu_len < 6) {
+                return 0;
+            }
+
+        /* decode the 4 byte original address and 2 byte port */
+        sbuf.processed = 4;
+        bits_sbuf_to_ipAddr_port( 
+            &sbuf, 
+            &original_sin.sin_addr,
+            &original_sin.sin_port);
+        
+        // is this a valid address?
+        if(original_sin.sin_addr.s_addr == 0 || original_sin.sin_addr.s_addr == 0xffffffff)
+        {
+            dbMessage(DBD_BBMD,
+                DB_ERROR,
+                "BVLL: Illegal address detected in BLVC %u.",
+                original_sin.sin_addr.s_addr);
+            return 0 ;
+        }
+
+        dbMessage(DBD_BBMD, DB_INFO, "BVLL: Received Forwarded-NPDU from %s:%d.",
+            inet_ntoa(original_sin.sin_addr), ntohs(original_sin.sin_port));
+
+        npdu_len -= 6;
+
+        /*  Broadcast locally if received via unicast from a BDT member */
+        if (bvlc_bdt_member_mask_is_unicast(portParams, &sin)) {
+            dest.sin_addr.s_addr = bip_get_broadcast_ipAddr(portParams);
+            dest.sin_port = portParams->datalink.bipParams.nwoPort;
+            dbMessage(DBD_BBMD, DB_INFO, "BVLL: Received unicast from BDT member, re-broadcasting locally to %s:%d.",
+                inet_ntoa(dest.sin_addr), ntohs(dest.sin_port));
+            bvlc_send_mpdu(portParams, &dest, &npdu[0], npdu_len + 4 + 6);
+        }
+
+        /* Distribute to Foreign Devices, use the original addr from the BVLC for src */
+        dest.sin_addr.s_addr = original_sin.sin_addr.s_addr;
+        dest.sin_port = original_sin.sin_port;
+        bvlc_fdt_forward_npdu(
+            portParams,
+            &dest,
+            &npdu[4 + 6],
+            max_npdu - (4 + 6),
+            npdu_len,
+            false);
+
+        dbMessage(DBD_BBMD, DB_INFO, "BVLL: Received Forwarded-NPDU from %s:%d.",
+            inet_ntoa(dest.sin_addr), ntohs(dest.sin_port));
+        bvlc_internet_to_bacnet_mac_address(src, &dest);
+
+        if (npdu_len < max_npdu) {
+            /* shift the buffer to return a valid PDU */
+        	memmove(npdu, &npdu[4 + 6], npdu_len);
+        }
+        else {
+            /* ignore packets that are too large */
+            /* clients should check my max-apdu first */
+            npdu_len = 0;
+        }
+        break;
+
+    case BVLC_REGISTER_FOREIGN_DEVICE:
+        /* Upon receipt of a BVLL Register-Foreign-Device message, a BBMD
+           shall start a timer with a value equal to the Time-to-Live
+           parameter supplied plus a fixed grace period of 30 seconds. If,
+           within the period during which the timer is active, another BVLL
+           Register-Foreign-Device message from the same device is received,
+           the timer shall be reset and restarted. If the time expires
+           without the receipt of another BVLL Register-Foreign-Device
+           message from the same foreign device, the FDT entry for this
+           device shall be cleared. */
+            if (npdu_len < 2) {
+                return 0;
+            }
+        (void)decode_unsigned16(&npdu[4], &time_to_live);
+        if (bvlc_register_foreign_device(portParams, &sin, time_to_live)) {
+            bvlc_send_result(portParams, &sin, BVLC_RESULT_SUCCESSFUL_COMPLETION);
+        }
+        else {
+            bvlc_send_result(
+                portParams,
+                &sin,
+                BVLC_RESULT_REGISTER_FOREIGN_DEVICE_NAK);
+            dbMessage(DBD_ALL, DB_ERROR, "BVLC: Failed to Register a Foreign Device.");
+        }
+        /* not an NPDU */
+        npdu_len = 0;
+        break;
+
+    case BVLC_READ_FOREIGN_DEVICE_TABLE:
+        dbMessage(DBD_ALL, DB_INFO, "BVLC: Received Read-FDT.");
+        /* Upon receipt of a BVLL Read-Foreign-Device-Table message, a
+           BBMD shall load the contents of its FDT into a BVLL Read-
+           Foreign-Device-Table-Ack message and send it to the originating
+           device. If the BBMD is unable to perform the read of its FDT,
+           it shall return a BVLC-Result message to the originating device
+           with a result code of X'0040' indicating that the read attempt has
+           failed. */
+        if (bvlc_send_fdt(portParams, &sin) <= 0) {
+            bvlc_send_result(portParams, &sin,
+                BVLC_RESULT_READ_FOREIGN_DEVICE_TABLE_NAK);
+        }
+        /* not an NPDU */
+        npdu_len = 0;
+        break;
+
+    case BVLC_READ_FOREIGN_DEVICE_TABLE_ACK:
+        dbMessage(DBD_ALL, DB_INFO, "BVLC: Received Read-FDT-Ack.\n");
+        /* FIXME: complete the code for client side read */
+        /* not an NPDU */
+        npdu_len = 0;
+        break;
+
+    case BVLC_DELETE_FOREIGN_DEVICE_TABLE_ENTRY:
+        dbMessage(DBD_ALL, DB_INFO, "BVLC: Received Delete-FDT-Entry.");
+        /* Upon receipt of a BVLL Delete-Foreign-Device-Table-Entry
+           message, a BBMD shall search its foreign device table for an entry
+           corresponding to the B/IP address supplied in the message. If an
+           entry is found, it shall be deleted and the BBMD shall return a
+           BVLC-Result message to the originating device with a result code
+           of X'0000'. Otherwise, the BBMD shall return a BVLCResult
+           message to the originating device with a result code of X'0050'
+           indicating that the deletion attempt has failed. */
+        sbuf.processed = 4;
+        // if (bvlc_delete_foreign_device(portParams, &npdu[4])) {
+        if (bvlc_delete_foreign_device(portParams, &sbuf)) {
+            bvlc_send_result(portParams, &sin, BVLC_RESULT_SUCCESSFUL_COMPLETION);
+        }
+        else {
+            bvlc_send_result(portParams, &sin, BVLC_RESULT_DELETE_FOREIGN_DEVICE_TABLE_ENTRY_NAK);
+        }
+        /* not an NPDU */
+        npdu_len = 0;
+        break;
+
+    case BVLC_DISTRIBUTE_BROADCAST_TO_NETWORK:
+        dbMessage(DBD_BBMD, DB_INFO, "BVLL: Received Distribute-Broadcast-to-Network from %s:%d.",
+            inet_ntoa(sin.sin_addr), ntohs(sin.sin_port));
+        /* Upon receipt of a BVLL Distribute-Broadcast-To-Network message
+           from a foreign device, the receiving BBMD shall transmit a
+           BVLL Forwarded-NPDU message on its local IP subnet using the
+           local B/IP broadcast address as the destination address. In
+           addition, a Forwarded-NPDU message shall be sent to each entry
+           in its BDT as described in the case of the receipt of a
+           BVLL Original-Broadcast-NPDU as well as directly to each foreign
+           device currently in the BBMD's FDT except the originating
+           node. If the BBMD is unable to perform the forwarding function,
+           it shall return a BVLC-Result message to the foreign device
+           with a result code of X'0060' indicating that the forwarding
+           attempt was unsuccessful */
+
+        // broadcast on local subnet. 
+        // ...unless we are doing a NAT
+        if (!portParams->datalink.bipParams.BVLC_NAT_Handling)
+        {
+            bvlc_broadcast_npdu(portParams, &sin, &npdu[4], max_npdu - 4, npdu_len);
+        }
+
+        // distribute to FDT and BDT. 
+        bvlc_bdt_forward_npdu(portParams, &sin, &npdu[4], max_npdu - 4, npdu_len, false);
+        bvlc_fdt_forward_npdu(portParams, &sin, &npdu[4], max_npdu - 4, npdu_len, false);
+
+#ifdef karg 
+        // for the rest I disagree with Karg (npdu_len = 0 ). We actually do want this call to bbmd_receive to succeed
+        // to that our application layer gets a chance to process the message too...
+        /* not an NPDU */
+        npdu_len = 0;
+#else // karg        
+
+        // we filter broadcasts from ourselves. Thus we cannot depend on the above broadcast to local subnet to arrive 'back' here. Therefore
+        // we have to manipulate that distribute b'cast into an original b'cast as if just received on a regular IP port, and we need 
+        bvlc_internet_to_bacnet_mac_address(src, &sin);
+        if (npdu_len < max_npdu) {
+            /* shift the buffer to return a valid PDU */
+        	memmove(npdu, &npdu[4], npdu_len);
+        }
+        else {
+            /* ignore packets that are too large */
+            /* clients should check my max-apdu first */
+            panic();
+            npdu_len = 0;
+        }
+#endif // karg
+        break;
+
+    case BVLC_ORIGINAL_UNICAST_NPDU:
+    {
+        char tstr[100];
+        dbMessage(DBD_BBMD, DB_INFO, "BVLL: Received Original-Unicast-NPDU from %s",
+            IPAddr_Port_ToString(tstr, &sin.sin_addr, sin.sin_port));
+    }
+        if ((sin.sin_addr.s_addr == bip_get_addr(portParams)) &&
+            (sin.sin_port == portParams->datalink.bipParams.nwoPort)) {
+            /* ignore messages from me */
+            npdu_len = 0;
+        }
+        else if (portParams->datalink.bipParams.BVLC_NAT_Handling &&
+            (sin.sin_addr.s_addr == portParams->datalink.bipParams.BVLC_Global_Address.sin_addr.s_addr) &&
+            (sin.sin_port == portParams->datalink.bipParams.BVLC_Global_Address.sin_port)) {
+            /* If the BBMD is behind a NAT router, the router forwards packets from
+               global IP and BACnet port to us. */
+            npdu_len = 0;
+        }
+        else {
+            bvlc_internet_to_bacnet_mac_address(src, &sin);
+            if (npdu_len < max_npdu) {
+                /* shift the buffer to return a valid PDU */
+                for (i = 0; i < npdu_len; i++) {
+                    npdu[i] = npdu[4 + i];
+                }
+            }
+            else {
+                /* ignore packets that are too large */
+                /* clients should check my max-apdu first */
+                npdu_len = 0;
+            }
+        }
+        break;
+
+    case BVLC_ORIGINAL_BROADCAST_NPDU:
+        if (portParams->datalink.bipParams.BVLC_NAT_Handling)
+        {
+            dbMessage(DBD_ALL, DB_INFO, "BVLC: Due to NAT mode, ignoring incoming local broadcasts.");
+            return 0;
+        }
+        else
+        {
+            char tstr[100];
+            dbMessage(DBD_BBMD, DB_INFO, "BVLL: Received Original-Broadcast-NPDU from %s",
+                IPAddr_Port_ToString(tstr, &sin.sin_addr, sin.sin_port));
+            // dbMessage(DBD_ALL, DB_INFO, "BVLC: Received Original-Broadcast-NPDU.");
+            /* Upon receipt of a BVLL Original-Broadcast-NPDU message,
+               a BBMD shall construct a BVLL Forwarded-NPDU message and
+               send it to each IP subnet in its BDT with the exception
+               of its own. The B/IP address to which the Forwarded-NPDU
+               message is sent is formed by inverting the broadcast
+               distribution mask in the BDT entry and logically ORing it
+               with the BBMD address of the same entry. This process
+               produces either the directed broadcast address of the remote
+               subnet or the unicast address of the BBMD on that subnet
+               depending on the contents of the broadcast distribution
+               mask. See J.4.3.2.. In addition, the received BACnet NPDU
+               shall be sent directly to each foreign device currently in
+               the BBMD's FDT also using the BVLL Forwarded-NPDU message. */
+            bvlc_internet_to_bacnet_mac_address(src, &sin);
+            if (npdu_len < max_npdu) {
+                /* shift the buffer to return a valid PDU */
+                for (i = 0; i < npdu_len; i++) {
+                    npdu[i] = npdu[4 + i];
+                }
+                /* if BDT or FDT entries exist, Forward the NPDU */
+                bvlc_bdt_forward_npdu(portParams, &sin, &npdu[0], max_npdu, npdu_len, true);
+                bvlc_fdt_forward_npdu(portParams, &sin, &npdu[0], max_npdu, npdu_len, true);
+            }
+            else {
+                /* ignore packets that are too large */
+                npdu_len = 0;
+            }
+        }
+        break;
+
+    default:
+        panic();
+        break;
+    }
+
+    return npdu_len;
+}
+
+
+static void bvlc_ipAddr_port_to_internet_address(
+struct sockaddr_in *sin,    /* source address in network order */
+    uint32_t ipAddr,
+    uint16_t port)
+{
+    /* returns the BACnet source address */
+
+    memcpy(&sin->sin_addr.s_addr, &ipAddr, 4);
+    memcpy(&sin->sin_port, &port, 2);
+}
+
+
+static int SendMPDU(const PORT_SUPPORT *portParams, const BACNET_BVLC_FUNCTION function, const uint32_t nHostAddr, const uint16_t nPort, const DLCB *dlcb )
+{
+    uint8_t mtu[MAX_LPDU_IP];
+    struct sockaddr_in bvlc_dest = { 0 };
+    uint16_t BVLC_length;
+    uint16_t mtu_len;
+
+    mtu[0] = BVLL_TYPE_BACNET_IP;
+    mtu[1] = (uint8_t)function;
+
+#if 0
+    // no longer a gateway, now a router...
+    if (function == BVLC_FORWARDED_NPDU) {
+        // insert the original source address, in this gateway demo, it is us.
+        BVLC_length = (uint16_t) pdu_len + 10 /*inclusive */;
+        dbMessage(DBD_NETWORK_LAYER, DB_NOTE, "Sending forwarded NPDU to : ");
+        dbMessage(DBD_ALL, DB_ERROR, "todo, with the change to bvlc_fdt_forward_npdu(), we don't use this anymore. Postponing removal decision todo 3");
+    } else {
+        BVLC_length = (uint16_t) pdu_len + 4 /*inclusive */;
+        // dbMessage(DBD_NETWORK_LAYER, DB_NOTE, "Sending other     NPDU to : ");
+    }
+#else
+    BVLC_length = (uint16_t)dlcb->optr + 4; /*inclusive */
+#endif
+
+    bvlc_dest.sin_addr.s_addr = nHostAddr;
+    bvlc_dest.sin_port = nPort;
+
+    mtu_len = 2;
+    mtu_len += (uint16_t)encode_unsigned16(&mtu[mtu_len], BVLC_length);
+
+#if 0
+    // no longer a gateway, now a router...
+    if (function == BVLC_FORWARDED_NPDU) {
+        // insert the original source address, in this gateway implementation, it is us.
+        uint16_t myPort = portParams->datalink.bipParams.nwoPort ;
+        struct in_addr myAddress;
+        myAddress.s_addr = bip_get_addr(portParams);
+        mtu_len += bvlc_encode_bip_address(&mtu[mtu_len], &myAddress, myPort );
+    }
+#endif
+
+
+    memcpy(&mtu[mtu_len], dlcb->Handler_Transmit_Buffer, dlcb->optr );
+    mtu_len += (uint16_t)dlcb->optr;
+
+    return bvlc_send_mpdu(portParams, &bvlc_dest, mtu, mtu_len);
+}
+
+#if ( BACDL_FD == 1 )
+void fd_send_npdu(
+    const PORT_SUPPORT *datalink,
+    const DLCB *dlcb)
+{
+    struct in_addr address;
+    uint16_t port;
+
+    if (dlcb->bacnetPath.localMac.len == 0) {
+        /* if we are a foreign device */
+            // mtu[1] = BVLC_DISTRIBUTE_BROADCAST_TO_NETWORK;
+            // address.s_addr = Remote_BBMD.sin_addr.s_addr;
+            // port = Remote_BBMD.sin_port;
+            dbMessage(DBD_ALL, DB_INFO, "FD: Sent Distribute-Broadcast-to-Network.");
+            SendMPDU( datalink, BVLC_DISTRIBUTE_BROADCAST_TO_NETWORK,
+                datalink->datalink.bipParams.fd_ipep.sin_addr.s_addr,
+                datalink->datalink.bipParams.fd_ipep.sin_port,
+                dlcb );
+    }
+#if 0
+    // I do not see this use-case
+    else if ((destPath->glAdr.net > 0) && (destPath->glAdr.mac.len == 0)) {
+        /* net > 0 and net < 65535 are network specific broadcast if len = 0 */
+        if (destPath->localMac.len == 6) {
+            /* remote broadcast */
+            bvlc_decode_bip_address(&destPath->localMac.bytes[0], &address, &port);
+            dbMessage(DBD_ALL, DB_INFO, "m0034 - FD: Sending Original-Broadcast-NPDU.");
+            rc = SendMPDU(portParams, BVLC_ORIGINAL_BROADCAST_NPDU, address.s_addr, port, pdu, pdu_len);
+        }
+        else {
+            // address.s_addr = bip_get_broadcast_ipAddr();
+            // port = bip_get_port();
+            dbMessage(DBD_ALL, DB_INFO, "m0035 - FD: Sending Original-Broadcast-NPDU.");
+            rc = SendMPDU(portParams, BVLC_ORIGINAL_BROADCAST_NPDU, bip_get_broadcast_ipAddr(portParams), portParams->datalink.bipParams.nwoPort,
+             pdu, pdu_len);
+        }
+        // mtu[1] = BVLC_ORIGINAL_BROADCAST_NPDU;
+    }
+#endif
+    else if (dlcb->bacnetPath.localMac.len == 6) {
+        /* valid unicast */
+        bits_bacnet_mac_to_ipAddr_port(&dlcb->bacnetPath.localMac, &address, &port);
+
+        // mtu[1] = BVLC_ORIGINAL_UNICAST_NPDU;
+        dbMessage(DBD_BBMD, DB_INFO, "FD: Sending Original-Unicast-NPDU.");
+        SendMPDU(datalink, BVLC_ORIGINAL_UNICAST_NPDU, address.s_addr, port, dlcb );
+    }
+    else {
+        /* invalid address */
+        panic();
+    }
+    dlcb_free(dlcb);
+}
+#endif
+
+
+/** Send a BBMD packet out the BACnet/IP socket (Annex J)
+ *
+ * @param dest - destination address
+ * @param npci_data - network information
+ * @param pdu - any data to be sent - may be null
+ * @param pdu_len - number of bytes of data
+ *
+ * @return returns number of bytes sent on success, negative number on failure
+ */
+void bbmd_send_npdu(
+    PORT_SUPPORT* datalink,
+    const DLCB *dlcb )
+{
+    /* addr and port in network format */
+    struct in_addr address;
+    uint16_t port;
+
+    /* handle various broadcasts: */
+    /* localMac.len = 0 is a broadcast address */
+    /* net = 0 indicates local, net = 65535 indicates global */
+    if (dlcb->bacnetPath.localMac.len == 0) {
+        if (datalink->datalink.bipParams.BVLC_NAT_Handling)
+        {
+            dbMessage(DBD_ALL, DB_INFO, "BVLC: Due to NAT mode, not sending local broadcasts.");
+        }
+        else
+        {
+            dbMessage(DBD_BBMD, DB_NORMAL_TRAFFIC, "BVLL: Sent Original-Broadcast-NPDU to %s", BACnetMacAddrToString(&dlcb->bacnetPath.localMac));
+
+            SendMPDU(datalink, BVLC_ORIGINAL_BROADCAST_NPDU, bip_get_broadcast_ipAddr(datalink),
+                datalink->datalink.bipParams.nwoPort,
+            dlcb );
+        }
+
+        struct sockaddr_in myAddr;
+        bvlc_ipAddr_port_to_internet_address(&myAddr, bip_get_addr( datalink ), 
+            datalink->datalink.bipParams.nwoPort);
+
+        // now, we may also have a populated FD table - we need to send broadcasts as forwarded messages to these too
+        bvlc_fdt_forward_npdu( datalink, &myAddr, dlcb->Handler_Transmit_Buffer, datalink->max_lpdu, dlcb->optr, true);
+    }
+#if 0
+    // I do not see this use-case
+    else if ((destPath->glAdr.net > 0) && (destPath->glAdr.mac.len == 0)) {
+        /* net > 0 and net < 65535 are network specific broadcast if len = 0 */
+        if (destPath->localMac.len == 6) {
+            /* remote broadcast */
+            bvlc_decode_bip_address(&destPath->localMac.bytes[0], &address, &port);
+            dbMessage(DBD_ALL, DB_INFO, "m0034 - BVLC: Sending Original-Broadcast-NPDU.");
+            rc = SendMPDU(portParams, BVLC_ORIGINAL_BROADCAST_NPDU, address.s_addr, port, pdu, pdu_len);
+        } else {
+            // address.s_addr = bip_get_broadcast_ipAddr();
+            // port = bip_get_port();
+            dbMessage(DBD_ALL, DB_INFO, "m0035 - BVLC: Sending Original-Broadcast-NPDU.");
+            rc = SendMPDU(portParams, BVLC_ORIGINAL_BROADCAST_NPDU, bip_get_broadcast_ipAddr(portParams), portParams->datalink.bipParams.nwoPort, pdu, pdu_len);
+        }
+        // mtu[1] = BVLC_ORIGINAL_BROADCAST_NPDU;
+    }
+#endif
+    else if (dlcb->bacnetPath.localMac.len == 6) {
+        /* valid unicast */
+        bits_bacnet_mac_to_ipAddr_port(&dlcb->bacnetPath.localMac, &address, &port);
+        // bvlc_decode_bip_address(&dlcb->route.bacnetPath.localMac.bytes[0], &address, &port);
+
+        // mtu[1] = BVLC_ORIGINAL_UNICAST_NPDU;
+        dbMessage(DBD_BBMD, DB_INFO, "BBMD: Sending Original-Unicast-NPDU.");
+        SendMPDU( datalink, BVLC_ORIGINAL_UNICAST_NPDU, address.s_addr, port, dlcb );
+    }
+    else {
+        /* invalid address */
+        panic();
+        //rc = -1;
+    }
+
+    dlcb_free(dlcb);
+}
+#endif
+
+
+#if ( BACDL_FD == 1 )
+
+/***********************************************
+ * Functions to register us as a foreign device.
+ ********************************************* */
+
+/** Encode foreign device registration message
+ *
+ * @param pdu - bytes for encoding the message
+ *                       in network byte order.
+ * @param time_to_live_seconds - Lease time to use when registering.
+ * @return Number of bytes encoded) on success,
+ *         or 0 if no encoding occurred.
+ */
+static int bvlc_encode_register_foreign_device(
+    uint8_t * pdu,
+    uint16_t time_to_live_seconds)
+{
     int len = 0;
-    uint16_t offset = 0;
-    BACNET_IP_FOREIGN_DEVICE_TABLE_ENTRY *fdt_entry = NULL;
-    uint16_t entry_count = 0;
-    uint16_t length = 0;
 
-    /* count the number of entries */
-    entry_count = bvlc_foreign_device_table_valid_count(fdt_list);
-    length = 4 + (entry_count * BACNET_IP_FDT_ENTRY_SIZE);
-    if (pdu && (pdu_size >= length)) {
-        bytes_encoded = bvlc_encode_header(
-            pdu, pdu_size, BVLC_READ_FOREIGN_DEVICE_TABLE_ACK, length);
-        if (bytes_encoded == 4) {
-            offset = 4;
-            /* encode the entries */
-            fdt_entry = fdt_list;
-            while (fdt_entry) {
-                if (fdt_entry->valid) {
-                    len = bvlc_encode_foreign_device_table_entry(
-                        &pdu[offset], pdu_size - offset, fdt_entry);
-                    offset += len;
-                }
-                fdt_entry = fdt_entry->next;
-            }
-            bytes_encoded = (int)length;
-        }
+    if (pdu) {
+        pdu[0] = BVLL_TYPE_BACNET_IP;
+        pdu[1] = BVLC_REGISTER_FOREIGN_DEVICE;
+        /* The 2-octet BVLC Length field is the length, in octets,
+           of the entire BVLL message, including the two octets of the
+           length field itself, most significant octet first. */
+        encode_unsigned16(&pdu[2], 6);
+        encode_unsigned16(&pdu[4], time_to_live_seconds);
+        len = 6;
     }
 
-    return bytes_encoded;
+    return len;
 }
 
-/**
- * @brief Decode Read-Foreign-Device-Table-Ack
- *
- * @param pdu - buffer from which to decode the message
- * @param pdu_len - length of the buffer that needs decoding
- * @param fdt_list - list of FDT entries
- *
- * @return number of bytes decoded
- */
-int bvlc_decode_read_foreign_device_table_ack(uint8_t *pdu,
-    uint16_t pdu_len,
-    BACNET_IP_FOREIGN_DEVICE_TABLE_ENTRY *fdt_list)
-{
-    int bytes_consumed = 0;
-    int len = 0;
-    uint16_t offset = 0;
-    uint16_t pdu_bytes = 0;
-    BACNET_IP_FOREIGN_DEVICE_TABLE_ENTRY *fdt_entry = NULL;
 
-    if (pdu && (pdu_len >= BACNET_IP_FDT_ENTRY_SIZE)) {
-        fdt_entry = fdt_list;
-        while (fdt_entry) {
-            pdu_bytes = pdu_len - offset;
-            if (pdu_bytes >= BACNET_IP_BDT_ENTRY_SIZE) {
-                len = bvlc_decode_foreign_device_table_entry(
-                    &pdu[offset], pdu_bytes, fdt_entry);
-                if (len > 0) {
-                    fdt_entry->valid = true;
-                }
-                offset += len;
-            } else {
-                fdt_entry->valid = false;
-            }
-            fdt_entry = fdt_entry->next;
+/** Register as a foreign device with the indicated BBMD.
+ * @param bbmd_address - IPv4 address (long) of BBMD to register with,
+ *                       in network byte order.
+ * @param bbmd_port - Network port of BBMD, in network byte order
+ * @param time_to_live_seconds - Lease time to use when registering.
+ * @return Positive number (of bytes sent) on success,
+ *         0 if no registration request is sent, or
+ *         -1 if registration fails.
+ */
+int bvlc_register_with_bbmd(
+    PORT_SUPPORT *portParams,
+    //uint32_t bbmd_address,
+    //uint16_t bbmd_port,
+    uint16_t time_to_live_seconds)
+{
+    uint8_t mtu[MAX_LPDU_IP] = { 0 };
+    uint16_t mtu_len = 0;
+    int retval = 0;
+
+    /* Store the BBMD address and port so that we
+       won't broadcast locally. */
+    // Remote_BBMD.sin_addr.s_addr = bbmd_address;
+    // Remote_BBMD.sin_port = bbmd_port;
+
+    /* In order for their broadcasts to get here,
+       we need to register our address with the remote BBMD using
+       Write Broadcast Distribution Table, or
+       register with the BBMD as a Foreign Device */
+    mtu_len =
+        (uint16_t)bvlc_encode_register_foreign_device(&mtu[0],
+        time_to_live_seconds);
+
+    retval = bvlc_send_mpdu(portParams, &portParams->datalink.bipParams.fd_ipep, /*&Remote_BBMD,*/  &mtu[0], mtu_len);
+    return retval;
+}
+#endif
+
+/** Note any BVLC_RESULT code, or NAK the BVLL message in the unsupported cases.
+ * Use this handler when you are not a BBMD.
+ * Sets the BVLC_Function_Code in case it is needed later.
+ *
+ * @param sout  [in] Socket address to send any NAK back to.
+ * @param npdu  [in] The received buffer.
+ * @param received_bytes [in] How many bytes in npdu[].
+ * @return Non-zero BVLC_RESULT_ code if we sent a response (NAK) to this
+ *      BVLC message.  If zero, may need further processing.
+ */
+int bvlc_for_non_bbmd2(
+    const PORT_SUPPORT *portParams,
+    struct sockaddr_in *sout,
+    uint8_t * npdu,
+    uint16_t received_bytes)
+{
+    BACNET_BVLC_RESULT result_code = BVLC_RESULT_SUCCESSFUL_COMPLETION;
+
+    BVLC_Function_Code = (BACNET_BVLC_FUNCTION)npdu[1];       /* The BVLC function */
+    switch (BVLC_Function_Code) {
+    case BVLC_RESULT:
+        if (received_bytes >= 6) {
+            uint16_t tresult_code;
+            /* This is the result of our foreign device registration */
+                (void) decode_unsigned16(&npdu[4], &tresult_code);
+                BVLC_Result_Code = (BACNET_BVLC_RESULT) tresult_code;
+            dbMessage(DBD_ALL, DB_DEBUG, "BVLC: Result Code=%d", BVLC_Result_Code);
+            /* But don't send any response */
+            result_code = BVLC_RESULT_SUCCESSFUL_COMPLETION;
         }
-        bytes_consumed = (int)offset;
+        break;
+    case BVLC_WRITE_BROADCAST_DISTRIBUTION_TABLE:
+        result_code = BVLC_RESULT_WRITE_BROADCAST_DISTRIBUTION_TABLE_NAK;
+        break;
+    case BVLC_READ_BROADCAST_DIST_TABLE:
+        result_code = BVLC_RESULT_READ_BROADCAST_DISTRIBUTION_TABLE_NAK;
+        break;
+        /* case BVLC_READ_BROADCAST_DIST_TABLE_ACK: */
+    case BVLC_REGISTER_FOREIGN_DEVICE:
+        result_code = BVLC_RESULT_REGISTER_FOREIGN_DEVICE_NAK;
+        break;
+    case BVLC_READ_FOREIGN_DEVICE_TABLE:
+        result_code = BVLC_RESULT_READ_FOREIGN_DEVICE_TABLE_NAK;
+        break;
+        /* case BVLC_READ_FOREIGN_DEVICE_TABLE_ACK: */
+    case BVLC_DELETE_FOREIGN_DEVICE_TABLE_ENTRY:
+        result_code = BVLC_RESULT_DELETE_FOREIGN_DEVICE_TABLE_ENTRY_NAK;
+        break;
+    case BVLC_DISTRIBUTE_BROADCAST_TO_NETWORK:
+        result_code = BVLC_RESULT_DISTRIBUTE_BROADCAST_TO_NETWORK_NAK;
+        break;
+
+    case BVLC_FORWARDED_NPDU:
+        /*
+        J.2.5 Forwarded-NPDU: Purpose
+        This BVLL message is used in broadcast messages from a BBMD as well as in messages forwarded to registered foreign
+        devices. It contains the source address of the original node, [BTC] or if NAT is being used, the address with which the original node is
+        accessed, as well as the original BACnet NPDU.
+         **/
+        break ;
+        
+        /* case BVLC_ORIGINAL_UNICAST_NPDU: */
+        /* case BVLC_ORIGINAL_BROADCAST_NPDU: */
+        
+    default:
+        break;
+    }
+    
+    if (result_code > 0) {
+        bvlc_send_result(portParams, sout, result_code);
+        dbMessage(DBD_ALL, DB_ERROR, "BVLC: NAK code=%d", result_code);
     }
 
-    return bytes_consumed;
+    return result_code;
 }
 
-/**
- * @brief J.2.9 Delete-Foreign-Device-Table-Entry: encode
+/** Returns the last BVLL Result we received, either as the result of a BBMD
+ * request we sent, or (if not a BBMD or Client), from trying to register
+ * as a foreign device.
  *
- * This message is used to delete an entry from the Foreign-Device-Table.
- *
- * @param pdu - buffer to store the encoding
- * @param pdu_size - size of the buffer to store encoding
- * @param ip_address - FDT Entry IP address
- *
- * @return number of bytes encoded
- *
- * BVLC Type:                   1-octet   X'81'   BVLL for BACnet/IP
- * BVLC Function:               1-octet   X'08'   Delete-Foreign-Device
- * BVLC Length:                 2-octets  X'000A' Length of the BVLL message
- * FDT Entry:                   6-octets  The FDT entry is the B/IP address
- *                                        of the table entry to be deleted.
+ * @return BVLC_RESULT_SUCCESSFUL_COMPLETION on success,
+ * BVLC_RESULT_REGISTER_FOREIGN_DEVICE_NAK if registration failed,
+ * or one of the other codes (if we are a BBMD).
  */
-int bvlc_encode_delete_foreign_device(
-    uint8_t *pdu, uint16_t pdu_size, BACNET_IP_ADDRESS *ip_address)
+BACNET_BVLC_RESULT bvlc_get_last_result(
+    void)
 {
-    int bytes_encoded = 0;
-    const uint16_t length = 0x000A;
-    uint16_t offset = 0;
-
-    if (pdu && (pdu_size >= length)) {
-        bytes_encoded = bvlc_encode_header(
-            pdu, pdu_size, BVLC_DELETE_FOREIGN_DEVICE_TABLE_ENTRY, length);
-        if (bytes_encoded == 4) {
-            offset = 4;
-            if (ip_address) {
-                bytes_encoded += bvlc_encode_address(
-                    &pdu[offset], pdu_size - offset, ip_address);
-            }
-        }
-    }
-
-    return bytes_encoded;
+    return BVLC_Result_Code;
 }
 
-/**
- * @brief Decode the BVLC Delete-Foreign-Device message
+
+
+/** Returns the current BVLL Function Code we are processing.
+ * We have to store this higher layer code for when the lower layers
+ * need to know what it is, especially to differentiate between
+ * BVLC_ORIGINAL_UNICAST_NPDU and BVLC_ORIGINAL_BROADCAST_NPDU.
  *
- * @param pdu - buffer from which to decode the message
- * @param pdu_len - length of the buffer that needs decoding
- * @param ip_address - FDT Entry IP address
- *
- * @return number of bytes decoded
+ * @return A BVLC_ code, such as BVLC_ORIGINAL_UNICAST_NPDU.
  */
-int bvlc_decode_delete_foreign_device(
-    uint8_t *pdu, uint16_t pdu_len, BACNET_IP_ADDRESS *ip_address)
+BACNET_BVLC_FUNCTION bvlc_get_function_code(
+    void)
 {
-    int bytes_consumed = 0;
-    const uint16_t length = BIP_ADDRESS_MAX;
-
-    if (pdu && (pdu_len >= length)) {
-        if (ip_address) {
-            bvlc_decode_address(&pdu[0], pdu_len, ip_address);
-        }
-        bytes_consumed = (int)length;
-    }
-
-    return bytes_consumed;
+    return BVLC_Function_Code;
 }
 
-/**
- * @brief J.2.10 Distribute-Broadcast-To-Network: encode
- *
- * This message provides a mechanism whereby a foreign device may cause
- * a BBMD to broadcast a message on all IP subnets in the BBMD's BDT.
- *
- * @param pdu - buffer to store the encoding
- * @param pdu_size - size of the buffer to store encoding
- * @param npdu - BACnet NPDU from Originating Device buffer
- * @param npdu_len - size of the BACnet NPDU buffer
- *
- * @return number of bytes encoded
- *
- * BVLC Type:                   1-octet   X'81'   BVLL for BACnet/IP
- * BVLC Function:               1-octet   X'09'   Original-Unicast-NPDU
- * BVLC Length:                 2-octets  L       Length of the BVLL message
- * BACnet NPDU from Originating Device:  Variable length
- */
-int bvlc_encode_distribute_broadcast_to_network(
-    uint8_t *pdu, uint16_t pdu_size, uint8_t *npdu, uint16_t npdu_len)
-{
-    int bytes_encoded = 0;
-    uint16_t length = 1 + 1 + 2;
-    uint16_t i = 0;
 
-    length += npdu_len;
-    if (pdu && (pdu_size >= length)) {
-        bytes_encoded = bvlc_encode_header(
-            pdu, pdu_size, BVLC_DISTRIBUTE_BROADCAST_TO_NETWORK, length);
-        if (bytes_encoded == 4) {
-            if (npdu && (npdu_len > 0)) {
-                for (i = 0; i < npdu_len; i++) {
-                    pdu[4 + i] = npdu[i];
-                }
-            }
-            bytes_encoded = (int)length;
-        }
+#if ( BACDL_BBMD == 1)
+#if defined(BBMD_ENABLED) && BBMD_ENABLED
+/** Get handle to broadcast distribution table (BDT).
+ *
+ *  Do not modify the table using the returned pointer,
+ *  use the dedicated functions instead.
+ *  (For optimization the table is not copied to caller)
+ *
+ * @param table [out] - broadcast distribution table
+ *
+ * @return Number of valid entries in the table or -1 on error.
+ */
+//int bvlc_get_bdt_local(
+//    const BBMD_TABLE_ENTRY** table)
+//{
+//    int count = 0;
+//
+//    if(table == NULL)
+//        return -1;
+//
+//    *table = BBMD_Table;
+//
+//    for (count = 0; count < MAX_BBMD_ENTRIES; ++count) {
+//        if (!datalink.bipParams.BBMD_Table[count].valid) {
+//            break;
+//        }
+//    }
+//
+//    return count;
+//}
+
+/** Invalidate all entries in the broadcast distribution table (BDT).
+ */
+void bbmd_clear_bdt_local(
+    PORT_SUPPORT *portParams)
+{
+    int i = 0;
+    for (i = 0; i < MAX_BBMD_ENTRIES; ++i) {
+        portParams->datalink.bipParams.BBMD_Table[i].valid = false;
+        portParams->datalink.bipParams.BBMD_Table[i].dest_address.s_addr = 0;
+        portParams->datalink.bipParams.BBMD_Table[i].dest_port = 0;
+        portParams->datalink.bipParams.BBMD_Table[i].broadcast_mask.s_addr = 0;
     }
 
-    return bytes_encoded;
+    // BDT needs at least one entry - us!
+#if 0 // todo 4 - i want to think this through a bit..
+    uint32_t addr = bip_get_addr(portParams);
+    uint16_t port = portParams->datalink.bipParams.nwoPort;
+    uint32_t mask = 0xffffffff;
+
+    if (portParams->datalink.bipParams.BVLC_NAT_Handling == true)
+    {
+        addr = portParams->datalink.bipParams.BVLC_Global_Address.sin_addr.s_addr;
+        port = portParams->datalink.bipParams.BVLC_Global_Address.sin_port;
+    }
+
+    memcpy(&portParams->datalink.bipParams.BBMD_Table[0].dest_address.s_addr, &addr, 4);
+    memcpy(&portParams->datalink.bipParams.BBMD_Table[0].dest_port, &port, 2);
+    memcpy(&portParams->datalink.bipParams.BBMD_Table[0].broadcast_mask.s_addr, &mask, 4);
+    portParams->datalink.bipParams.BBMD_Table[0].valid = true;
+#endif
 }
 
-/**
- * @brief Decode the BVLC Original-Broadcast-NPDU message
- *
- * @param pdu - buffer from which to decode the message
- * @param pdu_len - length of the buffer that needs decoding
- * @param npdu - buffer to copy the decoded BACnet NDPU
- * @param npdu_size - size of the buffer for the decoded BACnet NPDU
- * @param npdu_len - decoded length of the BACnet NPDU
- *
- * @return number of bytes decoded
- */
-int bvlc_decode_distribute_broadcast_to_network(uint8_t *pdu,
-    uint16_t pdu_len,
-    uint8_t *npdu,
-    uint16_t npdu_size,
-    uint16_t *npdu_len)
+
+void bbmd_clear_fdt_local(PORT_SUPPORT *portParams)
 {
-    int bytes_consumed = 0;
-    uint16_t i = 0;
-
-    if (pdu && npdu && (pdu_len > 0) && (pdu_len <= npdu_size)) {
-        for (i = 0; i < pdu_len; i++) {
-            npdu[i] = pdu[i];
-        }
+    for (int i = 0; i < MAX_FD_ENTRIES; ++i) {
+        portParams->datalink.bipParams.FD_Table[i].valid = false;
     }
-    if (npdu_len) {
-        *npdu_len = pdu_len;
-    }
-    bytes_consumed = (int)pdu_len;
-
-    return bytes_consumed;
 }
 
-/**
- * @brief J.2.11 Original-Unicast-NPDU: Encode
+
+/** Add new entry to broadcast distribution table.
  *
- * This message is used to send directed NPDUs to another
- * B/IP device or router.
- *
- * @param pdu - buffer to store the encoding
- * @param pdu_size - size of the buffer to store encoding
- * @param npdu - BACnet NPDU buffer
- * @param npdu_len - size of the BACnet NPDU buffer
- *
- * @return number of bytes encoded
- *
- * BVLC Type:     1-octet   X'81'   BVLL for BACnet/IPv4
- * BVLC Function: 1-octet   X'0A'   Original-Unicast-NPDU
- * BVLC Length:   2-octets  L       Length L, in octets, of the BVLL message
- * BACnet NPDU:   Variable length
+ * @return True if the new entry was added successfully.
  */
-int bvlc_encode_original_unicast(
-    uint8_t *pdu, uint16_t pdu_size, uint8_t *npdu, uint16_t npdu_len)
+bool bvlc_add_bdt_entry_local(
+    PORT_SUPPORT *portParams,
+    BBMD_TABLE_ENTRY* entry)
 {
-    int bytes_encoded = 0;
-    uint16_t length = 4;
-    uint16_t i = 0;
+    bool found = false;
+    int i = 0;
 
-    length += npdu_len;
-    if (pdu && (pdu_size >= length)) {
-        bytes_encoded = bvlc_encode_header(
-            pdu, pdu_size, BVLC_ORIGINAL_UNICAST_NPDU, length);
-        if (bytes_encoded == 4) {
-            if (npdu && (npdu_len > 0)) {
-                for (i = 0; i < npdu_len; i++) {
-                    pdu[4 + i] = npdu[i];
-                }
-                bytes_encoded = (int)length;
-            }
-        }
-    }
-
-    return bytes_encoded;
-}
-
-/**
- * @brief Decode the BVLC Original-Unicast-NPDU message, after decoding header
- *
- * @param pdu - buffer from which to decode the message
- * @param pdu_len - length of the buffer that needs decoding
- * @param npdu - BACnet NPDU buffer
- * @param npdu_size - size of the buffer for the decoded BACnet NPDU
- * @param npdu_len - decoded length of the BACnet NPDU buffer
- *
- * @return number of bytes decoded
- */
-int bvlc_decode_original_unicast(uint8_t *pdu,
-    uint16_t pdu_len,
-    uint8_t *npdu,
-    uint16_t npdu_size,
-    uint16_t *npdu_len)
-{
-    int bytes_consumed = 0;
-    uint16_t i = 0;
-
-    if (pdu && npdu && (pdu_len > 0) && (pdu_len <= npdu_size)) {
-        for (i = 0; i < pdu_len; i++) {
-            npdu[i] = pdu[i];
-        }
-    }
-    if (npdu_len) {
-        *npdu_len = pdu_len;
-    }
-    bytes_consumed = (int)pdu_len;
-
-    return bytes_consumed;
-}
-
-/**
- * @brief J.2.12 Original-Broadcast-NPDU: Encode
- *
- * This message is used by B/IP devices and routers which are
- * not foreign devices to broadcast NPDUs on a B/IP network
- *
- * @param pdu - buffer to store the encoding
- * @param pdu_size - size of the buffer to store encoding
- * @param npdu - BACnet NPDU buffer
- * @param npdu_len - size of the BACnet NPDU buffer
- *
- * @return number of bytes encoded
- *
- * BVLC Type:     1-octet   X'81'   BVLL for BACnet/IPv4
- * BVLC Function: 1-octet   X'0B'   Original-Broadcast-NPDU
- * BVLC Length:   2-octets  L       Length of the BVLL message
- * BACnet NPDU:   Variable length
- */
-int bvlc_encode_original_broadcast(
-    uint8_t *pdu, uint16_t pdu_size, uint8_t *npdu, uint16_t npdu_len)
-{
-    int bytes_encoded = 0;
-    uint16_t length = 4;
-    uint16_t i = 0;
-
-    length += npdu_len;
-    if (pdu && (pdu_size >= length)) {
-        bytes_encoded = bvlc_encode_header(
-            pdu, pdu_size, BVLC_ORIGINAL_BROADCAST_NPDU, length);
-        if (bytes_encoded == 4) {
-            if (npdu && (npdu_len > 0)) {
-                for (i = 0; i < npdu_len; i++) {
-                    pdu[4 + i] = npdu[i];
-                }
-                bytes_encoded = (int)length;
-            }
-        }
-    }
-
-    return bytes_encoded;
-}
-
-/**
- * @brief Decode the BVLC Original-Broadcast-NPDU message
- *
- * @param pdu - buffer from which to decode the message
- * @param pdu_len - length of the buffer that needs decoding
- * @param npdu - buffer to copy the decoded BACnet NDPU
- * @param npdu_size - size of the buffer for the decoded BACnet NPDU
- * @param npdu_len - decoded length of the BACnet NPDU
- *
- * @return number of bytes decoded
- */
-int bvlc_decode_original_broadcast(uint8_t *pdu,
-    uint16_t pdu_len,
-    uint8_t *npdu,
-    uint16_t npdu_size,
-    uint16_t *npdu_len)
-{
-    int bytes_consumed = 0;
-    uint16_t i = 0;
-
-    if (pdu && npdu && (pdu_len > 0) && (pdu_len <= npdu_size)) {
-        for (i = 0; i < pdu_len; i++) {
-            npdu[i] = pdu[i];
-        }
-    }
-    if (npdu_len) {
-        *npdu_len = pdu_len;
-    }
-    bytes_consumed = (int)pdu_len;
-
-    return bytes_consumed;
-}
-
-/**
- * @brief J.2.13 Secure-BVLL: encode
- *
- * This message is used to secure BVLL messages that do not contain NPDUs.
- * Its use is described in Clause 24.
- *
- * @param pdu - buffer to store the encoding
- * @param pdu_size - size of the buffer to store encoding
- * @param sbuf - Security Wrapper buffer
- * @param sbuf_len - size of the Security Wrapper buffer
- *
- * @return number of bytes encoded
- *
- * BVLC Type:                   1-octet   X'81'   BVLL for BACnet/IP
- * BVLC Function:               1-octet   X'0C'   Secure-BVLL
- * BVLC Length:                 2-octets  L       Length of the BVLL message
- * Security Wrapper:            Variable length
- */
-int bvlc_encode_secure_bvll(
-    uint8_t *pdu, uint16_t pdu_size, uint8_t *sbuf, uint16_t sbuf_len)
-{
-    int bytes_encoded = 0;
-    uint16_t length = 1 + 1 + 2;
-    uint16_t i = 0;
-
-    length += sbuf_len;
-    if (pdu && (pdu_size >= length)) {
-        bytes_encoded =
-            bvlc_encode_header(pdu, pdu_size, BVLC_SECURE_BVLL, length);
-        if (bytes_encoded == 4) {
-            if (sbuf && sbuf_len) {
-                for (i = 0; i < sbuf_len; i++) {
-                    pdu[4 + i] = sbuf[i];
-                }
-            }
-            bytes_encoded = (int)length;
-        }
-    }
-
-    return bytes_encoded;
-}
-
-/**
- * @brief Decode the BVLC Secure-BVLL message
- *
- * @param pdu - buffer from which to decode the message
- * @param pdu_len - length of the buffer that needs decoding
- * @param sbuf - Security Wrapper buffer
- * @param sbuf_size - size of the Security Wrapper buffer
- * @param sbuf_len - number of bytes decoded into the Security Wrapper buffer
- *
- * @return number of bytes decoded
- */
-int bvlc_decode_secure_bvll(uint8_t *pdu,
-    uint16_t pdu_len,
-    uint8_t *sbuf,
-    uint16_t sbuf_size,
-    uint16_t *sbuf_len)
-{
-    int bytes_consumed = 0;
-    uint16_t i = 0;
-
-    if (pdu && sbuf && (pdu_len > 0) && (pdu_len <= sbuf_size)) {
-        for (i = 0; i < pdu_len; i++) {
-            sbuf[i] = pdu[i];
-        }
-    }
-    if (sbuf_len) {
-        *sbuf_len = pdu_len;
-    }
-    bytes_consumed = (int)pdu_len;
-
-    return bytes_consumed;
-}
-
-/**
- * @brief Encode the BVLC Address
- *
- * Data link layer addressing between B/IPv4 nodes consists of a 32-bit
- * IPv4 address followed by a two-octet UDP port number (both of which
- * shall be transmitted with the most significant octet first). This
- * address shall be referred to as a B/IPv4 address.
- *
- * @param pdu - buffer to store the encoding
- * @param pdu_size - size of the buffer to store encoding
- * @param bip_address - B/IPv4 address
- *
- * @return number of bytes encoded
- */
-int bvlc_encode_address(
-    uint8_t *pdu, uint16_t pdu_size, const BACNET_IP_ADDRESS *bip_address)
-{
-    int bytes_encoded = 0;
-    uint16_t length = BIP_ADDRESS_MAX;
-    unsigned i = 0;
-
-    if (pdu && (pdu_size >= length) && bip_address) {
-        for (i = 0; i < IP_ADDRESS_MAX; i++) {
-            pdu[i] = bip_address->address[i];
-        }
-        encode_unsigned16(&pdu[IP_ADDRESS_MAX], bip_address->port);
-        bytes_encoded = (int)length;
-    }
-
-    return bytes_encoded;
-}
-
-/**
- * @brief Decode the BVLC Address
- *
- * Data link layer addressing between B/IPv4 nodes consists of a 32-bit
- * IPv4 address followed by a two-octet UDP port number (both of which
- * shall be transmitted with the most significant octet first). This
- * address shall be referred to as a B/IPv4 address.
- *
- * @param pdu - buffer from which to decode the message
- * @param pdu_len - length of the buffer that needs decoding
- * @param bip_address - B/IPv4 address
- *
- * @return number of bytes decoded
- */
-int bvlc_decode_address(
-    uint8_t *pdu, uint16_t pdu_len, BACNET_IP_ADDRESS *bip_address)
-{
-    int bytes_consumed = 0;
-    uint16_t length = BIP_ADDRESS_MAX;
-    unsigned i = 0;
-
-    if (pdu && (pdu_len >= length) && bip_address) {
-        for (i = 0; i < IP_ADDRESS_MAX; i++) {
-            bip_address->address[i] = pdu[i];
-        }
-        decode_unsigned16(&pdu[IP_ADDRESS_MAX], &bip_address->port);
-        bytes_consumed = (int)length;
-    }
-
-    return bytes_consumed;
-}
-
-/**
- * @brief Copy the BVLC Address
- *
- * Data link layer addressing between B/IPv4 nodes consists of a 32-bit
- * IPv4 address followed by a two-octet UDP port number (both of which
- * shall be transmitted with the most significant octet first). This
- * address shall be referred to as a B/IPv4 address.
- *
- * @param dst - B/IPv4 address that will be filled with src
- * @param src - B/IPv4 address that will be copied into dst
- *
- * @return true if the address was copied
- */
-bool bvlc_address_copy(BACNET_IP_ADDRESS *dst, const BACNET_IP_ADDRESS *src)
-{
-    bool status = false;
-    unsigned int i = 0;
-
-    if (src && dst) {
-        for (i = 0; i < IP_ADDRESS_MAX; i++) {
-            dst->address[i] = src->address[i];
-        }
-        dst->port = src->port;
-        status = true;
-    }
-
-    return status;
-}
-
-/**
- * @brief Compare the BVLC Address
- *
- * Data link layer addressing between B/IPv4 nodes consists of a 32-bit
- * IPv4 address followed by a two-octet UDP port number (both of which
- * shall be transmitted with the most significant octet first). This
- * address shall be referred to as a B/IPv4 address.
- *
- * @param dst - B/IPv4 address that will be compared to src
- * @param src - B/IPv4 address that will be compared to dst
- *
- * @return true if the addresses are different
- */
-bool bvlc_address_different(
-    const BACNET_IP_ADDRESS *dst, const BACNET_IP_ADDRESS *src)
-{
-    bool status = false;
-    unsigned int i = 0;
-
-    if (src && dst) {
-        for (i = 0; i < IP_ADDRESS_MAX; i++) {
-            if (dst->address[i] != src->address[i]) {
-                status = true;
-            }
-        }
-        if (dst->port != src->port) {
-            status = true;
-        }
-    }
-
-    return status;
-}
-
-/**
- * @brief Apply the Broadcast Distribution Mask to an address
- * @param dst - B/IPv4 address that will be masked
- * @param src - B/IPv4 address that will be ORed with the mask
- * @param mask - B/IPv4 broadcast distribution mask
- * @return true if the addresses are different
- */
-bool bvlc_address_mask(BACNET_IP_ADDRESS *dst,
-    const BACNET_IP_ADDRESS *src,
-    const BACNET_IP_BROADCAST_DISTRIBUTION_MASK *mask)
-{
-    bool status = false;
-    unsigned int i = 0;
-
-    if (src && dst && mask) {
-        for (i = 0; i < IP_ADDRESS_MAX; i++) {
-            dst->address[i] = src->address[i] | ~mask->address[i];
-        }
-        dst->port = src->port;
-    }
-
-    return status;
-}
-
-/**
- * @brief Set a BVLC Address from 4 octets
- *
- * Data link layer addressing between B/IPv4 nodes consists of a 32-bit
- * IPv4 address followed by a two-octet UDP port number (both of which
- * shall be transmitted with the most significant octet first). This
- * address shall be referred to as a B/IPv4 address.
- *
- * @param addr - B/IPv4 address that be set
- * @param addr0 - B/IPv4 address octet
- * @param addr1 - B/IPv4 address octet
- * @param addr2 - B/IPv4 address octet
- * @param addr3 - B/IPv4 address octet
- *
- * @return true if the address is set
- */
-bool bvlc_address_set(BACNET_IP_ADDRESS *addr,
-    uint8_t addr0,
-    uint8_t addr1,
-    uint8_t addr2,
-    uint8_t addr3)
-{
-    bool status = false;
-
-    if (addr) {
-        addr->address[0] = addr0;
-        addr->address[1] = addr1;
-        addr->address[2] = addr2;
-        addr->address[3] = addr3;
-        status = true;
-    }
-
-    return status;
-}
-
-/**
- * @brief Get a BVLC Address into 4 octets
- *
- * Data link layer addressing between B/IPv4 nodes consists of a 128-bit
- * IPv4 address followed by a two-octet UDP port number (both of which
- * shall be transmitted with the most significant octet first). This
- * address shall be referred to as a B/IPv4 address.
- *
- * @param addr - B/IPv4 address that be set
- * @param addr0 - B/IPv4 address octet
- * @param addr1 - B/IPv4 address octet
- * @param addr2 - B/IPv4 address octet
- * @param addr3 - B/IPv4 address octet
- *
- * @return true if the address is set
- */
-bool bvlc_address_get(BACNET_IP_ADDRESS *addr,
-    uint8_t *addr0,
-    uint8_t *addr1,
-    uint8_t *addr2,
-    uint8_t *addr3)
-{
-    bool status = false;
-
-    if (addr) {
-        if (addr0) {
-            *addr0 = addr->address[0];
-        }
-        if (addr1) {
-            *addr1 = addr->address[1];
-        }
-        if (addr2) {
-            *addr2 = addr->address[2];
-        }
-        if (addr3) {
-            *addr3 = addr->address[3];
-        }
-        status = true;
-    }
-
-    return status;
-}
-
-/**
- * @brief Convert IPv4 Address from ASCII
- *
- * IPv4 addresses are represented as four octets, separated by dots/periods,
- * of four decimal digits.
- *
- * Adapted from uiplib.c uIP TCP/IP stack and the Contiki operating system.
- * Thank you, Adam Dunkel, and the Swedish Institute of Computer Science.
- *
- * @param addr - B/IPv4 address that is set
- * @param addrstr - B/IPv4 address in ASCII dotted decimal format
- *
- * @return true if a valid address was set
- */
-bool bvlc_address_from_ascii(BACNET_IP_ADDRESS *addr, const char *addrstr)
-{
-    uint16_t tmp = 0;
-    char c = 0;
-    unsigned char i = 0, j = 0;
-    uint8_t charsread = 0;
-
-    if (!addr) {
+    if (entry == NULL)
         return false;
-    }
-    if (!addrstr) {
-        return false;
-    }
 
-    for (i = 0; i < 4; ++i) {
-        j = 0;
-        do {
-            c = *addrstr;
-            ++j;
-            if (j > 4) {
-                return false;
-            }
-            if ((c == '.') || (c == 0) || (c == ' ')) {
-                addr->address[i] = (uint8_t) tmp;
-                tmp = 0;
-            } else if ((c >= '0') && (c <= '9')) {
-                tmp = (tmp * 10) + (c - '0');
-		if (tmp > UINT8_MAX) {
-                    return false;
-		}
-            } else {
-                return false;
-            }
-            ++addrstr;
-            ++charsread;
-        } while ((c != '.') && (c != 0) && (c != ' '));
+    /* Find first empty slot */
+    for (i = 0; i < MAX_BBMD_ENTRIES; ++i) {
+        if (!portParams->datalink.bipParams.BBMD_Table[i].valid) {
+            found = true;
+            break;
+        }
+
+        /* Make sure that we are not adding a duplicate */
+        if (portParams->datalink.bipParams.BBMD_Table[i].dest_address.s_addr == entry->dest_address.s_addr &&
+            portParams->datalink.bipParams.BBMD_Table[i].broadcast_mask.s_addr == entry->broadcast_mask.s_addr &&
+            portParams->datalink.bipParams.BBMD_Table[i].dest_port == entry->dest_port) {
+            return false;
+        }
     }
+    /* BDT changed! Save backup to file */
+    bvlc_bdt_backup_local();
+    // debug_printf("BVLC: BBMD Table entries cleared.\n");
+    if (!found)
+        return false;
+    bvlc_bdt_backup_local();
+    /* Copy new entry to the empty slot */
+    portParams->datalink.bipParams.BBMD_Table[i] = *entry;
+    portParams->datalink.bipParams.BBMD_Table[i].valid = true;
 
     return true;
 }
 
-/**
- * @brief Convert IPv4 Address and UDP port number from ASCII
- *
- * @param addr - B/IPv4 address and port that is set
- * @param addrstr - B/IPv4 address in ASCII dotted decimal format
- * @param portstr - B/IPv4 port in 16-bit ASCII hex compressed format
- *
- * @return true if a valid address was set
- */
-bool bvlc_address_port_from_ascii(
-    BACNET_IP_ADDRESS *addr, const char *addrstr, const char *portstr)
-{
-    bool status = false;
-    unsigned long port = 0;
 
-    if (bvlc_address_from_ascii(addr, addrstr)) {
-        port = strtoul(portstr, NULL, 0);
-        if (port <= UINT16_MAX) {
-            addr->port = port;
-            status = true;
-        }
+/** Enable NAT handling and set the global IP address
+ * @param [in] - Global IP address visible to peer BBMDs and foreign devices
+ */
+//void bvlc_set_global_address_for_nat(const struct sockaddr_in* addr)
+//{
+//    BVLC_Global_Address = *addr;
+//    BVLC_NAT_Handling = true;
+//}
+//
+///** Disable NAT handling.
+// */
+//void bvlc_disable_nat(void)
+//{
+//    BVLC_NAT_Handling = false;
+//    BVLC_Global_Address.sin_addr.s_addr  = 0;
+//    BVLC_Global_Address.sin_port = 0;
+//}
+
+#endif // BBMC_ENABLED 
+
+#if defined(BBMD_ENABLED) && BBMD_ENABLED
+/** Add new entry to broadcast distribution table.
+ *
+ * @return True if the new entry was added successfully.
+ */
+#if 0 // never used
+bool bvlc_add_bdt_entry_local(
+    BBMD_TABLE_ENTRY* entry)
+{
+    bool found = false;
+    int i = 0;
+
+    if(entry == NULL) {
+        return false;
     }
 
-    return status;
-}
-
-/**
- * @brief Convert IPv4 Address from network byte order 32-bit value
- *
- * @param dst - B/IPv4 address that is set
- * @param addr - B/IPv4 address in network byte order 32-bit value
- */
-void bvlc_address_from_network(BACNET_IP_ADDRESS *dst, uint32_t addr)
-{
-    if (dst) {
-        /* copy most significant octet first, network byte order, big endian */
-        encode_unsigned32(&dst->address[0], addr);
-    }
-}
-
-/**
- * @brief Convert IPv4 Address to local BACnet address
- *
- * Data link layer addressing between B/IPv4 nodes consists of a 32-bit
- * IPv4 address followed by a two-octet UDP port number (both of which
- * shall be transmitted with the most significant octet first).
- * This address shall be referred to as a B/IPv4 address.
- *
- * @param dst - BACnet MAC address that is set
- * @param addr - B/IPv4 address in network byte order 32-bit value
- * @return true if a valid address was set
- */
-bool bvlc_ip_address_to_bacnet_local(
-    BACNET_ADDRESS *addr, BACNET_IP_ADDRESS *ipaddr)
-{
-    bool status = false;
-
-    if (addr && ipaddr) {
-        /* most significant octet first, network byte order, big endian */
-        addr->mac[0] = ipaddr->address[0];
-        addr->mac[1] = ipaddr->address[1];
-        addr->mac[2] = ipaddr->address[2];
-        addr->mac[3] = ipaddr->address[3];
-        encode_unsigned16(&addr->mac[4], ipaddr->port);
-        addr->mac[6] = 0;
-        addr->mac_len = 6;
-        /* local only, no routing */
-        addr->net = 0;
-        /* no SLEN/DLEN */
-        addr->len = 0;
-        /* no SADR/DADR */
-        addr->adr[0] = 0;
-        addr->adr[1] = 0;
-        addr->adr[2] = 0;
-        addr->adr[3] = 0;
-        addr->adr[4] = 0;
-        addr->adr[5] = 0;
-        addr->adr[6] = 0;
-        status = true;
-    }
-
-    return status;
-}
-
-/**
- * @brief Convert IPv4 Address from local BACnet address
- * @param addr - BACnet MAC address that is converted into B/IPv4 address/port
- * @param ipaddr - B/IPv4 address that is set
- * @return true if a valid address was set
- */
-bool bvlc_ip_address_from_bacnet_local(
-    BACNET_IP_ADDRESS *ipaddr, BACNET_ADDRESS *addr)
-{
-    bool status = false;
-
-    if (addr && ipaddr) {
-        if (addr->mac_len == 6) {
-            /* most significant octet first, network byte order, big endian */
-            ipaddr->address[0] = addr->mac[0];
-            ipaddr->address[1] = addr->mac[1];
-            ipaddr->address[2] = addr->mac[2];
-            ipaddr->address[3] = addr->mac[3];
-            decode_unsigned16(&addr->mac[4], &ipaddr->port);
-            status = true;
-        }
-    }
-
-    return status;
-}
-
-/**
- * @brief Convert IPv4 Address to remote BACnet address
- * @param dst - BACnet MAC address that is set
- * @param dnet - network number of BACnet address
- * @param addr - B/IPv4 address in network byte order 32-bit value
- * @return true if a valid address was set
- */
-bool bvlc_ip_address_to_bacnet_remote(
-    BACNET_ADDRESS *addr, uint16_t dnet, BACNET_IP_ADDRESS *ipaddr)
-{
-    bool status = false;
-
-    if (addr && ipaddr) {
-        /* don't modify local MAC or MAC len */
-        /* add DNET/SNET */
-        addr->net = dnet;
-        /* no SADR/DADR */
-        /* most significant octet first, network byte order, big endian */
-        addr->adr[0] = ipaddr->address[0];
-        addr->adr[1] = ipaddr->address[1];
-        addr->adr[2] = ipaddr->address[2];
-        addr->adr[3] = ipaddr->address[3];
-        encode_unsigned16(&addr->adr[4], ipaddr->port);
-        addr->adr[6] = 0;
-        /* set SLEN/DLEN for BACnet/IPv4 */
-        addr->len = 6;
-        status = true;
-    }
-
-    return status;
-}
-
-/**
- * @brief Convert IPv4 Address from remote BACnet address
- * @param addr - BACnet MAC address that is converted into B/IPv4 address/port
- * @param dnet - network number of BACnet address
- * @param ipaddr - B/IPv4 address that is set
- * @return true if a valid address was set
- */
-bool bvlc_ip_address_from_bacnet_remote(
-    BACNET_IP_ADDRESS *ipaddr, uint16_t *dnet, BACNET_ADDRESS *addr)
-{
-    bool status = false;
-
-    if (addr && ipaddr) {
-        if (addr->len == 6) {
-            /* most significant octet first, network byte order, big endian */
-            ipaddr->address[0] = addr->adr[0];
-            ipaddr->address[1] = addr->adr[1];
-            ipaddr->address[2] = addr->adr[2];
-            ipaddr->address[3] = addr->adr[3];
-            decode_unsigned16(&addr->adr[4], &ipaddr->port);
-            if (dnet) {
-                *dnet = addr->net;
-            }
-            status = true;
-        }
-    }
-
-    return status;
-}
-
-/**
- * @brief Encode the BVLC Broadcast Distribution Mask
- *
- * The Broadcast Distribution Mask is a 4-octet field that
- * indicates how broadcast messages are to be distributed on
- * the IP subnet served by the BBMD.
- *
- * @param pdu - buffer to store the encoding
- * @param pdu_size - size of the buffer to store encoding
- * @param bd_mask - Broadcast Distribution Mask
- *
- * @return number of bytes encoded
- */
-int bvlc_encode_broadcast_distribution_mask(uint8_t *pdu,
-    uint16_t pdu_size,
-    BACNET_IP_BROADCAST_DISTRIBUTION_MASK *bd_mask)
-{
-    int bytes_encoded = 0;
-    unsigned i = 0;
-
-    if (pdu && (pdu_size >= BACNET_IP_BDT_MASK_SIZE) && bd_mask) {
-        for (i = 0; i < IP_ADDRESS_MAX; i++) {
-            pdu[i] = bd_mask->address[i];
-        }
-        bytes_encoded = BACNET_IP_BDT_MASK_SIZE;
-    }
-
-    return bytes_encoded;
-}
-
-/**
- * @brief Decode the BVLC Broadcast Distribution Mask
- *
- * The Broadcast Distribution Mask is a 4-octet field that
- * indicates how broadcast messages are to be distributed on
- * the IP subnet served by the BBMD.
- *
- * @param pdu - buffer from which to decode the message
- * @param pdu_len - length of the buffer that needs decoding
- * @param bd_mask - Broadcast Distribution Mask
- *
- * @return number of bytes decoded
- */
-int bvlc_decode_broadcast_distribution_mask(uint8_t *pdu,
-    uint16_t pdu_len,
-    BACNET_IP_BROADCAST_DISTRIBUTION_MASK *bd_mask)
-{
-    int bytes_consumed = 0;
-    unsigned i = 0;
-
-    if (pdu && (pdu_len >= BACNET_IP_BDT_MASK_SIZE)) {
-        if (bd_mask) {
-            for (i = 0; i < IP_ADDRESS_MAX; i++) {
-                bd_mask->address[i] = pdu[i];
-            }
-        }
-        bytes_consumed = (int)BACNET_IP_BDT_MASK_SIZE;
-    }
-
-    return bytes_consumed;
-}
-
-/**
- * @brief Encode the BVLC Broadcast Distribution Table Entry
- *
- * Each BDT entry consists of the 6-octet B/IP address of a
- * BBMD followed by a 4-octet field called the broadcast distribution mask
- * that indicates how broadcast messages are to be distributed on the
- * IP subnet served by the BBMD
- *
- * @param pdu - buffer to store the encoding
- * @param pdu_size - size of the buffer to store encoding
- * @param bdt_entry - BDT Entry
- *
- * @return number of bytes encoded
- */
-int bvlc_encode_broadcast_distribution_table_entry(uint8_t *pdu,
-    uint16_t pdu_size,
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *bdt_entry)
-{
-    int bytes_encoded = 0;
-    int len = 0;
-    int offset = 0;
-
-    if (pdu && (pdu_size >= BACNET_IP_BDT_ENTRY_SIZE)) {
-        if (bdt_entry) {
-            len = bvlc_encode_address(
-                &pdu[offset], pdu_size - offset, &bdt_entry->dest_address);
-            if (len > 0) {
-                offset += len;
-                len = bvlc_encode_broadcast_distribution_mask(&pdu[offset],
-                    pdu_size - offset, &bdt_entry->broadcast_mask);
-            }
-            if (len > 0) {
-                offset += len;
-                bytes_encoded = offset;
-            }
-        }
-    }
-
-    return bytes_encoded;
-}
-
-/**
- * @brief Decode the BVLC Broadcast Distribution Table Entry
- *
- * Each BDT entry consists of the 6-octet B/IP address of a
- * BBMD followed by a 4-octet field called the broadcast distribution mask
- * that indicates how broadcast messages are to be distributed on the
- * IP subnet served by the BBMD
- *
- * @param pdu - buffer from which to decode the message
- * @param pdu_len - length of the buffer that needs decoding
- * @param bdt_entry - BDT Entry
- *
- * @return number of bytes decoded
- */
-int bvlc_decode_broadcast_distribution_table_entry(uint8_t *pdu,
-    uint16_t pdu_len,
-    BACNET_IP_BROADCAST_DISTRIBUTION_TABLE_ENTRY *bdt_entry)
-{
-    int bytes_consumed = 0;
-    int len = 0;
-    int offset = 0;
-
-    if (pdu && (pdu_len >= BACNET_IP_BDT_ENTRY_SIZE)) {
-        if (bdt_entry) {
-            len = bvlc_decode_address(
-                &pdu[offset], pdu_len - offset, &bdt_entry->dest_address);
-            if (len > 0) {
-                offset += len;
-                len = bvlc_decode_broadcast_distribution_mask(
-                    &pdu[offset], pdu_len - offset, &bdt_entry->broadcast_mask);
-            }
-            if (len > 0) {
-                offset += len;
-                bytes_consumed = offset;
-            }
-        }
-    }
-
-    return bytes_consumed;
-}
-
-/**
- * @brief Encode the BVLC Foreign Device Table Entry
- *
- * Each BDT entry consists of the 6-octet B/IP address of the registrant;
- * the 2-octet Time-to-Live value supplied at the time of registration;
- * and a 2-octet value representing the number of seconds remaining.
- *
- * @param pdu - buffer to store the encoding
- * @param pdu_size - size of the buffer to store encoding
- * @param fdt_entry - Foreign Device Table (FDT) Entry
- *
- * @return number of bytes encoded
- */
-int bvlc_encode_foreign_device_table_entry(uint8_t *pdu,
-    uint16_t pdu_size,
-    BACNET_IP_FOREIGN_DEVICE_TABLE_ENTRY *fdt_entry)
-{
-    int bytes_encoded = 0;
-    int len = 0;
-    int offset = 0;
-
-    if (pdu && (pdu_size >= BACNET_IP_FDT_ENTRY_SIZE)) {
-        if (fdt_entry) {
-            len = bvlc_encode_address(
-                &pdu[offset], pdu_size - offset, &fdt_entry->dest_address);
-            if (len > 0) {
-                offset += len;
-                len = encode_unsigned16(&pdu[offset], fdt_entry->ttl_seconds);
-            }
-            if (len > 0) {
-                offset += len;
-                len = encode_unsigned16(
-                    &pdu[offset], fdt_entry->ttl_seconds_remaining);
-            }
-            if (len > 0) {
-                offset += len;
-                bytes_encoded = offset;
-            }
-        }
-    }
-
-    return bytes_encoded;
-}
-
-/**
- * @brief Decode the BVLC Foreign Device Table Entry
- *
- * Each BDT entry consists of the 6-octet B/IP address of the registrant;
- * the 2-octet Time-to-Live value supplied at the time of registration;
- * and a 2-octet value representing the number of seconds remaining.
- *
- * @param pdu - buffer from which to decode the message
- * @param pdu_len - length of the buffer that needs decoding
- * @param fdt_entry - Foreign Device Table (FDT) Entry
- *
- * @return number of bytes decoded
- */
-int bvlc_decode_foreign_device_table_entry(uint8_t *pdu,
-    uint16_t pdu_len,
-    BACNET_IP_FOREIGN_DEVICE_TABLE_ENTRY *fdt_entry)
-{
-    int bytes_consumed = 0;
-    int len = 0;
-    int offset = 0;
-
-    if (pdu && (pdu_len >= BACNET_IP_FDT_ENTRY_SIZE)) {
-        if (fdt_entry) {
-            len = bvlc_decode_address(
-                &pdu[offset], pdu_len - offset, &fdt_entry->dest_address);
-            if (len > 0) {
-                offset += len;
-                len = decode_unsigned16(&pdu[offset], &fdt_entry->ttl_seconds);
-            }
-            if (len > 0) {
-                offset += len;
-                len = decode_unsigned16(
-                    &pdu[offset], &fdt_entry->ttl_seconds_remaining);
-            }
-            if (len > 0) {
-                offset += len;
-                bytes_consumed = offset;
-            }
-        }
-    }
-
-    return bytes_consumed;
-}
-
-/**
- * @brief Get a text name for each BVLC result code
- * @param result_code - BVLC result code
- * @return ASCII text name for each BVLC result code or empty string
- */
-const char *bvlc_result_code_name(uint16_t result_code)
-{
-    const char *name = "";
-
-    switch (result_code) {
-        case BVLC_RESULT_SUCCESSFUL_COMPLETION:
-            name = "Successful Completion";
+    /* Find first empty slot */
+    for (i = 0; i < MAX_BBMD_ENTRIES; ++i) {
+        if (!datalink.bipParams.BBMD_Table[i].valid) {
+            found = true;
             break;
-        case BVLC_RESULT_WRITE_BROADCAST_DISTRIBUTION_TABLE_NAK:
-            name= "Write-Broadcast-Distribution-Table NAK";
-            break;
-        case BVLC_RESULT_READ_BROADCAST_DISTRIBUTION_TABLE_NAK:
-            name = "Read-Broadcast-Distribution-Table NAK";
-            break;
-        case BVLC_RESULT_REGISTER_FOREIGN_DEVICE_NAK:
-            name = "Register-Foreign-Device NAK";
-            break;
-        case BVLC_RESULT_READ_FOREIGN_DEVICE_TABLE_NAK:
-            name = "Read-Foreign-Device-Table NAK";
-            break;
-        case BVLC_RESULT_DELETE_FOREIGN_DEVICE_TABLE_ENTRY_NAK:
-            name = "Delete-Foreign-Device-Table-Entry NAK";
-            break;
-        case BVLC_RESULT_DISTRIBUTE_BROADCAST_TO_NETWORK_NAK:
-            name = "Distribute-Broadcast-To-Network NAK";
-            break;
-        default:
-            break;
+        }
+
+        /* Make sure that we are not adding a duplicate */
+        if(datalink.bipParams.BBMD_Table[i].dest_address.s_addr == entry->dest_address.s_addr &&
+           datalink.bipParams.BBMD_Table[i].broadcast_mask.s_addr == entry->broadcast_mask.s_addr &&
+           datalink.bipParams.BBMD_Table[i].dest_port == entry->dest_port) {
+            return false;
+        }
     }
 
-    return name;
+    if(!found) {
+        return false;
+    }
+
+    /* Copy new entry to the empty slot */
+    datalink.bipParams.BBMD_Table[i] = *entry;
+    datalink.bipParams.BBMD_Table[i].valid = true;
+    // debug_printf("BVLC: BBMD Table entry added. %s\n", IPAddr_ToString(tstring, &bb);
+
+    /* BDT changed! Save backup to file */
+    bvlc_bdt_backup_local();
+
+    return true;
 }
+#endif // 0 never used
+
+void bvlc_cleanup(void)
+{
+    //if (routerAppPortParams.datalink.bipParams.socket >= 0) {
+    //    closesocket(routerAppPortParams.datalink.bipParams.socket);
+    // debug_printf("BVLC: NAT Address disabled.\n");
+    //routerAppPortParams.datalink.bipParams.socket = -1;
+#if defined ( _MSC_VER  )
+    WSACleanup();
+#endif
+}
+
+
+#endif // BBMC_ENABLED 
+#endif // BBMC_ENABLED 
+
+#ifdef TEST
+#include <assert.h>
+#include <string.h>
+#include "ctest.h"
+
+/* copy the source internet address to the BACnet address */
+/* FIXME: IPv6? */
+static void bvlc_bacnet_to_internet_address(
+struct sockaddr_in *sin,    /* source address in network order */
+    BACNET_GLOBAL_ADDRESS * src) {
+    /* returns the BACnet source address */
+
+    if (src && sin) {
+        if (src->localMac.len == 6) {
+            memcpy(&sin->sin_addr.s_addr, &src->mac[0], 4);
+            memcpy(&sin->sin_port, &src->mac[4], 2);
+        }
+    }
+
+}
+
+void testBIPAddress(
+    Test * pTest)
+{
+    uint8_t apdu[50] = { 0 };
+    int len = 0, test_len = 0;
+    struct in_addr address;
+    struct in_addr test_address;
+    uint16_t port = 0, test_port = 0;
+
+    address.s_addr = 42;
+    len = bvlc_encode_bip_address(&apdu[0], &address, port);
+    test_len = bvlc_decode_bip_address(&apdu[0], &test_address, &test_port);
+    ct_test(pTest, len == test_len);
+    ct_test(pTest, address.s_addr == test_address.s_addr);
+    ct_test(pTest, port == test_port);
+}
+
+void testInternetAddress(
+    Test * pTest)
+{
+    BACNET_GLOBAL_ADDRESS src;
+    BACNET_GLOBAL_ADDRESS test_src;
+    struct sockaddr_in sin = { 0 };
+    struct sockaddr_in test_sin = { 0 };
+
+    sin.sin_port = htons(0xBAC0);
+    sin.sin_addr.s_addr = inet_addr("192.168.0.1");
+    bvlc_internet_to_bacnet_address(&src, &sin);
+    bvlc_bacnet_to_internet_address(&test_sin, &src);
+    ct_test(pTest, sin.sin_port == test_sin.sin_port);
+    ct_test(pTest, sin.sin_addr.s_addr == test_sin.sin_addr.s_addr);
+}
+
+#ifdef TEST_BVLC
+int main(
+    void)
+{
+    Test *pTest;
+    bool rc;
+
+    pTest = ct_create("BACnet Virtual Link Control", NULL);
+    /* individual tests */
+    rc = ct_addTestFunction(pTest, testBIPAddress);
+    assert(rc);
+    rc = ct_addTestFunction(pTest, testInternetAddress);
+    assert(rc);
+    /* configure output */
+    ct_setStream(pTest, stdout);
+    ct_run(pTest);
+    (void) ct_report(pTest);
+    ct_destroy(pTest);
+
+    return 0;
+}
+
+#endif /* TEST_BBMD */
+#endif /* TEST */

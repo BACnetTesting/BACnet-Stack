@@ -21,22 +21,36 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- *********************************************************************/
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
 #include <stddef.h>
 #include <stdint.h>
 #include <errno.h>
 #include <string.h>
-#include "bacnet/config.h"
+#include "configProj.h"
 #include "bacnet/bacdef.h"
 #include "bacnet/bacdcode.h"
+#include "bacnet/basic/binding//address.h"
+#include "bacnet/basic/tsm/tsm.h"
 #include "bacnet/npdu.h"
 #include "bacnet/apdu.h"
+#include "bacnet/basic/object/device.h"
 #include "bacnet/dcc.h"
 /* some demo stuff needed */
-#include "bacnet/basic/binding/address.h"
-#include "bacnet/basic/tsm/tsm.h"
-#include "bacnet/basic/object/device.h"
-#include "bacnet/datalink/datalink.h"
 #include "bacnet/basic/services.h"
 
 /** @file s_dcc.c  Send a Device Communication Control (DCC) request. */
@@ -52,44 +66,47 @@
  * @return The invokeID of the transmitted message, or 0 on failure.
  */
 
-uint8_t Send_Device_Communication_Control_Request(uint32_t device_id,
-    uint16_t timeDuration, /* 0=optional */
+#ifdef DCC_A
+
+uint8_t Send_Device_Communication_Control_Request(
+    BACNET_ROUTE *dest,
+    DEVICE_OBJECT_DATA *sendingDev,
+    uint32_t device_id,
+    uint16_t timeDuration,      /* 0=optional */
     BACNET_COMMUNICATION_ENABLE_DISABLE state,
     char *password)
-{ /* NULL=optional */
-    BACNET_ADDRESS dest;
-    BACNET_ADDRESS my_address;
+{       /* NULL=optional */
+    BACNET_PATH dest;
+    //BACNET_PATH my_address;
     unsigned max_apdu = 0;
     uint8_t invoke_id = 0;
     bool status = false;
     int len = 0;
     int pdu_len = 0;
-#if PRINT_ENABLED
     int bytes_sent = 0;
-#endif
     BACNET_CHARACTER_STRING password_string;
-    BACNET_NPDU_DATA npdu_data;
+    BACNET_NPCI_DATA npci_data;
 
     /* if we are forbidden to send, don't send! */
-    if (!dcc_communication_enabled()) {
+    if (!dcc_communication_enabled())
         return 0;
-    }
 
     /* is the device bound? */
     status = address_get_by_device(device_id, &max_apdu, &dest);
     /* is there a tsm available? */
-    if (status) {
+    if (status)
         invoke_id = tsm_next_free_invokeID();
-    }
     if (invoke_id) {
         /* encode the NPDU portion of the packet */
-        datalink_get_my_address(&my_address);
-        npdu_encode_npdu_data(&npdu_data, true, MESSAGE_PRIORITY_NORMAL);
-        pdu_len = npdu_encode_pdu(
-            &Handler_Transmit_Buffer[0], &dest, &my_address, &npdu_data);
+        //datalink_get_my_address(&my_address);
+        npdu_setup_npci_data(&npci_data, true, MESSAGE_PRIORITY_NORMAL);
+        pdu_len =
+            npdu_encode_pdu(&Handler_Transmit_Buffer[0], &dest, NULL,
+            &npci_data);
         /* encode the APDU portion of the packet */
         characterstring_init_ansi(&password_string, password);
-        len = dcc_encode_apdu(&Handler_Transmit_Buffer[pdu_len], invoke_id,
+        len =
+            dcc_encode_apdu(&Handler_Transmit_Buffer[pdu_len], invoke_id,
             timeDuration, state, password ? &password_string : NULL);
         pdu_len += len;
         /* will it fit in the sender?
@@ -97,20 +114,16 @@ uint8_t Send_Device_Communication_Control_Request(uint32_t device_id,
            us and the destination, we won't know unless
            we have a way to check for that and update the
            max_apdu in the address binding table. */
-        if ((unsigned)pdu_len < max_apdu) {
+        if ((unsigned) pdu_len < max_apdu) {
             tsm_set_confirmed_unsegmented_transaction(invoke_id, &dest,
-                &npdu_data, &Handler_Transmit_Buffer[0], (uint16_t)pdu_len);
-#if PRINT_ENABLED
-            bytes_sent =
-#endif
-                datalink_send_pdu(
-                    &dest, &npdu_data, &Handler_Transmit_Buffer[0], pdu_len);
-#if PRINT_ENABLED
-            if (bytes_sent <= 0)
-                fprintf(stderr,
-                    "Failed to Send DeviceCommunicationControl Request (%s)!\n",
-                    strerror(errno));
-#endif
+                &npci_data, &Handler_Transmit_Buffer[0], (uint16_t) pdu_len);
+            //bytes_sent =
+            //    datalink_send _pdu(&dest, &npci_data,
+            //    &Handler_Transmit_Buffer[0], pdu_len);
+
+            dest->portParams->SendPdu(dest->portParams, sendingDev, &dest->bacnetPath->localMac, &npci_data, &Handler_Transmit_Buffer[0],
+                pdu_len);
+
         } else {
             tsm_free_invoke_id(invoke_id);
             invoke_id = 0;
@@ -124,3 +137,5 @@ uint8_t Send_Device_Communication_Control_Request(uint32_t device_id,
 
     return invoke_id;
 }
+
+#endif

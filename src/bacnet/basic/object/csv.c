@@ -38,6 +38,7 @@
 #include "bacnet/wp.h"
 #include "bacnet/basic/object/csv.h"
 #include "bacnet/basic/services.h"
+#include "bacnet/basic/service/h_wp.h"
 
 /* number of demo objects */
 #ifndef MAX_CHARACTERSTRING_VALUES
@@ -297,12 +298,14 @@ void CharacterString_Value_Change_Of_Value_Clear(
     }
 }
 
+
 /**
  * @brief For a given object instance-number, loads the value_list with the COV data.
  * @param  object_instance - object-instance number of the object
  * @param  value_list - list of COV data
  * @return  true if the value list is encoded
  */
+#if ( BACNET_SVC_COV_B == 1 )
 bool CharacterString_Value_Encode_Value_List(
     uint32_t object_instance,
     BACNET_PROPERTY_VALUE * value_list)
@@ -322,6 +325,8 @@ bool CharacterString_Value_Encode_Value_List(
 
     return status;
 }
+#endif // #if ( BACNET_SVC_COV_B == 1 )
+
 
 /**
  * For a given object instance-number, return the description.
@@ -356,7 +361,7 @@ bool CharacterString_Value_Description_Set(
     uint32_t object_instance, char *new_descr)
 {
     unsigned index = 0; /* offset from instance lookup */
-    size_t i = 0; /* loop counter */
+    uint16_t i = 0; /* loop counter */
     bool status = false; /* return value */
 
     index = CharacterString_Value_Instance_To_Index(object_instance);
@@ -414,7 +419,7 @@ bool CharacterString_Value_Object_Name(
 bool CharacterString_Value_Name_Set(uint32_t object_instance, char *new_name)
 {
     unsigned index = 0; /* offset from instance lookup */
-    size_t i = 0; /* loop counter */
+    uint16_t i = 0; /* loop counter */
     bool status = false; /* return value */
 
     index = CharacterString_Value_Instance_To_Index(object_instance);
@@ -589,8 +594,9 @@ bool CharacterString_Value_Write_Property(BACNET_WRITE_PROPERTY_DATA *wp_data)
 
     switch (wp_data->object_property) {
         case PROP_PRESENT_VALUE:
-            status = write_property_type_valid(wp_data, &value,
-                BACNET_APPLICATION_TAG_CHARACTER_STRING);
+            status = WPValidateArgType(&value,
+                BACNET_APPLICATION_TAG_CHARACTER_STRING, &wp_data->error_class,
+                &wp_data->error_code);
             if (status) {
                 status = CharacterString_Value_Present_Value_Set(
                     wp_data->object_instance, &value.type.Character_String);
@@ -601,8 +607,8 @@ bool CharacterString_Value_Write_Property(BACNET_WRITE_PROPERTY_DATA *wp_data)
             }
             break;
         case PROP_OUT_OF_SERVICE:
-            status = write_property_type_valid(wp_data, &value,
-                BACNET_APPLICATION_TAG_BOOLEAN);
+            status = WPValidateArgType(&value, BACNET_APPLICATION_TAG_BOOLEAN,
+                &wp_data->error_class, &wp_data->error_code);
             if (status) {
                 CharacterString_Value_Out_Of_Service_Set(
                     wp_data->object_instance, value.type.Boolean);
@@ -625,3 +631,70 @@ bool CharacterString_Value_Write_Property(BACNET_WRITE_PROPERTY_DATA *wp_data)
 
     return status;
 }
+
+#ifdef BAC_TEST
+#include <assert.h>
+#include <string.h>
+#include "ctest.h"
+
+bool WPValidateArgType(BACNET_APPLICATION_DATA_VALUE *pValue,
+    uint8_t ucExpectedTag,
+    BACNET_ERROR_CLASS *pErrorClass,
+    BACNET_ERROR_CODE *pErrorCode)
+{
+    pValue = pValue;
+    ucExpectedTag = ucExpectedTag;
+    pErrorClass = pErrorClass;
+    pErrorCode = pErrorCode;
+
+    return false;
+}
+
+void testCharacterStringValue(Test *pTest)
+{
+    uint8_t apdu[MAX_APDU] = { 0 };
+    int len = 0;
+    uint16_t len_value = 0;
+    uint8_t tag_number = 0;
+    uint16_t decoded_type = 0;
+    uint32_t decoded_instance = 0;
+    BACNET_READ_PROPERTY_DATA rpdata;
+
+    CharacterString_Value_Init();
+    rpdata.application_data = &apdu[0];
+    rpdata.application_data_len = sizeof(apdu);
+    rpdata.object_type = OBJECT_CHARACTERSTRING_VALUE;
+    rpdata.object_instance = 1;
+    rpdata.object_property = PROP_OBJECT_IDENTIFIER;
+    rpdata.array_index = BACNET_ARRAY_ALL;
+    len = CharacterString_Value_Read_Property(&rpdata);
+    ct_test(pTest, len != 0);
+    len = decode_tag_number_and_value(&apdu[0], &tag_number, &len_value);
+    ct_test(pTest, tag_number == BACNET_APPLICATION_TAG_OBJECT_ID);
+    len = decode_object_id(&apdu[len], &decoded_type, &decoded_instance);
+    ct_test(pTest, decoded_type == rpdata.object_type);
+    ct_test(pTest, decoded_instance == rpdata.object_instance);
+
+    return;
+}
+
+#ifdef TEST_CHARACTERSTRING_VALUE
+int main(void)
+{
+    Test *pTest;
+    bool rc;
+
+    pTest = ct_create("BACnet CharacterString Value", NULL);
+    /* individual tests */
+    rc = ct_addTestFunction(pTest, testCharacterStringValue);
+    assert(rc);
+
+    ct_setStream(pTest, stdout);
+    ct_run(pTest);
+    (void)ct_report(pTest);
+    ct_destroy(pTest);
+
+    return 0;
+}
+#endif
+#endif /* BAC_TEST */

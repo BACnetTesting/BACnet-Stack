@@ -21,32 +21,32 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- *********************************************************************/
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-#include "bacnet/config.h"
-#include "bacnet/bacdef.h"
-#include "bacnet/bacdcode.h"
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
 #include "bacnet/bacerror.h"
-#include "bacnet/bacdevobjpropref.h"
 #include "bacnet/apdu.h"
-#include "bacnet/npdu.h"
 #include "bacnet/abort.h"
 #include "bacnet/reject.h"
-#include "bacnet/rp.h"
-/* basic objects, services, TSM, and datalink */
+/* device object has custom handler for all objects */
 #include "bacnet/basic/object/device.h"
-#if (BACNET_PROTOCOL_REVISION >= 17)
-#include "bacnet/basic/object/netport.h"
-#endif
-#include "bacnet/basic/tsm/tsm.h"
 #include "bacnet/basic/services.h"
-#include "bacnet/datalink/datalink.h"
 
 /** @file h_rp.c  Handles Read Property requests. */
+
 
 /** Handler for a ReadProperty Service request.
  * @ingroup DSRP
@@ -63,163 +63,144 @@
  *
  * @param service_request [in] The contents of the service request.
  * @param service_len [in] The length of the service_request.
- * @param src [in] BACNET_ADDRESS of the source of the message
+ * @param src [in] BACNET_PATH of the source of the message
  * @param service_data [in] The BACNET_CONFIRMED_SERVICE_DATA information
  *                          decoded from the APDU header of this message.
  */
-void handler_read_property(uint8_t *service_request,
+void handler_read_property(
+    DEVICE_OBJECT_DATA *pDev,
+    uint8_t *service_request,
     uint16_t service_len,
-    BACNET_ADDRESS *src,
+    BACNET_ROUTE * srcRoute,
     BACNET_CONFIRMED_SERVICE_DATA *service_data)
 {
     BACNET_READ_PROPERTY_DATA rpdata;
-    int len = 0;
-    int pdu_len = 0;
-    int apdu_len = -1;
-    int npdu_len = -1;
-    BACNET_NPDU_DATA npdu_data;
-    bool error = true; /* assume that there is an error */
-    int bytes_sent = 0;
-    BACNET_ADDRESS my_address;
+    int len ;
+    // int pdu_len ;
+    int apdu_len ;
+    int npdu_len ;
+    BACNET_NPCI_DATA npci_data;
+    bool error = true;  /* assume that there is an error */
+    // int bytes_sent = 0;
+//    BACNET_PATH my_address;
+
+    DLCB *dlcb = alloc_dlcb_response('f', &srcRoute->bacnetPath, pDev->datalink->max_lpdu );
+    if (dlcb == NULL) return;
 
     /* configure default error code as an abort since it is common */
+    rpdata.error_class = ERROR_CLASS_OBJECT;
     rpdata.error_code = ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
+
     /* encode the NPDU portion of the packet */
-    datalink_get_my_address(&my_address);
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
-    npdu_len = npdu_encode_pdu(
-        &Handler_Transmit_Buffer[0], src, &my_address, &npdu_data);
-    if (npdu_len <= 0) {
-        /* If 0 or negative, there were problems with the data or encoding. */
-        len = BACNET_STATUS_ABORT;
-    #if PRINT_ENABLED
-            fprintf(stderr, "RP: npdu_encode_pdu error.  Sending Abort!\n");
-    #endif
-    } else if (service_data->segmented_message) {
+    // datalink_get_my_address(&my_address);
+    npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_len =
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &srcRoute->bacnetPath.glAdr, NULL,
+        &npci_data);
+    if (service_data->segmented_message) {
         /* we don't support segmentation - send an abort */
         len = BACNET_STATUS_ABORT;
-#if PRINT_ENABLED
-        fprintf(stderr, "RP: Segmented message.  Sending Abort!\n");
-#endif
-    } else {
-        len = rp_decode_service_request(service_request, service_len, &rpdata);
-    #if PRINT_ENABLED
-        if (len <= 0) {
-            fprintf(stderr, "RP: Unable to decode Request!\n");
-        }
-    #endif
-        if (len < 0) {
-            /* bad decoding - skip to error/reject/abort handling */
-            error = true;
-    #if PRINT_ENABLED
-            fprintf(stderr, "RP: Bad Encoding.\n");
-    #endif
-        } else {
-            /* When the object-type in the Object Identifier parameter
-               contains the value DEVICE and the instance in the 'Object
-               Identifier' parameter contains the value 4194303, the responding
-               BACnet-user shall treat the Object Identifier as if it correctly
-               matched the local Device object. This allows the device instance
-               of a device that does not generate I-Am messages to be
-               determined. */
-            if ((rpdata.object_type == OBJECT_DEVICE) &&
-                (rpdata.object_instance == BACNET_MAX_INSTANCE)) {
-                rpdata.object_instance = Device_Object_Instance_Number();
-            }
-#if (BACNET_PROTOCOL_REVISION >= 17)
-            /* When the object-type in the Object Identifier parameter
-               contains the value NETWORK_PORT and the instance in the 'Object
-               Identifier' parameter contains the value 4194303, the responding
-               BACnet-user shall treat the Object Identifier as if it correctly
-               matched the local Network Port object representing the network
-               port through which the request was received. This allows the
-               network port instance of the network port that was used to
-               receive the request to be determined. */
-            if ((rpdata.object_type == OBJECT_NETWORK_PORT) &&
-                (rpdata.object_instance == BACNET_MAX_INSTANCE)) {
-                rpdata.object_instance = Network_Port_Index_To_Instance(0);
-            }
-#endif
-            apdu_len = rp_ack_encode_apdu_init(
-                &Handler_Transmit_Buffer[npdu_len], service_data->invoke_id,
-                &rpdata);
-            /* configure our storage */
-            rpdata.application_data =
-                &Handler_Transmit_Buffer[npdu_len + apdu_len];
-            rpdata.application_data_len =
-                sizeof(Handler_Transmit_Buffer) - (npdu_len + apdu_len);
-            len = Device_Read_Property(&rpdata);
-            if (len >= 0) {
-                apdu_len += len;
-                len = rp_ack_encode_apdu_object_property_end(
-                    &Handler_Transmit_Buffer[npdu_len + apdu_len]);
-                apdu_len += len;
-                if (apdu_len > service_data->max_resp) {
-                    /* too big for the sender - send an abort!
-                       Setting of error code needed here as read property
-                       processing may have overridden the default set at start */
-                    rpdata.error_code =
-                        ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
-                    len = BACNET_STATUS_ABORT;
-        #if PRINT_ENABLED
-                    fprintf(stderr, "RP: Message too large.\n");
-        #endif
-                } else {
-        #if PRINT_ENABLED
-                    fprintf(stderr, "RP: Sending Ack!\n");
-        #endif
-                    error = false;
-                }
-            } else {
-        #if PRINT_ENABLED
-                fprintf(stderr, "RP: Device_Read_Property: ");
-                if (len == BACNET_STATUS_ABORT) {
-                    fprintf(stderr, "Abort!\n");
-                } else if (len == BACNET_STATUS_ERROR) {
-                    fprintf(stderr, "Error!\n");
-                } else if (len == BACNET_STATUS_REJECT) {
-                    fprintf(stderr, "Reject!\n");
-                } else {
-                    fprintf(stderr, "Unknown Len=%d\n", len);
-                }
-        #endif
-            }
-        }
+        dbMessage(DBD_ALL, DB_ERROR, "RP: Segmented message.  Sending Abort!");
+        goto RP_FAILURE;
+    }
+    len = rp_decode_service_request(service_request, service_len, &rpdata);
+//    dbMessageAssert(DB_ERROR, (len > 0 ), "RP: Unable to decode Request!");
+    if (len < 0) {
+        /* bad decoding - skip to error/reject/abort handling */
+        error = true;
+        dbMessage(DBD_ALL, DB_ERROR, "RP: Bad Encoding.");
+        goto RP_FAILURE;
     }
 
+    /* Test for case of indefinite Device object instance */
+    if ((rpdata.object_type == OBJECT_DEVICE) &&
+        (rpdata.object_instance == BACNET_MAX_INSTANCE)) {
+        rpdata.object_instance = Device_Object_Instance_Number(pDev);
+    }
+
+    apdu_len =
+        rp_ack_encode_apdu_init(&dlcb->Handler_Transmit_Buffer[npdu_len],
+        service_data->invoke_id, &rpdata);
+
+    /* configure our storage */
+    rpdata.application_data = &dlcb->Handler_Transmit_Buffer[npdu_len + apdu_len];
+    rpdata.application_data_len =
+        dlcb->lpduMax - (npdu_len + apdu_len);
+    len = Device_Read_Property(pDev, &rpdata);
+    if (len >= 0) {
+        apdu_len += len;
+        len =
+            rp_ack_encode_apdu_object_property_end(&dlcb->Handler_Transmit_Buffer
+            [npdu_len + apdu_len]);
+        apdu_len += len;
+        if (apdu_len > service_data->max_resp) {
+            /* too big for the sender - send an abort
+             * Setting of error code needed here as read property processing may
+             * have overriden the default set at start */
+            rpdata.error_code = ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
+            len = BACNET_STATUS_ABORT;
+            dbMessage(DBD_ReadOperations, DB_ERROR, "RP: Message too large.");
+        }
+        else {
+            dbMessage(DBD_ReadOperations, DB_INFO, "RP: Sending Ack!");
+            error = false;
+        }
+    } 
+    else {
+#if PRINT_ENABLED_off
+        if (len == BACNET_STATUS_ABORT) {
+            dbMessage(DB_ERROR, "RP: Device_Read_Property: Abort!");
+        } else if (len == BACNET_STATUS_ERROR || len == BACNET_STATUS_UNKNOWN_PROPERTY ) {
+            dbMessage(DB_ERROR, "RP: Device_Read_Property: Error. Class:%s, Code:%s  for  %s:%d.%s !", 
+                bactext_error_class_name(rpdata.error_class), 
+                bactext_error_code_name(rpdata.error_code), 
+                bactext_object_type_name(rpdata.object_type), 
+                rpdata.object_instance, 
+                bactext_property_name(rpdata.object_property) );
+        } else if (len == BACNET_STATUS_REJECT) {
+            dbMessage(DB_ERROR, "RP: Device_Read_Property: Reject!");
+        } else {
+            dbMessage(DB_ERROR, "RP: Device_Read_Property: Unknown Len=%d", len);
+        }
+#endif
+    }
+
+RP_FAILURE:
     if (error) {
         if (len == BACNET_STATUS_ABORT) {
-            apdu_len = abort_encode_apdu(&Handler_Transmit_Buffer[npdu_len],
+            apdu_len =
+                abort_encode_apdu(&dlcb->Handler_Transmit_Buffer[npdu_len],
                 service_data->invoke_id,
                 abort_convert_error_code(rpdata.error_code), true);
-#if PRINT_ENABLED
-            fprintf(stderr, "RP: Sending Abort!\n");
-#endif
-        } else if (len == BACNET_STATUS_ERROR) {
-            apdu_len = bacerror_encode_apdu(&Handler_Transmit_Buffer[npdu_len],
-                service_data->invoke_id, SERVICE_CONFIRMED_READ_PROPERTY,
-                rpdata.error_class, rpdata.error_code);
-#if PRINT_ENABLED
-            fprintf(stderr, "RP: Sending Error!\n");
-#endif
-        } else if (len == BACNET_STATUS_REJECT) {
-            apdu_len = reject_encode_apdu(&Handler_Transmit_Buffer[npdu_len],
-                service_data->invoke_id,
-                reject_convert_error_code(rpdata.error_code));
-#if PRINT_ENABLED
-            fprintf(stderr, "RP: Sending Reject!\n");
-#endif
+            dbMessage(DBD_ALL, DB_UNUSUAL_TRAFFIC, "RP: Sending Abort!");
+        } 
+        else if (len == BACNET_STATUS_ERROR) {
+            apdu_len =
+                bacerror_encode_apdu(&dlcb->Handler_Transmit_Buffer[npdu_len],
+                                     service_data->invoke_id, SERVICE_CONFIRMED_READ_PROPERTY,
+                                     rpdata.error_class, rpdata.error_code);
+            dbMessage(DBD_ALL, DB_EXPECTED_ERROR_TRAFFIC, "RP: Sending Error!");
+        }
+        else if (len == BACNET_STATUS_UNKNOWN_PROPERTY) {
+            apdu_len =
+                bacerror_encode_apdu(&dlcb->Handler_Transmit_Buffer[npdu_len],
+                                     service_data->invoke_id, SERVICE_CONFIRMED_READ_PROPERTY,
+                                     rpdata.error_class, rpdata.error_code);
+            // and no error message
+        }
+        else if (len == BACNET_STATUS_REJECT) {
+            apdu_len =
+                reject_encode_apdu(&dlcb->Handler_Transmit_Buffer[npdu_len],
+                    service_data->invoke_id,
+                    reject_convert_error_code(rpdata.error_code));
+            dbMessage(DBD_ALL, DB_UNUSUAL_TRAFFIC, "RP: Sending Reject!");
+        }
+        else {
+            panic();
+            return;
         }
     }
 
-    pdu_len = npdu_len + apdu_len;
-    bytes_sent = datalink_send_pdu(
-        src, &npdu_data, &Handler_Transmit_Buffer[0], pdu_len);
-    if (bytes_sent <= 0) {
-#if PRINT_ENABLED
-        fprintf(stderr, "Failed to send PDU (%s)!\n", strerror(errno));
-#endif
-    }
-
-    return;
+    dlcb->optr = (uint16_t)(npdu_len + apdu_len);
+    pDev->datalink->SendPdu(pDev->datalink, dlcb );
 }

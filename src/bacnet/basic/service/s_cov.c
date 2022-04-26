@@ -21,58 +21,57 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- *********************************************************************/
-#include <stddef.h>
-#include <stdint.h>
-#include <errno.h>
-#include <string.h>
-#include "bacnet/config.h"
-#include "bacnet/bacdef.h"
-#include "bacnet/bacdcode.h"
-#include "bacnet/dcc.h"
-#include "bacnet/npdu.h"
-#include "bacnet/apdu.h"
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
+//#include "datalink.h"
 #include "bacnet/cov.h"
-/* some demo stuff needed */
-#include "bacnet/basic/binding/address.h"
-#include "bacnet/basic/tsm/tsm.h"
-#include "bacnet/basic/object/device.h"
-#include "bacnet/datalink/datalink.h"
-#include "bacnet/basic/services.h"
 
-/** @file s_cov.c  Send a Change of Value (COV) update or a Subscribe COV
- * request. */
-
+/** @file s_cov.c  Send a Change of Value (COV) update or a Subscribe COV request. */
+#if 0
 /** Encodes an Unconfirmed COV Notification.
  * @ingroup DSCOV
  *
  * @param buffer [in,out] The buffer to build the message in for sending.
  * @param buffer_len [in] Number of bytes in the buffer
  * @param dest [in] Destination address
- * @param npdu_data [in] Network Layer information
+ * @param npci_data [in] Network Layer information
  * @param cov_data [in]  The COV update information to be encoded.
  * @return Size of the message sent (bytes), or a negative value on error.
  */
-int ucov_notify_encode_pdu(uint8_t *buffer,
-    unsigned buffer_len,
-    BACNET_ADDRESS *dest,
-    BACNET_NPDU_DATA *npdu_data,
-    BACNET_COV_DATA *cov_data)
+int ucov_notify_encode_pdu(
+	DLCB *dlcb,
+    DEVICE_OBJECT_DATA *pDev,
+    BACNET_PATH * dest,
+    BACNET_NPCI_DATA * npci_data,
+    BACNET_COV_DATA * cov_data)
 {
     int len = 0;
     int pdu_len = 0;
-    BACNET_ADDRESS my_address;
-    datalink_get_my_address(&my_address);
 
     /* unconfirmed is a broadcast */
-    datalink_get_broadcast_address(dest);
+    bacnet_path_set_broadcast_global(dest);
+
     /* encode the NPDU portion of the packet */
-    npdu_encode_npdu_data(npdu_data, false, MESSAGE_PRIORITY_NORMAL);
-    pdu_len = npdu_encode_pdu(&buffer[0], dest, &my_address, npdu_data);
+    npdu_setup_npci_data(npci_data, false, MESSAGE_PRIORITY_NORMAL);
+    pdu_len = npdu_encode_pdu(dlcb->Handler_Transmit_Buffer, &dest->glAdr, NULL, npci_data);
 
     /* encode the APDU portion of the packet */
-    len = ucov_notify_encode_apdu(
-        &buffer[pdu_len], buffer_len - pdu_len, cov_data);
+    len = ucov_notify_encode_apdu(&buffer[pdu_len],
+        dlcb->used - pdu_len, cov_data);
     if (len) {
         pdu_len += len;
     } else {
@@ -90,20 +89,28 @@ int ucov_notify_encode_pdu(uint8_t *buffer,
  * @param cov_data [in]  The COV update information to be encoded.
  * @return Size of the message sent (bytes), or a negative value on error.
  */
+#if 0
+
 int Send_UCOV_Notify(
-    uint8_t *buffer, unsigned buffer_len, BACNET_COV_DATA *cov_data)
+    PORT_SUPPORT *portParams,
+    DEVICE_OBJECT_DATA *pDev,
+    DLCB *dlcb,
+    BACNET_COV_DATA * cov_data)
 {
     int pdu_len = 0;
-    BACNET_ADDRESS dest;
+    BACNET_PATH dest;
     int bytes_sent = 0;
-    BACNET_NPDU_DATA npdu_data;
+    BACNET_NPCI_DATA npci_data;
 
-    pdu_len =
-        ucov_notify_encode_pdu(buffer, buffer_len, &dest, &npdu_data, cov_data);
-    bytes_sent = datalink_send_pdu(&dest, &npdu_data, &buffer[0], pdu_len);
+    pdu_len = ucov_notify_encode_pdu( portParams, pDev, buffer, &dest, &npci_data, cov_data);
+    dlcb->bufSize = pdu_len;
+    bytes_sent = portParams->SendPdu(dlcb);
 
     return bytes_sent;
 }
+#endif
+
+#if 0 // client side
 
 /** Sends a COV Subscription request.
  * @ingroup DSCOV
@@ -114,63 +121,72 @@ int Send_UCOV_Notify(
  *         no slot is available from the tsm for sending.
  */
 uint8_t Send_COV_Subscribe(
-    uint32_t device_id, BACNET_SUBSCRIBE_COV_DATA *cov_data)
+    PORT_SUPPORT *portParams,
+    DEVICE_OBJECT_DATA *pDev,
+    uint32_t device_id,
+    BACNET_SUBSCRIBE_COV_DATA * cov_data)
 {
     BACNET_ADDRESS dest;
     BACNET_ADDRESS my_address;
-    unsigned max_apdu = 0;
+    uint16_t max_apdu = 0;
     uint8_t invoke_id = 0;
     bool status = false;
     int len = 0;
     int pdu_len = 0;
-    int bytes_sent = 0;
-    BACNET_NPDU_DATA npdu_data;
+    BACNET_NPCI_DATA npci_data;
 
-    if (!dcc_communication_enabled()) {
+    if (!dcc_communication_enabled(pDev)) {
         return 0;
     }
     /* is the device bound? */
     status = address_get_by_device(device_id, &max_apdu, &dest);
     /* is there a tsm available? */
     if (status) {
-        invoke_id = tsm_next_free_invokeID();
+        invoke_id = tsm_next_free_invokeID(routerApplicationEntity);
     }
     if (invoke_id) {
         /* encode the NPDU portion of the packet */
-        datalink_get_my_address(&my_address);
-        npdu_encode_npdu_data(&npdu_data, true, MESSAGE_PRIORITY_NORMAL);
-        pdu_len = npdu_encode_pdu(
-            &Handler_Transmit_Buffer[0], &dest, &my_address, &npdu_data);
+        // datalink_get_my_address(&my_address);
+        npdu_setup_npci_data(&npci_data, true, MESSAGE_PRIORITY_NORMAL);
+        pdu_len =
+            npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &dest, NULL,
+                            &npci_data);
         /* encode the APDU portion of the packet */
-        len = cov_subscribe_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
-            sizeof(Handler_Transmit_Buffer) - pdu_len, invoke_id, cov_data);
+        len =
+            cov_subscribe_encode_apdu(dlcb, invoke_id, cov_data);
         pdu_len += len;
         /* will it fit in the sender?
            note: if there is a bottleneck router in between
            us and the destination, we won't know unless
            we have a way to check for that and update the
            max_apdu in the address binding table. */
-        if ((unsigned)pdu_len < max_apdu) {
-            tsm_set_confirmed_unsegmented_transaction(invoke_id, &dest,
-                &npdu_data, &Handler_Transmit_Buffer[0], (uint16_t)pdu_len);
-            bytes_sent = datalink_send_pdu(
-                &dest, &npdu_data, &Handler_Transmit_Buffer[0], pdu_len);
+        if ((unsigned) pdu_len < max_apdu) {
+           dlcb->optr = pdu_len ;
+           // todo1, make sure other occurences set optr before submittal to tsm!
+            tsm_set_confirmed_unsegmented_transaction( portParams, pDev, invoke_id, &dest,
+                &npci_data, &Handler_Transmit_Buffer[0], (uint16_t) pdu_len);
+            bytes_sent =
+                portParams->SendPdu(portParams, &dest, &npdu_data, 
+
+
             if (bytes_sent <= 0) {
-#if PRINT_ENABLED
-                fprintf(stderr, "Failed to Send SubscribeCOV Request (%s)!\n",
-                    strerror(errno));
-#endif
+                dbMessage(DB_UNEXPECTED_ERROR, "Failed to Send SubscribeCOV Request (%s)!\n",
+                        strerror(errno));
             }
         } else {
-            tsm_free_invoke_id(invoke_id);
+            tsm_free_invoke_id(pDev, invoke_id);
             invoke_id = 0;
-#if PRINT_ENABLED
-            fprintf(stderr,
-                "Failed to Send SubscribeCOV Request "
-                "(exceeds destination maximum APDU)!\n");
-#endif
+
+            dbMessage(DB_UNEXPECTED_ERROR,
+                    "Failed to Send SubscribeCOV Request "
+                    "(exceeds destination maximum APDU)!\n");
+
         }
     }
 
     return invoke_id;
 }
+#endif // 0  client side
+
+#endif // ( BACNET_SVC_COV_B == 1 )
+

@@ -29,34 +29,49 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
-#include <stddef.h>
-#include <stdint.h>
-#include "bacnet/alarm_ack.h"
+ *
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
+#include "configProj.h"
+
+#if (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1) || (INTRINSIC_REPORTING_B == 1)
+
+#include "alarm_ack.h"
 
 /** @file alarm_ack.c  Handles Event Notifications (ACKs) */
 
-/**
- * @brief Creates an Unconfirmed Event Notification APDU
- *
- * @param apdu  Transmission buffer
- * @param invoke_id  Invoked ID
- * @param data  Alarm acknowledge data that will be copied into the payload.
- *
- * @return Length of the APDU
- */
+/***************************************************
+ **
+ ** Creates an Unconfirmed Event Notification APDU
+ **
+ ****************************************************/
 int alarm_ack_encode_apdu(
-    uint8_t *apdu, uint8_t invoke_id, BACNET_ALARM_ACK_DATA *data)
+    uint8_t * apdu,
+    uint8_t invoke_id,
+    BACNET_ALARM_ACK_DATA * data)
 {
-    int len = 0; /* length of each encoding */
-    int apdu_len = 0; /* total length of the apdu, return value */
+    int len = 0;        /* length of each encoding */
+    int apdu_len = 0;   /* total length of the apdu, return value */
 
     if (apdu) {
         apdu[0] = PDU_TYPE_CONFIRMED_SERVICE_REQUEST;
-        apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU);
+        apdu[1] = encode_max_segs_max_apdu(0, MAX_LPDU_IP);
         apdu[2] = invoke_id;
-        apdu[3] = SERVICE_CONFIRMED_ACKNOWLEDGE_ALARM; /* service choice */
+        apdu[3] = SERVICE_CONFIRMED_ACKNOWLEDGE_ALARM;  /* service choice */
         apdu_len = 4;
 
         len = alarm_ack_encode_service_request(&apdu[apdu_len], data);
@@ -66,110 +81,221 @@ int alarm_ack_encode_apdu(
     return apdu_len;
 }
 
-/**
- * @brief Encodes the service data part of Event Notification.
- *
- * @param apdu  Receive buffer
- * @param data  Alarm acknowledge data that will be filled in
- *              with the data from the payload.
- *
- * @return Total length of the apdu
- */
-int alarm_ack_encode_service_request(uint8_t *apdu, BACNET_ALARM_ACK_DATA *data)
+
+/***************************************************
+ **
+ ** Encodes the service data part of Event Notification
+ **
+ ****************************************************/
+int alarm_ack_encode_service_request(
+    uint8_t * apdu,
+    BACNET_ALARM_ACK_DATA * data)
 {
-    int len = 0; /* length of each encoding */
-    int apdu_len = 0; /* total length of the apdu, return value */
+    int len = 0;        /* length of each encoding */
+    int apdu_len = 0;   /* total length of the apdu, return value */
 
     if (apdu) {
-        len = encode_context_unsigned(
-            &apdu[apdu_len], 0, data->ackProcessIdentifier);
+        len =
+            encode_context_unsigned(&apdu[apdu_len], 0,
+                                    data->ackProcessIdentifier);
         apdu_len += len;
 
-        len = encode_context_object_id(&apdu[apdu_len], 1,
-            data->eventObjectIdentifier.type,
-            data->eventObjectIdentifier.instance);
+        len =
+            encode_context_object_id(&apdu[apdu_len], 1,
+                                     data->eventObjectIdentifier.type,
+                                     data->eventObjectIdentifier.instance);
         apdu_len += len;
 
-        len = encode_context_enumerated(
-            &apdu[apdu_len], 2, data->eventStateAcked);
+        len =
+            encode_context_enumerated(&apdu[apdu_len], 2,
+                                      data->eventStateAcked);
         apdu_len += len;
 
-        len = bacapp_encode_context_timestamp(
-            &apdu[apdu_len], 3, &data->eventTimeStamp);
+        len =
+            bacapp_encode_context_timestamp(&apdu[apdu_len], 3,
+                                            &data->eventTimeStamp);
         apdu_len += len;
 
-        len = encode_context_character_string(
-            &apdu[apdu_len], 4, &data->ackSource);
+        len =
+            encode_context_character_string(&apdu[apdu_len], 4,
+                                            &data->ackSource);
         apdu_len += len;
 
-        len = bacapp_encode_context_timestamp(
-            &apdu[apdu_len], 5, &data->ackTimeStamp);
+        len =
+            bacapp_encode_context_timestamp(&apdu[apdu_len], 5,
+                                            &data->ackTimeStamp);
         apdu_len += len;
     }
 
     return apdu_len;
 }
 
-/**
- * @brief Decodes the service data part of Event Notification.
- *
- * @param apdu  Receive buffer
- * @param apdu_len  Bytes valid in the buffer.
- * @param data  Alarm acknowledge data that will be filled.
- *
- * @return Total length of the apdu
- */
+
+/***************************************************
+ **
+ ** Decodes the service data part of Event Notification
+ **
+ ****************************************************/
 int alarm_ack_decode_service_request(
-    uint8_t *apdu, unsigned apdu_len, BACNET_ALARM_ACK_DATA *data)
+    uint8_t * apdu,
+    unsigned apdu_len,
+    BACNET_ALARM_ACK_DATA * data)
 {
     int len = 0;
-    int section_len = 0;
-    uint32_t enum_value = 0;
-    BACNET_UNSIGNED_INTEGER unsigned_value = 0;
+    int section_len;
+    uint32_t enumValue;
 
-    (void)apdu_len;
-    section_len = decode_context_unsigned(&apdu[len], 0, &unsigned_value);
-    if (section_len == BACNET_STATUS_ERROR) {
-        return BACNET_STATUS_ERROR;
-    }
-    data->ackProcessIdentifier = (uint32_t)unsigned_value;
-    len += section_len;
+    /* unused parameter */
+  //  apdu_len = apdu_len;
 
-    section_len = decode_context_object_id(&apdu[len], 1,
-        &data->eventObjectIdentifier.type,
-        &data->eventObjectIdentifier.instance);
-    if (section_len == BACNET_STATUS_ERROR) {
-        return BACNET_STATUS_ERROR;
+    if (-1 == (section_len =
+                   decode_context_unsigned(&apdu[len], 0,
+                                           &data->ackProcessIdentifier))) {
+        return -1;
     }
     len += section_len;
 
-    section_len = decode_context_enumerated(&apdu[len], 2, &enum_value);
-    if (section_len == BACNET_STATUS_ERROR) {
-        return BACNET_STATUS_ERROR;
-    }
-    data->eventStateAcked = (BACNET_EVENT_STATE)enum_value;
-    len += section_len;
-
-    section_len =
-        bacapp_decode_context_timestamp(&apdu[len], 3, &data->eventTimeStamp);
-    if (section_len == BACNET_STATUS_ERROR) {
-        return BACNET_STATUS_ERROR;
+    if (-1 == (section_len =
+                   decode_context_object_id(&apdu[len], 1,
+                                            &data->eventObjectIdentifier.type,
+                                            &data->eventObjectIdentifier.instance))) {
+        return -1;
     }
     len += section_len;
 
-    section_len =
-        decode_context_character_string(&apdu[len], 4, &data->ackSource);
-    if (section_len == BACNET_STATUS_ERROR) {
-        return BACNET_STATUS_ERROR;
+    if (-1 == (section_len =
+                   decode_context_enumerated(&apdu[len], 2, &enumValue))) {
+        return -1;
+    }
+    data->eventStateAcked = (BACNET_EVENT_STATE) enumValue;
+    len += section_len;
+
+    if (-1 == (section_len =
+                   bacapp_decode_context_timestamp(&apdu[len], 3,
+                           &data->eventTimeStamp))) {
+        return -1;
     }
     len += section_len;
 
-    section_len =
-        bacapp_decode_context_timestamp(&apdu[len], 5, &data->ackTimeStamp);
-    if (section_len == BACNET_STATUS_ERROR) {
-        return BACNET_STATUS_ERROR;
+    if (-1 == (section_len =
+                   decode_context_character_string(&apdu[len], 4,
+                           &data->ackSource))) {
+        return -1;
+    }
+    len += section_len;
+
+    if (-1 == (section_len =
+                   bacapp_decode_context_timestamp(&apdu[len], 5,
+                           &data->ackTimeStamp))) {
+        return -1;
     }
     len += section_len;
 
     return len;
 }
+
+#ifdef TEST
+
+#include <assert.h>
+#include <string.h>
+#include "ctest.h"
+
+
+void testAlarmAck(
+    Test * pTest)
+{
+    BACNET_ALARM_ACK_DATA testAlarmAckIn;
+    BACNET_ALARM_ACK_DATA testAlarmAckOut;
+
+    uint8_t buffer[MAX_LPDU_IP];
+    int inLen;
+    int outLen;
+
+    testAlarmAckIn.ackProcessIdentifier = 0x1234;
+    characterstring_init_ansi(&testAlarmAckIn.ackSource, "This is a test");
+    testAlarmAckIn.ackTimeStamp.tag = TIME_STAMP_SEQUENCE;
+    testAlarmAckIn.ackTimeStamp.value.sequenceNum = 0x4331;
+    testAlarmAckIn.eventObjectIdentifier.instance = 567;
+    testAlarmAckIn.eventObjectIdentifier.type = OBJECT_DEVICE;
+    testAlarmAckIn.eventTimeStamp.tag = TIME_STAMP_TIME;
+    testAlarmAckIn.eventTimeStamp.value.time.hour = 10;
+    testAlarmAckIn.eventTimeStamp.value.time.min = 11;
+    testAlarmAckIn.eventTimeStamp.value.time.sec = 12;
+    testAlarmAckIn.eventTimeStamp.value.time.hundredths = 14;
+    testAlarmAckIn.eventStateAcked = EVENT_STATE_OFFNORMAL;
+
+    memset(&testAlarmAckOut, 0, sizeof(testAlarmAckOut));
+
+
+    inLen = alarm_ack_encode_service_request(buffer, &testAlarmAckIn);
+    outLen = alarm_ack_decode_service_request(buffer, inLen, &testAlarmAckOut);
+
+    ct_test(pTest, inLen == outLen);
+
+    ct_test(pTest,
+        testAlarmAckIn.ackProcessIdentifier ==
+        testAlarmAckOut.ackProcessIdentifier);
+
+    ct_test(pTest,
+        testAlarmAckIn.ackTimeStamp.tag == testAlarmAckOut.ackTimeStamp.tag);
+    ct_test(pTest,
+        testAlarmAckIn.ackTimeStamp.value.sequenceNum ==
+        testAlarmAckOut.ackTimeStamp.value.sequenceNum);
+
+    ct_test(pTest,
+        testAlarmAckIn.ackProcessIdentifier ==
+        testAlarmAckOut.ackProcessIdentifier);
+
+    ct_test(pTest,
+        testAlarmAckIn.eventObjectIdentifier.instance ==
+        testAlarmAckOut.eventObjectIdentifier.instance);
+    ct_test(pTest,
+        testAlarmAckIn.eventObjectIdentifier.type ==
+        testAlarmAckOut.eventObjectIdentifier.type);
+
+    ct_test(pTest,
+        testAlarmAckIn.eventTimeStamp.tag ==
+        testAlarmAckOut.eventTimeStamp.tag);
+    ct_test(pTest,
+        testAlarmAckIn.eventTimeStamp.value.time.hour ==
+        testAlarmAckOut.eventTimeStamp.value.time.hour);
+    ct_test(pTest,
+        testAlarmAckIn.eventTimeStamp.value.time.min ==
+        testAlarmAckOut.eventTimeStamp.value.time.min);
+    ct_test(pTest,
+        testAlarmAckIn.eventTimeStamp.value.time.sec ==
+        testAlarmAckOut.eventTimeStamp.value.time.sec);
+    ct_test(pTest,
+        testAlarmAckIn.eventTimeStamp.value.time.hundredths ==
+        testAlarmAckOut.eventTimeStamp.value.time.hundredths);
+
+    ct_test(pTest,
+        testAlarmAckIn.eventStateAcked == testAlarmAckOut.eventStateAcked);
+
+}
+
+
+#ifdef TEST_ALARM_ACK
+int main(
+    void)
+{
+    Test *pTest;
+    bool rc;
+
+    pTest = ct_create("BACnet Alarm Ack", NULL);
+    /* individual tests */
+    rc = ct_addTestFunction(pTest, testAlarmAck);
+    assert(rc);
+
+    ct_setStream(pTest, stdout);
+    ct_run(pTest);
+    (void) ct_report(pTest);
+    ct_destroy(pTest);
+
+    return 0;
+}
+
+#endif /* TEST_ALARM_ACK */
+#endif /* TEST */
+
+#endif

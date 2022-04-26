@@ -27,21 +27,23 @@
  *
  */
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
+//#include <stdbool.h>
+//#include <stdint.h>
+//#include <stdio.h>
 #include "bacnet/bacdef.h"
-#include "bacnet/bacdcode.h"
-#include "bacnet/bacenum.h"
+//#include "bacnet/bacdcode.h"
+// #include "bacnet/bacenum.h"
 #include "bacnet/bacapp.h"
-#include "bacnet/config.h" /* the custom stuff */
+#include "bacnet/bacstr.h"
+#include "bacnet/bits.h"
+//#include "bacnet/config.h" /* the custom stuff */
 #include "bacnet/rp.h"
 #include "bacnet/wp.h"
 #include "bacnet/lighting.h"
 #include "bacnet/basic/services.h"
-#include "bacnet/proplist.h"
-/* me! */
-#include "bacnet/basic/object/lo.h"
+//#include "bacnet/proplist.h"
+///* me! */
+#include "lo.h"
 
 #ifndef MAX_LIGHTING_OUTPUTS
 #define MAX_LIGHTING_OUTPUTS 8
@@ -1153,6 +1155,8 @@ bool Lighting_Output_Write_Property(BACNET_WRITE_PROPERTY_DATA *wp_data)
                 }
             }
             break;
+
+#if defined (BACAPP_LIGHTING_COMMAND)
         case PROP_LIGHTING_COMMAND:
             status = write_property_type_valid(wp_data, &value,
                 BACNET_APPLICATION_TAG_LIGHTING_COMMAND);
@@ -1165,6 +1169,8 @@ bool Lighting_Output_Write_Property(BACNET_WRITE_PROPERTY_DATA *wp_data)
                 }
             }
             break;
+#endif
+
         case PROP_OUT_OF_SERVICE:
             status = write_property_type_valid(wp_data, &value,
                 BACNET_APPLICATION_TAG_BOOLEAN);
@@ -1331,3 +1337,57 @@ void Lighting_Output_Init(void)
 
     return;
 }
+
+#ifdef BAC_TEST
+#include <assert.h>
+#include <string.h>
+#include "ctest.h"
+
+void testLightingOutput(Test *pTest)
+{
+    uint8_t apdu[MAX_APDU] = { 0 };
+    int len = 0;
+    uint32_t len_value = 0;
+    uint8_t tag_number = 0;
+    uint16_t decoded_type = 0;
+    uint32_t decoded_instance = 0;
+    BACNET_READ_PROPERTY_DATA rpdata;
+
+    Lighting_Output_Init();
+    rpdata.application_data = &apdu[0];
+    rpdata.application_data_len = sizeof(apdu);
+    rpdata.object_type = OBJECT_LIGHTING_OUTPUT;
+    rpdata.object_instance = 1;
+    rpdata.object_property = PROP_OBJECT_IDENTIFIER;
+    rpdata.array_index = BACNET_ARRAY_ALL;
+    len = Lighting_Output_Read_Property(&rpdata);
+    ct_test(pTest, len != 0);
+    len = decode_tag_number_and_value(&apdu[0], &tag_number, &len_value);
+    ct_test(pTest, tag_number == BACNET_APPLICATION_TAG_OBJECT_ID);
+    len = decode_object_id(&apdu[len], &decoded_type, &decoded_instance);
+    ct_test(pTest, decoded_type == rpdata.object_type);
+    ct_test(pTest, decoded_instance == rpdata.object_instance);
+
+    return;
+}
+
+#ifdef TEST_LIGHTING_OUTPUT
+int main(void)
+{
+    Test *pTest;
+    bool rc;
+
+    pTest = ct_create("BACnet Lighting Output", NULL);
+    /* individual tests */
+    rc = ct_addTestFunction(pTest, testLightingOutput);
+    assert(rc);
+
+    ct_setStream(pTest, stdout);
+    ct_run(pTest);
+    (void)ct_report(pTest);
+    ct_destroy(pTest);
+
+    return 0;
+}
+#endif /* TEST_LIGHTING_INPUT */
+#endif /* BAC_TEST */

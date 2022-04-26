@@ -21,7 +21,26 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- *********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*
+*   For access to source code :
+*
+*       info@bac-test.com
+*           or
+*       www.github.com/bacnettesting/bacnet-stack
+*
+*
+****************************************************************************************/
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -74,15 +93,15 @@ void Schedule_Init(void)
     SCHEDULE_DESCR *psched = &Schedule_Descr[0];
 
     for (i = 0; i < MAX_SCHEDULES; i++, psched++) {
-        /* whole year, change as necessary */
+        /* whole year, change as neccessary */
         psched->Start_Date.year = 0xFF;
         psched->Start_Date.month = 1;
         psched->Start_Date.day = 1;
-        psched->Start_Date.wday = 0xFF;
+        psched->Start_Date.wday = BACNET_WEEKDAY_ANY ;
         psched->End_Date.year = 0xFF;
         psched->End_Date.month = 12;
         psched->End_Date.day = 31;
-        psched->End_Date.wday = 0xFF;
+        psched->End_Date.wday = BACNET_WEEKDAY_ANY;
         for (j = 0; j < 7; j++) {
             psched->Weekly_Schedule[j].TV_Count = 0;
         }
@@ -424,3 +443,59 @@ void Schedule_Recalculate_PV(
         desc->Present_Value = &desc->Schedule_Default;
     }
 }
+
+#ifdef BAC_TEST
+#include <assert.h>
+#include <string.h>
+#include "ctest.h"
+
+void testSchedule(Test *pTest)
+{
+    BACNET_READ_PROPERTY_DATA rpdata;
+    uint8_t apdu[MAX_APDU] = { 0 };
+    int len = 0;
+    uint32_t len_value = 0;
+    uint8_t tag_number = 0;
+    uint16_t decoded_type = 0;
+    uint32_t decoded_instance = 0;
+
+    Schedule_Init();
+    rpdata.application_data = &apdu[0];
+    rpdata.application_data_len = sizeof(apdu);
+    rpdata.object_type = OBJECT_SCHEDULE;
+    rpdata.object_instance = 1;
+    rpdata.object_property = PROP_OBJECT_IDENTIFIER;
+    rpdata.array_index = BACNET_ARRAY_ALL;
+    len = Schedule_Read_Property(&rpdata);
+    ct_test(pTest, len != 0);
+    len = decode_tag_number_and_value(&apdu[0], &tag_number, &len_value);
+    ct_test(pTest, tag_number == BACNET_APPLICATION_TAG_OBJECT_ID);
+    len = decode_object_id(&apdu[len], &decoded_type, &decoded_instance);
+    ct_test(pTest, decoded_type == rpdata.object_type);
+    ct_test(pTest, decoded_instance == rpdata.object_instance);
+
+    return;
+}
+
+#ifdef TEST_SCHEDULE
+
+int main(void)
+{
+    Test *pTest;
+    bool rc;
+
+    pTest = ct_create("BACnet Schedule", NULL);
+    /* individual tests */
+    rc = ct_addTestFunction(pTest, testSchedule);
+    assert(rc);
+
+    ct_setStream(pTest, stdout);
+    ct_run(pTest);
+    (void)ct_report(pTest);
+    ct_destroy(pTest);
+
+    return 0;
+}
+
+#endif /* TEST_SCHEDULE */
+#endif /* BAC_TEST */

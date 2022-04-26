@@ -1,6 +1,0 @@
-tests:
-  bacnet.basic.object.netport:
-    tags: bacnet
-  bacnet.basic.object.netport.unit:
-    tags: bacnet
-    type: unit

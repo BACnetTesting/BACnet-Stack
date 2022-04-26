@@ -1,47 +1,61 @@
 /**************************************************************************
- *
- * Copyright (C) 2015 Nikola Jelic <nikola.jelic@euroicc.com>
- *
- * Permission is hereby granted, free of charge, to any person obtaining
- * a copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to
- * the following conditions:
- *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
- * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- *********************************************************************/
+*
+* Copyright (C) 2015 Nikola Jelic <nikola.jelic@euroicc.com>
+*
+* Permission is hereby granted, free of charge, to any person obtaining
+* a copy of this software and associated documentation files (the
+* "Software"), to deal in the Software without restriction, including
+* without limitation the rights to use, copy, modify, merge, publish,
+* distribute, sublicense, and/or sell copies of the Software, and to
+* permit persons to whom the Software is furnished to do so, subject to
+* the following conditions:
+*
+* The above copyright notice and this permission notice shall be included
+* in all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
-#include "bacnet/bacdcode.h"
-#include "bacnet/datalink/bacsec.h"
+#include "bacdcode.h"
+#include "bacsec.h"
 
 BACNET_KEY_IDENTIFIER_ALGORITHM key_algorithm(uint16_t id)
 {
-    return (BACNET_KEY_IDENTIFIER_ALGORITHM)((id >> 8) & 0xFF);
+    return (BACNET_KEY_IDENTIFIER_ALGORITHM) ((id >> 8) & 0xFF);
 }
 
 BACNET_KEY_IDENTIFIER_KEY_NUMBER key_number(uint16_t id)
 {
-    return (BACNET_KEY_IDENTIFIER_KEY_NUMBER)(id & 0xFF);
+    return (BACNET_KEY_IDENTIFIER_KEY_NUMBER) (id & 0xFF);
 }
 
-#if 0
-/* FIXME: please fix? */
-int encode_security_wrapper(
-    int bytes_before, uint8_t *apdu, BACNET_SECURITY_WRAPPER *wrapper)
+int encode_security_wrapper(int bytes_before,
+    uint8_t * apdu,
+    BACNET_SECURITY_WRAPPER * wrapper)
 {
     int curr = 0;
     int enc_begin = 0;
@@ -116,14 +130,16 @@ int encode_security_wrapper(
         apdu[curr++] = wrapper->user_role;
         if ((wrapper->authentication_mechanism >= 1) &&
             (wrapper->authentication_mechanism <= 199)) {
-            curr += encode_unsigned16(
-                &apdu[curr], wrapper->authentication_data_length + 5);
+            curr +=
+                encode_unsigned16(&apdu[curr],
+                wrapper->authentication_data_length + 5);
             memcpy(&apdu[curr], wrapper->authentication_data,
                 wrapper->authentication_data_length);
             curr += wrapper->authentication_data_length;
         } else if (wrapper->authentication_mechanism >= 200) {
-            curr += encode_unsigned16(
-                &apdu[curr], wrapper->authentication_data_length + 7);
+            curr +=
+                encode_unsigned16(&apdu[curr],
+                wrapper->authentication_data_length + 7);
             curr += encode_unsigned16(&apdu[curr], wrapper->vendor_id);
             memcpy(&apdu[curr], wrapper->authentication_data,
                 wrapper->authentication_data_length);
@@ -140,8 +156,8 @@ int encode_security_wrapper(
         /* set encryption flag, signing is done */
         apdu[0] |= 1 << 6;
         /* handle padding */
-        key_set_padding(
-            &key, curr - enc_begin, &wrapper->padding_len, wrapper->padding);
+        key_set_padding(&key, curr - enc_begin, &wrapper->padding_len,
+            wrapper->padding);
         if (wrapper->padding_len > 2) {
             memcpy(&apdu[curr], wrapper->padding, wrapper->padding_len - 2);
             curr += wrapper->padding_len - 2;
@@ -156,9 +172,9 @@ int encode_security_wrapper(
 
     return curr;
 }
-#endif
 
-int encode_challenge_request(uint8_t *apdu, BACNET_CHALLENGE_REQUEST *bc_req)
+int encode_challenge_request(uint8_t * apdu,
+    BACNET_CHALLENGE_REQUEST * bc_req)
 {
     int curr = 0;
 
@@ -169,7 +185,8 @@ int encode_challenge_request(uint8_t *apdu, BACNET_CHALLENGE_REQUEST *bc_req)
     return curr;
 }
 
-int encode_security_payload(uint8_t *apdu, BACNET_SECURITY_PAYLOAD *payload)
+int encode_security_payload(uint8_t * apdu,
+    BACNET_SECURITY_PAYLOAD * payload)
 {
     encode_unsigned16(&apdu[0], payload->payload_length);
     memcpy(&apdu[2], payload->payload, payload->payload_length);
@@ -177,7 +194,8 @@ int encode_security_payload(uint8_t *apdu, BACNET_SECURITY_PAYLOAD *payload)
     return (int)(2 + payload->payload_length);
 }
 
-int encode_security_response(uint8_t *apdu, BACNET_SECURITY_RESPONSE *resp)
+int encode_security_response(uint8_t * apdu,
+    BACNET_SECURITY_RESPONSE * resp)
 {
     int curr = 0;
     int i;
@@ -185,32 +203,37 @@ int encode_security_response(uint8_t *apdu, BACNET_SECURITY_RESPONSE *resp)
     apdu[curr++] = resp->response_code;
     curr += encode_unsigned32(&apdu[curr], resp->orig_message_id);
     curr += encode_unsigned32(&apdu[curr], resp->orig_timestamp);
-    switch ((BACNET_SECURITY_RESPONSE_CODE)resp->response_code) {
+    switch ((BACNET_SECURITY_RESPONSE_CODE) resp->response_code) {
         case SEC_RESP_BAD_TIMESTAMP:
-            curr += encode_unsigned32(
-                &apdu[curr], resp->response.bad_timestamp.expected_timestamp);
+            curr +=
+                encode_unsigned32(&apdu[curr],
+                resp->response.bad_timestamp.expected_timestamp);
             break;
         case SEC_RESP_CANNOT_USE_KEY:
-            curr += encode_unsigned16(
-                &apdu[curr], resp->response.cannot_use_key.key);
+            curr +=
+                encode_unsigned16(&apdu[curr],
+                resp->response.cannot_use_key.key);
             break;
         case SEC_RESP_INCORRECT_KEY:
             apdu[curr++] = resp->response.incorrect_key.number_of_keys;
-            for (i = 0; i < (int)resp->response.incorrect_key.number_of_keys;
-                 i++) {
-                curr += encode_unsigned16(
-                    &apdu[curr], resp->response.incorrect_key.keys[i]);
+            for (i = 0; i < (int)resp->response.incorrect_key.number_of_keys; i++) {
+                curr +=
+                    encode_unsigned16(&apdu[curr],
+                    resp->response.incorrect_key.keys[i]);
             }
             break;
         case SEC_RESP_UNKNOWN_AUTHENTICATION_TYPE:
-            apdu[curr++] = resp->response.unknown_authentication_type
-                               .original_authentication_type;
-            curr += encode_unsigned16(&apdu[curr],
+            apdu[curr++] =
+                resp->response.unknown_authentication_type.
+                original_authentication_type;
+            curr +=
+                encode_unsigned16(&apdu[curr],
                 resp->response.unknown_authentication_type.vendor_id);
             break;
         case SEC_RESP_UNKNOWN_KEY:
-            curr += encode_unsigned16(
-                &apdu[curr], resp->response.unknown_key.original_key);
+            curr +=
+                encode_unsigned16(&apdu[curr],
+                resp->response.unknown_key.original_key);
             break;
         case SEC_RESP_UNKNOWN_KEY_REVISION:
             apdu[curr++] =
@@ -220,8 +243,9 @@ int encode_security_response(uint8_t *apdu, BACNET_SECURITY_RESPONSE *resp)
             apdu[curr++] = resp->response.too_many_keys.max_num_of_keys;
             break;
         case SEC_RESP_INVALID_KEY_DATA:
-            curr += encode_unsigned16(
-                &apdu[curr], resp->response.invalid_key_data.key);
+            curr +=
+                encode_unsigned16(&apdu[curr],
+                resp->response.invalid_key_data.key);
             break;
         case SEC_RESP_SUCCESS:
         case SEC_RESP_ACCESS_DENIED:
@@ -243,13 +267,14 @@ int encode_security_response(uint8_t *apdu, BACNET_SECURITY_RESPONSE *resp)
         case SEC_RESP_UNKNOWN_SOURCE_MESSAGE:
             break;
         default:
-            return -1; /* unknown message type */
+            return -1;  /* unknown message type */
     }
 
     return curr;
 }
 
-int encode_request_key_update(uint8_t *apdu, BACNET_REQUEST_KEY_UPDATE *req)
+int encode_request_key_update(uint8_t * apdu,
+    BACNET_REQUEST_KEY_UPDATE * req)
 {
     int curr = 0;
 
@@ -264,7 +289,8 @@ int encode_request_key_update(uint8_t *apdu, BACNET_REQUEST_KEY_UPDATE *req)
     return curr;
 }
 
-int encode_key_entry(uint8_t *apdu, BACNET_KEY_ENTRY *entry)
+int encode_key_entry(uint8_t * apdu,
+    BACNET_KEY_ENTRY * entry)
 {
     int curr = 0;
 
@@ -276,7 +302,8 @@ int encode_key_entry(uint8_t *apdu, BACNET_KEY_ENTRY *entry)
     return curr;
 }
 
-int encode_update_key_set(uint8_t *apdu, BACNET_UPDATE_KEY_SET *key_set)
+int encode_update_key_set(uint8_t * apdu,
+    BACNET_UPDATE_KEY_SET * key_set)
 {
     int curr = 0;
     int i, res;
@@ -309,8 +336,10 @@ int encode_update_key_set(uint8_t *apdu, BACNET_UPDATE_KEY_SET *key_set)
     curr++;
     if (key_set->set_rae[0]) {
         apdu[curr++] = key_set->set_key_revision[0];
-        curr += encode_unsigned32(&apdu[curr], key_set->set_activation_time[0]);
-        curr += encode_unsigned32(&apdu[curr], key_set->set_expiration_time[0]);
+        curr +=
+            encode_unsigned32(&apdu[curr], key_set->set_activation_time[0]);
+        curr +=
+            encode_unsigned32(&apdu[curr], key_set->set_expiration_time[0]);
     }
     if (key_set->set_ck[0]) {
         apdu[curr++] = key_set->set_key_count[0];
@@ -327,8 +356,10 @@ int encode_update_key_set(uint8_t *apdu, BACNET_UPDATE_KEY_SET *key_set)
     }
     if (key_set->set_rae[1]) {
         apdu[curr++] = key_set->set_key_revision[1];
-        curr += encode_unsigned32(&apdu[curr], key_set->set_activation_time[1]);
-        curr += encode_unsigned32(&apdu[curr], key_set->set_expiration_time[1]);
+        curr +=
+            encode_unsigned32(&apdu[curr], key_set->set_activation_time[1]);
+        curr +=
+            encode_unsigned32(&apdu[curr], key_set->set_expiration_time[1]);
     }
     if (key_set->set_ck[1]) {
         apdu[curr++] = key_set->set_key_count[1];
@@ -346,8 +377,8 @@ int encode_update_key_set(uint8_t *apdu, BACNET_UPDATE_KEY_SET *key_set)
     return curr;
 }
 
-int encode_update_distribution_key(
-    uint8_t *apdu, BACNET_UPDATE_DISTRIBUTION_KEY *dist_key)
+int encode_update_distribution_key(uint8_t * apdu,
+    BACNET_UPDATE_DISTRIBUTION_KEY * dist_key)
 {
     int curr = 0;
     int res;
@@ -361,8 +392,8 @@ int encode_update_distribution_key(
     return curr + res;
 }
 
-int encode_request_master_key(
-    uint8_t *apdu, BACNET_REQUEST_MASTER_KEY *req_master_key)
+int encode_request_master_key(uint8_t * apdu,
+    BACNET_REQUEST_MASTER_KEY * req_master_key)
 {
     int curr = 0;
 
@@ -373,17 +404,16 @@ int encode_request_master_key(
     return (int)(curr + req_master_key->no_supported_algorithms);
 }
 
-int encode_set_master_key(uint8_t *apdu, BACNET_SET_MASTER_KEY *set_master_key)
+int encode_set_master_key(uint8_t * apdu,
+    BACNET_SET_MASTER_KEY * set_master_key)
 {
     return encode_key_entry(apdu, &set_master_key->key);
 }
 
-#if 0
-/* FIXME: please fix? */
 int decode_security_wrapper_safe(int bytes_before,
-    uint8_t *apdu,
+    uint8_t * apdu,
     uint32_t apdu_len_remaining,
-    BACNET_SECURITY_WRAPPER *wrapper)
+    BACNET_SECURITY_WRAPPER * wrapper)
 {
     int curr = 0;
     int enc_begin = 0;
@@ -409,7 +439,7 @@ int decode_security_wrapper_safe(int bytes_before,
         return -SEC_RESP_MALFORMED_MESSAGE;
     }
     /* remove encryption flag for signature validation */
-    apdu[curr] &= ~((uint8_t)(1 << 6));
+    apdu[curr] &= ~((uint8_t) (1 << 6));
     curr++;
     /* key */
     wrapper->key_revision = apdu[curr++];
@@ -435,15 +465,14 @@ int decode_security_wrapper_safe(int bytes_before,
                 (uint32_t)(real_len - enc_begin), wrapper->signature)) {
             return -SEC_RESP_MALFORMED_MESSAGE;
         }
-        curr += decode_unsigned16(&apdu[real_len - 2],
-        &wrapper->padding_len); real_len -= wrapper->padding_len;
+        curr += decode_unsigned16(&apdu[real_len - 2], &wrapper->padding_len);
+        real_len -= wrapper->padding_len;
         memcpy(wrapper->padding, &apdu[wrapper->padding_len],
             wrapper->padding_len - 2);
     }
     /* destination device instance */
     curr +=
-        decode_unsigned24(&apdu[curr],
-        &wrapper->destination_device_instance);
+        decode_unsigned24(&apdu[curr], &wrapper->destination_device_instance);
     /* dst address */
     curr += decode_unsigned16(&apdu[curr], &wrapper->dnet);
     wrapper->dlen = apdu[curr++];
@@ -462,15 +491,17 @@ int decode_security_wrapper_safe(int bytes_before,
         wrapper->user_role = apdu[curr++];
         if ((wrapper->authentication_mechanism >= 1) &&
             (wrapper->authentication_mechanism <= 199)) {
-            curr += decode_unsigned16(
-                &apdu[curr], &wrapper->authentication_data_length);
+            curr +=
+                decode_unsigned16(&apdu[curr],
+                &wrapper->authentication_data_length);
             wrapper->authentication_data_length -= 5;
             memcpy(wrapper->authentication_data, &apdu[curr],
                 wrapper->authentication_data_length);
             curr += wrapper->authentication_data_length;
         } else if (wrapper->authentication_mechanism >= 200) {
-            curr += decode_unsigned16(
-                &apdu[curr], &wrapper->authentication_data_length);
+            curr +=
+                decode_unsigned16(&apdu[curr],
+                &wrapper->authentication_data_length);
             wrapper->authentication_data_length -= 7;
             curr += decode_unsigned16(&apdu[curr], &wrapper->vendor_id);
             memcpy(wrapper->authentication_data, &apdu[curr],
@@ -488,11 +519,10 @@ int decode_security_wrapper_safe(int bytes_before,
 
     return curr;
 }
-#endif
 
-int decode_challenge_request_safe(uint8_t *apdu,
+int decode_challenge_request_safe(uint8_t * apdu,
     uint32_t apdu_len_remaining,
-    BACNET_CHALLENGE_REQUEST *bc_req)
+    BACNET_CHALLENGE_REQUEST * bc_req)
 {
     int curr = 0;
 
@@ -503,12 +533,12 @@ int decode_challenge_request_safe(uint8_t *apdu,
     curr += decode_unsigned32(&apdu[curr], &bc_req->orig_message_id);
     curr += decode_unsigned32(&apdu[curr], &bc_req->orig_timestamp);
 
-    return curr; /* always 9! */
+    return curr;        /* always 9! */
 }
 
-int decode_security_payload_safe(uint8_t *apdu,
+int decode_security_payload_safe(uint8_t * apdu,
     uint32_t apdu_len_remaining,
-    BACNET_SECURITY_PAYLOAD *payload)
+    BACNET_SECURITY_PAYLOAD * payload)
 {
     if (apdu_len_remaining < 2) {
         return -1;
@@ -521,8 +551,9 @@ int decode_security_payload_safe(uint8_t *apdu,
     return (int)(2 + payload->payload_length);
 }
 
-int decode_security_response_safe(
-    uint8_t *apdu, uint32_t apdu_len_remaining, BACNET_SECURITY_RESPONSE *resp)
+int decode_security_response_safe(uint8_t * apdu,
+    uint32_t apdu_len_remaining,
+    BACNET_SECURITY_RESPONSE * resp)
 {
     int curr = 0;
     int i;
@@ -533,46 +564,49 @@ int decode_security_response_safe(
     resp->response_code = apdu[curr++];
     curr += decode_unsigned32(&apdu[curr], &resp->orig_message_id);
     curr += decode_unsigned32(&apdu[curr], &resp->orig_timestamp);
-    switch ((BACNET_SECURITY_RESPONSE_CODE)resp->response_code) {
+    switch ((BACNET_SECURITY_RESPONSE_CODE) resp->response_code) {
         case SEC_RESP_BAD_TIMESTAMP:
             if (apdu_len_remaining < 13) {
                 return -1;
             }
-            curr += decode_unsigned32(
-                &apdu[curr], &resp->response.bad_timestamp.expected_timestamp);
+            curr +=
+                decode_unsigned32(&apdu[curr],
+                &resp->response.bad_timestamp.expected_timestamp);
             break;
         case SEC_RESP_CANNOT_USE_KEY:
             if (apdu_len_remaining < 11) {
                 return -1;
             }
-            curr += decode_unsigned16(
-                &apdu[curr], &resp->response.cannot_use_key.key);
+            curr +=
+                decode_unsigned16(&apdu[curr],
+                &resp->response.cannot_use_key.key);
             break;
         case SEC_RESP_INCORRECT_KEY:
             if (apdu_len_remaining < 10) {
                 return -1;
             }
             resp->response.incorrect_key.number_of_keys = apdu[curr++];
-            if (apdu_len_remaining - 10 <
-                resp->response.incorrect_key.number_of_keys * 2) {
+            if (apdu_len_remaining - 10u <
+                resp->response.incorrect_key.number_of_keys * 2u) {
                 return -1;
             }
-            for (i = 0; i < (int)resp->response.incorrect_key.number_of_keys;
-                 i++) {
-                curr += decode_unsigned16(
-                    &apdu[curr], &resp->response.incorrect_key.keys[i]);
+            for (i = 0; i < (int)resp->response.incorrect_key.number_of_keys; i++) {
+                curr +=
+                    decode_unsigned16(&apdu[curr],
+                    &resp->response.incorrect_key.keys[i]);
             }
             break;
         case SEC_RESP_UNKNOWN_AUTHENTICATION_TYPE:
             if (apdu_len_remaining < 12) {
                 return -1;
             }
-            resp->response.unknown_authentication_type
-                .original_authentication_type = apdu[curr++];
-            curr += decode_unsigned16(&apdu[curr],
+            resp->response.unknown_authentication_type.
+                original_authentication_type = apdu[curr++];
+            curr +=
+                decode_unsigned16(&apdu[curr],
                 &resp->response.unknown_authentication_type.vendor_id);
-            if (resp->response.unknown_authentication_type
-                        .original_authentication_type < 200 &&
+            if (resp->response.unknown_authentication_type.
+                original_authentication_type < 200 &&
                 resp->response.unknown_authentication_type.vendor_id != 0) {
                 return -1;
             }
@@ -581,8 +615,9 @@ int decode_security_response_safe(
             if (apdu_len_remaining < 11) {
                 return -1;
             }
-            curr += decode_unsigned16(
-                &apdu[curr], &resp->response.unknown_key.original_key);
+            curr +=
+                decode_unsigned16(&apdu[curr],
+                &resp->response.unknown_key.original_key);
             break;
         case SEC_RESP_UNKNOWN_KEY_REVISION:
             if (apdu_len_remaining < 10) {
@@ -601,8 +636,9 @@ int decode_security_response_safe(
             if (apdu_len_remaining < 11) {
                 return -1;
             }
-            curr += decode_unsigned16(
-                &apdu[curr], &resp->response.invalid_key_data.key);
+            curr +=
+                decode_unsigned16(&apdu[curr],
+                &resp->response.invalid_key_data.key);
             break;
         case SEC_RESP_SUCCESS:
         case SEC_RESP_ACCESS_DENIED:
@@ -624,13 +660,14 @@ int decode_security_response_safe(
         case SEC_RESP_UNKNOWN_SOURCE_MESSAGE:
             break;
         default:
-            return -1; /* unknown message type */
+            return -1;  /* unknown message type */
     }
     return curr;
 }
 
-int decode_request_key_update_safe(
-    uint8_t *apdu, uint32_t apdu_len_remaining, BACNET_REQUEST_KEY_UPDATE *req)
+int decode_request_key_update_safe(uint8_t * apdu,
+    uint32_t apdu_len_remaining,
+    BACNET_REQUEST_KEY_UPDATE * req)
 {
     int curr = 0;
 
@@ -648,8 +685,9 @@ int decode_request_key_update_safe(
     return curr;
 }
 
-int decode_key_entry_safe(
-    uint8_t *apdu, uint32_t apdu_len_remaining, BACNET_KEY_ENTRY *entry)
+int decode_key_entry_safe(uint8_t * apdu,
+    uint32_t apdu_len_remaining,
+    BACNET_KEY_ENTRY * entry)
 {
     int curr = 0;
 
@@ -668,8 +706,9 @@ int decode_key_entry_safe(
     return curr;
 }
 
-int decode_update_key_set_safe(
-    uint8_t *apdu, uint32_t apdu_len_remaining, BACNET_UPDATE_KEY_SET *key_set)
+int decode_update_key_set_safe(uint8_t * apdu,
+    uint32_t apdu_len_remaining,
+    BACNET_UPDATE_KEY_SET * key_set)
 {
     int curr = 0;
     int i, res;
@@ -721,7 +760,8 @@ int decode_update_key_set_safe(
             return -1;
         }
         for (i = 0; i < (int)key_set->set_key_count[0]; i++) {
-            res = decode_key_entry_safe(apdu + curr, apdu_len_remaining - curr,
+            res =
+                decode_key_entry_safe(apdu + curr, apdu_len_remaining - curr,
                 &key_set->set_keys[0][i]);
             if (res < 0) {
                 return -1;
@@ -748,7 +788,8 @@ int decode_update_key_set_safe(
             return -1;
         }
         for (i = 0; i < (int)key_set->set_key_count[1]; i++) {
-            res = decode_key_entry_safe(apdu + curr, apdu_len_remaining - curr,
+            res =
+                decode_key_entry_safe(apdu + curr, apdu_len_remaining - curr,
                 &key_set->set_keys[1][i]);
             if (res < 0) {
                 return -1;
@@ -760,9 +801,9 @@ int decode_update_key_set_safe(
     return curr;
 }
 
-int decode_update_distribution_key_safe(uint8_t *apdu,
+int decode_update_distribution_key_safe(uint8_t * apdu,
     uint32_t apdu_len_remaining,
-    BACNET_UPDATE_DISTRIBUTION_KEY *dist_key)
+    BACNET_UPDATE_DISTRIBUTION_KEY * dist_key)
 {
     int curr = 0;
     int res;
@@ -770,8 +811,9 @@ int decode_update_distribution_key_safe(uint8_t *apdu,
         return -1;
     }
     dist_key->key_revision = apdu[curr++];
-    res = decode_key_entry_safe(
-        &apdu[curr], apdu_len_remaining - curr, &dist_key->key);
+    res =
+        decode_key_entry_safe(&apdu[curr], apdu_len_remaining - curr,
+        &dist_key->key);
     if (res < 0) {
         return -1;
     }
@@ -779,9 +821,9 @@ int decode_update_distribution_key_safe(uint8_t *apdu,
     return curr + res;
 }
 
-int decode_request_master_key_safe(uint8_t *apdu,
+int decode_request_master_key_safe(uint8_t * apdu,
     uint32_t apdu_len_remaining,
-    BACNET_REQUEST_MASTER_KEY *req_master_key)
+    BACNET_REQUEST_MASTER_KEY * req_master_key)
 {
     uint32_t curr = 0;
 
@@ -798,10 +840,10 @@ int decode_request_master_key_safe(uint8_t *apdu,
     return (int)(curr + req_master_key->no_supported_algorithms);
 }
 
-int decode_set_master_key_safe(uint8_t *apdu,
+int decode_set_master_key_safe(uint8_t * apdu,
     uint32_t apdu_len_remaining,
-    BACNET_SET_MASTER_KEY *set_master_key)
+    BACNET_SET_MASTER_KEY * set_master_key)
 {
-    return decode_key_entry_safe(
-        apdu, apdu_len_remaining, &set_master_key->key);
+    return decode_key_entry_safe(apdu, apdu_len_remaining,
+        &set_master_key->key);
 }

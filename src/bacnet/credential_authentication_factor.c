@@ -22,36 +22,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  *********************************************************************/
-#include <stdint.h>
-#include "bacnet/credential_authentication_factor.h"
-#include "bacnet/bacdcode.h"
+
+#include "credential_authentication_factor.h"
+#include "bacdcode.h"
+
 
 int bacapp_encode_credential_authentication_factor(
-    uint8_t *apdu, BACNET_CREDENTIAL_AUTHENTICATION_FACTOR *caf)
+    uint8_t * apdu,
+    BACNET_CREDENTIAL_AUTHENTICATION_FACTOR * caf)
 {
     int len;
     int apdu_len = 0;
 
     len = encode_context_enumerated(&apdu[apdu_len], 0, caf->disable);
-    if (len < 0) {
+    if (len < 0)
         return -1;
-    } else {
+    else
         apdu_len += len;
-    }
 
-    len = bacapp_encode_context_authentication_factor(
-        &apdu[apdu_len], 1, &caf->authentication_factor);
-    if (len < 0) {
+    len =
+        bacapp_encode_context_authentication_factor(&apdu[apdu_len], 1,
+        &caf->authentication_factor);
+    if (len < 0)
         return -1;
-    } else {
+    else
         apdu_len += len;
-    }
 
     return apdu_len;
 }
 
 int bacapp_encode_context_credential_authentication_factor(
-    uint8_t *apdu, uint8_t tag, BACNET_CREDENTIAL_AUTHENTICATION_FACTOR *caf)
+    uint8_t * apdu,
+    uint8_t tag,
+    BACNET_CREDENTIAL_AUTHENTICATION_FACTOR * caf)
 {
     int len;
     int apdu_len = 0;
@@ -66,46 +69,46 @@ int bacapp_encode_context_credential_authentication_factor(
     apdu_len += len;
 
     return apdu_len;
+
 }
 
 int bacapp_decode_credential_authentication_factor(
-    uint8_t *apdu, BACNET_CREDENTIAL_AUTHENTICATION_FACTOR *caf)
+    uint8_t * apdu,
+    BACNET_CREDENTIAL_AUTHENTICATION_FACTOR * caf)
 {
     int len;
     int apdu_len = 0;
-    uint32_t disable = caf->disable;
+    uint32_t tuint ;
 
     if (decode_is_context_tag(&apdu[apdu_len], 0)) {
-        len = decode_context_enumerated(&apdu[apdu_len], 0, &disable);
-        if (len < 0) {
+        len = decode_context_enumerated(&apdu[apdu_len], 0, &tuint );
+        if (len < 0)
             return -1;
-        } else if (disable < ACCESS_AUTHENTICATION_FACTOR_DISABLE_MAX) {
-            apdu_len += len;
-            caf->disable = (BACNET_ACCESS_AUTHENTICATION_FACTOR_DISABLE)disable;
-        } else {
-            return -1;
+        else {
+        	caf->disable = (BACNET_ACCESS_AUTHENTICATION_FACTOR_DISABLE) tuint ;
         }
-    } else {
+            apdu_len += len;
+    } else
         return -1;
-    }
 
     if (decode_is_context_tag(&apdu[apdu_len], 1)) {
-        len = bacapp_decode_context_authentication_factor(
-            &apdu[apdu_len], 1, &caf->authentication_factor);
-        if (len < 0) {
+        len =
+            bacapp_decode_context_authentication_factor(&apdu[apdu_len], 1,
+            &caf->authentication_factor);
+        if (len < 0)
             return -1;
-        } else {
+        else
             apdu_len += len;
-        }
-    } else {
+    } else
         return -1;
-    }
 
     return apdu_len;
 }
 
 int bacapp_decode_context_credential_authentication_factor(
-    uint8_t *apdu, uint8_t tag, BACNET_CREDENTIAL_AUTHENTICATION_FACTOR *caf)
+    uint8_t * apdu,
+    uint8_t tag,
+    BACNET_CREDENTIAL_AUTHENTICATION_FACTOR * caf)
 {
     int len = 0;
     int section_length;

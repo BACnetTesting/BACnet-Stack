@@ -32,6 +32,15 @@
  -------------------------------------------
 ####COPYRIGHTEND####*/
 
+
+/*
+    BITS: we want to include this file to test routing layers.... 
+    compiling as an emulation with effectively stubs only for ethernet
+    to validate other functionality.
+    Final target is linux, so not too much effort spent on win ethernet.c
+    Commented out code is BITS_ETHERNET_EMULATION
+*/
+
 #include <stdint.h> /* for standard integer types uint8_t etc. */
 #include <stdbool.h> /* for the standard bool type. */
 #include <assert.h>
@@ -41,6 +50,7 @@
 #include "bacnet/bacdef.h"
 #include "bacnet/datalink/ethernet.h"
 #include "bacnet/bacdcode.h"
+#include "bacnet/bits/util/multipleDatalink.h"
 
 /* Uses WinPCap to access raw ethernet */
 /* Notes:                                               */
@@ -53,47 +63,64 @@
 /* -- Kevin Liao                                        */
 
 /* includes for accessing ethernet by using winpcap */
+#ifdef BITS_ETHERNET_EMULATION
 #include "pcap.h"
 #include "packet32.h"
 #include "ntddndis.h"
 #include "remote-ext.h"
+#endif
 
 /* commonly used comparison address for ethernet */
-uint8_t Ethernet_Broadcast[MAX_MAC_LEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF };
+// uint8_t Ethernet_Broadcast[MAX_ETHERNET_MAC_LEN] ={0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+
 /* commonly used empty address for ethernet quick compare */
-uint8_t Ethernet_Empty_MAC[MAX_MAC_LEN] = { 0, 0, 0, 0, 0, 0 };
+// uint8_t Ethernet_Empty_MAC[MAX_ETHERNET_MAC_LEN] = {0, 0, 0, 0, 0, 0};
 
 /* my local device data - MAC address */
-uint8_t Ethernet_MAC_Address[MAX_MAC_LEN] = { 0 };
+// uint8_t Ethernet_MAC_Address[MAX_ETHERNET_MAC_LEN] = {0};
 
 /* couple of var for using winpcap */
+#ifdef BITS_ETHERNET_EMULATION
 static char pcap_errbuf[PCAP_ERRBUF_SIZE + 1];
 static pcap_t *pcap_eth802_fp = NULL; /* 802.2 file handle, from winpcap */
+#endif
 static unsigned eth_timeout = 100;
 
 /* couple of external func for runtime error logging, you can simply    */
 /* replace them with standard "printf(...)"                             */
 /* Logging extern functions: Info level */
+
+#ifdef BITS_ETHERNET_EMULATION
 extern void LogInfo(const char *msg);
 /* Logging extern functions: Error level*/
 extern void LogError(const char *msg);
 /* Logging extern functions: Debug level*/
 extern void LogDebug(const char *msg);
+#endif
 
-bool ethernet_valid(void)
+bool ethernet_valid(
+    void)
 {
+#ifdef BITS_ETHERNET_EMULATION
     return (pcap_eth802_fp != NULL);
+#else
+    return true;
+#endif
 }
 
-void ethernet_cleanup(void)
+
+void ethernet_cleanup(
+    void)
 {
+#ifdef BITS_ETHERNET_EMULATION
     if (pcap_eth802_fp) {
         pcap_close(pcap_eth802_fp);
         pcap_eth802_fp = NULL;
     }
     LogInfo("ethernet.c: ethernet_cleanup() ok.\n");
+#endif
 }
+
 
 void ethernet_set_timeout(unsigned timeout)
 {
@@ -125,15 +152,19 @@ int setNonblocking(int fd)
 }
 */
 
-bool ethernet_init(char *if_name)
+bool ethernet_init(
+    PORT_SUPPORT *portParams,
+    const char *if_name)
 {
+    int i;
+
+#ifdef BITS_ETHERNET_EMULATION
     PPACKET_OID_DATA pOidData;
     LPADAPTER lpAdapter;
     pcap_if_t *pcap_all_if;
     pcap_if_t *dev;
     BOOLEAN result;
     CHAR str[sizeof(PACKET_OID_DATA) + 128];
-    int i;
     char msgBuf[200];
 
     if (ethernet_valid())
@@ -184,8 +215,28 @@ bool ethernet_init(char *if_name)
         LogError("ethernet.c: error in PacketRequest()\n");
         return false;
     }
-    for (i = 0; i < 6; ++i)
+#endif
+
+
+#ifdef BITS_ETHERNET_EMULATION
+    for (i = 0; i < MAX_ETHERNET_MAC_LEN; ++i)
+    {
+        portParams->localMAC->len = MAX_ETHERNET_MAC_LEN;
         Ethernet_MAC_Address[i] = pOidData->Data[i];
+    }
+#else
+    portParams->localMAC->len = MAX_ETHERNET_MAC_LEN;
+    portParams->localMAC->macType = MAC_TYPE_ETHERNET;
+    for (i = 0; i < MAX_ETHERNET_MAC_LEN; ++i)
+    {
+        portParams->localMAC->bytes[i] = (uint8_t) ( 0xf0 + i ) ;
+    }
+#endif
+
+
+
+#ifdef BITS_ETHERNET_EMULATION
+
     PacketCloseAdapter(lpAdapter);
 
     /**
@@ -193,7 +244,7 @@ bool ethernet_init(char *if_name)
      */
     /* Open the output device */
     pcap_eth802_fp = pcap_open(if_name, /* name of the device */
-        ETHERNET_MPDU_MAX, /* portion of the packet to capture */
+        MAX_MPDU, /* portion of the packet to capture */
         PCAP_OPENFLAG_PROMISCUOUS, /* promiscuous mode */
         eth_timeout, /* read timeout */
         NULL, /* authentication on the remote machine */
@@ -215,105 +266,102 @@ bool ethernet_init(char *if_name)
     atexit(ethernet_cleanup);
 
     return ethernet_valid();
+#else
+    return true;
+#endif
 }
 
+
 /* function to send a packet out the 802.2 socket */
-/* returns bytes sent success, negative on failure */
-int ethernet_send(BACNET_ADDRESS *dest, /* destination address */
-    BACNET_ADDRESS *src, /* source address */
-    uint8_t *pdu, /* any data to be sent - may be null */
-    unsigned pdu_len /* number of bytes of data */
-)
+/* returns number of bytes sent on success, negative on failure */
+void ethernet_send_npdu(
+    PORT_SUPPORT* datalink,
+    const DLCB *dlcb)
 {
-    int bytes = 0;
-    uint8_t mtu[ETHERNET_MPDU_MAX] = { 0 };
+    uint8_t mtu[MAX_LPDU_ETHERNET] ;
     int mtu_len = 0;
-    int i = 0;
+    int i ;
 
     /* don't waste time if the socket is not valid */
     if (!ethernet_valid()) {
-        LogError("ethernet.c: invalid 802.2 ethernet interface descriptor!\n");
-        return -1;
+        panic();
+        // LogError("ethernet.c: invalid 802.2 ethernet interface descriptor!\n");
+        return ;
     }
+
     /* load destination ethernet MAC address */
-    if (dest->mac_len == 6) {
-        for (i = 0; i < 6; i++) {
-            mtu[mtu_len] = dest->mac[i];
+    if ( dlcb->bacnetPath.localMac.len == MAX_ETHERNET_MAC_LEN) {
+        for (i = 0; i < MAX_ETHERNET_MAC_LEN; i++) {
+            mtu[mtu_len] = dlcb->bacnetPath.localMac.bytes[i];
             mtu_len++;
         }
-    } else {
-        LogError("ethernet.c: invalid destination MAC address!\n");
-        return -2;
+    }
+    else if (dlcb->bacnetPath.localMac.len == 0) {
+        // Assume broadcast
+        for (i = 0; i < MAX_ETHERNET_MAC_LEN; i++)
+        {
+            mtu[mtu_len] = 0xff ;
+            mtu_len++;
+        }
+    }
+    else
+    {
+        panic();
+        return;
     }
 
     /* load source ethernet MAC address */
-    if (src->mac_len == 6) {
-        for (i = 0; i < 6; i++) {
-            mtu[mtu_len] = src->mac[i];
+    if ( datalink->localMAC->len == MAX_ETHERNET_MAC_LEN) {
+        for (i = 0; i < MAX_ETHERNET_MAC_LEN; i++) {
+            mtu[mtu_len] = datalink->localMAC->bytes[i];
             mtu_len++;
         }
     } else {
-        LogError("ethernet.c: invalid source MAC address!\n");
-        return -3;
+        panic();
+        return;
     }
-    if ((14 + 3 + pdu_len) > ETHERNET_MPDU_MAX) {
-        LogError("ethernet.c: PDU is too big to send!\n");
-        return -4;
+
+    if ((14 + 3 + dlcb->optr ) > MAX_LPDU_ETHERNET) {
+        // LogError("ethernet.c: PDU is too big to send!\n");
+        panic();
+        return;
     }
+
     /* packet length */
-    mtu_len += encode_unsigned16(&mtu[12], 3 /*DSAP,SSAP,LLC */ + pdu_len);
+    mtu_len += encode_unsigned16(&mtu[12], 3 /*DSAP,SSAP,LLC */ + dlcb->optr );
     /* Logical PDU portion */
     mtu[mtu_len++] = 0x82; /* DSAP for BACnet */
     mtu[mtu_len++] = 0x82; /* SSAP for BACnet */
     mtu[mtu_len++] = 0x03; /* Control byte in header */
-    memcpy(&mtu[mtu_len], pdu, pdu_len);
-    mtu_len += pdu_len;
+    memcpy(&mtu[mtu_len], dlcb->Handler_Transmit_Buffer, dlcb->optr);
+    mtu_len += dlcb->optr;
 
     /* Send the packet */
+#ifdef BITS_ETHERNET_EMULATION
     if (pcap_sendpacket(pcap_eth802_fp, mtu, mtu_len) != 0) {
         /* did it get sent? */
         char msgBuf[200];
         sprintf(msgBuf, "ethernet.c: error sending packet: %s\n",
             pcap_geterr(pcap_eth802_fp));
         LogError(msgBuf);
-        return -5;
+        return ;
     }
+#endif
 
-    return mtu_len;
+    dlcb_free(dlcb);
 }
 
-/* function to send a packet out the 802.2 socket */
-/* returns number of bytes sent on success, negative on failure */
-int ethernet_send_pdu(BACNET_ADDRESS *dest, /* destination address */
-    uint8_t *pdu, /* any data to be sent - may be null */
-    unsigned pdu_len /* number of bytes of data */
-)
-{
-    int i = 0; /* counter */
-    BACNET_ADDRESS src = { 0 }; /* source address */
-
-    for (i = 0; i < 6; i++) {
-        src.mac[i] = Ethernet_MAC_Address[i];
-        src.mac_len++;
-    }
-    /* function to send a packet out the 802.2 socket */
-    /* returns 1 on success, 0 on failure */
-    return ethernet_send(dest, /* destination address */
-        &src, /* source address */
-        pdu, /* any data to be sent - may be null */
-        pdu_len /* number of bytes of data */
-    );
-}
 
 /* receives an 802.2 framed packet */
 /* returns the number of octets in the PDU, or zero on failure */
-uint16_t ethernet_receive(BACNET_ADDRESS *src, /* source address */
-    uint8_t *pdu, /* PDU data */
-    uint16_t max_pdu, /* amount of space available in the PDU  */
-    unsigned timeout /* number of milliseconds to wait for a packet. we ommit it
-                        due to winpcap API. */
+uint16_t ethernet_receive(
+    PORT_SUPPORT *portParams,
+    BACNET_MAC_ADDRESS *mac,
+    uint8_t *npdu,
+    uint16_t max_pdu
 )
 {
+#ifdef BITS_ETHERNET_EMULATION
     struct pcap_pkthdr *header;
     int res;
     u_char *pkt_data;
@@ -365,57 +413,61 @@ uint16_t ethernet_receive(BACNET_ADDRESS *src, /* source address */
         pdu_len = 0;
 
     return pdu_len;
+#else
+    return 0;
+#endif
 }
 
-void ethernet_set_my_address(BACNET_ADDRESS *my_address)
+
+//void ethernet_set_my_address(
+//    BACNET_GLOBAL_ADDRESS *my_address)
+//{
+//    int i ;
+//
+//    for (i = 0; i < 6; i++) {
+//        Ethernet_MAC_Address[i] = my_address->mac.bytes[i];
+//    }
+//
+//    return;
+//}
+
+
+void ethernet_get_MAC_address(
+    const PORT_SUPPORT *portParams,
+    BACNET_MAC_ADDRESS * my_address)
 {
-    int i = 0;
+    int i ;
 
-    for (i = 0; i < 6; i++) {
-        Ethernet_MAC_Address[i] = my_address->mac[i];
+    my_address->len = MAX_ETHERNET_MAC_LEN;
+    my_address->macType = MAC_TYPE_ETHERNET ;
+    for (i = 0; i < MAX_ETHERNET_MAC_LEN; i++) {
+        my_address->bytes[i] = portParams->localMAC->bytes[i] ;
     }
-
-    return;
 }
 
-void ethernet_get_my_address(BACNET_ADDRESS *my_address)
-{
-    int i = 0;
 
-    my_address->mac_len = 0;
-    for (i = 0; i < 6; i++) {
-        my_address->mac[i] = Ethernet_MAC_Address[i];
-        my_address->mac_len++;
-    }
-    my_address->net = 0; /* local only, no routing */
-    my_address->len = 0;
-    for (i = 0; i < MAX_MAC_LEN; i++) {
-        my_address->adr[i] = 0;
-    }
+//void ethernet_get_broadcast_address(
+//    BACNET_PATH *dest)        /* destination address */
+//{ 
+//    int i;
+//
+//    dest->localMac.macType = MAC_TYPE_ETHERNET;
+//    for (i = 0; i < 6; i++) {
+//        dest->localMac.bytes[i] = Ethernet_Broadcast[i];
+//    }
+//    dest->localMac.len = 6;
+//    dest->glAdr.net = BACNET_BROADCAST_NETWORK;
+//    dest->glAdr.mac.len = 0; /* denotes broadcast address  */
+//    for (i = 0; i < MAX_MAC_LEN; i++) {
+//        dest->glAdr.mac.bytes[i] = 0;
+//    }
+//}
 
-    return;
-}
 
-void ethernet_get_broadcast_address(BACNET_ADDRESS *dest)
-{ /* destination address */
-    int i = 0; /* counter */
-
-    if (dest) {
-        for (i = 0; i < 6; i++) {
-            dest->mac[i] = Ethernet_Broadcast[i];
-        }
-        dest->mac_len = 6;
-        dest->net = BACNET_BROADCAST_NETWORK;
-        dest->len = 0; /* denotes broadcast address  */
-        for (i = 0; i < MAX_MAC_LEN; i++) {
-            dest->adr[i] = 0;
-        }
-    }
-
-    return;
-}
-
-void ethernet_debug_address(const char *info, BACNET_ADDRESS *dest)
+#if 0
+void ethernet_debug_address(
+    const char *info, 
+    BACNET_GLOBAL_ADDRESS *dest)
 {
     int i = 0; /* counter */
     char msgBuf[200];
@@ -429,19 +481,18 @@ void ethernet_debug_address(const char *info, BACNET_ADDRESS *dest)
         sprintf(
             msgBuf, "Address:\n  MAC Length=%d\n  MAC Address=", dest->mac_len);
         LogInfo(msgBuf);
-        for (i = 0; i < MAX_MAC_LEN; i++) {
+        for (i = 0; i < MAX_ETHERNET_MAC_LEN; i++) {
             sprintf(msgBuf, "%02X ", (unsigned)dest->mac[i]);
             LogInfo(msgBuf);
         } /* for */
         LogInfo("\n");
         sprintf(msgBuf, "  Net=%hu\n  Len=%d\n  Adr=", dest->net, dest->len);
         LogInfo(msgBuf);
-        for (i = 0; i < MAX_MAC_LEN; i++) {
+        for (i = 0; i < MAX_ETHERNET_MAC_LEN; i++) {
             sprintf(msgBuf, "%02X ", (unsigned)dest->adr[i]);
             LogInfo(msgBuf);
-        } /* for */
+        }
         LogInfo("\n");
     }
-    /* if ( dest ) */
-    return;
 }
+#endif

@@ -85,10 +85,6 @@ extern "C" {
         uint16_t seconds);
 
     BACNET_STACK_EXPORT
-    void bvlc6_debug_enable(
-        void);
-
-    BACNET_STACK_EXPORT
     void bvlc6_cleanup(void);
 
     BACNET_STACK_EXPORT

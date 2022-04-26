@@ -29,28 +29,42 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+ *
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
 #include <stdint.h>
 #include "bacnet/bacenum.h"
-#include "bacnet/bacdcode.h"
+#include "bacdcode.h"
 #include "bacnet/bacdef.h"
-#include "bacnet/abort.h"
+#include "abort.h"
+#include "eLib/util/eLibDebug.h"
 
 /** @file abort.c  Abort Encoding/Decoding */
-
-/**
- * @brief Convert error-code into abort-reason
- *
- * Helper function to avoid needing additional entries in service data
- * structures when passing back abort status. Convert from error code to abort
- * code. Anything not defined converts to ABORT_REASON_OTHER. Alternate
- * methods are required to return proprietary abort codes.
- *
- * @param error_code - BACnet Error Code to convert
- * @return abort code or ABORT_REASON_OTHER if not found
+/* Helper function to avoid needing additional entries in service data structures
+ * when passing back abort status.
+ * Convert from error code to abort code.
+ * Anything not defined converts to ABORT_REASON_OTHER.
+ * Will need reworking if it is required to return proprietary abort codes.
  */
-BACNET_ABORT_REASON abort_convert_error_code(BACNET_ERROR_CODE error_code)
+
+// todo 4 - a better approach will be to add an abort reason field in the WP_DATA or RP_DATA
+
+BACNET_ABORT_REASON abort_convert_error_code(
+    BACNET_ERROR_CODE error_code)
 {
     BACNET_ABORT_REASON abort_code = ABORT_REASON_OTHER;
 
@@ -67,94 +81,35 @@ BACNET_ABORT_REASON abort_convert_error_code(BACNET_ERROR_CODE error_code)
         case ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED:
             abort_code = ABORT_REASON_SEGMENTATION_NOT_SUPPORTED;
             break;
-        case ERROR_CODE_ABORT_SECURITY_ERROR:
-            abort_code = ABORT_REASON_SECURITY_ERROR;
-            break;
-        case ERROR_CODE_ABORT_INSUFFICIENT_SECURITY:
-            abort_code = ABORT_REASON_INSUFFICIENT_SECURITY;
-            break;
         case ERROR_CODE_ABORT_PROPRIETARY:
             abort_code = ABORT_REASON_PROPRIETARY_FIRST;
             break;
         case ERROR_CODE_ABORT_OTHER:
+            // 'other' is coded above
+            break;
         default:
-            abort_code = ABORT_REASON_OTHER;
+            // 'other' is coded above
+            dbMessage(DBD_ALL, DB_UNEXPECTED_ERROR, "Unexpected Abort Reason %d", error_code );
             break;
     }
 
     return (abort_code);
 }
 
-/**
- * @brief Convert error-code from abort-reason
- *
- * Helper function to avoid needing additional entries in service data
- * structures when passing back abort status. Converts to error code from
- * abort code. Anything not defined converts to ABORT_REASON_OTHER.
- * Alternate methods are required to return proprietary abort codes.
- *
- * @param abort_code - BACnet Error Code to convert
- * @return error code or ERROR_CODE_ABORT_OTHER if not found
- */
-BACNET_ERROR_CODE abort_convert_to_error_code(BACNET_ABORT_REASON abort_code)
-{
-    BACNET_ERROR_CODE error_code = ERROR_CODE_ABORT_OTHER;
-
-    switch (abort_code) {
-        case ABORT_REASON_BUFFER_OVERFLOW:
-            error_code = ERROR_CODE_ABORT_BUFFER_OVERFLOW;
-            break;
-        case ABORT_REASON_INVALID_APDU_IN_THIS_STATE:
-            error_code = ERROR_CODE_ABORT_INVALID_APDU_IN_THIS_STATE;
-            break;
-        case ABORT_REASON_PREEMPTED_BY_HIGHER_PRIORITY_TASK:
-            error_code = ERROR_CODE_ABORT_PREEMPTED_BY_HIGHER_PRIORITY_TASK;
-            break;
-        case ABORT_REASON_SEGMENTATION_NOT_SUPPORTED:
-            error_code = ERROR_CODE_ABORT_SEGMENTATION_NOT_SUPPORTED;
-            break;
-        case ABORT_REASON_SECURITY_ERROR:
-            error_code = ERROR_CODE_ABORT_SECURITY_ERROR;
-            break;
-        case ABORT_REASON_INSUFFICIENT_SECURITY:
-            error_code = ERROR_CODE_ABORT_INSUFFICIENT_SECURITY;
-            break;
-        case ABORT_REASON_OTHER:
-            error_code = ERROR_CODE_ABORT_OTHER;
-            break;
-        default:
-            if ((abort_code >= ABORT_REASON_PROPRIETARY_FIRST) &&
-                (abort_code <= ABORT_REASON_PROPRIETARY_LAST)) {
-                error_code = ERROR_CODE_ABORT_PROPRIETARY;
-            }
-            break;
-    }
-
-    return (error_code);
-}
-
-/**
- * @brief Encode the BACnet Abort Service, returning the reason
- *        for the operation being aborted.
- *
- * @param apdu  Transmit buffer
- * @param invoke_id  ID invoked
- * @param abort_reason  Abort reason, see ABORT_REASON_X enumeration for details
- * @param server  True, if the abort has been issued by this device.
- *
- * @return Total length of the apdu, typically 3 on success, zero otherwise.
- */
+/* encode service */
 int abort_encode_apdu(
-    uint8_t *apdu, uint8_t invoke_id, uint8_t abort_reason, bool server)
+    uint8_t * apdu,
+    uint8_t invoke_id,
+    BACNET_ABORT_REASON abort_reason,
+    bool server)
 {
-    int apdu_len = 0; /* total length of the apdu, return value */
+    int apdu_len = 0;   /* total length of the apdu, return value */
 
     if (apdu) {
-        if (server) {
+        if (server)
             apdu[0] = PDU_TYPE_ABORT | 1;
-        } else {
+        else
             apdu[0] = PDU_TYPE_ABORT;
-        }
         apdu[1] = invoke_id;
         apdu[2] = abort_reason;
         apdu_len = 3;
@@ -164,39 +119,158 @@ int abort_encode_apdu(
 }
 
 #if !BACNET_SVC_SERVER
-/**
- * @brief Decode the BACnet Abort Service, returning the reason
- *        for the operation being aborted.
- *
- * @param apdu  Receive buffer
- * @param apdu_len  Count of bytes valid in the received buffer.
- * @param invoke_id  Pointer to a variable, taking the invoked ID from the
- * message.
- * @param abort_reason  Pointer to a variable, taking the abort reason, see
- * ABORT_REASON_X enumeration for details
- *
- * @return Total length of the apdu, typically 2 on success, zero otherwise.
- */
+/* decode the service request only */
 int abort_decode_service_request(
-    uint8_t *apdu, unsigned apdu_len, uint8_t *invoke_id, uint8_t *abort_reason)
+    uint8_t * apdu,
+    unsigned apdu_len,
+    uint8_t * invoke_id,
+    BACNET_ABORT_REASON * abort_reason)
 {
     int len = 0;
 
     if (apdu_len > 0) {
-        if (invoke_id) {
+        if (invoke_id)
             *invoke_id = apdu[0];
-        }
-        len++;
-
-        if (apdu_len > 1) {
-            if (abort_reason) {
-                *abort_reason = apdu[1];
-            }
-
-            len++;
-        }
+        if (abort_reason)
+            *abort_reason = (BACNET_ABORT_REASON) apdu[1];
     }
 
     return len;
 }
 #endif
+
+#ifdef TEST
+#include <assert.h>
+#include <string.h>
+#include "ctest.h"
+
+/* decode the whole APDU - mainly used for unit testing */
+int abort_decode_apdu(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    uint8_t * invoke_id,
+    uint8_t * abort_reason,
+    bool * server)
+{
+    int len = 0;
+
+    if (!apdu)
+        return -1;
+    /* optional checking - most likely was already done prior to this call */
+    if (apdu_len > 0) {
+        if ((apdu[0] & 0xF0) != PDU_TYPE_ABORT)
+            return -1;
+        if (apdu[0] & 1)
+            *server = true;
+        else
+            *server = false;
+        if (apdu_len > 1) {
+            len =
+                abort_decode_service_request(&apdu[1], apdu_len - 1, invoke_id,
+                abort_reason);
+        }
+    }
+
+    return len;
+}
+
+void testAbortAPDU(
+    Test * pTest,
+    uint8_t invoke_id,
+    uint8_t abort_reason,
+    bool server)
+{
+    uint8_t apdu[480] = { 0 };
+    int len = 0;
+    int apdu_len = 0;
+    uint8_t test_invoke_id = 0;
+    uint8_t test_abort_reason = 0;
+    bool test_server = false;
+
+    len = abort_encode_apdu(&apdu[0], invoke_id, abort_reason, server);
+    apdu_len = len;
+    ct_test(pTest, len != 0);
+    len =
+        abort_decode_apdu(&apdu[0], apdu_len, &test_invoke_id,
+        &test_abort_reason, &test_server);
+    ct_test(pTest, len != -1);
+    ct_test(pTest, test_invoke_id == invoke_id);
+    ct_test(pTest, test_abort_reason == abort_reason);
+    ct_test(pTest, test_server == server);
+
+}
+
+
+void testAbort(
+    Test * pTest)
+{
+    uint8_t apdu[480] = { 0 };
+    int len = 0;
+    int apdu_len = 0;
+    uint8_t invoke_id = 0;
+    uint8_t test_invoke_id = 0;
+    uint8_t abort_reason = 0;
+    uint8_t test_abort_reason = 0;
+    bool server = false;
+    bool test_server = false;
+
+    len = abort_encode_apdu(&apdu[0], invoke_id, abort_reason, server);
+    ct_test(pTest, len != 0);
+    apdu_len = len;
+    len =
+        abort_decode_apdu(&apdu[0], apdu_len, &test_invoke_id,
+        &test_abort_reason, &test_server);
+    ct_test(pTest, len != -1);
+    ct_test(pTest, test_invoke_id == invoke_id);
+    ct_test(pTest, test_abort_reason == abort_reason);
+    ct_test(pTest, test_server == server);
+
+    /* change type to get negative response */
+    apdu[0] = PDU_TYPE_REJECT;
+    len =
+        abort_decode_apdu(&apdu[0], apdu_len, &test_invoke_id,
+        &test_abort_reason, &test_server);
+    ct_test(pTest, len == -1);
+
+    /* test NULL APDU */
+    len =
+        abort_decode_apdu(NULL, apdu_len, &test_invoke_id, &test_abort_reason,
+        &test_server);
+    ct_test(pTest, len == -1);
+
+    /* force a zero length */
+    len =
+        abort_decode_apdu(&apdu[0], 0, &test_invoke_id, &test_abort_reason,
+        &test_server);
+    ct_test(pTest, len == 0);
+
+    /* check them all...   */
+    for (invoke_id = 0; invoke_id < 255; invoke_id++) {
+        for (abort_reason = 0; abort_reason < 255; abort_reason++) {
+            testAbortAPDU(pTest, invoke_id, abort_reason, false);
+            testAbortAPDU(pTest, invoke_id, abort_reason, true);
+        }
+    }
+}
+
+#ifdef TEST_ABORT
+int main(
+    void)
+{
+    Test *pTest;
+    bool rc;
+
+    pTest = ct_create("BACnet Abort", NULL);
+    /* individual tests */
+    rc = ct_addTestFunction(pTest, testAbort);
+    assert(rc);
+
+    ct_setStream(pTest, stdout);
+    ct_run(pTest);
+    (void) ct_report(pTest);
+    ct_destroy(pTest);
+
+    return 0;
+}
+#endif /* TEST_ABORT */
+#endif /* TEST */

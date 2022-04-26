@@ -27,6 +27,22 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************
+ *
  * @section DESCRIPTION
  *
  * The GetAlarmSummary service is used by a client BACnet-user
@@ -38,18 +54,20 @@
  */
 #include <assert.h>
 
-#include "bacnet/bacdcode.h"
-#include "bacnet/get_alarm_sum.h"
+#include "bacdcode.h"
+#include "get_alarm_sum.h"
 #include "bacnet/npdu.h"
 
 /* encode service */
-int get_alarm_summary_encode_apdu(uint8_t *apdu, uint8_t invoke_id)
-{
+int get_alarm_summary_encode_apdu(
+    uint8_t * apdu,
+    uint8_t invoke_id
+        ) {
     int apdu_len = 0; /* total length of the apdu, return value */
 
     if (apdu) {
         apdu[0] = PDU_TYPE_CONFIRMED_SERVICE_REQUEST;
-        apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU);
+        apdu[1] = encode_max_segs_max_apdu(0, MAX_LPDU_IP);
         apdu[2] = invoke_id;
         apdu[3] = SERVICE_CONFIRMED_GET_ALARM_SUMMARY;
         apdu_len = 4;
@@ -65,13 +83,15 @@ int get_alarm_summary_encode_apdu(uint8_t *apdu, uint8_t invoke_id)
  *
  * @return number of bytes encoded
  */
-int get_alarm_summary_ack_encode_apdu_init(uint8_t *apdu, uint8_t invoke_id)
+int get_alarm_summary_ack_encode_apdu_init(
+    uint8_t * apdu,
+    uint8_t invoke_id)
 {
-    int apdu_len = 0; /* total length of the apdu, return value */
+    int apdu_len = 0;   /* total length of the apdu, return value */
 
     if (apdu) {
         apdu[0] = PDU_TYPE_COMPLEX_ACK; /* complex ACK service */
-        apdu[1] = invoke_id; /* original invoke id from request */
+        apdu[1] = invoke_id;    /* original invoke id from request */
         apdu[2] = SERVICE_CONFIRMED_GET_ALARM_SUMMARY;
         apdu_len = 3;
     }
@@ -87,25 +107,29 @@ int get_alarm_summary_ack_encode_apdu_init(uint8_t *apdu, uint8_t invoke_id)
  *
  * @return number of bytes encoded, or BACNET_STATUS_ERROR if an error.
  */
-int get_alarm_summary_ack_encode_apdu_data(uint8_t *apdu,
-    size_t max_apdu,
-    BACNET_GET_ALARM_SUMMARY_DATA *get_alarm_data)
+int get_alarm_summary_ack_encode_apdu_data(
+    uint8_t * apdu,
+    uint16_t max_apdu,
+    BACNET_GET_ALARM_SUMMARY_DATA * get_alarm_data)
 {
-    int apdu_len = 0; /* total length of the apdu, return value */
+    int apdu_len = 0;   /* total length of the apdu, return value */
 
     if (!apdu) {
         apdu_len = BACNET_STATUS_ERROR;
     } else if (max_apdu >= 10) {
         /* tag 0 - Object Identifier */
-        apdu_len += encode_application_object_id(&apdu[apdu_len],
-            get_alarm_data->objectIdentifier.type,
-            get_alarm_data->objectIdentifier.instance);
+        apdu_len +=
+            encode_application_object_id(&apdu[apdu_len],
+                                         get_alarm_data->objectIdentifier.type,
+                                         get_alarm_data->objectIdentifier.instance);
         /* tag 1 - Alarm State */
-        apdu_len += encode_application_enumerated(
-            &apdu[apdu_len], get_alarm_data->alarmState);
+        apdu_len +=
+            encode_application_enumerated(&apdu[apdu_len],
+                                          get_alarm_data->alarmState);
         /* tag 2 - Acknowledged Transitions */
-        apdu_len += encode_application_bitstring(
-            &apdu[apdu_len], &get_alarm_data->acknowledgedTransitions);
+        apdu_len +=
+            encode_application_bitstring(&apdu[apdu_len],
+                                         &get_alarm_data->acknowledgedTransitions);
     } else {
         apdu_len = BACNET_STATUS_ABORT;
     }
@@ -121,36 +145,40 @@ int get_alarm_summary_ack_encode_apdu_data(uint8_t *apdu,
  *
  * @return number of bytes decoded, or BACNET_STATUS_ERROR if an error.
  */
-int get_alarm_summary_ack_decode_apdu_data(uint8_t *apdu,
-    size_t max_apdu,
-    BACNET_GET_ALARM_SUMMARY_DATA *get_alarm_data)
+int get_alarm_summary_ack_decode_apdu_data(
+    uint8_t * apdu,
+    uint16_t max_apdu,
+    BACNET_GET_ALARM_SUMMARY_DATA * get_alarm_data)
 {
-    int apdu_len = 0; /* total length of the apdu, return value */
+    int apdu_len = 0;   /* total length of the apdu, return value */
     BACNET_APPLICATION_DATA_VALUE value;
 
     if (!apdu) {
         apdu_len = BACNET_STATUS_ERROR;
     } else if (max_apdu >= 10) {
         /* tag 0 - Object Identifier */
-        apdu_len += bacapp_decode_application_data(
-            &apdu[apdu_len], (unsigned int)(max_apdu - apdu_len), &value);
+        apdu_len +=
+            bacapp_decode_application_data(&apdu[apdu_len],
+                                           max_apdu - apdu_len, &value);
         if (value.tag == BACNET_APPLICATION_TAG_OBJECT_ID) {
             get_alarm_data->objectIdentifier = value.type.Object_Id;
         } else {
             return BACNET_STATUS_ERROR;
         }
         /* tag 1 - Alarm State */
-        apdu_len += bacapp_decode_application_data(
-            &apdu[apdu_len], (unsigned int)(max_apdu - apdu_len), &value);
+        apdu_len +=
+            bacapp_decode_application_data(&apdu[apdu_len],
+                                           max_apdu - apdu_len, &value);
         if (value.tag == BACNET_APPLICATION_TAG_ENUMERATED) {
             get_alarm_data->alarmState =
-                (BACNET_EVENT_STATE)value.type.Enumerated;
+                (BACNET_EVENT_STATE) value.type.Enumerated;
         } else {
             return BACNET_STATUS_ERROR;
         }
         /* tag 2 - Acknowledged Transitions */
-        apdu_len += bacapp_decode_application_data(
-            &apdu[apdu_len], (unsigned int)(max_apdu - apdu_len), &value);
+        apdu_len +=
+            bacapp_decode_application_data(&apdu[apdu_len],
+                                           max_apdu - apdu_len, &value);
         if (value.tag == BACNET_APPLICATION_TAG_BIT_STRING) {
             get_alarm_data->acknowledgedTransitions = value.type.Bit_String;
         } else {

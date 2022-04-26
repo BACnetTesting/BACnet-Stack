@@ -29,50 +29,76 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+ *
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
 #include <stdbool.h>
 #include <string.h>
 #if PRINT_ENABLED
 #include <stdio.h>
 #endif
-#include "bacnet/bacprop.h"
+#include "bacprop.h"
 
 /** @file bacprop.c  Lookup BACnet Property Tags */
 
 PROP_TAG_DATA bacnet_object_device_property_tag_map[] = {
-    { PROP_OBJECT_IDENTIFIER, BACNET_APPLICATION_TAG_OBJECT_ID },
-    { PROP_OBJECT_NAME, BACNET_APPLICATION_TAG_CHARACTER_STRING },
-    { PROP_OBJECT_TYPE, BACNET_APPLICATION_TAG_ENUMERATED },
-    { PROP_SYSTEM_STATUS, BACNET_APPLICATION_TAG_ENUMERATED },
-    { PROP_VENDOR_NAME, BACNET_APPLICATION_TAG_CHARACTER_STRING },
-    { PROP_VENDOR_IDENTIFIER, BACNET_APPLICATION_TAG_UNSIGNED_INT },
-    { PROP_MODEL_NAME, BACNET_APPLICATION_TAG_CHARACTER_STRING },
-    { PROP_FIRMWARE_REVISION, BACNET_APPLICATION_TAG_CHARACTER_STRING },
-    { PROP_APPLICATION_SOFTWARE_VERSION,
-        BACNET_APPLICATION_TAG_CHARACTER_STRING },
-    { PROP_PROTOCOL_VERSION, BACNET_APPLICATION_TAG_UNSIGNED_INT },
-    { PROP_PROTOCOL_CONFORMANCE_CLASS, BACNET_APPLICATION_TAG_UNSIGNED_INT },
-    { PROP_PROTOCOL_SERVICES_SUPPORTED, BACNET_APPLICATION_TAG_BIT_STRING },
-    { PROP_PROTOCOL_OBJECT_TYPES_SUPPORTED, BACNET_APPLICATION_TAG_BIT_STRING },
-    { PROP_MAX_APDU_LENGTH_ACCEPTED, BACNET_APPLICATION_TAG_UNSIGNED_INT },
-    { PROP_SEGMENTATION_SUPPORTED, BACNET_APPLICATION_TAG_ENUMERATED },
-    { PROP_APDU_TIMEOUT, BACNET_APPLICATION_TAG_UNSIGNED_INT },
-    { PROP_NUMBER_OF_APDU_RETRIES, BACNET_APPLICATION_TAG_UNSIGNED_INT },
-    { -1, -1 }
+    {PROP_OBJECT_IDENTIFIER, BACNET_APPLICATION_TAG_OBJECT_ID}
+    ,
+    {PROP_OBJECT_NAME, BACNET_APPLICATION_TAG_CHARACTER_STRING}
+    ,
+    {PROP_OBJECT_TYPE, BACNET_APPLICATION_TAG_ENUMERATED}
+    ,
+    {PROP_SYSTEM_STATUS, BACNET_APPLICATION_TAG_ENUMERATED}
+    ,
+    {PROP_VENDOR_NAME, BACNET_APPLICATION_TAG_CHARACTER_STRING}
+    ,
+    {PROP_VENDOR_IDENTIFIER, BACNET_APPLICATION_TAG_UNSIGNED_INT}
+    ,
+    {PROP_MODEL_NAME, BACNET_APPLICATION_TAG_CHARACTER_STRING}
+    ,
+    {PROP_FIRMWARE_REVISION, BACNET_APPLICATION_TAG_CHARACTER_STRING}
+    ,
+    {PROP_APPLICATION_SOFTWARE_VERSION,
+        BACNET_APPLICATION_TAG_CHARACTER_STRING}
+    ,
+    {PROP_PROTOCOL_VERSION, BACNET_APPLICATION_TAG_UNSIGNED_INT}
+    ,
+    {PROP_PROTOCOL_CONFORMANCE_CLASS, BACNET_APPLICATION_TAG_UNSIGNED_INT}
+    ,
+    {PROP_PROTOCOL_SERVICES_SUPPORTED, BACNET_APPLICATION_TAG_BIT_STRING}
+    ,
+    {PROP_PROTOCOL_OBJECT_TYPES_SUPPORTED,
+        BACNET_APPLICATION_TAG_BIT_STRING}
+    ,
+    {PROP_MAX_APDU_LENGTH_ACCEPTED, BACNET_APPLICATION_TAG_UNSIGNED_INT}
+    ,
+    {PROP_SEGMENTATION_SUPPORTED, BACNET_APPLICATION_TAG_ENUMERATED}
+    ,
+    {PROP_APDU_TIMEOUT, BACNET_APPLICATION_TAG_UNSIGNED_INT}
+    ,
+    {PROP_NUMBER_OF_APDU_RETRIES, BACNET_APPLICATION_TAG_UNSIGNED_INT}
+    ,
+    {-1, -1}
 };
 
-/**
- * Search for the given index in the data list.
- *
- * @param data_list  Pointer to the list.
- * @param index  Index to search for.
- * @param default_ret  Default return value.
- *
- * @return Value found or the default value.
- */
 signed bacprop_tag_by_index_default(
-    PROP_TAG_DATA *data_list, signed index, signed default_ret)
+    PROP_TAG_DATA * data_list,
+    signed index,
+    signed default_ret)
 {
     signed pUnsigned = 0;
 
@@ -89,25 +115,21 @@ signed bacprop_tag_by_index_default(
     return pUnsigned ? pUnsigned : default_ret;
 }
 
-/**
- * Return the value of the given property, if available.
- *
- * @param type Object type
- * @param prop Property
- *
- * @return Value found or -1
- */
-signed bacprop_property_tag(BACNET_OBJECT_TYPE type, signed prop)
+
+signed bacprop_property_tag(
+    BACNET_OBJECT_TYPE type,
+    signed prop)
 {
     switch (type) {
-        case OBJECT_DEVICE:
-            return bacprop_tag_by_index_default(
-                bacnet_object_device_property_tag_map, prop, -1);
-        default:
+    case OBJECT_DEVICE:
+        return
+            bacprop_tag_by_index_default
+            (bacnet_object_device_property_tag_map, prop, -1);
+    default:
 #if PRINT_ENABLED
-            fprintf(stderr, "Unsupported object type");
+        fprintf(stderr, "Unsupported object type");
 #endif
-            break;
+        break;
     }
 
     return -1;

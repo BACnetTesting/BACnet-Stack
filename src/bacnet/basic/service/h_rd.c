@@ -26,8 +26,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <errno.h>
-#include "bacnet/config.h"
+#include "configProj.h"
 #include "bacnet/bacdef.h"
 #include "bacnet/bacdcode.h"
 #include "bacnet/bacerror.h"
@@ -40,7 +39,7 @@
 #include "bacnet/basic/object/device.h"
 #include "bacnet/basic/tsm/tsm.h"
 #include "bacnet/basic/services.h"
-#include "bacnet/datalink/datalink.h"
+// #include "bacnet/datalink/datalink.h"
 
 /** @file h_rd.c  Handles Reinitialize Device requests. */
 
@@ -72,14 +71,14 @@ void handler_reinitialize_device(uint8_t *service_request,
     BACNET_REINITIALIZE_DEVICE_DATA rd_data;
     int len = 0;
     int pdu_len = 0;
-    BACNET_NPDU_DATA npdu_data;
+    BACNET_NPCI_DATA npci_data;
     BACNET_ADDRESS my_address;
 
     /* encode the NPDU portion of the packet */
     datalink_get_my_address(&my_address);
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
+    npdu_encode_npdu_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
     pdu_len = npdu_encode_pdu(
-        &Handler_Transmit_Buffer[0], src, &my_address, &npdu_data);
+        &Handler_Transmit_Buffer[0], src, &my_address, &npci_data);
 #if PRINT_ENABLED
     fprintf(stderr, "ReinitializeDevice!\n");
 #endif
@@ -150,12 +149,8 @@ void handler_reinitialize_device(uint8_t *service_request,
 RD_ABORT:
     pdu_len += len;
     len = datalink_send_pdu(
-        src, &npdu_data, &Handler_Transmit_Buffer[0], pdu_len);
+        src, &npci_data, &Handler_Transmit_Buffer[0], pdu_len);
     if (len <= 0) {
-#if PRINT_ENABLED
-        fprintf(stderr, "ReinitializeDevice: Failed to send PDU (%s)!\n",
-            strerror(errno));
-#endif
     }
 
     return;

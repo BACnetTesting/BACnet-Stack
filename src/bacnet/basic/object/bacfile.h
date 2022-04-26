@@ -29,100 +29,108 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef BACFILE_H
 #define BACFILE_H
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "bacnet/bacnet_stack_exports.h"
-#include "bacnet/bacdef.h"
-#include "bacnet/bacenum.h"
-#include "bacnet/bacint.h"
-#include "bacnet/apdu.h"
-#include "bacnet/arf.h"
-#include "bacnet/awf.h"
-#include "bacnet/rp.h"
-#include "bacnet/wp.h"
+#include "bacdef.h"
+#include "bacenum.h"
+#include "apdu.h"
+#include "arf.h"
+#include "awf.h"
+#include "rp.h"
+#include "wp.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+typedef struct
+{
+    uint32_t instance;
+    // todo 1 bool archive;
+    const char *filename;
+} BACNET_FILE_LISTING;
 
-    BACNET_STACK_EXPORT
-    void BACfile_Property_Lists(
-        const int **pRequired,
-        const int **pOptional,
-        const int **pProprietary);
-    BACNET_STACK_EXPORT
-    bool bacfile_object_name(
-        uint32_t object_instance,
-        BACNET_CHARACTER_STRING * object_name);
-    BACNET_STACK_EXPORT
-    bool bacfile_valid_instance(
-        uint32_t object_instance);
-    BACNET_STACK_EXPORT
-    uint32_t bacfile_count(
-        void);
-    BACNET_STACK_EXPORT
-    uint32_t bacfile_index_to_instance(
-        unsigned find_index);
-    BACNET_STACK_EXPORT
-    unsigned bacfile_instance_to_index(
-        uint32_t instance);
-    BACNET_STACK_EXPORT
-    uint32_t bacfile_instance(
-        char *filename);
-    /* this is one way to match up the invoke ID with */
-    /* the file ID from the AtomicReadFile request. */
-    /* Another way would be to store the */
-    /* invokeID and file instance in a list or table */
-    /* when the request was sent */
-    BACNET_STACK_EXPORT
-    uint32_t bacfile_instance_from_tsm(
-        uint8_t invokeID);
 
-    /* handler ACK helper */
-    BACNET_STACK_EXPORT
-    bool bacfile_read_stream_data(
-        BACNET_ATOMIC_READ_FILE_DATA * data);
-    BACNET_STACK_EXPORT
-    bool bacfile_read_ack_stream_data(
-        uint32_t instance,
-        BACNET_ATOMIC_READ_FILE_DATA * data);
-    BACNET_STACK_EXPORT
-    bool bacfile_write_stream_data(
-        BACNET_ATOMIC_WRITE_FILE_DATA * data);
-    BACNET_STACK_EXPORT
-    bool bacfile_read_record_data(
-        BACNET_ATOMIC_READ_FILE_DATA * data);
-    BACNET_STACK_EXPORT
-    bool bacfile_read_ack_record_data(
-        uint32_t instance,
-        BACNET_ATOMIC_READ_FILE_DATA * data);
-    BACNET_STACK_EXPORT
-    bool bacfile_write_record_data(
-        BACNET_ATOMIC_WRITE_FILE_DATA * data);
+void BACfile_Property_Lists(
+    const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary);
 
-    BACNET_STACK_EXPORT
-    void bacfile_init(
-        void);
-    BACNET_STACK_EXPORT
-    BACNET_UNSIGNED_INTEGER bacfile_file_size(
-        uint32_t instance);
+bool bacfile_object_name(
+    uint32_t object_instance,
+    BACNET_CHARACTER_STRING * object_name);
 
-    /* handling for read property service */
-    BACNET_STACK_EXPORT
-    int bacfile_read_property(
-        BACNET_READ_PROPERTY_DATA * rpdata);
+bool bacfile_valid_instance(
+    uint32_t object_instance);
 
-    /* handling for write property service */
-    BACNET_STACK_EXPORT
-    bool bacfile_write_property(
-        BACNET_WRITE_PROPERTY_DATA * wp_data);
+uint32_t bacfile_count(
+    void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+uint32_t bacfile_index_to_instance(
+    unsigned find_index);
+
+unsigned bacfile_instance_to_index(
+    uint32_t instance);
+
+uint32_t bacfile_instance(
+    char *filename);
+/* this is one way to match up the invoke ID with */
+/* the file ID from the AtomicReadFile request. */
+/* Another way would be to store the */
+/* invokeID and file instance in a list or table */
+/* when the request was sent */
+uint32_t bacfile_instance_from_tsm(
+    DEVICE_OBJECT_DATA *pDev,
+    uint8_t invokeID);
+
+/* handler ACK helper */
+bool bacfile_read_stream_data(
+    BACNET_ATOMIC_READ_FILE_DATA * data);
+
+bool bacfile_read_ack_stream_data(
+    uint32_t instance,
+    BACNET_ATOMIC_READ_FILE_DATA * data);
+
+bool bacfile_write_stream_data(
+    BACNET_ATOMIC_WRITE_FILE_DATA * data);
+
+bool bacfile_read_record_data(
+    BACNET_ATOMIC_READ_FILE_DATA * data);
+
+bool bacfile_read_ack_record_data(
+    uint32_t instance,
+    BACNET_ATOMIC_READ_FILE_DATA * data);
+
+bool bacfile_write_record_data(
+    BACNET_ATOMIC_WRITE_FILE_DATA * data);
+
+void bacfile_init(
+    void);
+uint32_t bacfile_file_size(
+    uint32_t instance);
+
+/* handling for read property service */
+int bacfile_read_property(
+    BACNET_READ_PROPERTY_DATA * rpdata);
+
+/* handling for write property service */
+bool bacfile_write_property(
+    BACNET_WRITE_PROPERTY_DATA * wp_data);
+
 #endif

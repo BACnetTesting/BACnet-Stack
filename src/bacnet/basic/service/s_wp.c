@@ -21,64 +21,78 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- *********************************************************************/
-#include <stddef.h>
-#include <stdint.h>
-#include <errno.h>
-#include <string.h>
-#include "bacnet/config.h"
-#include "bacnet/bacdef.h"
-#include "bacnet/bacdcode.h"
-#include "bacnet/npdu.h"
-#include "bacnet/apdu.h"
-#include "bacnet/dcc.h"
-#include "bacnet/whois.h"
-/* some demo stuff needed */
-#include "bacnet/basic/binding/address.h"
-#include "bacnet/basic/object/device.h"
-#include "bacnet/basic/services.h"
-#include "bacnet/basic/tsm/tsm.h"
-#include "bacnet/datalink/datalink.h"
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
+#include "configProj.h"
+
+#if ( BACNET_CLIENT == 1 ) || ( BACNET_SVC_COV_B == 1 )
+
+#include "address.h"
+//#include "datalink.h"
+#include "dcc.h"
+// #include "bacnet/basic/tsm/tsm.h"
+#include "bacnet/wp.h"
+//#include "debug.h"
+#include "client.h"
+#include "multipleDatalink.h"
+#include "bitsRouter.h"
 
 /** @file s_wp.c  Send a Write Property request. */
 
 /** returns the invoke ID for confirmed request, or zero on failure */
-uint8_t Send_Write_Property_Request_Data(uint32_t device_id,
+
+uint8_t Send_Write_Property_Request_Data(
+    DEVICE_OBJECT_DATA *pDev,
+    BACNET_PATH *dest,
+    uint16_t max_apdu,
     BACNET_OBJECT_TYPE object_type,
     uint32_t object_instance,
     BACNET_PROPERTY_ID object_property,
-    uint8_t *application_data,
+    uint8_t * application_data,
     int application_data_len,
     uint8_t priority,
     uint32_t array_index)
 {
-    BACNET_ADDRESS dest;
-    BACNET_ADDRESS my_address;
-    unsigned max_apdu = 0;
+    //BACNET_PATH my_address;
     uint8_t invoke_id = 0;
-    bool status = false;
     int len = 0;
     int pdu_len = 0;
-    int bytes_sent = 0;
     BACNET_WRITE_PROPERTY_DATA data;
-    BACNET_NPDU_DATA npdu_data;
+    BACNET_NPCI_DATA npci_data;
 
-    if (!dcc_communication_enabled()) {
+    if (!dcc_communication_enabled(pDev)) {
         return 0;
     }
 
-    /* is the device bound? */
-    status = address_get_by_device(device_id, &max_apdu, &dest);
-    /* is there a tsm available? */
-    if (status) {
-        invoke_id = tsm_next_free_invokeID();
+    DLCB *dlcb = alloc_dlcb_application('a', dest, pDev->datalink->max_lpdu );
+    if (dlcb == NULL)
+    {
+        return 0;
     }
+
+    /* is there a tsm available? */
+    invoke_id = tsm_next_free_invokeID(routerApplicationEntity);
     if (invoke_id) {
         /* encode the NPDU portion of the packet */
-        datalink_get_my_address(&my_address);
-        npdu_encode_npdu_data(&npdu_data, true, MESSAGE_PRIORITY_NORMAL);
-        pdu_len = npdu_encode_pdu(
-            &Handler_Transmit_Buffer[0], &dest, &my_address, &npdu_data);
+        //datalink_get_my_address(&my_address);
+        npdu_setup_npci_data(&npci_data, true, MESSAGE_PRIORITY_NORMAL);
+        pdu_len =
+            npdu_encode_pdu(dlcb->Handler_Transmit_Buffer, &dlcb->bacnetPath.glAdr, NULL,
+                &npci_data);
         /* encode the APDU portion of the packet */
         data.object_type = object_type;
         data.object_instance = object_instance;
@@ -88,39 +102,41 @@ uint8_t Send_Write_Property_Request_Data(uint32_t device_id,
         memcpy(&data.application_data[0], &application_data[0],
             application_data_len);
         data.priority = priority;
+
         len =
-            wp_encode_apdu(&Handler_Transmit_Buffer[pdu_len], invoke_id, &data);
+            wp_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len], max_apdu, invoke_id,
+                &data);
+
         pdu_len += len;
         /* will it fit in the sender?
            note: if there is a bottleneck router in between
            us and the destination, we won't know unless
            we have a way to check for that and update the
            max_apdu in the address binding table. */
-        if ((unsigned)pdu_len < max_apdu) {
-            tsm_set_confirmed_unsegmented_transaction(invoke_id, &dest,
-                &npdu_data, &Handler_Transmit_Buffer[0], (uint16_t)pdu_len);
-            bytes_sent = datalink_send_pdu(
-                &dest, &npdu_data, &Handler_Transmit_Buffer[0], pdu_len);
-            if (bytes_sent <= 0) {
-#if PRINT_ENABLED
-                fprintf(stderr, "Failed to Send WriteProperty Request (%s)!\n",
-                    strerror(errno));
-#endif
-            }
-        } else {
-            tsm_free_invoke_id(invoke_id);
+        if ((uint16_t)pdu_len < max_apdu) {
+            dlcb->optr = pdu_len;
+            tsm_set_confirmed_unsegmented_transaction(pDev, invoke_id, NULL, dlcb);
+            pDev->datalink->SendPdu(pDev->datalink, dlcb);
+
+        }
+        else {
+            tsm_free_invoke_id(pDev, invoke_id);
             invoke_id = 0;
-#if PRINT_ENABLED
-            fprintf(stderr,
+            dbMessage(DBD_ALL, DB_ERROR,
                 "Failed to Send WriteProperty Request "
                 "(exceeds destination maximum APDU)!\n");
-#endif
         }
+    }
+    else
+    {
+        dlcb_free(dlcb); // todo 3 - check wpm for these frees too!
     }
 
     return invoke_id;
 }
 
+
+#if 0
 /** Sends a Write Property request.
  * @ingroup DSWP
  *
@@ -134,38 +150,66 @@ uint8_t Send_Write_Property_Request_Data(uint32_t device_id,
  *   - 0 for the array size
  *   - 1 to n for individual array members
  *   - BACNET_ARRAY_ALL (~0) for the array value to be ignored (not sent)
- * @return invoke id of outgoing message, or 0 on failure.
+ * @return invoke id of outgoing message, or 0 if device is not bound or no tsm available
  */
-uint8_t Send_Write_Property_Request(uint32_t device_id,
+uint8_t Send_Write_Property_Request(
+    PORT_SUPPORT *portParams,
+    DEVICE_OBJECT_DATA *sendingDev,
+    uint32_t device_id, /* destination device */
     BACNET_OBJECT_TYPE object_type,
     uint32_t object_instance,
     BACNET_PROPERTY_ID object_property,
-    BACNET_APPLICATION_DATA_VALUE *object_value,
+    BACNET_APPLICATION_DATA_VALUE * object_value,
     uint8_t priority,
     uint32_t array_index)
 {
-    uint8_t application_data[MAX_APDU] = { 0 };
+    BACNET_ROUTE dest;
+    uint16_t max_apdu;
+    uint8_t invoke_id = 0;
+    bool status;
+    uint8_t application_data[MAX_LPDU_IP] = { 0 };
     int apdu_len = 0, len = 0;
 
     while (object_value) {
 #if PRINT_ENABLED_DEBUG
-        fprintf(stderr,
-            "WriteProperty service: "
-            "%s tag=%d\n",
+        fprintf(stderr, "WriteProperty service: " "%s tag=%d\n",
             (object_value->context_specific ? "context" : "application"),
-            (int)(object_value->context_specific ? object_value->context_tag
-                                                 : object_value->tag));
+            (int)(object_value->
+                context_specific ? object_value->context_tag : object_value->
+                tag));
 #endif
         len = bacapp_encode_data(&application_data[apdu_len], object_value);
-        if ((len + apdu_len) < MAX_APDU) {
+        if ((len + apdu_len) < MAX_LPDU_IP) {
             apdu_len += len;
-        } else {
+        }
+        else {
             return 0;
         }
         object_value = object_value->next;
     }
 
-    return Send_Write_Property_Request_Data(device_id, object_type,
-        object_instance, object_property, &application_data[0], apdu_len,
-        priority, array_index);
+    /* is the device bound? */
+    status = address_get_by_device(device_id, &max_apdu, &dest);
+    if (status) {
+
+        DLCB *dlcb = alloc_dlcb_application('r', &dest);
+        if (dlcb == NULL)
+        {
+            panic();
+            return 0;   // todo, make a real flag here.
+        }
+
+    invoke_id = Send_Write_Property_Request_Data(
+        sendingDev, dlcb, max_apdu, object_type,
+        object_instance, object_property,
+        application_data, apdu_len,
+        priority,
+        array_index);
+
+    }
+
+    return invoke_id;
 }
+
+#endif // if 0
+#endif

@@ -29,21 +29,35 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
-#include <stdint.h>
-#include <assert.h>
-#include "bacnet/bacapp.h"
-#include "bacnet/timestamp.h"
+ *
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
+#include "configProj.h"
+
+#if (BACNET_USE_EVENT_HANDLING == 1 )
+
+#include "assert.h"
+#include "timestamp.h"
 
 /** @file timestamp.c  Encode/Decode BACnet Timestamps  */
 
-/** Set the sequence number in a timestamp structure.
- *
- * @param dest  Pointer to the destination time stamp structure.
- * @param sequenceNum  Sequence number to be set into the time stamp.
- */
-void bacapp_timestamp_sequence_set(BACNET_TIMESTAMP *dest, uint16_t sequenceNum)
+void bacapp_timestamp_sequence_set(
+    BACNET_TIMESTAMP * dest,
+    uint16_t sequenceNum)
 {
     if (dest) {
         dest->tag = TIME_STAMP_SEQUENCE;
@@ -51,13 +65,9 @@ void bacapp_timestamp_sequence_set(BACNET_TIMESTAMP *dest, uint16_t sequenceNum)
     }
 }
 
-/** Set a timestamp structure with the value given
- * from a time structure.
- *
- * @param dest  Pointer to the destination time stamp structure.
- * @param btime  Pointer to the BACNet time structure.
- */
-void bacapp_timestamp_time_set(BACNET_TIMESTAMP *dest, BACNET_TIME *btime)
+void bacapp_timestamp_time_set(
+    BACNET_TIMESTAMP * dest,
+    BACNET_TIME *btime)
 {
     if (dest && btime) {
         dest->tag = TIME_STAMP_TIME;
@@ -65,14 +75,9 @@ void bacapp_timestamp_time_set(BACNET_TIMESTAMP *dest, BACNET_TIME *btime)
     }
 }
 
-/** Set a timestamp structure with the value given
- * from a date/time structure.
- *
- * @param dest  Pointer to the destination time stamp structure.
- * @param bdateTime  Pointer to the BACNet date/time structure.
- */
 void bacapp_timestamp_datetime_set(
-    BACNET_TIMESTAMP *dest, BACNET_DATE_TIME *bdateTime)
+    BACNET_TIMESTAMP * dest,
+    BACNET_DATE_TIME * bdateTime)
 {
     if (dest && bdateTime) {
         dest->tag = TIME_STAMP_DATETIME;
@@ -80,84 +85,68 @@ void bacapp_timestamp_datetime_set(
     }
 }
 
-/** Copy a timestamp depending of the tag it holds.
- *
- * @param dest  Pointer to the destination time stamp structure.
- * @param src   Pointer to the source time stamp structure.
- */
-void bacapp_timestamp_copy(BACNET_TIMESTAMP *dest, BACNET_TIMESTAMP *src)
+void bacapp_timestamp_copy(
+    BACNET_TIMESTAMP * dest,
+    BACNET_TIMESTAMP * src)
 {
     if (dest && src) {
         dest->tag = src->tag;
         switch (src->tag) {
-            case TIME_STAMP_TIME:
-                datetime_copy_time(&dest->value.time, &src->value.time);
-                break;
-            case TIME_STAMP_SEQUENCE:
-                dest->value.sequenceNum = src->value.sequenceNum;
-                break;
-            case TIME_STAMP_DATETIME:
-                datetime_copy(&dest->value.dateTime, &src->value.dateTime);
-                break;
-            default:
-                break;
+        case TIME_STAMP_TIME:
+            datetime_copy_time(&dest->value.time, &src->value.time);
+            break;
+        case TIME_STAMP_SEQUENCE:
+            dest->value.sequenceNum = src->value.sequenceNum;
+            break;
+        case TIME_STAMP_DATETIME:
+            datetime_copy(&dest->value.dateTime, &src->value.dateTime);
+            break;
+        default:
+            break;
         }
     }
 }
 
-/** Encode a time stamp.
- *
- * @param apdu  Pointer to the APDU buffer.
- * @param value  Pointer to the variable that holds
- *               the time stamp values to be encoded.
- *
- * @return Bytes encoded or 0 on error.
- */
-int bacapp_encode_timestamp(uint8_t *apdu, BACNET_TIMESTAMP *value)
+int bacapp_encode_timestamp(
+    uint8_t * apdu,
+    BACNET_TIMESTAMP * value)
 {
-    int len = 0; /* length of each encoding */
+    int len = 0;        /* length of each encoding */
 
     if (value && apdu) {
         switch (value->tag) {
-            case TIME_STAMP_TIME:
-                len = encode_context_time(&apdu[0], 0, &value->value.time);
-                break;
+        case TIME_STAMP_TIME:
+            len = encode_context_time(&apdu[0], 0, &value->value.time);
+            break;
 
-            case TIME_STAMP_SEQUENCE:
-                len = encode_context_unsigned(
-                    &apdu[0], 1, value->value.sequenceNum);
-                break;
+        case TIME_STAMP_SEQUENCE:
+            len =
+                encode_context_unsigned(&apdu[0], 1,
+                                        value->value.sequenceNum);
+            break;
 
-            case TIME_STAMP_DATETIME:
-                len = bacapp_encode_context_datetime(
-                    &apdu[0], 2, &value->value.dateTime);
-                break;
+        case TIME_STAMP_DATETIME:
+            len =
+                bacapp_encode_context_datetime(&apdu[0], 2,
+                                               &value->value.dateTime);
+            break;
 
-            default:
-                len = 0;
-                assert(len);
-                break;
+        default:
+            len = 0;
+            assert(0);
+            break;
         }
     }
 
     return len;
 }
 
-/** Encode a time stamp for the given tag
- * number, using an opening and closing tag.
- *
- * @param apdu  Pointer to the APDU buffer.
- * @param tag_number  The tag number that shall
- *                    hold the time stamp.
- * @param value  Pointer to the variable that holds
- *               the time stamp values to be encoded.
- *
- * @return Bytes encoded or 0 on error.
- */
 int bacapp_encode_context_timestamp(
-    uint8_t *apdu, uint8_t tag_number, BACNET_TIMESTAMP *value)
+    uint8_t * apdu,
+    uint8_t tag_number,
+    BACNET_TIMESTAMP * value)
 {
-    int len = 0; /* length of each encoding */
+    int len = 0;        /* length of each encoding */
     int apdu_len = 0;
 
     if (value && apdu) {
@@ -171,85 +160,76 @@ int bacapp_encode_context_timestamp(
     return apdu_len;
 }
 
-/** Decode a time stamp from the given buffer.
- *
- * @param apdu  Pointer to the APDU buffer.
- * @param value  Pointer to the variable that shall
- *               take the time stamp values.
- *
- * @return Bytes decoded or -1 on error.
- */
-int bacapp_decode_timestamp(uint8_t *apdu, BACNET_TIMESTAMP *value)
+int bacapp_decode_timestamp(
+    uint8_t * apdu,
+    BACNET_TIMESTAMP * value)
 {
     int len = 0;
     int section_len;
     uint32_t len_value_type;
-    BACNET_UNSIGNED_INTEGER unsigned_value;
+    uint32_t sequenceNum;
 
-    if (apdu && value) {
-        section_len = decode_tag_number_and_value(
-            &apdu[len], &value->tag, &len_value_type);
+    if (apdu) {
+        section_len =
+            decode_tag_number_and_value(&apdu[len], &value->tag,
+                                        &len_value_type);
 
         if (-1 == section_len) {
             return -1;
         }
         switch (value->tag) {
-            case TIME_STAMP_TIME:
-                if ((section_len = decode_context_bacnet_time(&apdu[len],
-                         TIME_STAMP_TIME, &value->value.time)) == -1) {
-                    return -1;
-                } else {
-                    len += section_len;
-                }
-                break;
-
-            case TIME_STAMP_SEQUENCE:
-                if ((section_len = decode_context_unsigned(&apdu[len],
-                         TIME_STAMP_SEQUENCE, &unsigned_value)) == -1) {
-                    return -1;
-                } else {
-                    if (unsigned_value <= 0xffff) {
-                        len += section_len;
-                        value->value.sequenceNum = (uint16_t)unsigned_value;
-                    } else {
-                        return -1;
-                    }
-                }
-                break;
-
-            case TIME_STAMP_DATETIME:
-                if ((section_len = bacapp_decode_context_datetime(&apdu[len],
-                         TIME_STAMP_DATETIME, &value->value.dateTime)) == -1) {
-                    return -1;
-                } else {
-                    len += section_len;
-                }
-                break;
-
-            default:
+        case TIME_STAMP_TIME:
+            if ((section_len =
+                     decode_context_bacnet_time(&apdu[len], TIME_STAMP_TIME,
+                                                &value->value.time)) == -1) {
                 return -1;
+            } else {
+                len += section_len;
+            }
+            break;
+
+        case TIME_STAMP_SEQUENCE:
+            if ((section_len =
+                     decode_context_unsigned(&apdu[len],
+                                             TIME_STAMP_SEQUENCE, &sequenceNum)) == -1) {
+                return -1;
+            } else {
+                if (sequenceNum <= 0xffff) {
+                    len += section_len;
+                    value->value.sequenceNum = (uint16_t) sequenceNum;
+                } else {
+                    return -1;
+                }
+            }
+            break;
+
+        case TIME_STAMP_DATETIME:
+            if ((section_len =
+                     bacapp_decode_context_datetime(&apdu[len],
+                                                    TIME_STAMP_DATETIME,
+                                                    &value->value.dateTime)) == -1) {
+                return -1;
+            } else {
+                len += section_len;
+            }
+            break;
+
+        default:
+            return -1;
         }
     }
 
     return len;
 }
 
-/** Decode a time stamp and check for
- * opening and closing tags.
- *
- * @param apdu  Pointer to the APDU buffer.
- * @param tag_number  The tag number that shall
- *                    hold the time stamp.
- * @param value  Pointer to the variable that shall
- *               take the time stamp values.
- *
- * @return Bytes decoded or -1 on error.
- */
 int bacapp_decode_context_timestamp(
-    uint8_t *apdu, uint8_t tag_number, BACNET_TIMESTAMP *value)
+    uint8_t * apdu,
+    uint8_t tag_number,
+    BACNET_TIMESTAMP * value)
 {
     int len = 0;
     int section_len;
+
 
     if (decode_is_opening_tag_number(&apdu[len], tag_number)) {
         len++;
@@ -266,83 +246,156 @@ int bacapp_decode_context_timestamp(
     return len;
 }
 
-/**
- * @brief Parse an ascii string for the timestamp
- * @param btime - #BACNET_TIME structure
- * @param ascii - C string with timestamp formatted as one of the following:
- *  time - 23:59:59.99 or 23:59:59 or 23:59 or
- *  datetime - 2021/12/31 or 2021/12/31-23:59:59.99 or 2021/12/31-23:59:59 or
- *             2021/12/31-23:59 2021/12/31-23 or
- *  sequence number: 1234
- * @return true if parsed successfully
- */
-bool bacapp_timestamp_init_ascii(BACNET_TIMESTAMP *timestamp, const char *ascii)
+#ifdef TEST
+
+#include <assert.h>
+#include <string.h>
+#include "ctest.h"
+
+
+void testTimestampSequence(
+    Test * pTest)
 {
-    bool status = false;
-    int hour, min, sec, hundredths;
-    int year, month, day;
-    int sequence;
-    int count = 0;
+    BACNET_TIMESTAMP testTimestampIn;
+    BACNET_TIMESTAMP testTimestampOut;
+    uint8_t buffer[MAX_LPDU_IP];
+    int inLen;
+    int outLen;
 
-    count = sscanf(
-        ascii, "%3d:%3d:%3d.%3d", &hour, &min, &sec, &hundredths);
-    if (count == 4) {
-        timestamp->tag = TIME_STAMP_TIME;
-        timestamp->value.time.hour = (uint8_t)hour;
-        timestamp->value.time.min = (uint8_t)min;
-        timestamp->value.time.sec = (uint8_t)sec;
-        timestamp->value.time.hundredths = (uint8_t)hundredths;
-        status = true;
-    } else if (count == 3) {
-        timestamp->tag = TIME_STAMP_TIME;
-        timestamp->value.time.hour = (uint8_t)hour;
-        timestamp->value.time.min = (uint8_t)min;
-        timestamp->value.time.sec = (uint8_t)sec;
-        timestamp->value.time.hundredths = 0;
-        status = true;
-    } else if (count == 2) {
-        timestamp->tag = TIME_STAMP_TIME;
-        timestamp->value.time.hour = (uint8_t)hour;
-        timestamp->value.time.min = (uint8_t)min;
-        timestamp->value.time.sec = 0;
-        timestamp->value.time.hundredths = 0;
-        status = true;
-    }
-    if (!status) {
-        count =
-            sscanf(ascii, "%4d/%3d/%3d-%3d:%3d:%3d.%3d",
-            &year, &month, &day, &hour, &min, &sec, &hundredths);
-        if (count >= 3) {
-            timestamp->tag = TIME_STAMP_DATETIME;
-            datetime_set_date(&timestamp->value.dateTime.date,
-                (uint16_t)year, (uint8_t)month, (uint8_t)day);
-            if (count >= 7) {
-                datetime_set_time(&timestamp->value.dateTime.time,
-                    (uint8_t)hour, (uint8_t)min, (uint8_t)sec,
-                    (uint8_t)hundredths);
-            } else if (count >= 6) {
-                datetime_set_time(&timestamp->value.dateTime.time,
-                    (uint8_t)hour, (uint8_t)min, (uint8_t)sec, 0);
-            } else if (count >= 5) {
-                datetime_set_time(&timestamp->value.dateTime.time,
-                    (uint8_t)hour, (uint8_t)min, 0, 0);
-            } else if (count >= 4) {
-                datetime_set_time(&timestamp->value.dateTime.time,
-                    (uint8_t)hour, 0, 0, 0);
-            } else {
-                datetime_set_time(&timestamp->value.dateTime.time, 0, 0, 0, 0);
-            }
-            status = true;
-        }
-    }
-    if (!status) {
-        count = sscanf(ascii, "%4d", &sequence);
-        if (count == 1) {
-            timestamp->tag = TIME_STAMP_DATETIME;
-            timestamp->value.sequenceNum = (uint16_t)sequence;
-            status = true;
-        }
-    }
+    testTimestampIn.tag = TIME_STAMP_SEQUENCE;
+    testTimestampIn.value.sequenceNum = 0x1234;
 
-    return status;
+    memset(&testTimestampOut, 0, sizeof(testTimestampOut));
+
+
+    inLen = bacapp_encode_context_timestamp(buffer, 2, &testTimestampIn);
+    outLen = bacapp_decode_context_timestamp(buffer, 2, &testTimestampOut);
+
+    ct_test(pTest, inLen == outLen);
+    ct_test(pTest, testTimestampIn.tag == testTimestampOut.tag);
+    ct_test(pTest,
+            testTimestampIn.value.sequenceNum ==
+            testTimestampOut.value.sequenceNum);
 }
+
+void testTimestampTime(
+    Test * pTest)
+{
+    BACNET_TIMESTAMP testTimestampIn;
+    BACNET_TIMESTAMP testTimestampOut;
+    uint8_t buffer[MAX_LPDU_IP];
+    int inLen;
+    int outLen;
+
+    testTimestampIn.tag = TIME_STAMP_TIME;
+    testTimestampIn.value.time.hour = 1;
+    testTimestampIn.value.time.min = 2;
+    testTimestampIn.value.time.sec = 3;
+    testTimestampIn.value.time.hundredths = 4;
+
+    memset(&testTimestampOut, 0, sizeof(testTimestampOut));
+
+
+    inLen = bacapp_encode_context_timestamp(buffer, 2, &testTimestampIn);
+    outLen = bacapp_decode_context_timestamp(buffer, 2, &testTimestampOut);
+
+    ct_test(pTest, inLen == outLen);
+    ct_test(pTest, testTimestampIn.tag == testTimestampOut.tag);
+    ct_test(pTest,
+            testTimestampIn.value.time.hour == testTimestampOut.value.time.hour);
+    ct_test(pTest,
+            testTimestampIn.value.time.min == testTimestampOut.value.time.min);
+    ct_test(pTest,
+            testTimestampIn.value.time.sec == testTimestampOut.value.time.sec);
+    ct_test(pTest,
+            testTimestampIn.value.time.hundredths ==
+            testTimestampOut.value.time.hundredths);
+}
+
+void testTimestampTimeDate(
+    Test * pTest)
+{
+    BACNET_TIMESTAMP testTimestampIn;
+    BACNET_TIMESTAMP testTimestampOut;
+    uint8_t buffer[MAX_LPDU_IP];
+    int inLen;
+    int outLen;
+
+    testTimestampIn.tag = TIME_STAMP_DATETIME;
+    testTimestampIn.value.dateTime.time.hour = 1;
+    testTimestampIn.value.dateTime.time.min = 2;
+    testTimestampIn.value.dateTime.time.sec = 3;
+    testTimestampIn.value.dateTime.time.hundredths = 4;
+
+    testTimestampIn.value.dateTime.date.year = 1901;
+    testTimestampIn.value.dateTime.date.month = 1;
+    testTimestampIn.value.dateTime.date.wday = 2;
+    testTimestampIn.value.dateTime.date.day = 3;
+
+    memset(&testTimestampOut, 0, sizeof(testTimestampOut));
+
+    inLen = bacapp_encode_context_timestamp(buffer, 2, &testTimestampIn);
+    outLen = bacapp_decode_context_timestamp(buffer, 2, &testTimestampOut);
+
+    ct_test(pTest, inLen == outLen);
+    ct_test(pTest, testTimestampIn.tag == testTimestampOut.tag);
+    ct_test(pTest,
+            testTimestampIn.value.dateTime.time.hour ==
+            testTimestampOut.value.dateTime.time.hour);
+    ct_test(pTest,
+            testTimestampIn.value.dateTime.time.min ==
+            testTimestampOut.value.dateTime.time.min);
+    ct_test(pTest,
+            testTimestampIn.value.dateTime.time.sec ==
+            testTimestampOut.value.dateTime.time.sec);
+    ct_test(pTest,
+            testTimestampIn.value.dateTime.time.hundredths ==
+            testTimestampOut.value.dateTime.time.hundredths);
+
+    ct_test(pTest,
+            testTimestampIn.value.dateTime.date.year ==
+            testTimestampOut.value.dateTime.date.year);
+    ct_test(pTest,
+            testTimestampIn.value.dateTime.date.month ==
+            testTimestampOut.value.dateTime.date.month);
+    ct_test(pTest,
+            testTimestampIn.value.dateTime.date.wday ==
+            testTimestampOut.value.dateTime.date.wday);
+    ct_test(pTest,
+            testTimestampIn.value.dateTime.date.day ==
+            testTimestampOut.value.dateTime.date.day);
+
+}
+
+#ifdef TEST_TIME_STAMP
+
+int main(
+    void)
+{
+    Test *pTest;
+    bool rc;
+
+    pTest = ct_create("BACnet Time Stamp", NULL);
+    /* individual tests */
+    rc = ct_addTestFunction(pTest, testTimestampSequence);
+    assert(rc);
+
+    rc = ct_addTestFunction(pTest, testTimestampTime);
+    assert(rc);
+
+    rc = ct_addTestFunction(pTest, testTimestampTimeDate);
+    assert(rc);
+
+    ct_setStream(pTest, stdout);
+    ct_run(pTest);
+    (void) ct_report(pTest);
+    ct_destroy(pTest);
+
+    return 0;
+}
+
+#endif /* TEST_TIME_STAMP */
+#endif /* TEST */
+
+#endif // (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1)
+

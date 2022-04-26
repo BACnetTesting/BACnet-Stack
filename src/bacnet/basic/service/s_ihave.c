@@ -21,24 +21,29 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- *********************************************************************/
-#include <stddef.h>
-#include <stdint.h>
-#include <errno.h>
-#include <string.h>
-#include "bacnet/config.h"
-#include "bacnet/bacdef.h"
-#include "bacnet/bacdcode.h"
-#include "bacnet/npdu.h"
-#include "bacnet/apdu.h"
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
+//#include "datalink.h"
 #include "bacnet/dcc.h"
 #include "bacnet/ihave.h"
 /* some demo stuff needed */
-#include "bacnet/basic/binding/address.h"
-#include "bacnet/basic/tsm/tsm.h"
-#include "bacnet/basic/object/device.h"
-#include "bacnet/datalink/datalink.h"
 #include "bacnet/basic/services.h"
+//#include "debug.h"
+#include "bacnet/bacaddr.h"
 
 /** @file s_ihave.c  Send an I-Have (property) message. */
 
@@ -50,30 +55,45 @@
  * @param object_instance [in] The Object ID that I Have.
  * @param object_name [in] The Name of the Object I Have.
  */
-void Send_I_Have(uint32_t device_id,
+void Send_I_Have(
+    const BACNET_ROUTE *dest2,
+    DEVICE_OBJECT_DATA *pDev,
+    uint32_t device_id,
     BACNET_OBJECT_TYPE object_type,
     uint32_t object_instance,
     BACNET_CHARACTER_STRING *object_name)
 {
     int len = 0;
     int pdu_len = 0;
-    BACNET_ADDRESS dest;
-    int bytes_sent = 0;
     BACNET_I_HAVE_DATA data;
-    BACNET_NPDU_DATA npdu_data;
-    BACNET_ADDRESS my_address;
+    BACNET_NPCI_DATA npci_data;
 
-    datalink_get_my_address(&my_address);
+    // don't allocate here, we may be ditching
+
     /* if we are forbidden to send, don't send! */
-    if (!dcc_communication_enabled()) {
+    if (!dcc_communication_enabled(pDev))
         return;
-    }
+
+    /*The sending BACnet-user shall broadcast or unicast the I-Have unconfirmed request. If the I-Have is broadcast, this
+    broadcast may be on the local network only, a remote network only, or globally on all networks at the discretion of the
+    application. If the I-Have is being transmitted in response to a previously received Who-Has, then the I-Have shall be
+    transmitted in such a manner that the BACnet-user that sent the Who-Has will receive the resulting I-Have.*/
+
+    DLCB *dlcb = alloc_dlcb_response('s', &dest2->bacnetPath, pDev->datalink->max_lpdu);
+    if (dlcb == NULL) return;
+
     /* Who-Has is a global broadcast */
-    datalink_get_broadcast_address(&dest);
+    // Make a local copy so we don't corrupt the original
+    BACNET_PATH localPath;
+    bacnet_path_copy(&localPath, &dest2->bacnetPath);
+    bacnet_path_set_broadcast_global(&localPath);
+
     /* encode the NPDU portion of the packet */
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
-    pdu_len = npdu_encode_pdu(
-        &Handler_Transmit_Buffer[0], &dest, &my_address, &npdu_data);
+    npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
+
+    pdu_len =
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], &localPath.glAdr, NULL,
+            &npci_data);
 
     /* encode the APDU portion of the packet */
     data.device_id.type = OBJECT_DEVICE;
@@ -81,14 +101,10 @@ void Send_I_Have(uint32_t device_id,
     data.object_id.type = object_type;
     data.object_id.instance = object_instance;
     characterstring_copy(&data.object_name, object_name);
-    len = ihave_encode_apdu(&Handler_Transmit_Buffer[pdu_len], &data);
+    len = ihave_encode_apdu(&dlcb->Handler_Transmit_Buffer[pdu_len], &data);
     pdu_len += len;
+
     /* send the data */
-    bytes_sent = datalink_send_pdu(
-        &dest, &npdu_data, &Handler_Transmit_Buffer[0], pdu_len);
-    if (bytes_sent <= 0) {
-#if PRINT_ENABLED
-        fprintf(stderr, "Failed to Send I-Have Reply (%s)!\n", strerror(errno));
-#endif
-    }
+    dlcb->optr = pdu_len;
+    pDev->datalink->SendPdu(pDev->datalink, dlcb);
 }

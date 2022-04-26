@@ -30,8 +30,23 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 
 /** @file win32/rs485.c  Provides Windows-specific functions for RS-485 */
 
@@ -40,6 +55,10 @@
    SerialGear USB-COMi-SI-M
    USB-RS485-WE-1800-BT
 */
+
+#include "configProj.h"
+
+#if (BACDL_MSTP == 1)
 
 #include <stddef.h>
 #include <stdint.h>
@@ -91,7 +110,8 @@ static DWORD RS485_RTSControl = RTS_CONTROL_DISABLE;
  * ALGORITHM:   none
  * NOTES:       none
  *****************************************************************************/
-static void strupper(char *str)
+static void strupper(
+    char *str)
 {
     char *p;
     for (p = str; *p != '\0'; ++p) {
@@ -106,7 +126,8 @@ static void strupper(char *str)
  * ALGORITHM:   none
  * NOTES:       expects a constant char ifname, or char from the heap
  *****************************************************************************/
-void RS485_Set_Interface(char *ifname)
+void RS485_Set_Interface(
+    char *ifname)
 {
     /* For COM ports greater than 9 you have to use a special syntax
        for CreateFile. The syntax also works for COM ports 1-9. */
@@ -129,7 +150,8 @@ void RS485_Set_Interface(char *ifname)
  * ALGORITHM:   none
  * NOTES:       none
  *****************************************************************************/
-bool RS485_Interface_Valid(unsigned port_number)
+bool RS485_Interface_Valid(
+    unsigned port_number)
 {
     HANDLE h = 0;
     DWORD err = 0;
@@ -137,8 +159,9 @@ bool RS485_Interface_Valid(unsigned port_number)
     char ifname[255] = "";
 
     sprintf(ifname, "\\\\.\\COM%u", port_number);
-    h = CreateFile(
-        ifname, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+#if 0 // todo1
+    h = CreateFile(ifname, GENERIC_READ | GENERIC_WRITE, 0, NULL,
+        OPEN_EXISTING, 0, NULL);
     if (h == INVALID_HANDLE_VALUE) {
         err = GetLastError();
         if ((err == ERROR_ACCESS_DENIED) || (err == ERROR_GEN_FAILURE) ||
@@ -149,29 +172,33 @@ bool RS485_Interface_Valid(unsigned port_number)
         status = true;
         CloseHandle(h);
     }
+#endif
 
     return status;
 }
 
-const char *RS485_Interface(void)
+const char *RS485_Interface(
+    void)
 {
     return RS485_Port_Name;
 }
 
-void RS485_Print_Error(void)
+void RS485_Print_Error(
+    void)
 {
     LPVOID lpMsgBuf;
 
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
         NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPTSTR)&lpMsgBuf, 0, NULL);
+        (LPTSTR) & lpMsgBuf, 0, NULL);
+#if 0 // todo1
     MessageBox(NULL, lpMsgBuf, "GetLastError", MB_OK | MB_ICONINFORMATION);
     LocalFree(lpMsgBuf);
-
-    return;
+#endif
 }
 
-static void RS485_Configure_Status(void)
+static void RS485_Configure_Status(
+    void)
 {
     DCB dcb = { 0 };
     COMMTIMEOUTS ctNew;
@@ -226,7 +253,7 @@ static void RS485_Configure_Status(void)
         RS485_Print_Error();
     }
     /* Set the Comm buffer size */
-    SetupComm(RS485_Handle, DLMSTP_MPDU_MAX, DLMSTP_MPDU_MAX);
+    SetupComm(RS485_Handle, MAX_LPDU_MSTP, MAX_LPDU_MSTP);
     /* raise DTR */
     if (!EscapeCommFunction(RS485_Handle, SETDTR)) {
         fprintf(stderr, "Unable to set DTR on %s\n", RS485_Port_Name);
@@ -240,7 +267,8 @@ static void RS485_Configure_Status(void)
  * ALGORITHM:   none
  * NOTES:       none
  *****************************************************************************/
-static void RS485_Cleanup(void)
+static void RS485_Cleanup(
+    void)
 {
     if (!EscapeCommFunction(RS485_Handle, CLRDTR)) {
         RS485_Print_Error();
@@ -260,8 +288,10 @@ static void RS485_Cleanup(void)
  * ALGORITHM:   none
  * NOTES:       none
  *****************************************************************************/
-void RS485_Initialize(void)
+void RS485_Initialize(
+    void)
 {
+#if 0
     RS485_Handle = CreateFile(RS485_Port_Name, GENERIC_READ | GENERIC_WRITE, 0,
         0, OPEN_EXISTING,
         /*FILE_FLAG_OVERLAPPED */ 0, 0);
@@ -273,14 +303,9 @@ void RS485_Initialize(void)
     if (!GetCommTimeouts(RS485_Handle, &RS485_Timeouts)) {
         RS485_Print_Error();
     }
-    RS485_Configure_Status();
-#if PRINT_ENABLED
-    fprintf(stdout, "RS485 Interface: %s\n", RS485_Port_Name);
 #endif
-
+    RS485_Configure_Status();
     atexit(RS485_Cleanup);
-
-    return;
 }
 
 /****************************************************************************
@@ -289,7 +314,8 @@ void RS485_Initialize(void)
  * ALGORITHM:   none
  * NOTES:       none
  *****************************************************************************/
-uint32_t RS485_Get_Baud_Rate(void)
+uint32_t RS485_Get_Baud_Rate(
+    void)
 {
     switch (RS485_Baud) {
         case CBR_19200:
@@ -340,7 +366,8 @@ uint32_t RS485_Get_Baud_Rate(void)
  * ALGORITHM:   none
  * NOTES:       none
  *****************************************************************************/
-bool RS485_Set_Baud_Rate(uint32_t baud)
+bool RS485_Set_Baud_Rate(
+    uint32_t baud)
 {
     bool valid = true;
 
@@ -436,7 +463,7 @@ void RS485_Send_Frame(
             turnaround_time = 2;
         else
             turnaround_time = 2;
-        while (mstp_port->SilenceTimer(NULL) < turnaround_time) {
+        while ( SilenceTimer( mstp_port ) < turnaround_time) {
             /* do nothing - wait for timer to increment */
         };
     }
@@ -444,14 +471,14 @@ void RS485_Send_Frame(
 
     /* per MSTP spec, reset SilenceTimer after each byte is sent */
     if (mstp_port) {
-        mstp_port->SilenceTimerReset(NULL);
+        SilenceTimerReset(mstp_port);
     }
-
-    return;
 }
 
+
 /* called by timer, interrupt(?) or other thread */
-void RS485_Check_UART_Data(volatile struct mstp_port_struct_t *mstp_port)
+void RS485_Check_UART_Data(
+    volatile struct mstp_port_struct_t *mstp_port)
 {
     char lpBuf[1];
     DWORD dwRead = 0;
@@ -480,7 +507,8 @@ void RS485_Check_UART_Data(volatile struct mstp_port_struct_t *mstp_port)
  * Returns: none
  * Notes: none
  **************************************************************************/
-void RS485_Print_Ports(void)
+void RS485_Print_Ports(
+    void)
 {
     unsigned i = 0;
 
@@ -499,7 +527,9 @@ void RS485_Print_Ports(void)
 
 #include "bacnet/datalink/mstpdef.h"
 
-static void test_transmit_task(void *pArg)
+
+static void test_transmit_task(
+    void *pArg)
 {
     char *TxBuf = "BACnet MS/TP";
     size_t len = strlen(TxBuf) + 1;
@@ -511,7 +541,8 @@ static void test_transmit_task(void *pArg)
 }
 
 #if defined(_WIN32)
-static BOOL WINAPI CtrlCHandler(DWORD dwCtrlType)
+static BOOL WINAPI CtrlCHandler(
+    DWORD dwCtrlType)
 {
     dwCtrlType = dwCtrlType;
     exit(0);
@@ -519,7 +550,8 @@ static BOOL WINAPI CtrlCHandler(DWORD dwCtrlType)
 }
 #endif
 
-static int ascii_hex_to_int(char ch)
+static int ascii_hex_to_int(
+    char ch)
 {
     int rv = -1;
 
@@ -534,7 +566,9 @@ static int ascii_hex_to_int(char ch)
     return rv;
 }
 
-int main(int argc, char *argv[])
+int main(
+    int argc,
+    char *argv[])
 {
     unsigned long hThread = 0;
     uint32_t arg_value = 0;
@@ -608,3 +642,5 @@ int main(int argc, char *argv[])
 #endif
 }
 #endif
+
+#endif // #if (BACDL_MSTP == 1)

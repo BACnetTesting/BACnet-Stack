@@ -31,12 +31,18 @@
  License.
  -------------------------------------------
 ####COPYRIGHTEND####*/
+
+#include "configProj.h"
+
+#if (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1) || (BACNET_USE_OBJECT_NOTIFICATION_CLASS == 1)
+
 #include <assert.h>
 #include "bacnet/event.h"
 #include "bacnet/bacdcode.h"
 #include "bacnet/npdu.h"
 #include "bacnet/timestamp.h"
-#include "bacnet/authentication_factor.h"
+#include "bacnet/bacreal.h"
+#include "bacnet/bacdevobjpropref.h"
 
 /** @file event.c  Encode/Decode Event Notifications */
 
@@ -253,79 +259,6 @@ int event_notify_encode_service_request(
                         apdu_len += len;
                         break;
 
-                    case EVENT_COMMAND_FAILURE:
-
-                        len = encode_opening_tag(&apdu[apdu_len], 3);
-                        apdu_len += len;
-
-                        len = encode_opening_tag(&apdu[apdu_len], 0);
-                        apdu_len += len;
-
-                        switch (data->notificationParams.commandFailure.tag) {
-                            case COMMAND_FAILURE_BINARY_PV:
-                                len =
-                                    encode_application_enumerated(&apdu
-                                    [apdu_len],
-                                    data->notificationParams.commandFailure.
-                                    commandValue.binaryValue);
-                                apdu_len += len;
-                                break;
-
-                            case COMMAND_FAILURE_UNSIGNED:
-                                len =
-                                    encode_application_unsigned(&apdu
-                                    [apdu_len],
-                                    data->notificationParams.commandFailure.
-                                    commandValue.unsignedValue);
-                                apdu_len += len;
-                                break;
-
-                            default:
-                                return 0;
-                        }
-
-                        len = encode_closing_tag(&apdu[apdu_len], 0);
-                        apdu_len += len;
-
-                        len =
-                            encode_context_bitstring(&apdu[apdu_len], 1,
-                            &data->notificationParams.commandFailure.
-                            statusFlags);
-                        apdu_len += len;
-
-                        len = encode_opening_tag(&apdu[apdu_len], 2);
-                        apdu_len += len;
-
-                        switch (data->notificationParams.commandFailure.tag) {
-                            case COMMAND_FAILURE_BINARY_PV:
-                                len =
-                                    encode_application_enumerated(&apdu
-                                    [apdu_len],
-                                    data->notificationParams.commandFailure.
-                                    feedbackValue.binaryValue);
-                                apdu_len += len;
-                                break;
-
-                            case COMMAND_FAILURE_UNSIGNED:
-                                len =
-                                    encode_application_unsigned(&apdu
-                                    [apdu_len],
-                                    data->notificationParams.commandFailure.
-                                    feedbackValue.unsignedValue);
-                                apdu_len += len;
-                                break;
-
-                            default:
-                                return 0;
-                        }
-
-                        len = encode_closing_tag(&apdu[apdu_len], 2);
-                        apdu_len += len;
-
-                        len = encode_closing_tag(&apdu[apdu_len], 3);
-                        apdu_len += len;
-                        break;
-
                     case EVENT_FLOATING_LIMIT:
                         len = encode_opening_tag(&apdu[apdu_len], 4);
                         apdu_len += len;
@@ -450,54 +383,8 @@ int event_notify_encode_service_request(
                         len = encode_closing_tag(&apdu[apdu_len], 11);
                         apdu_len += len;
                         break;
-                    case EVENT_ACCESS_EVENT:
-                        len = encode_opening_tag(&apdu[apdu_len], 13);
-                        apdu_len += len;
-
-                        len =
-                            encode_context_enumerated(&apdu[apdu_len], 0,
-                            data->notificationParams.accessEvent.accessEvent);
-                        apdu_len += len;
-
-                        len =
-                            encode_context_bitstring(&apdu[apdu_len], 1,
-                            &data->notificationParams.accessEvent.statusFlags);
-                        apdu_len += len;
-
-                        len =
-                            encode_context_unsigned(&apdu[apdu_len], 2,
-                            data->notificationParams.
-                            accessEvent.accessEventTag);
-                        apdu_len += len;
-
-                        len =
-                            bacapp_encode_context_timestamp(&apdu[apdu_len], 3,
-                            &data->notificationParams.
-                            accessEvent.accessEventTime);
-                        apdu_len += len;
-
-                        len =
-                            bacapp_encode_context_device_obj_ref(&apdu
-                            [apdu_len], 4,
-                            &data->notificationParams.
-                            accessEvent.accessCredential);
-                        apdu_len += len;
-
-                        if (data->notificationParams.
-                            accessEvent.authenticationFactor.format_type <
-                            AUTHENTICATION_FACTOR_MAX) {
-                            len =
-                                bacapp_encode_context_authentication_factor
-                                (&apdu[apdu_len], 5,
-                                &data->notificationParams.
-                                accessEvent.authenticationFactor);
-                            apdu_len += len;
-                        }
-
-                        len = encode_closing_tag(&apdu[apdu_len], 13);
-                        apdu_len += len;
-                        break;
                     case EVENT_EXTENDED:
+                    case EVENT_COMMAND_FAILURE:
                     default:
                         assert(0);
                         break;
@@ -521,8 +408,6 @@ int event_notify_decode_service_request(
     int section_length = 0;
     BACNET_UNSIGNED_INTEGER unsigned_value = 0;
     uint32_t enum_value = 0;
-    uint32_t len_value = 0;
-    uint8_t tag_number = 0;
 
     if (apdu_len && data) {
         /* tag 0 - processIdentifier */
@@ -629,7 +514,7 @@ int event_notify_decode_service_request(
                 /* tag 9 - ackRequired */
                 section_length =
                     decode_context_boolean2(&apdu[len], 9, &data->ackRequired);
-                if (section_length == BACNET_STATUS_ERROR) {
+                if (section_length == -1) {
                     return -1;
                 }
                 len += section_length;
@@ -766,105 +651,6 @@ int event_notify_decode_service_request(
                             return -1;
                         }
                         len += section_length;
-                        break;
-
-                    case EVENT_COMMAND_FAILURE:
-                        if (!decode_is_opening_tag_number(&apdu[len], 0)) {
-                            return -1;
-                        }
-                        len++;
-
-                        if (-1 == (section_length =
-                                decode_tag_number_and_value(&apdu[len],
-                                    &tag_number, &len_value))) {
-                            return -1;
-                        }
-                        len += section_length;
-
-                        switch (tag_number) {
-                            case BACNET_APPLICATION_TAG_ENUMERATED:
-                                if (-1 == (section_length =
-                                        decode_enumerated(&apdu[len],
-                                            len_value,
-                                            &data->
-                                            notificationParams.commandFailure.
-                                            commandValue.binaryValue))) {
-                                    return -1;
-                                }
-                                break;
-
-                            case BACNET_APPLICATION_TAG_UNSIGNED_INT:
-                                if (-1 == (section_length =
-                                        decode_unsigned(&apdu[len], len_value,
-                                            &data->
-                                            notificationParams.commandFailure.
-                                            commandValue.unsignedValue))) {
-                                    return -1;
-                                }
-                                break;
-
-                            default:
-                                return 0;
-                        }
-                        len += section_length;
-
-                        if (!decode_is_closing_tag_number(&apdu[len], 0)) {
-                            return -1;
-                        }
-                        len++;
-
-                        if (-1 == (section_length =
-                                decode_context_bitstring(&apdu[len], 1,
-                                    &data->notificationParams.commandFailure.
-                                    statusFlags))) {
-                            return -1;
-                        }
-                        len += section_length;
-
-                        if (!decode_is_opening_tag_number(&apdu[len], 2)) {
-                            return -1;
-                        }
-                        len++;
-
-                        if (-1 == (section_length =
-                                decode_tag_number_and_value(&apdu[len],
-                                    &tag_number, &len_value))) {
-                            return -1;
-                        }
-                        len += section_length;
-
-                        switch (tag_number) {
-                            case BACNET_APPLICATION_TAG_ENUMERATED:
-                                if (-1 == (section_length =
-                                        decode_enumerated(&apdu[len],
-                                            len_value,
-                                            &data->
-                                            notificationParams.commandFailure.
-                                            feedbackValue.binaryValue))) {
-                                    return -1;
-                                }
-                                break;
-
-                            case BACNET_APPLICATION_TAG_UNSIGNED_INT:
-                                if (-1 == (section_length =
-                                        decode_unsigned(&apdu[len], len_value,
-                                            &data->
-                                            notificationParams.commandFailure.
-                                            feedbackValue.unsignedValue))) {
-                                    return -1;
-                                }
-                                break;
-
-                            default:
-                                return 0;
-                        }
-                        len += section_length;
-
-                        if (!decode_is_closing_tag_number(&apdu[len], 2)) {
-                            return -1;
-                        }
-                        len++;
-
                         break;
 
                     case EVENT_FLOATING_LIMIT:
@@ -1057,60 +843,6 @@ int event_notify_decode_service_request(
                         }
                         break;
 
-                    case EVENT_ACCESS_EVENT:
-                        if (-1 == (section_length =
-                                decode_context_enumerated(&apdu[len], 0,
-                                    &data->notificationParams.
-                                    accessEvent.accessEvent))) {
-                            return -1;
-                        }
-                        len += section_length;
-
-                        if (-1 == (section_length =
-                                decode_context_bitstring(&apdu[len], 1,
-                                    &data->notificationParams.
-                                    accessEvent.statusFlags))) {
-                            return -1;
-                        }
-                        len += section_length;
-
-                        if (-1 == (section_length =
-                                decode_context_unsigned(&apdu[len], 2,
-                                    &data->notificationParams.
-                                    accessEvent.accessEventTag))) {
-                            return -1;
-                        }
-                        len += section_length;
-
-                        if (-1 == (section_length =
-                                bacapp_decode_context_timestamp(&apdu[len], 3,
-                                    &data->notificationParams.
-                                    accessEvent.accessEventTime))) {
-                            return -1;
-                        }
-                        len += section_length;
-
-                        if (-1 == (section_length =
-                                bacapp_decode_context_device_obj_ref(&apdu
-                                    [len], 4,
-                                    &data->notificationParams.
-                                    accessEvent.accessCredential))) {
-                            return -1;
-                        }
-                        len += section_length;
-
-                        if (!decode_is_closing_tag(&apdu[len])) {
-                            if (-1 == (section_length =
-                                    bacapp_decode_context_authentication_factor
-                                    (&apdu[len], 5,
-                                        &data->notificationParams.
-                                        accessEvent.authenticationFactor))) {
-                                return -1;
-                            }
-                            len += section_length;
-                        }
-                        break;
-
                     default:
                         return -1;
                 }
@@ -1137,3 +869,650 @@ int event_notify_decode_service_request(
 
     return len;
 }
+
+#ifdef BAC_TEST
+
+#include <assert.h>
+#include <string.h>
+#include "ctest.h"
+
+BACNET_EVENT_NOTIFICATION_DATA data;
+BACNET_EVENT_NOTIFICATION_DATA data2;
+
+void testBaseEventState(Test *pTest)
+{
+    ct_test(pTest, data.processIdentifier == data2.processIdentifier);
+    ct_test(pTest,
+        data.initiatingObjectIdentifier.instance ==
+            data2.initiatingObjectIdentifier.instance);
+    ct_test(pTest,
+        data.initiatingObjectIdentifier.type ==
+            data2.initiatingObjectIdentifier.type);
+    ct_test(pTest,
+        data.eventObjectIdentifier.instance ==
+            data2.eventObjectIdentifier.instance);
+    ct_test(pTest,
+        data.eventObjectIdentifier.type == data2.eventObjectIdentifier.type);
+    ct_test(pTest, data.notificationClass == data2.notificationClass);
+    ct_test(pTest, data.priority == data2.priority);
+    ct_test(pTest, data.notifyType == data2.notifyType);
+    ct_test(pTest, data.fromState == data2.fromState);
+    ct_test(pTest, data.toState == data2.toState);
+    ct_test(pTest, data.toState == data2.toState);
+
+    if (data.messageText != NULL && data2.messageText != NULL) {
+        ct_test(
+            pTest, data.messageText->encoding == data2.messageText->encoding);
+        ct_test(pTest, data.messageText->length == data2.messageText->length);
+        ct_test(pTest,
+            strcmp(data.messageText->value, data2.messageText->value) == 0);
+    }
+
+    ct_test(pTest, data.timeStamp.tag == data2.timeStamp.tag);
+
+    switch (data.timeStamp.tag) {
+        case TIME_STAMP_SEQUENCE:
+            ct_test(pTest,
+                data.timeStamp.value.sequenceNum ==
+                    data2.timeStamp.value.sequenceNum);
+            break;
+
+        case TIME_STAMP_DATETIME:
+            ct_test(pTest,
+                data.timeStamp.value.dateTime.time.hour ==
+                    data2.timeStamp.value.dateTime.time.hour);
+            ct_test(pTest,
+                data.timeStamp.value.dateTime.time.min ==
+                    data2.timeStamp.value.dateTime.time.min);
+            ct_test(pTest,
+                data.timeStamp.value.dateTime.time.sec ==
+                    data2.timeStamp.value.dateTime.time.sec);
+            ct_test(pTest,
+                data.timeStamp.value.dateTime.time.hundredths ==
+                    data2.timeStamp.value.dateTime.time.hundredths);
+
+            ct_test(pTest,
+                data.timeStamp.value.dateTime.date.day ==
+                    data2.timeStamp.value.dateTime.date.day);
+            ct_test(pTest,
+                data.timeStamp.value.dateTime.date.month ==
+                    data2.timeStamp.value.dateTime.date.month);
+            ct_test(pTest,
+                data.timeStamp.value.dateTime.date.wday ==
+                    data2.timeStamp.value.dateTime.date.wday);
+            ct_test(pTest,
+                data.timeStamp.value.dateTime.date.year ==
+                    data2.timeStamp.value.dateTime.date.year);
+            break;
+
+        case TIME_STAMP_TIME:
+            ct_test(pTest,
+                data.timeStamp.value.time.hour ==
+                    data2.timeStamp.value.time.hour);
+            ct_test(pTest,
+                data.timeStamp.value.time.min ==
+                    data2.timeStamp.value.time.min);
+            ct_test(pTest,
+                data.timeStamp.value.time.sec ==
+                    data2.timeStamp.value.time.sec);
+            ct_test(pTest,
+                data.timeStamp.value.time.hundredths ==
+                    data2.timeStamp.value.time.hundredths);
+            break;
+
+        default:
+            ct_fail(pTest, "Unknown type");
+            break;
+    }
+}
+
+void testEventEventState(Test *pTest)
+{
+    uint8_t buffer[MAX_APDU];
+    int inLen;
+    int outLen;
+    BACNET_CHARACTER_STRING messageText;
+    BACNET_CHARACTER_STRING messageText2;
+    characterstring_init_ansi(
+        &messageText, "This is a test of the message text\n");
+
+    data.messageText = &messageText;
+    data2.messageText = &messageText2;
+
+    data.processIdentifier = 1234;
+    data.initiatingObjectIdentifier.type = OBJECT_ANALOG_INPUT;
+    data.initiatingObjectIdentifier.instance = 100;
+    data.eventObjectIdentifier.type = OBJECT_ANALOG_INPUT;
+    data.eventObjectIdentifier.instance = 200;
+    data.timeStamp.value.sequenceNum = 1234;
+    data.timeStamp.tag = TIME_STAMP_SEQUENCE;
+    data.notificationClass = 50;
+    data.priority = 50;
+    data.notifyType = NOTIFY_ALARM;
+    data.fromState = EVENT_STATE_NORMAL;
+    data.toState = EVENT_STATE_OFFNORMAL;
+
+    data.eventType = EVENT_CHANGE_OF_STATE;
+    data.notificationParams.changeOfState.newState.tag = UNITS;
+    data.notificationParams.changeOfState.newState.state.units =
+        UNITS_SQUARE_METERS;
+
+    bitstring_init(&data.notificationParams.changeOfState.statusFlags);
+    bitstring_set_bit(&data.notificationParams.changeOfState.statusFlags,
+        STATUS_FLAG_IN_ALARM, true);
+    bitstring_set_bit(&data.notificationParams.changeOfState.statusFlags,
+        STATUS_FLAG_FAULT, false);
+    bitstring_set_bit(&data.notificationParams.changeOfState.statusFlags,
+        STATUS_FLAG_OVERRIDDEN, false);
+    bitstring_set_bit(&data.notificationParams.changeOfState.statusFlags,
+        STATUS_FLAG_OUT_OF_SERVICE, false);
+
+    inLen = event_notify_encode_service_request(&buffer[0], &data);
+
+    outLen = event_notify_decode_service_request(&buffer[0], inLen, &data2);
+
+    ct_test(pTest, inLen == outLen);
+    testBaseEventState(pTest);
+
+    ct_test(pTest,
+        data.notificationParams.changeOfState.newState.tag ==
+            data2.notificationParams.changeOfState.newState.tag);
+    ct_test(pTest,
+        data.notificationParams.changeOfState.newState.state.units ==
+            data2.notificationParams.changeOfState.newState.state.units);
+
+    ct_test(pTest,
+        bitstring_same(&data.notificationParams.changeOfState.statusFlags,
+            &data2.notificationParams.changeOfState.statusFlags));
+
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+
+    /*
+     ** Same, but timestamp of
+     */
+    data.timeStamp.tag = TIME_STAMP_DATETIME;
+    data.timeStamp.value.dateTime.time.hour = 1;
+    data.timeStamp.value.dateTime.time.min = 2;
+    data.timeStamp.value.dateTime.time.sec = 3;
+    data.timeStamp.value.dateTime.time.hundredths = 4;
+
+    data.timeStamp.value.dateTime.date.day = 1;
+    data.timeStamp.value.dateTime.date.month = 1;
+    data.timeStamp.value.dateTime.date.wday = 1;
+    data.timeStamp.value.dateTime.date.year = 1945;
+
+    memset(buffer, 0, MAX_APDU);
+    inLen = event_notify_encode_service_request(&buffer[0], &data);
+
+    memset(&data2, 0, sizeof(data2));
+    data2.messageText = &messageText2;
+    outLen = event_notify_decode_service_request(&buffer[0], inLen, &data2);
+
+    ct_test(pTest, inLen == outLen);
+    testBaseEventState(pTest);
+    ct_test(pTest,
+        data.notificationParams.changeOfState.newState.tag ==
+            data2.notificationParams.changeOfState.newState.tag);
+    ct_test(pTest,
+        data.notificationParams.changeOfState.newState.state.units ==
+            data2.notificationParams.changeOfState.newState.state.units);
+
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+
+    /*
+     ** Event Type = EVENT_CHANGE_OF_BITSTRING
+     */
+    data.timeStamp.value.sequenceNum = 1234;
+    data.timeStamp.tag = TIME_STAMP_SEQUENCE;
+
+    data.eventType = EVENT_CHANGE_OF_BITSTRING;
+
+    bitstring_init(
+        &data.notificationParams.changeOfBitstring.referencedBitString);
+    bitstring_set_bit(
+        &data.notificationParams.changeOfBitstring.referencedBitString, 0,
+        true);
+    bitstring_set_bit(
+        &data.notificationParams.changeOfBitstring.referencedBitString, 1,
+        false);
+    bitstring_set_bit(
+        &data.notificationParams.changeOfBitstring.referencedBitString, 2,
+        true);
+    bitstring_set_bit(
+        &data.notificationParams.changeOfBitstring.referencedBitString, 2,
+        false);
+
+    bitstring_init(&data.notificationParams.changeOfBitstring.statusFlags);
+
+    bitstring_set_bit(&data.notificationParams.changeOfBitstring.statusFlags,
+        STATUS_FLAG_IN_ALARM, true);
+    bitstring_set_bit(&data.notificationParams.changeOfBitstring.statusFlags,
+        STATUS_FLAG_FAULT, false);
+    bitstring_set_bit(&data.notificationParams.changeOfBitstring.statusFlags,
+        STATUS_FLAG_OVERRIDDEN, false);
+    bitstring_set_bit(&data.notificationParams.changeOfBitstring.statusFlags,
+        STATUS_FLAG_OUT_OF_SERVICE, false);
+
+    memset(buffer, 0, MAX_APDU);
+    inLen = event_notify_encode_service_request(&buffer[0], &data);
+
+    memset(&data2, 0, sizeof(data2));
+    data2.messageText = &messageText2;
+    outLen = event_notify_decode_service_request(&buffer[0], inLen, &data2);
+
+    ct_test(pTest, inLen == outLen);
+    testBaseEventState(pTest);
+
+    ct_test(pTest,
+        bitstring_same(
+            &data.notificationParams.changeOfBitstring.referencedBitString,
+            &data2.notificationParams.changeOfBitstring.referencedBitString));
+
+    ct_test(pTest,
+        bitstring_same(&data.notificationParams.changeOfBitstring.statusFlags,
+            &data2.notificationParams.changeOfBitstring.statusFlags));
+
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /*
+     ** Event Type = EVENT_CHANGE_OF_VALUE - float value
+     */
+
+    data.eventType = EVENT_CHANGE_OF_VALUE;
+    data.notificationParams.changeOfValue.tag = CHANGE_OF_VALUE_REAL;
+    data.notificationParams.changeOfValue.newValue.changeValue = 1.23f;
+
+    bitstring_init(&data.notificationParams.changeOfValue.statusFlags);
+
+    bitstring_set_bit(&data.notificationParams.changeOfValue.statusFlags,
+        STATUS_FLAG_IN_ALARM, true);
+    bitstring_set_bit(&data.notificationParams.changeOfValue.statusFlags,
+        STATUS_FLAG_FAULT, false);
+    bitstring_set_bit(&data.notificationParams.changeOfValue.statusFlags,
+        STATUS_FLAG_OVERRIDDEN, false);
+    bitstring_set_bit(&data.notificationParams.changeOfValue.statusFlags,
+        STATUS_FLAG_OUT_OF_SERVICE, false);
+
+    memset(buffer, 0, MAX_APDU);
+    inLen = event_notify_encode_service_request(&buffer[0], &data);
+
+    memset(&data2, 0, sizeof(data2));
+    data2.messageText = &messageText2;
+    outLen = event_notify_decode_service_request(&buffer[0], inLen, &data2);
+
+    ct_test(pTest, inLen == outLen);
+    testBaseEventState(pTest);
+
+    ct_test(pTest,
+        bitstring_same(&data.notificationParams.changeOfValue.statusFlags,
+            &data2.notificationParams.changeOfValue.statusFlags));
+
+    ct_test(pTest,
+        data.notificationParams.changeOfValue.tag ==
+            data2.notificationParams.changeOfValue.tag);
+
+    ct_test(pTest,
+        data.notificationParams.changeOfValue.newValue.changeValue ==
+            data2.notificationParams.changeOfValue.newValue.changeValue);
+
+    /*
+     ** Event Type = EVENT_CHANGE_OF_VALUE - bitstring value
+     */
+
+    data.notificationParams.changeOfValue.tag = CHANGE_OF_VALUE_BITS;
+
+    bitstring_init(&data.notificationParams.changeOfValue.newValue.changedBits);
+    bitstring_set_bit(
+        &data.notificationParams.changeOfValue.newValue.changedBits, 0, true);
+    bitstring_set_bit(
+        &data.notificationParams.changeOfValue.newValue.changedBits, 1, false);
+    bitstring_set_bit(
+        &data.notificationParams.changeOfValue.newValue.changedBits, 2, false);
+    bitstring_set_bit(
+        &data.notificationParams.changeOfValue.newValue.changedBits, 3, false);
+
+    memset(buffer, 0, MAX_APDU);
+    inLen = event_notify_encode_service_request(&buffer[0], &data);
+
+    memset(&data2, 0, sizeof(data2));
+    data2.messageText = &messageText2;
+    outLen = event_notify_decode_service_request(&buffer[0], inLen, &data2);
+
+    ct_test(pTest, inLen == outLen);
+    testBaseEventState(pTest);
+
+    ct_test(pTest,
+        bitstring_same(&data.notificationParams.changeOfValue.statusFlags,
+            &data2.notificationParams.changeOfValue.statusFlags));
+
+    ct_test(pTest,
+        data.notificationParams.changeOfValue.tag ==
+            data2.notificationParams.changeOfValue.tag);
+
+    ct_test(pTest,
+        bitstring_same(
+            &data.notificationParams.changeOfValue.newValue.changedBits,
+            &data2.notificationParams.changeOfValue.newValue.changedBits));
+
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /*
+     ** Event Type = EVENT_FLOATING_LIMIT
+     */
+    data.eventType = EVENT_FLOATING_LIMIT;
+    data.notificationParams.floatingLimit.referenceValue = 1.23f;
+    data.notificationParams.floatingLimit.setPointValue = 2.34f;
+    data.notificationParams.floatingLimit.errorLimit = 3.45f;
+
+    bitstring_init(&data.notificationParams.floatingLimit.statusFlags);
+
+    bitstring_set_bit(&data.notificationParams.floatingLimit.statusFlags,
+        STATUS_FLAG_IN_ALARM, true);
+    bitstring_set_bit(&data.notificationParams.floatingLimit.statusFlags,
+        STATUS_FLAG_FAULT, false);
+    bitstring_set_bit(&data.notificationParams.floatingLimit.statusFlags,
+        STATUS_FLAG_OVERRIDDEN, false);
+    bitstring_set_bit(&data.notificationParams.floatingLimit.statusFlags,
+        STATUS_FLAG_OUT_OF_SERVICE, false);
+
+    memset(buffer, 0, MAX_APDU);
+    inLen = event_notify_encode_service_request(&buffer[0], &data);
+
+    memset(&data2, 0, sizeof(data2));
+    data2.messageText = &messageText2;
+    outLen = event_notify_decode_service_request(&buffer[0], inLen, &data2);
+
+    ct_test(pTest, inLen == outLen);
+    testBaseEventState(pTest);
+
+    ct_test(pTest,
+        data.notificationParams.floatingLimit.referenceValue ==
+            data2.notificationParams.floatingLimit.referenceValue);
+
+    ct_test(pTest,
+        data.notificationParams.floatingLimit.setPointValue ==
+            data2.notificationParams.floatingLimit.setPointValue);
+
+    ct_test(pTest,
+        data.notificationParams.floatingLimit.errorLimit ==
+            data2.notificationParams.floatingLimit.errorLimit);
+    ct_test(pTest,
+        bitstring_same(&data.notificationParams.floatingLimit.statusFlags,
+            &data2.notificationParams.floatingLimit.statusFlags));
+
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /*
+     ** Event Type = EVENT_OUT_OF_RANGE
+     */
+    data.eventType = EVENT_OUT_OF_RANGE;
+    data.notificationParams.outOfRange.exceedingValue = 3.45f;
+    data.notificationParams.outOfRange.deadband = 2.34f;
+    data.notificationParams.outOfRange.exceededLimit = 1.23f;
+
+    bitstring_init(&data.notificationParams.outOfRange.statusFlags);
+
+    bitstring_set_bit(&data.notificationParams.outOfRange.statusFlags,
+        STATUS_FLAG_IN_ALARM, true);
+    bitstring_set_bit(&data.notificationParams.outOfRange.statusFlags,
+        STATUS_FLAG_FAULT, false);
+    bitstring_set_bit(&data.notificationParams.outOfRange.statusFlags,
+        STATUS_FLAG_OVERRIDDEN, false);
+    bitstring_set_bit(&data.notificationParams.outOfRange.statusFlags,
+        STATUS_FLAG_OUT_OF_SERVICE, false);
+
+    memset(buffer, 0, MAX_APDU);
+    inLen = event_notify_encode_service_request(&buffer[0], &data);
+
+    memset(&data2, 0, sizeof(data2));
+    data2.messageText = &messageText2;
+    outLen = event_notify_decode_service_request(&buffer[0], inLen, &data2);
+
+    ct_test(pTest, inLen == outLen);
+    testBaseEventState(pTest);
+
+    ct_test(pTest,
+        data.notificationParams.outOfRange.deadband ==
+            data2.notificationParams.outOfRange.deadband);
+
+    ct_test(pTest,
+        data.notificationParams.outOfRange.exceededLimit ==
+            data2.notificationParams.outOfRange.exceededLimit);
+
+    ct_test(pTest,
+        data.notificationParams.outOfRange.exceedingValue ==
+            data2.notificationParams.outOfRange.exceedingValue);
+    ct_test(pTest,
+        bitstring_same(&data.notificationParams.outOfRange.statusFlags,
+            &data2.notificationParams.outOfRange.statusFlags));
+
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /*
+     ** Event Type = EVENT_CHANGE_OF_LIFE_SAFETY
+     */
+    data.eventType = EVENT_CHANGE_OF_LIFE_SAFETY;
+    data.notificationParams.changeOfLifeSafety.newState =
+        LIFE_SAFETY_STATE_ALARM;
+    data.notificationParams.changeOfLifeSafety.newMode = LIFE_SAFETY_MODE_ARMED;
+    data.notificationParams.changeOfLifeSafety.operationExpected =
+        LIFE_SAFETY_OP_RESET;
+
+    bitstring_init(&data.notificationParams.changeOfLifeSafety.statusFlags);
+
+    bitstring_set_bit(&data.notificationParams.changeOfLifeSafety.statusFlags,
+        STATUS_FLAG_IN_ALARM, true);
+    bitstring_set_bit(&data.notificationParams.changeOfLifeSafety.statusFlags,
+        STATUS_FLAG_FAULT, false);
+    bitstring_set_bit(&data.notificationParams.changeOfLifeSafety.statusFlags,
+        STATUS_FLAG_OVERRIDDEN, false);
+    bitstring_set_bit(&data.notificationParams.changeOfLifeSafety.statusFlags,
+        STATUS_FLAG_OUT_OF_SERVICE, false);
+
+    memset(buffer, 0, MAX_APDU);
+    inLen = event_notify_encode_service_request(&buffer[0], &data);
+
+    memset(&data2, 0, sizeof(data2));
+    data2.messageText = &messageText2;
+    outLen = event_notify_decode_service_request(&buffer[0], inLen, &data2);
+
+    ct_test(pTest, inLen == outLen);
+    testBaseEventState(pTest);
+
+    ct_test(pTest,
+        data.notificationParams.changeOfLifeSafety.newMode ==
+            data2.notificationParams.changeOfLifeSafety.newMode);
+
+    ct_test(pTest,
+        data.notificationParams.changeOfLifeSafety.newState ==
+            data2.notificationParams.changeOfLifeSafety.newState);
+
+    ct_test(pTest,
+        data.notificationParams.changeOfLifeSafety.operationExpected ==
+            data2.notificationParams.changeOfLifeSafety.operationExpected);
+
+    ct_test(pTest,
+        bitstring_same(&data.notificationParams.changeOfLifeSafety.statusFlags,
+            &data2.notificationParams.changeOfLifeSafety.statusFlags));
+
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /*
+     ** Event Type = EVENT_UNSIGNED_RANGE
+     */
+    data.eventType = EVENT_UNSIGNED_RANGE;
+    data.notificationParams.unsignedRange.exceedingValue = 1234;
+    data.notificationParams.unsignedRange.exceededLimit = 2345;
+
+    bitstring_init(&data.notificationParams.unsignedRange.statusFlags);
+
+    bitstring_set_bit(&data.notificationParams.unsignedRange.statusFlags,
+        STATUS_FLAG_IN_ALARM, true);
+    bitstring_set_bit(&data.notificationParams.unsignedRange.statusFlags,
+        STATUS_FLAG_FAULT, false);
+    bitstring_set_bit(&data.notificationParams.unsignedRange.statusFlags,
+        STATUS_FLAG_OVERRIDDEN, false);
+    bitstring_set_bit(&data.notificationParams.unsignedRange.statusFlags,
+        STATUS_FLAG_OUT_OF_SERVICE, false);
+
+    memset(buffer, 0, MAX_APDU);
+    inLen = event_notify_encode_service_request(&buffer[0], &data);
+
+    memset(&data2, 0, sizeof(data2));
+    data2.messageText = &messageText2;
+    outLen = event_notify_decode_service_request(&buffer[0], inLen, &data2);
+
+    ct_test(pTest, inLen == outLen);
+    testBaseEventState(pTest);
+
+    ct_test(pTest,
+        data.notificationParams.unsignedRange.exceedingValue ==
+            data2.notificationParams.unsignedRange.exceedingValue);
+
+    ct_test(pTest,
+        data.notificationParams.unsignedRange.exceededLimit ==
+            data2.notificationParams.unsignedRange.exceededLimit);
+
+    ct_test(pTest,
+        bitstring_same(&data.notificationParams.unsignedRange.statusFlags,
+            &data2.notificationParams.unsignedRange.statusFlags));
+
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /**********************************************************************************/
+    /*
+     ** Event Type = EVENT_BUFFER_READY
+     */
+    data.eventType = EVENT_BUFFER_READY;
+    data.notificationParams.bufferReady.previousNotification = 1234;
+    data.notificationParams.bufferReady.currentNotification = 2345;
+    data.notificationParams.bufferReady.bufferProperty.deviceIdentifier.type =
+        OBJECT_DEVICE;
+    data.notificationParams.bufferReady.bufferProperty.deviceIdentifier
+        .instance = 500;
+    data.notificationParams.bufferReady.bufferProperty.objectIdentifier.type =
+        OBJECT_ANALOG_INPUT;
+    data.notificationParams.bufferReady.bufferProperty.objectIdentifier
+        .instance = 100;
+    data.notificationParams.bufferReady.bufferProperty.propertyIdentifier =
+        PROP_PRESENT_VALUE;
+    data.notificationParams.bufferReady.bufferProperty.arrayIndex = 0;
+
+    memset(buffer, 0, MAX_APDU);
+    inLen = event_notify_encode_service_request(&buffer[0], &data);
+
+    memset(&data2, 0, sizeof(data2));
+    data2.messageText = &messageText2;
+    outLen = event_notify_decode_service_request(&buffer[0], inLen, &data2);
+
+    ct_test(pTest, inLen == outLen);
+    testBaseEventState(pTest);
+
+    ct_test(pTest,
+        data.notificationParams.bufferReady.previousNotification ==
+            data2.notificationParams.bufferReady.previousNotification);
+
+    ct_test(pTest,
+        data.notificationParams.bufferReady.currentNotification ==
+            data2.notificationParams.bufferReady.currentNotification);
+
+    ct_test(pTest,
+        data.notificationParams.bufferReady.bufferProperty.deviceIdentifier
+                .type ==
+            data2.notificationParams.bufferReady.bufferProperty.deviceIdentifier
+                .type);
+
+    ct_test(pTest,
+        data.notificationParams.bufferReady.bufferProperty.deviceIdentifier
+                .instance ==
+            data2.notificationParams.bufferReady.bufferProperty.deviceIdentifier
+                .instance);
+
+    ct_test(pTest,
+        data.notificationParams.bufferReady.bufferProperty.objectIdentifier
+                .instance ==
+            data2.notificationParams.bufferReady.bufferProperty.objectIdentifier
+                .instance);
+
+    ct_test(pTest,
+        data.notificationParams.bufferReady.bufferProperty.objectIdentifier
+                .type ==
+            data2.notificationParams.bufferReady.bufferProperty.objectIdentifier
+                .type);
+
+    ct_test(pTest,
+        data.notificationParams.bufferReady.bufferProperty.propertyIdentifier ==
+            data2.notificationParams.bufferReady.bufferProperty
+                .propertyIdentifier);
+
+    ct_test(pTest,
+        data.notificationParams.bufferReady.bufferProperty.arrayIndex ==
+            data2.notificationParams.bufferReady.bufferProperty.arrayIndex);
+}
+
+#ifdef TEST_EVENT
+
+int main(void)
+{
+    Test *pTest;
+    bool rc;
+
+    pTest = ct_create("BACnet Event", NULL);
+    /* individual tests */
+    rc = ct_addTestFunction(pTest, testEventEventState);
+    assert(rc);
+
+    ct_setStream(pTest, stdout);
+    ct_run(pTest);
+    (void)ct_report(pTest);
+    ct_destroy(pTest);
+
+    return 0;
+}
+
+#endif /* TEST_EVENT */
+#endif /* BAC_TEST */
+
+#endif // #if (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1) || (BACNET_USE_OBJECT_NOTIFICATION_CLASS == 1)
+

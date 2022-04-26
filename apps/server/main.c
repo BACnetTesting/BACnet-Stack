@@ -22,42 +22,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  *********************************************************************/
-#include <stddef.h>
+
+//#include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
+//#include <stdio.h>
 #include <stdlib.h>
-#include <signal.h>
+//#include <signal.h>
 #include <string.h>
 #include <time.h>
-#include "bacnet/config.h"
-#include "bacnet/bacdef.h"
-#include "bacnet/bacdcode.h"
-#include "bacnet/apdu.h"
+//#include "bacnet/config.h"
+//#include "bacnet/bacdef.h"
+//#include "bacnet/bacdcode.h"
+//#include "bacnet/apdu.h"
 #include "bacnet/dcc.h"
-#include "bacnet/iam.h"
-#include "bacnet/npdu.h"
-#include "bacnet/getevent.h"
+//#include "bacnet/iam.h"
+//#include "bacnet/npdu.h"
+//#include "bacnet/getevent.h"
 #include "bacnet/version.h"
 #include "bacnet/basic/services.h"
 #include "bacnet/datalink/dlenv.h"
 #include "bacnet/basic/sys/filename.h"
-#include "bacnet/basic/tsm/tsm.h"
+//#include "bacnet/basic/tsm/tsm.h"
 #include "bacnet/basic/tsm/tsm.h"
 #include "bacnet/datalink/datalink.h"
 #include "bacnet/basic/binding/address.h"
-/* include the device object */
+///* include the device object */
 #include "bacnet/basic/object/device.h"
 #include "bacnet/basic/object/lc.h"
 #include "bacnet/basic/object/trendlog.h"
-#if defined(INTRINSIC_REPORTING)
-#include "bacnet/basic/object/nc.h"
-#endif /* defined(INTRINSIC_REPORTING) */
-#if defined(BACFILE)
-#include "bacnet/basic/object/bacfile.h"
-#endif /* defined(BACFILE) */
-#if defined(BAC_UCI)
-#include "bacnet/basic/ucix/ucix.h"
-#endif /* defined(BAC_UCI) */
+//#if defined(INTRINSIC_REPORTING)
+//#include "bacnet/basic/object/nc.h"
+//#endif /* defined(INTRINSIC_REPORTING) */
+//#if defined(BACFILE)
+//#include "bacnet/basic/object/bacfile.h"
+//#endif /* defined(BACFILE) */
+//#if defined(BAC_UCI)
+//#include "bacnet/basic/ucix/ucix.h"
+//#endif /* defined(BAC_UCI) */
 
 /** @file server/main.c  Example server application using the BACnet Stack. */
 
@@ -103,8 +104,10 @@ static void Init_Service_Handlers(void)
     /* We must implement read property - it's required! */
     apdu_set_confirmed_handler(
         SERVICE_CONFIRMED_READ_PROPERTY, handler_read_property);
+#if ( BACNET_SVC_RPM_B == 1)
     apdu_set_confirmed_handler(
         SERVICE_CONFIRMED_READ_PROP_MULTIPLE, handler_read_property_multiple);
+#endif
     apdu_set_confirmed_handler(
         SERVICE_CONFIRMED_WRITE_PROPERTY, handler_write_property);
     apdu_set_confirmed_handler(
@@ -112,10 +115,10 @@ static void Init_Service_Handlers(void)
     apdu_set_confirmed_handler(
         SERVICE_CONFIRMED_READ_RANGE, handler_read_range);
 #if defined(BACFILE)
-    apdu_set_confirmed_handler(
-        SERVICE_CONFIRMED_ATOMIC_READ_FILE, handler_atomic_read_file);
-    apdu_set_confirmed_handler(
-        SERVICE_CONFIRMED_ATOMIC_WRITE_FILE, handler_atomic_write_file);
+//    apdu_set_confirmed_handler(
+//        SERVICE_CONFIRMED_ATOMIC_READ_FILE, handler_atomic_read_file);
+//    apdu_set_confirmed_handler(
+//        SERVICE_CONFIRMED_ATOMIC_WRITE_FILE, handler_atomic_write_file);
 #endif
     apdu_set_confirmed_handler(
         SERVICE_CONFIRMED_REINITIALIZE_DEVICE, handler_reinitialize_device);
@@ -123,10 +126,14 @@ static void Init_Service_Handlers(void)
         SERVICE_UNCONFIRMED_UTC_TIME_SYNCHRONIZATION, handler_timesync_utc);
     apdu_set_unconfirmed_handler(
         SERVICE_UNCONFIRMED_TIME_SYNCHRONIZATION, handler_timesync);
+
+#if ( BACNET_SVC_COV_B == 1 )
     apdu_set_confirmed_handler(
         SERVICE_CONFIRMED_SUBSCRIBE_COV, handler_cov_subscribe);
     apdu_set_unconfirmed_handler(
         SERVICE_UNCONFIRMED_COV_NOTIFICATION, handler_ucov_notification);
+#endif
+
     /* handle communication so we can shutup when asked */
     apdu_set_confirmed_handler(SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL,
         handler_device_communication_control);
@@ -134,12 +141,12 @@ static void Init_Service_Handlers(void)
     apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_PRIVATE_TRANSFER,
         handler_unconfirmed_private_transfer);
 #if defined(INTRINSIC_REPORTING)
-    apdu_set_confirmed_handler(
-        SERVICE_CONFIRMED_ACKNOWLEDGE_ALARM, handler_alarm_ack);
-    apdu_set_confirmed_handler(
-        SERVICE_CONFIRMED_GET_EVENT_INFORMATION, handler_get_event_information);
-    apdu_set_confirmed_handler(
-        SERVICE_CONFIRMED_GET_ALARM_SUMMARY, handler_get_alarm_summary);
+    //apdu_set_confirmed_handler(
+    //    SERVICE_CONFIRMED_ACKNOWLEDGE_ALARM, handler_alarm_ack);
+    //apdu_set_confirmed_handler(
+    //    SERVICE_CONFIRMED_GET_EVENT_INFORMATION, handler_get_event_information);
+    //apdu_set_confirmed_handler(
+    //    SERVICE_CONFIRMED_GET_ALARM_SUMMARY, handler_get_alarm_summary);
 #endif /* defined(INTRINSIC_REPORTING) */
 #if defined(BACNET_TIME_MASTER)
     handler_timesync_init();
@@ -183,7 +190,7 @@ static void print_help(const char *filename)
  */
 int main(int argc, char *argv[])
 {
-    BACNET_ADDRESS src = { 0 }; /* address where message came from */
+    BACNET_GLOBAL_ADDRESS src = { 0 }; /* address where message came from */
     uint16_t pdu_len = 0;
     unsigned timeout = 1; /* milliseconds */
     time_t last_seconds = 0;
@@ -226,6 +233,7 @@ int main(int argc, char *argv[])
     if (!ctx)
         fprintf(stderr, "Failed to load config file bacnet_dev\n");
     uciId = ucix_get_option_int(ctx, "bacnet_dev", "0", "Id", 0);
+    printf("ID: %i", uciId);
     if (uciId != 0) {
         Device_Set_Object_Instance_Number(uciId);
     } else {
@@ -249,28 +257,9 @@ int main(int argc, char *argv[])
        in our device bindings list */
     address_init();
     Init_Service_Handlers();
-#if defined(BAC_UCI)
-    const char *uciname;
-    ctx = ucix_init("bacnet_dev");
-    if (!ctx)
-        fprintf(stderr, "Failed to load config file bacnet_dev\n");
-    uciname = ucix_get_option(ctx, "bacnet_dev", "0", "Name");
-    if (uciname != 0) {
-        Device_Object_Name_ANSI_Init(uciname);
-    } else {
-#endif /* defined(BAC_UCI) */
-        if (argc > 2) {
-            Device_Object_Name_ANSI_Init(argv[2]);
-        }
-#if defined(BAC_UCI)
+    if (argc > 2) {
+        Device_Object_Name_ANSI_Init(argv[2]);
     }
-    ucix_cleanup(ctx);
-#endif /* defined(BAC_UCI) */
-    BACNET_CHARACTER_STRING DeviceName;
-    if (Device_Object_Name(Device_Object_Instance_Number(),&DeviceName)) {
-        printf("BACnet Device Name: %s\n", DeviceName.value);
-}
-
     dlenv_init();
     atexit(datalink_cleanup);
     /* configure the timeout values */
@@ -296,11 +285,21 @@ int main(int argc, char *argv[])
             dcc_timer_seconds(elapsed_seconds);
             datalink_maintenance_timer(elapsed_seconds);
             dlenv_maintenance_timer(elapsed_seconds);
+
+#if ( BACNET_USE_OBJECT_LOAD_CONTROL == 1 )
             Load_Control_State_Machine_Handler();
+#endif
+
             elapsed_milliseconds = elapsed_seconds * 1000;
+
+#if ( BACNET_SVC_COV_B == 1 )
             handler_cov_timer_seconds(elapsed_seconds);
+#endif
+
             tsm_timer_milliseconds(elapsed_milliseconds);
+#if ( BACNET_USE_OBJECT_TRENDLOG == 1 )
             trend_log_timer(elapsed_seconds);
+#endif
 #if defined(INTRINSIC_REPORTING)
             Device_local_reporting();
 #endif
@@ -309,7 +308,11 @@ int main(int argc, char *argv[])
             handler_timesync_task(&bdatetime);
 #endif
         }
+
+#if ( BACNET_SVC_COV_B == 1 )
         handler_cov_task();
+#endif
+
         /* scan cache address */
         address_binding_tmr += elapsed_seconds;
         if (address_binding_tmr >= 60) {
@@ -319,17 +322,15 @@ int main(int argc, char *argv[])
 #if defined(INTRINSIC_REPORTING)
         /* try to find addresses of recipients */
         recipient_scan_tmr += elapsed_seconds;
-        if (recipient_scan_tmr >= NC_RESCAN_RECIPIENTS_SECS) {
-            Notification_Class_find_recipient();
-            recipient_scan_tmr = 0;
-        }
+//        if (recipient_scan_tmr >= NC_RESCAN_RECIPIENTS_SECS) {
+//            Notification_Class_find_recipient();
+//            recipient_scan_tmr = 0;
+//        }
 #endif
         /* output */
 
         /* blink LEDs, Turn on or off outputs, etc */
     }
-
-    return 0;
 }
 
 /* @} */

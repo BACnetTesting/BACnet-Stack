@@ -1,27 +1,41 @@
 /**************************************************************************
+ *
+ * Copyright (C) 2015 Nikola Jelic <nikola.jelic@euroicc.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+*****************************************************************************************
 *
-* Copyright (C) 2015 Nikola Jelic <nikola.jelic@euroicc.com>
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
 *
-* Permission is hereby granted, free of charge, to any person obtaining
-* a copy of this software and associated documentation files (the
-* "Software"), to deal in the Software without restriction, including
-* without limitation the rights to use, copy, modify, merge, publish,
-* distribute, sublicense, and/or sell copies of the Software, and to
-* permit persons to whom the Software is furnished to do so, subject to
-* the following conditions:
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
 *
-* The above copyright notice and this permission notice shall be included
-* in all copies or substantial portions of the Software.
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
 *
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*
-*********************************************************************/
+****************************************************************************************/
 
 #ifndef SCHEDULE_H
 #define SCHEDULE_H
@@ -55,6 +69,34 @@ extern "C" {
         BACNET_TIME_VALUE Time_Values[BACNET_WEEKLY_SCHEDULE_SIZE];
         uint16_t TV_Count;      /* the number of time values actually used */
     } BACNET_DAILY_SCHEDULE;
+
+	/*
+
+	BACnetCalendarEntry ::= CHOICE {
+		date [0] Date,
+		dateRange [1] BACnetDateRange,
+		weekNDay [2] BACnetWeekNDay
+		}
+
+	BACnetSpecialEvent :: = SEQUENCE{
+	period CHOICE{
+	calendarEntry[0] BACnetCalendarEntry,
+	calendarReference[1] BACnetObjectIdentifier
+	},
+	listOfTimeValues[2] SEQUENCE OF BACnetTimeValue,
+	eventPriority[3] Unsigned(1..16)
+	}
+
+	BACnetSpecialEvent ::= SEQUENCE {
+		period CHOICE {
+			calendar-entry          [0] BACnetCalendarEntry,
+			calendar-reference      [1] BACnetObjectIdentifier
+			},
+		list-of-time-values     [2] SEQUENCE OF BACnetTimeValue,
+		event-priority          [3] Unsigned (1..16)
+    }
+
+    */
 
     typedef struct schedule {
         /* Effective Period: Start and End Date */

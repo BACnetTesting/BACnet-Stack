@@ -2,13 +2,30 @@
 * @file
 * @author Steve Karg
 * @date 2016
-*/
+
+
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef VMAC_H
 #define VMAC_H
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "bacnet/bacnet_stack_exports.h"
 
 /* define the max MAC as big as IPv6 + port number */
 #define VMAC_MAC_MAX 18
@@ -23,36 +40,24 @@ struct vmac_data {
 };
 /** @} */
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-    BACNET_STACK_EXPORT
     unsigned int VMAC_Count(void);
-    BACNET_STACK_EXPORT
     struct vmac_data *VMAC_Find_By_Key(uint32_t device_id);
-    BACNET_STACK_EXPORT
     bool VMAC_Find_By_Data(struct vmac_data *vmac, uint32_t *device_id);
-    BACNET_STACK_EXPORT
     bool VMAC_Add(uint32_t device_id, struct vmac_data *pVMAC);
-    BACNET_STACK_EXPORT
     bool VMAC_Delete(uint32_t device_id);
-    BACNET_STACK_EXPORT
     bool VMAC_Different(
         struct vmac_data *vmac1,
         struct vmac_data *vmac2);
-    BACNET_STACK_EXPORT
     bool VMAC_Match(
         struct vmac_data *vmac1,
         struct vmac_data *vmac2);
-    BACNET_STACK_EXPORT
     void VMAC_Cleanup(void);
-    BACNET_STACK_EXPORT
     void VMAC_Init(void);
-    BACNET_STACK_EXPORT
-    void VMAC_Debug_Enable(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+#ifdef TEST
+#include "ctest.h"
+    void testVMAC(
+        Test * pTest);
+#endif
+
 #endif

@@ -29,20 +29,44 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
 
-#include <stdint.h> /* for standard integer types uint8_t etc. */
-#include <stdbool.h> /* for the standard bool type. */
-#include <stdio.h> /* Standard I/O */
-#include <stdlib.h> /* Standard Library */
+#include <stdint.h>     /* for standard integer types uint8_t etc. */
+#include <stdbool.h>    /* for the standard bool type. */
+#include <stdio.h>      /* Standard I/O */
+#include <stdlib.h>     /* Standard Library */
 #include <stdarg.h>
-#include "bacnet/basic/sys/debug.h"
+
+#error - obsolete this file
+
+// #if defined ( _MSC_VER  )
+// #include <wtypes.h>     // for Mutex Handle
+// #endif
+
+//#include "debug.h"
+#include "btaDebug.h"
 
 /** @file debug.c  Debug print function */
 
-#if DEBUG_ENABLED
-void debug_printf(const char *format, ...)
+#if DEBUG_ENABLED == 1
+void debug_printf(
+    const char *format,
+    ...)
 {
     va_list ap;
 
@@ -51,11 +75,13 @@ void debug_printf(const char *format, ...)
     va_end(ap);
     fflush(stdout);
 
-    return;
 }
 #else
-void debug_printf(const char *format, ...)
+void debug_printf(
+    const char *format,
+    ...)
 {
-    (void)format;
+    format = format;
 }
 #endif
+

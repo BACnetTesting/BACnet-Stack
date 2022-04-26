@@ -23,12 +23,18 @@
  *
  *********************************************************************/
 
+#include "configProj.h"
+
+#if (BACNET_USE_EVENT_HANDLING == 1)
+
 #include <stdint.h>
 #include <stdbool.h>
-#include "bacnet/access_rule.h"
-#include "bacnet/bacdcode.h"
+#include "access_rule.h"
+#include "bacdcode.h"
 
-int bacapp_encode_access_rule(uint8_t *apdu, BACNET_ACCESS_RULE *rule)
+int bacapp_encode_access_rule(
+    uint8_t * apdu,
+    BACNET_ACCESS_RULE * rule)
 {
     int len;
     int apdu_len = 0;
@@ -37,27 +43,28 @@ int bacapp_encode_access_rule(uint8_t *apdu, BACNET_ACCESS_RULE *rule)
     apdu_len += len;
 
     if (rule->time_range_specifier == TIME_RANGE_SPECIFIER_SPECIFIED) {
-        len = bacapp_encode_context_device_obj_property_ref(
-            &apdu[apdu_len], 1, &rule->time_range);
-        if (len > 0) {
+        len =
+            bacapp_encode_context_device_obj_property_ref(&apdu[apdu_len], (uint8_t) 1,
+            &rule->time_range);
+        if (len > 0)
             apdu_len += len;
-        } else {
+        else
             return -1;
-        }
     }
 
     len =
-        encode_context_enumerated(&apdu[apdu_len], 2, rule->location_specifier);
+        encode_context_enumerated(&apdu[apdu_len], 2,
+        rule->location_specifier);
     apdu_len += len;
 
     if (rule->location_specifier == LOCATION_SPECIFIER_SPECIFIED) {
-        len = bacapp_encode_context_device_obj_property_ref(
-            &apdu[apdu_len], 3, &rule->location);
-        if (len > 0) {
+        len =
+            bacapp_encode_context_device_obj_property_ref(&apdu[apdu_len], 3,
+            &rule->location);
+        if (len > 0)
             apdu_len += len;
-        } else {
+        else
             return -1;
-        }
     }
 
     len = encode_context_boolean(&apdu[apdu_len], 4, rule->enable);
@@ -67,7 +74,9 @@ int bacapp_encode_access_rule(uint8_t *apdu, BACNET_ACCESS_RULE *rule)
 }
 
 int bacapp_encode_context_access_rule(
-    uint8_t *apdu, uint8_t tag_number, BACNET_ACCESS_RULE *rule)
+    uint8_t * apdu,
+    uint8_t tag_number,
+    BACNET_ACCESS_RULE * rule)
 {
     int len;
     int apdu_len = 0;
@@ -84,89 +93,80 @@ int bacapp_encode_context_access_rule(
     return apdu_len;
 }
 
-int bacapp_decode_access_rule(uint8_t *apdu, BACNET_ACCESS_RULE *rule)
+int bacapp_decode_access_rule(
+    uint8_t * apdu,
+    BACNET_ACCESS_RULE * rule)
 {
     int len;
     int apdu_len = 0;
-    uint32_t time_range_specifier = rule->time_range_specifier;
-    uint32_t location_specifier = rule->location_specifier;
+    uint32_t    temp;
 
     if (decode_is_context_tag(&apdu[apdu_len], 0)) {
-        len = decode_context_enumerated(
-            &apdu[apdu_len], 0, &time_range_specifier);
-        if (len < 0) {
+        // have to use a temp variable here, size is not the same for all target platforms.
+        len =
+            decode_context_enumerated(&apdu[apdu_len], 0, &temp);
+        rule->time_range_specifier = (BACNET_ACCESS_RULE_TIME_RANGE_SPECIFIER) temp;
+        if (len < 0)
             return -1;
-        } else if (time_range_specifier < TIME_RANGE_SPECIFIER_MAX) {
+        else
             apdu_len += len;
-            rule->time_range_specifier =
-                (BACNET_ACCESS_RULE_TIME_RANGE_SPECIFIER)time_range_specifier;
-        } else {
-            return -1;
-        }
-    } else {
+    } else
         return -1;
-    }
 
     if (rule->time_range_specifier == TIME_RANGE_SPECIFIER_SPECIFIED) {
         if (decode_is_context_tag(&apdu[apdu_len], 1)) {
-            len = bacapp_decode_context_device_obj_property_ref(
-                &apdu[apdu_len], 1, &rule->time_range);
-            if (len < 0) {
+            len =
+                bacapp_decode_context_device_obj_property_ref(&apdu[apdu_len],
+                1, &rule->time_range);
+            if (len < 0)
                 return -1;
-            } else {
+            else
                 apdu_len += len;
-            }
-        } else {
+        } else
             return -1;
-        }
     }
 
     if (decode_is_context_tag(&apdu[apdu_len], 2)) {
+        // have to use a temp variable here, size is not the same for all target platforms.
         len =
-            decode_context_enumerated(&apdu[apdu_len], 2, &location_specifier);
-        if (len < 0) {
+            decode_context_enumerated(&apdu[apdu_len], 2, &temp);
+        rule->location_specifier = (BACNET_ACCESS_RULE_LOCATION_SPECIFIER)temp;
+        if (len < 0)
             return -1;
-        } else if (location_specifier < LOCATION_SPECIFIER_MAX) {
+        else
             apdu_len += len;
-            rule->location_specifier =
-                (BACNET_ACCESS_RULE_LOCATION_SPECIFIER)location_specifier;
-        } else {
-            return -1;
-        }
-    } else {
+    } else
         return -1;
-    }
 
     if (rule->location_specifier == LOCATION_SPECIFIER_SPECIFIED) {
         if (decode_is_context_tag(&apdu[apdu_len], 3)) {
-            len = bacapp_decode_context_device_obj_property_ref(
-                &apdu[apdu_len], 3, &rule->location);
-            if (len < 0) {
+            len =
+                bacapp_decode_context_device_obj_property_ref(&apdu[apdu_len],
+                3, &rule->location);
+            if (len < 0)
                 return -1;
-            } else {
+            else
                 apdu_len += len;
-            }
-        } else {
+        } else
             return -1;
-        }
     }
 
     if (decode_is_context_tag(&apdu[apdu_len], 4)) {
         len = decode_context_boolean2(&apdu[apdu_len], 4, &rule->enable);
-        if (len < 0) {
+        if (len < 0)
             return -1;
-        } else {
+        else
             apdu_len += len;
-        }
-    } else {
+    } else
         return -1;
-    }
 
     return apdu_len;
 }
 
 int bacapp_decode_context_access_rule(
-    uint8_t *apdu, uint8_t tag_number, BACNET_ACCESS_RULE *rule)
+    uint8_t * apdu,
+    uint8_t tag_number,
+    BACNET_ACCESS_RULE * rule)
 {
     int len = 0;
     int section_length;
@@ -177,16 +177,21 @@ int bacapp_decode_context_access_rule(
 
         if (section_length == -1) {
             len = -1;
-        } else {
+        }
+        else {
             len += section_length;
             if (decode_is_closing_tag_number(&apdu[len], tag_number)) {
                 len++;
-            } else {
+            }
+            else {
                 len = -1;
             }
         }
-    } else {
+    }
+    else {
         len = -1;
     }
     return len;
 }
+
+#endif

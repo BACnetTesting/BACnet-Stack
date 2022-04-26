@@ -1,6 +1,0 @@
-tests:
-  bacnet.basic.object.device:
-    tags: bacnet
-  bacnet.basic.object.device.unit:
-    tags: bacnet
-    type: unit

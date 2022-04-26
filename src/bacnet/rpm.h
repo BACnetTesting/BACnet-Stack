@@ -1,36 +1,52 @@
 /**************************************************************************
-*
-* Copyright (C) 2012 Steve Karg <skarg@users.sourceforge.net>
-*
-* Permission is hereby granted, free of charge, to any person obtaining
-* a copy of this software and associated documentation files (the
-* "Software"), to deal in the Software without restriction, including
-* without limitation the rights to use, copy, modify, merge, publish,
-* distribute, sublicense, and/or sell copies of the Software, and to
-* permit persons to whom the Software is furnished to do so, subject to
-* the following conditions:
-*
-* The above copyright notice and this permission notice shall be included
-* in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*********************************************************************/
+ *
+ * Copyright (C) 2012 Steve Karg <skarg@users.sourceforge.net>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
 #ifndef RPM_H
 #define RPM_H
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "bacnet/bacnet_stack_exports.h"
 #include "bacnet/bacenum.h"
 #include "bacnet/bacdef.h"
-#include "bacnet/bacapp.h"
-#include "bacnet/proplist.h"
+#include "bacapp.h"
+#include "proplist.h"
+
 /*
  * Bundle together commonly used data items for convenience when calling
  * rpm helper functions.
@@ -40,9 +56,10 @@ typedef struct BACnet_RPM_Data {
     BACNET_OBJECT_TYPE object_type;
     uint32_t object_instance;
     BACNET_PROPERTY_ID object_property;
-    BACNET_ARRAY_INDEX array_index;
+    uint32_t array_index;
     BACNET_ERROR_CLASS error_class;
     BACNET_ERROR_CODE error_code;
+    // we really, really should put Abort_reason in here
 } BACNET_RPM_DATA;
 
 struct BACnet_Read_Access_Data;
@@ -66,18 +83,14 @@ typedef struct BACnet_Read_Access_Data {
  */
 typedef void (
     *rpm_property_lists_function) (
-    const int **pRequired,
-    const int **pOptional,
-    const int **pProprietary);
+        const BACNET_PROPERTY_ID **pRequired,
+        const BACNET_PROPERTY_ID **pOptional,
+        const BACNET_PROPERTY_ID **pProprietary);
 
 typedef void (
     *rpm_object_property_lists_function) (
-    BACNET_OBJECT_TYPE object_type,
-    struct special_property_list_t * pPropertyList);
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+        BACNET_OBJECT_TYPE object_type,
+        struct special_property_list_t * pPropertyList);
 
 /* encode functions */
 /* Start with the Init function, and then add an object,
@@ -86,108 +99,109 @@ extern "C" {
  until the APDU is full.*/
 
 /* RPM */
-    BACNET_STACK_EXPORT
-    int rpm_encode_apdu_init(
-        uint8_t * apdu,
-        uint8_t invoke_id);
+int rpm_encode_apdu_init(
+    uint8_t * apdu,
+    uint8_t invoke_id);
 
-    BACNET_STACK_EXPORT
-    int rpm_encode_apdu_object_begin(
-        uint8_t * apdu,
-        BACNET_OBJECT_TYPE object_type,
-        uint32_t object_instance);
+int rpm_encode_apdu_object_begin(
+    uint8_t * apdu,
+    BACNET_OBJECT_TYPE object_type,
+    uint32_t object_instance);
 
-    BACNET_STACK_EXPORT
-    int rpm_encode_apdu_object_property(
-        uint8_t * apdu,
-        BACNET_PROPERTY_ID object_property,
-        BACNET_ARRAY_INDEX array_index);
+int rpm_encode_apdu_object_property(
+    uint8_t * apdu,
+    BACNET_PROPERTY_ID object_property,
+    uint32_t array_index);
 
-    BACNET_STACK_EXPORT
-    int rpm_encode_apdu_object_end(
-        uint8_t * apdu);
+int rpm_encode_apdu_object_end(
+    uint8_t * apdu);
 
-    BACNET_STACK_EXPORT
-    int rpm_encode_apdu(
-        uint8_t * apdu,
-        size_t max_apdu,
-        uint8_t invoke_id,
-        BACNET_READ_ACCESS_DATA * read_access_data);
+int rpm_encode_apdu(
+    uint8_t * apdu,
+    uint16_t max_apdu,
+    uint8_t invoke_id,
+    BACNET_READ_ACCESS_DATA * read_access_data);
 
 /* decode the object portion of the service request only */
-    BACNET_STACK_EXPORT
-    int rpm_decode_object_id(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        BACNET_RPM_DATA * rpmdata);
+int rpm_decode_object_id(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    BACNET_RPM_DATA * rpmdata);
 
 /* is this the end of this object property list? */
-    BACNET_STACK_EXPORT
-    int rpm_decode_object_end(
-        uint8_t * apdu,
-        unsigned apdu_len);
+int rpm_decode_object_end(
+    uint8_t * apdu,
+    unsigned apdu_len);
 
 /* decode the object property portion of the service request only */
-    BACNET_STACK_EXPORT
-    int rpm_decode_object_property(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        BACNET_RPM_DATA * rpmdata);
+int rpm_decode_object_property(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    BACNET_RPM_DATA * rpmdata);
 
 /* RPM Ack - reply from server */
-    BACNET_STACK_EXPORT
-    int rpm_ack_encode_apdu_init(
-        uint8_t * apdu,
-        uint8_t invoke_id);
+int rpm_ack_encode_apdu_init(
+    uint8_t * apdu,
+    uint8_t invoke_id);
 
-    BACNET_STACK_EXPORT
-    int rpm_ack_encode_apdu_object_begin(
-        uint8_t * apdu,
-        BACNET_RPM_DATA * rpmdata);
+int rpm_ack_encode_apdu_object_begin(
+    uint8_t * apdu,
+    BACNET_RPM_DATA * rpmdata);
 
-    BACNET_STACK_EXPORT
-    int rpm_ack_encode_apdu_object_property(
-        uint8_t * apdu,
-        BACNET_PROPERTY_ID object_property,
-        BACNET_ARRAY_INDEX array_index);
+int rpm_ack_encode_apdu_object_property(
+    uint8_t * apdu,
+    BACNET_PROPERTY_ID object_property,
+    uint32_t array_index);
 
-    BACNET_STACK_EXPORT
-    int rpm_ack_encode_apdu_object_property_value(
-        uint8_t * apdu,
-        uint8_t * application_data,
-        unsigned application_data_len);
+int rpm_ack_encode_apdu_object_property_value(
+    uint8_t * apdu,
+    uint8_t * application_data,
+    unsigned application_data_len);
 
-    BACNET_STACK_EXPORT
-    int rpm_ack_encode_apdu_object_property_error(
-        uint8_t * apdu,
-        BACNET_ERROR_CLASS error_class,
-        BACNET_ERROR_CODE error_code);
+int rpm_ack_encode_apdu_object_property_error(
+    uint8_t * apdu,
+    BACNET_ERROR_CLASS error_class,
+    BACNET_ERROR_CODE error_code);
 
-    BACNET_STACK_EXPORT
     int rpm_ack_encode_apdu_object_end(
         uint8_t * apdu);
 
-    BACNET_STACK_EXPORT
-    int rpm_ack_decode_object_id(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        BACNET_OBJECT_TYPE * object_type,
-        uint32_t * object_instance);
+int rpm_ack_decode_object_id(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    BACNET_OBJECT_TYPE * object_type,
+    uint32_t * object_instance);
 /* is this the end of the list of this objects properties values? */
-    BACNET_STACK_EXPORT
-    int rpm_ack_decode_object_end(
-        uint8_t * apdu,
-        unsigned apdu_len);
-    BACNET_STACK_EXPORT
-    int rpm_ack_decode_object_property(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        BACNET_PROPERTY_ID * object_property,
-        BACNET_ARRAY_INDEX * array_index);
+int rpm_ack_decode_object_end(
+    uint8_t * apdu,
+    unsigned apdu_len);
+int rpm_ack_decode_object_property(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    BACNET_PROPERTY_ID * object_property,
+    uint32_t * array_index);
+#ifdef TEST
+#include "ctest.h"
+int rpm_decode_apdu(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    uint8_t * invoke_id,
+    uint8_t ** service_request,
+    unsigned *service_request_len);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+int rpm_ack_decode_apdu(
+    uint8_t * apdu,
+    int apdu_len,   /* total length of the apdu */
+    uint8_t * invoke_id,
+    uint8_t ** service_request,
+    unsigned *service_request_len);
+
+void testReadPropertyMultiple(
+    Test * pTest);
+void testReadPropertyMultipleAck(
+    Test * pTest);
+#endif
+
 /** @defgroup DSRPM Data Sharing -Read Property Multiple Service (DS-RPM)
  * @ingroup DataShare
  * 15.7 ReadPropertyMultiple Service <br>

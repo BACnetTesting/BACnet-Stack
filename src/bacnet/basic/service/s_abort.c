@@ -21,40 +21,59 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- *********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stddef.h>
 #include <stdint.h>
 #include <errno.h>
 #include <string.h>
-#include "bacnet/config.h"
+#include "configProj.h"
 #include "bacnet/bacdef.h"
 #include "bacnet/bacdcode.h"
 #include "bacnet/abort.h"
+#include "bacnet/basic/binding/address.h"
+#include "bacnet/basic/tsm/tsm.h"
 #include "bacnet/dcc.h"
 #include "bacnet/npdu.h"
 #include "bacnet/apdu.h"
-#include "bacnet/iam.h"
-/* basic objects, services, TSM, and datalink */
 #include "bacnet/basic/object/device.h"
-#include "bacnet/basic/tsm/tsm.h"
+//#include "datalink.h"
+#include "bacnet/iam.h"
+/* some demo stuff needed */
 #include "bacnet/basic/services.h"
-#include "bacnet/datalink/datalink.h"
+// #include "client.h"
+
 
 /** Encodes an Abort message
  * @param buffer The buffer to build the message for sending.
  * @param dest - Destination address to send the message
  * @param src - Source address from which the message originates
- * @param npdu_data - buffer to hold NPDU data encoded
+ * @param npci_data - buffer to hold NPDU data encoded
  * @param invoke_id - use to match up a reply
  * @param reason - #BACNET_ABORT_REASON enumeration
  * @param server - true or false
  *
  * @return Size of the message sent (bytes), or a negative value on error.
  */
-int abort_encode_pdu(uint8_t *buffer,
-    BACNET_ADDRESS *dest,
-    BACNET_ADDRESS *src,
-    BACNET_NPDU_DATA *npdu_data,
+int abort_encode_pdu(
+    uint8_t * buffer,
+    BACNET_GLOBAL_ADDRESS * dest,
+    BACNET_GLOBAL_ADDRESS * src,
+    BACNET_NPCI_DATA * npci_data,
     uint8_t invoke_id,
     BACNET_ABORT_REASON reason,
     bool server)
@@ -63,8 +82,8 @@ int abort_encode_pdu(uint8_t *buffer,
     int pdu_len = 0;
 
     /* encode the NPDU portion of the packet */
-    npdu_encode_npdu_data(npdu_data, false, MESSAGE_PRIORITY_NORMAL);
-    pdu_len = npdu_encode_pdu(&buffer[0], dest, src, npdu_data);
+    npdu_setup_npci_data(npci_data, false, MESSAGE_PRIORITY_NORMAL);
+    pdu_len = npdu_encode_pdu(&buffer[0], dest, src, npci_data);
 
     /* encode the APDU portion of the packet */
     len = abort_encode_apdu(&buffer[pdu_len], invoke_id, reason, server);
@@ -82,21 +101,28 @@ int abort_encode_pdu(uint8_t *buffer,
  *
  * @return Size of the message sent (bytes), or a negative value on error.
  */
-int Send_Abort_To_Network(uint8_t *buffer,
-    BACNET_ADDRESS *dest,
+#if 0
+void Send_Abort_To_Network(
+    BACNET_ROUTE *dest,
+    DEVICE_OBJECT_DATA *sendingDev,
+    uint8_t * buffer,
     uint8_t invoke_id,
     BACNET_ABORT_REASON reason,
     bool server)
 {
     int pdu_len = 0;
-    BACNET_ADDRESS src;
+    // BACNET_PATH src;
     int bytes_sent = 0;
-    BACNET_NPDU_DATA npdu_data;
+    BACNET_NPCI_DATA npci_data;
 
-    datalink_get_my_address(&src);
-    pdu_len = abort_encode_pdu(
-        buffer, dest, &src, &npdu_data, invoke_id, reason, server);
-    bytes_sent = datalink_send_pdu(dest, &npdu_data, &buffer[0], pdu_len);
+    //datalink_get_my_address(&src);
+    pdu_len = abort_encode_pdu(buffer, &dest->bacnetPath->adr, NULL, &npci_data,
+        invoke_id, reason, server);
 
-    return bytes_sent;
+    //bytes_sent = datalink_send _pdu(portParams, dest, &npci_data, &buffer[0], pdu_len);
+
+    dest->portParams->SendPdu(dlcb);
+
+    // return bytes_sent;
 }
+#endif

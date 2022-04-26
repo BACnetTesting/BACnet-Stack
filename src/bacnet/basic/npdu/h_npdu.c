@@ -21,21 +21,35 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- *********************************************************************/
-#include <stdbool.h>
-#include <stdint.h>
-#include "bacnet/bacdef.h"
-#include "bacnet/bacdcode.h"
-#include "bacnet/bacint.h"
-#include "bacnet/bacenum.h"
-#include "bacnet/bits.h"
-#include "bacnet/npdu.h"
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
+#include "configProj.h"
+
+#if ( BITS_ROUTER_LAYER == 0 )
+
+#include <stdio.h>
 #include "bacnet/apdu.h"
+#include "bacnet/bacaddr.h"
+#include "bacnet/bacdcode.h"
+// no... this file is only used by non-routing configurations..  #include "bacnet/bits/bitsRouter/bitsRouter.h"
+#include "bacnet/basic/object/device.h"
 #include "bacnet/basic/services.h"
 
-#if PRINT_ENABLED
-#include <stdio.h>
-#endif
+extern DEVICE_OBJECT_DATA *applicationEntity;
 
 /** @file h_npdu.c  Handles messages at the NPDU level of the BACnet stack. */
 
@@ -44,7 +58,7 @@
  *  this handler doesn't do much besides stepping over the NPDU header
  *  and passing the remaining bytes to the apdu_handler.
  *  @note The routing (except src) and NCPI information, including
- *  npdu_data->data_expecting_reply, are discarded.
+ *  npci_data->data_expecting_reply, are discarded.
  * @see routing_npdu_handler
  *
  * @ingroup MISCHNDLR
@@ -62,13 +76,14 @@
  *  @param pdu [in]  Buffer containing the NPDU and APDU of the received packet.
  *  @param pdu_len [in] The size of the received message in the pdu[] buffer.
  */
-void npdu_handler(BACNET_ADDRESS *src, /* source address */
-    uint8_t *pdu, /* PDU data */
-    uint16_t pdu_len)
-{ /* length PDU  */
+void npdu_handler2(
+    BACNET_ROUTE *src,              /* source address */
+    uint8_t *pdu,                   /* PDU data */
+    uint16_t pdu_len)               /* length PDU  */
+{ 
     int apdu_offset = 0;
-    BACNET_ADDRESS dest = { 0 };
-    BACNET_NPDU_DATA npdu_data = { 0 };
+    BACNET_GLOBAL_ADDRESS dest ;
+    BACNET_NPCI_DATA npdu_data ;
 
     if (pdu_len < 1) {
         return;
@@ -77,13 +92,15 @@ void npdu_handler(BACNET_ADDRESS *src, /* source address */
     /* only handle the version that we know how to handle */
     if (pdu[0] == BACNET_PROTOCOL_VERSION) {
         apdu_offset =
-            bacnet_npdu_decode(&pdu[0], pdu_len, &dest, src, &npdu_data);
-        if (npdu_data.network_layer_message) {
-            /*FIXME: network layer message received!  Handle it! */
-#if PRINT_ENABLED
-            fprintf(stderr, "NPDU: Network Layer Message discarded!\n");
-#endif
-        } else if ((apdu_offset > 0) && (apdu_offset < pdu_len)) {
+            npci_decode(&pdu[0], &dest, &src->bacnetPath.glAdr, &npdu_data);
+        if (npdu_data.network_layer_message)
+        {
+            // problem is, we don't know if we received a directed message or a broadcast message (albeit local)
+            // so we NEVER respond to any network message (unless we are in router mode, in which case npdu_handler()
+            // will be replaced by handleRoutingMessage() (or whatever it is)
+        }
+        else if ((apdu_offset > 0) && (apdu_offset < pdu_len)) 
+        {
             if ((dest.net == 0) || (dest.net == BACNET_BROADCAST_NETWORK)) {
                 /* only handle the version that we know how to handle */
                 /* and we are not a router, so ignore messages with
@@ -95,21 +112,28 @@ void npdu_handler(BACNET_ADDRESS *src, /* source address */
                     /* ConfirmedBroadcastReceived */
                     /* then enter IDLE - ignore the PDU */
                 } else {
-                    apdu_handler(src, &pdu[apdu_offset],
-                        (uint16_t)(pdu_len - apdu_offset));
-                }
-            } else {
-#if PRINT_ENABLED
-                printf("NPDU: DNET=%u.  Discarded!\n", (unsigned)dest.net);
+
+#if ( BAC_DEBUG == 1 )
+                    // we only test during debug phase since this is a busy function during operation.
+                    // and there should _always_ be an application entity
+                    if (applicationEntity == NULL)
+                    {
+                        panic();
+                        return;
+                    }
 #endif
+
+                    apdu_handler(
+                        applicationEntity,
+                        src, 
+                        &pdu[apdu_offset],
+                        (uint16_t)(pdu_len - apdu_offset));
+
+                }
             }
         }
-    } else {
-#if PRINT_ENABLED
-        printf("NPDU: BACnet Protocol Version=%u.  Discarded!\n",
-            (unsigned)pdu[0]);
-#endif
     }
-
-    return;
 }
+
+#endif // #if (BITS_ROUTER_LAYER == 1 )
+

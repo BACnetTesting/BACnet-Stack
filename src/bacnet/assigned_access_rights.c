@@ -22,36 +22,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  *********************************************************************/
-#include <stdint.h>
-#include "bacnet/assigned_access_rights.h"
-#include "bacnet/bacdcode.h"
+
+#include "assigned_access_rights.h"
+#include "bacdcode.h"
+
 
 int bacapp_encode_assigned_access_rights(
-    uint8_t *apdu, BACNET_ASSIGNED_ACCESS_RIGHTS *aar)
+    uint8_t * apdu,
+    BACNET_ASSIGNED_ACCESS_RIGHTS * aar)
 {
     int len;
     int apdu_len = 0;
 
-    len = bacapp_encode_context_device_obj_ref(
-        &apdu[apdu_len], 0, &aar->assigned_access_rights);
-    if (len < 0) {
+    len =
+        bacapp_encode_context_device_obj_ref(&apdu[apdu_len], 0,
+        &aar->assigned_access_rights);
+    if (len < 0)
         return -1;
-    } else {
+    else
         apdu_len += len;
-    }
 
     len = encode_context_boolean(&apdu[apdu_len], 1, aar->enable);
-    if (len < 0) {
+    if (len < 0)
         return -1;
-    } else {
+    else
         apdu_len += len;
-    }
 
     return apdu_len;
 }
 
 int bacapp_encode_context_assigned_access_rights(
-    uint8_t *apdu, uint8_t tag, BACNET_ASSIGNED_ACCESS_RIGHTS *aar)
+    uint8_t * apdu,
+    uint8_t tag,
+    BACNET_ASSIGNED_ACCESS_RIGHTS * aar)
 {
     int len;
     int apdu_len = 0;
@@ -66,42 +69,43 @@ int bacapp_encode_context_assigned_access_rights(
     apdu_len += len;
 
     return apdu_len;
+
 }
 
 int bacapp_decode_assigned_access_rights(
-    uint8_t *apdu, BACNET_ASSIGNED_ACCESS_RIGHTS *aar)
+    uint8_t * apdu,
+    BACNET_ASSIGNED_ACCESS_RIGHTS * aar)
 {
     int len;
     int apdu_len = 0;
 
     if (decode_is_context_tag(&apdu[apdu_len], 0)) {
-        len = bacapp_decode_context_device_obj_ref(
-            &apdu[apdu_len], 0, &aar->assigned_access_rights);
-        if (len < 0) {
+        len =
+            bacapp_decode_context_device_obj_ref(&apdu[apdu_len], 0,
+            &aar->assigned_access_rights);
+        if (len < 0)
             return -1;
-        } else {
+        else
             apdu_len += len;
-        }
-    } else {
+    } else
         return -1;
-    }
 
     if (decode_is_context_tag(&apdu[apdu_len], 1)) {
         len = decode_context_boolean2(&apdu[apdu_len], 1, &aar->enable);
-        if (len < 0) {
+        if (len < 0)
             return -1;
-        } else {
+        else
             apdu_len += len;
-        }
-    } else {
+    } else
         return -1;
-    }
 
     return apdu_len;
 }
 
 int bacapp_decode_context_assigned_access_rights(
-    uint8_t *apdu, uint8_t tag, BACNET_ASSIGNED_ACCESS_RIGHTS *aar)
+    uint8_t * apdu,
+    uint8_t tag,
+    BACNET_ASSIGNED_ACCESS_RIGHTS * aar)
 {
     int len = 0;
     int section_length;

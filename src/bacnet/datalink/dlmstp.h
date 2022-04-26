@@ -20,179 +20,161 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*********************************************************************/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef DLMSTP_H
 #define DLMSTP_H
 
 #include <stdbool.h>
-#include <stdint.h>
-#include <stddef.h>
-#include "bacnet/bacnet_stack_exports.h"
-#include "bacnet/bacdef.h"
-#include "bacnet/npdu.h"
+#include "bacnet/bacaddr.h"
+#include "bacnet/bits/util/multipleDatalink.h"
+
+#define MAX_APDU_MSTP   480
 
 /* defines specific to MS/TP */
-/* preamble+type+dest+src+len+crc8+crc16 */
-#define DLMSTP_HEADER_MAX (2+1+1+1+2+1+2)
-#define DLMSTP_MPDU_MAX (DLMSTP_HEADER_MAX+MAX_PDU)
+                                
+#define MAX_HEADER_MSTP (2+1+1+1+2+1+2)             /* preamble1,2+type+dest+src+len+crc8+..+crc16 */
+
+#define MAX_NPDU_MSTP   (MAX_NPCI+MAX_APDU_MSTP)
+
+#define MAX_LPDU_MSTP   (MAX_HEADER_MSTP+MAX_NPDU_MSTP)    // should result in 512, which is why 480 for APDU was chosen in the first place
+
+#if ( MAX_LPDU_MSTP != 512)
+#error - check your arithmetic
+#endif
+
+// in bacdef.h #define MAX_NPCI        (22)                                        
+// 22 bytes, see http://www.bacnetwiki.com/wiki/index.php?title=NPCI
+
+/*
+12.11.18 Max_APDU_Length_Accepted
+
+This property, of type Unsigned, is the maximum number of octets that may be contained in a single, indivisible application
+layer protocol data unit. The value of this property shall be greater than or equal to 50. The value of this property is also
+constrained by the underlying data link technology and shall be less than or equal to the largest APDU_Length of the enabled
+Network Port objects used to represent the underlying data links. See Clauses 6 through 11, Annex J, Annex O, and Annex U.
+If the value of this property is not encodable in the 'Max APDU Length Accepted' parameter of a ConfirmedRequest-PDU,
+then the value encoded shall be the highest encodable value less than the value of this property. In such cases, a responding
+device may ignore the encoded value in favor of the value of this property, if it is known.
+*/
+
+typedef struct _DLCB DLCB;                          // Datalink control block
+typedef struct _PORT_SUPPORT PORT_SUPPORT;
 
 typedef struct dlmstp_packet {
     bool ready; /* true if ready to be sent or received */
-    BACNET_ADDRESS address;     /* source address */
+    // BACNET_PATH address;     /* source address */
+    uint8_t address;            // incoming-src outgoing-dst
     uint8_t frame_type; /* type of message */
     uint16_t pdu_len;   /* packet length */
-    uint8_t pdu[DLMSTP_MPDU_MAX];      /* packet */
+    uint8_t pdu[MAX_LPDU_MSTP];      /* packet */
 } DLMSTP_PACKET;
 
-/* container for packet and token statistics */
-typedef struct dlmstp_statistics {
-    uint32_t transmit_frame_counter;
-    uint32_t receive_valid_frame_counter;
-    uint32_t receive_invalid_frame_counter;
-    uint32_t transmit_pdu_counter;
-    uint32_t receive_pdu_counter;
-    uint32_t lost_token_counter;
-} DLMSTP_STATISTICS;
+/* data structure for MS/TP transmit packet */
+struct mstp_tx_packet {
+    uint16_t length;
+    uint16_t index;
+    uint8_t buffer[MAX_LPDU_MSTP];
+};
 
-/* callback to signify the receipt of a preamble */
-typedef void (*dlmstp_hook_frame_rx_start_cb)();
+typedef enum {
+    MSTP_TX_STATE_IDLE,
+    MSTP_TX_STATE_SILENCE_WAIT,
+    MSTP_TX_STATE_SEND_WAIT,
+    //MSTP_TX_STATE_STOP
+} MSTP_TX_STATE;
 
-/* callback on for receiving every valid frame */
-typedef void (*dlmstp_hook_frame_rx_complete_cb)(
-    uint8_t src,
-    uint8_t dest,
-    uint8_t mstp_msg_type,
-    uint8_t * pdu,
-    uint16_t pdu_len);
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+bool dlmstp_init(
+    PORT_SUPPORT *portParams,
+    const char *ifname);
 
-    BACNET_STACK_EXPORT
-    bool dlmstp_init(
-        char *ifname);
-    BACNET_STACK_EXPORT
-    void dlmstp_reset(
-        void);
-    BACNET_STACK_EXPORT
-    void dlmstp_cleanup(
-        void);
+void dlmstp_reset(
+    void);
 
-    /* returns number of bytes sent on success, negative on failure */
-    BACNET_STACK_EXPORT
-    int dlmstp_send_pdu(
-        BACNET_ADDRESS * dest,  /* destination address */
-        BACNET_NPDU_DATA * npdu_data,   /* network information */
-        uint8_t * pdu,  /* any data to be sent - may be null */
-        unsigned pdu_len);      /* number of bytes of data */
+void dlmstp_cleanup(
+    void);
 
-    /* returns the number of octets in the PDU, or zero on failure */
-    BACNET_STACK_EXPORT
-    uint16_t dlmstp_receive(
-        BACNET_ADDRESS * src,   /* source address */
-        uint8_t * pdu,  /* PDU data */
-        uint16_t max_pdu,       /* amount of space available in the PDU  */
-        unsigned timeout);      /* milliseconds to wait for a packet */
+/* returns number of bytes sent on success, negative on failure */
+void dlmstp_send_npdu(
+    const PORT_SUPPORT* datalink,
+    const DLCB *dlcb);
 
-    /* This parameter represents the value of the Max_Info_Frames property of */
-    /* the node's Device object. The value of Max_Info_Frames specifies the */
-    /* maximum number of information frames the node may send before it must */
-    /* pass the token. Max_Info_Frames may have different values on different */
-    /* nodes. This may be used to allocate more or less of the available link */
-    /* bandwidth to particular nodes. If Max_Info_Frames is not writable in a */
-    /* node, its value shall be 1. */
-    BACNET_STACK_EXPORT
-    void dlmstp_set_max_info_frames(
-        uint8_t max_info_frames);
-    BACNET_STACK_EXPORT
-    uint8_t dlmstp_max_info_frames(
-        void);
 
-    /* This parameter represents the value of the Max_Master property of the */
-    /* node's Device object. The value of Max_Master specifies the highest */
-    /* allowable address for master nodes. The value of Max_Master shall be */
-    /* less than or equal to 127. If Max_Master is not writable in a node, */
-    /* its value shall be 127. */
-    BACNET_STACK_EXPORT
-    void dlmstp_set_max_master(
-        uint8_t max_master);
-    BACNET_STACK_EXPORT
-    uint8_t dlmstp_max_master(
-        void);
+/* returns the number of octets in the PDU, or zero on failure */
+uint16_t dlmstp_receive_npdu(
+    PORT_SUPPORT *portParams,
+    BACNET_MAC_ADDRESS *src,
+    uint8_t * npdu,
+    uint16_t max_npdu);
 
-    /* MAC address 0-127 */
-    BACNET_STACK_EXPORT
-    void dlmstp_set_mac_address(
-        uint8_t my_address);
-    BACNET_STACK_EXPORT
-    uint8_t dlmstp_mac_address(
-        void);
 
-    BACNET_STACK_EXPORT
-    void dlmstp_get_my_address(
-        BACNET_ADDRESS * my_address);
-    BACNET_STACK_EXPORT
-    void dlmstp_get_broadcast_address(
-        BACNET_ADDRESS * dest); /* destination address */
 
-    /* RS485 Baud Rate 9600, 19200, 38400, 57600, 115200 */
-    BACNET_STACK_EXPORT
-    void dlmstp_set_baud_rate(
-        uint32_t baud);
-    BACNET_STACK_EXPORT
-    uint32_t dlmstp_baud_rate(
-        void);
+/* This parameter represents the value of the Max_Info_Frames property of */
+/* the node's Device object. The value of Max_Info_Frames specifies the */
+/* maximum number of information frames the node may send before it must */
+/* pass the token. Max_Info_Frames may have different values on different */
+/* nodes. This may be used to allocate more or less of the available link */
+/* bandwidth to particular nodes. If Max_Info_Frames is not writable in a */
+/* node, its value shall be 1. */
+//void dlmstp_set_max_info_frames(
+//    uint8_t max_info_frames);
 
-    BACNET_STACK_EXPORT
-    void dlmstp_fill_bacnet_address(
-        BACNET_ADDRESS * src,
-        uint8_t mstp_address);
+uint8_t dlmstp_max_info_frames(
+    void );
 
-    BACNET_STACK_EXPORT
-    bool dlmstp_sole_master(
-        void);
-    BACNET_STACK_EXPORT
-    bool dlmstp_send_pdu_queue_empty(void);
-    BACNET_STACK_EXPORT
-    bool dlmstp_send_pdu_queue_full(void);
+/* This parameter represents the value of the Max_Master property of the */
+/* node's Device object. The value of Max_Master specifies the highest */
+/* allowable address for master nodes. The value of Max_Master shall be */
+/* less than or equal to 127. If Max_Master is not writable in a node, */
+/* its value shall be 127. */
+void dlmstp_set_max_master(
+    uint8_t max_master);
 
-    BACNET_STACK_EXPORT
-    uint8_t dlmstp_max_info_frames_limit(void);
-    BACNET_STACK_EXPORT
-    uint8_t dlmstp_max_master_limit(void);
+uint8_t dlmstp_max_master(
+    void );
 
-    /* Set the callback function to be called on every valid received frame */
-    /* This is not necessary for normal usage, but is helpful if the caller */
-    /* needs to monitor traffic on the MS/TP bus */
-    /* The specified callback function should execute quickly so as to avoid */
-    /* interfering with bus timing */
-    BACNET_STACK_EXPORT
-    void dlmstp_set_frame_rx_complete_callback(
-        dlmstp_hook_frame_rx_complete_cb cb_func);
+///* MAC address 0-127 */
+//void dlmstp_set_mac_address(
+//    uint8_t my_address);
 
-    /* Set the callback function to be called every time the start of a */
-    /* frame is detected.  This is not necessary for normal usage, but is */
-    /* helpful if the caller needs to know when a frame begins for timing */
-    /* (timing is heavily dependent upon baud rate and the period with */
-    /* which dlmstp_receive is called) */
-    /* The specified callback function should execute quickly so as to avoid */
-    /* interfering with bus timing */
-    BACNET_STACK_EXPORT
-    void dlmstp_set_frame_rx_start_callback(
-        dlmstp_hook_frame_rx_start_cb cb_func);
+void dlmstp_get_MAC_address(
+    const PORT_SUPPORT *portParams,
+    BACNET_MAC_ADDRESS * my_address);
 
-    /* Reset the statistics counters on the MS/TP datalink */
-    BACNET_STACK_EXPORT
-    void dlmstp_reset_statistics(void);
+void dlmstp_get_my_MAC_address(
+    BACNET_MAC_ADDRESS * my_address);
 
-    /* Retrieve statistics counters from the MS/TP datalink */
-    /* Values for the current counters at the time this function is called */
-    /* will be copied into *statistics */
-    BACNET_STACK_EXPORT
-    void dlmstp_fill_statistics(struct dlmstp_statistics * statistics);
+void dlmstp_get_broadcast_address(
+    BACNET_PATH * dest); /* destination address */
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+/* RS485 Baud Rate 9600, 19200, 38400, 57600, 115200 */
+//void dlmstp_set_baud_rate(
+//    uint32_t baud);
+
+//uint32_t dlmstp_baud_rate(
+//    void);
+
+void dlmstp_fill_bacnet_address(
+    BACNET_PATH * src,
+    uint8_t mstp_address);
+
+bool dlmstp_sole_master(
+    void);
+
 #endif

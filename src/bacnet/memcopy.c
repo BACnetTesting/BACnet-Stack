@@ -33,6 +33,22 @@
  * based on this file might be covered by the GNU General Public
  * License.
  *
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************
+ *
  * @section DESCRIPTION
  *
  * Memory copy functions for deeply embedded system.  The functions
@@ -40,8 +56,8 @@
  * and the number of bytes to copy to the buffer.
  */
 #include <stddef.h>
+#include "memcopy.h"
 #include <string.h>
-#include "bacnet/memcopy.h"
 
 /**
  * Tests to see if the number of bytes is available from an offset
@@ -53,12 +69,15 @@
  *
  * @return True if there is enough space to copy len bytes.
  */
-bool memcopylen(size_t offset, size_t max, size_t len)
+bool memcopylen(
+    const uint16_t offset,
+    const uint16_t max,
+    const uint16_t len) 
 {
     return ((offset + len) <= max);
 }
 
-#if defined(MEMCOPY_SIMPLE)
+#if defined (MEMCOPY_SIMPLE)
 /**
  * Copy len bytes from src to offset of dest if there is enough space
  * in a buffer of max bytes.
@@ -73,10 +92,15 @@ bool memcopylen(size_t offset, size_t max, size_t len)
  * @return returns zero if there is not enough space, or returns
  * the number of bytes copied.
  */
-size_t memcopy(void *dest, void *src, size_t offset, size_t len, size_t max)
+uint16_t memcopy(
+    void *dest,
+    void *src,
+    uint16_t offset,
+    uint16_t len,
+    uint16_t max)
 {
-    size_t i;
-    size_t copy_len = 0;
+    uint16_t i;
+    uint16_t copy_len = 0;
     char *s1, *s2;
 
     s1 = dest;
@@ -105,17 +129,68 @@ size_t memcopy(void *dest, void *src, size_t offset, size_t len, size_t max)
  * @return returns zero if there is not enough space, or returns
  * the number of bytes copied.
  */
-size_t memcopy(void *dest,
-    void *src,
-    size_t offset, /* where in dest to put the data */
-    size_t len, /* amount of data to copy */
-    size_t max)
-{ /* total size of destination */
+uint16_t memcopy(
+    void *dest,
+    const void *src,
+    const uint16_t offset,    /* where in dest to put the data */
+    const uint16_t len,       /* amount of data to copy */
+    const uint16_t max)       /* total size of destination */
+{       
     if (memcopylen(offset, max, len)) {
-        memcpy(&((char *)dest)[offset], src, len);
+        memcpy(&((char *) dest)[offset], src, len);
         return (len);
     }
 
     return 0;
 }
 #endif
+
+#ifdef TEST
+#include <assert.h>
+#include <string.h>
+
+#include "ctest.h"
+
+void test_memcopy(
+    Test * pTest)
+{
+    char *data1 = "Joshua";
+    char *data2 = "Anna";
+    char buffer[480] = "";
+    char big_buffer[480] = "";
+    uint16_t len = 0;
+
+    len = memcopy(&buffer[0], &data1[0], 0, sizeof(data1), sizeof(buffer));
+    ct_test(pTest, len == sizeof(data1));
+    ct_test(pTest, memcmp(&buffer[0], &data1[0], len) == 0);
+    len = memcopy(&buffer[0], &data2[0], len, sizeof(data2), sizeof(buffer));
+    ct_test(pTest, len == sizeof(data2));
+    len =
+        memcopy(&buffer[0], &big_buffer[0], 1, sizeof(big_buffer),
+                sizeof(buffer));
+    ct_test(pTest, len == 0);
+}
+
+#ifdef TEST_MEM_COPY
+int main(
+    void)
+{
+    Test *pTest;
+    bool rc;
+
+    pTest = ct_create("Memory Copy", NULL);
+
+    /* individual tests */
+    rc = ct_addTestFunction(pTest, test_memcopy);
+    assert(rc);
+
+    ct_setStream(pTest, stdout);
+    ct_run(pTest);
+    (void) ct_report(pTest);
+
+    ct_destroy(pTest);
+
+    return 0;
+}
+#endif
+#endif /* TEST */

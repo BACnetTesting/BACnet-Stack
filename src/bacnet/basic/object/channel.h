@@ -41,6 +41,7 @@
 #include "bacnet/rp.h"
 #include "bacnet/wp.h"
 #include "bacnet/basic/object/lo.h"
+#include "bacnet/bacdevobjpropref.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -221,6 +222,12 @@ extern "C" {
 
     BACNET_STACK_EXPORT
     void Channel_Init(void);
+
+#ifdef BAC_TEST
+#include "ctest.h"
+    BACNET_STACK_EXPORT
+    void testChannelObject(Test * pTest);
+#endif
 
 #ifdef __cplusplus
 }

@@ -27,10 +27,12 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include "bacnet/bacapp.h"
 #include "bacnet/bacdef.h"
 #include "bacnet/bacdcode.h"
 #include "bacnet/config.h"
 #include "bacnet/basic/object/acc.h"
+#include "bacnet/bacint.h"
 
 #ifndef MAX_ACCUMULATORS
 #define MAX_ACCUMULATORS 64

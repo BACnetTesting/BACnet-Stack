@@ -29,40 +29,33 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "bacnet/config.h"
-#include "bacnet/bacdef.h"
-#include "bacnet/basic/sys/keylist.h"
+#include "configProj.h"
+#include "bacdef.h"
+#include "keylist.h"
 /* me! */
-#include "bacnet/basic/bbmd6/vmac.h"
-
-/* enable debugging */
-static bool VMAC_Debug = false;
-#if PRINT_ENABLED
-#include <stdarg.h>
-#include <stdio.h>
-#define PRINTF(...) \
-    if (VMAC_Debug) { \
-        fprintf(stderr,__VA_ARGS__); \
-        fflush(stderr); \
-    }
-#else
-#define PRINTF(...)
-#endif
-
-/**
- * @brief Enable debugging if print is enabled
- */
-void VMAC_Debug_Enable(void)
-{
-    VMAC_Debug = true;
-}
+#include "vmac.h"
 
 /** @file
     Handle VMAC address binding */
@@ -78,7 +71,7 @@ static OS_Keylist VMAC_List;
  */
 unsigned int VMAC_Count(void)
 {
-    return (unsigned int)Keylist_Count(VMAC_List);
+    return Keylist_Count(VMAC_List);
 }
 
 /**
@@ -96,9 +89,9 @@ bool VMAC_Add(uint32_t device_id, struct vmac_data *src)
     int index = 0;
     size_t i = 0;
 
-    pVMAC = Keylist_Data(VMAC_List, device_id);
+    pVMAC = (struct vmac_data *) Keylist_Data(VMAC_List, device_id);
     if (!pVMAC) {
-        pVMAC = calloc(1, sizeof(struct vmac_data));
+        pVMAC = (struct vmac_data *) calloc(1, sizeof(struct vmac_data));
         if (pVMAC) {
             /* copy the MAC into the data store */
             for (i = 0; i < sizeof(pVMAC->mac); i++) {
@@ -112,7 +105,7 @@ bool VMAC_Add(uint32_t device_id, struct vmac_data *src)
             index = Keylist_Data_Add(VMAC_List, device_id, pVMAC);
             if (index >= 0) {
                 status = true;
-                PRINTF("VMAC %u added.\n", (unsigned int)device_id);
+                printf("VMAC %u added.\n", device_id);
             }
         }
     }
@@ -132,7 +125,7 @@ bool VMAC_Delete(uint32_t device_id)
     bool status = false;
     struct vmac_data *pVMAC;
 
-    pVMAC = Keylist_Data_Delete(VMAC_List, device_id);
+    pVMAC = (struct vmac_data *) Keylist_Data_Delete(VMAC_List, device_id);
     if (pVMAC) {
         free(pVMAC);
         status = true;
@@ -150,7 +143,7 @@ bool VMAC_Delete(uint32_t device_id)
  */
 struct vmac_data *VMAC_Find_By_Key(uint32_t device_id)
 {
-    return Keylist_Data(VMAC_List, device_id);
+    return (struct vmac_data *) Keylist_Data(VMAC_List, device_id);
 }
 
 /** Compare the VMAC address
@@ -160,7 +153,9 @@ struct vmac_data *VMAC_Find_By_Key(uint32_t device_id)
  *
  * @return true if the addresses are different
  */
-bool VMAC_Different(struct vmac_data *vmac1, struct vmac_data *vmac2)
+bool VMAC_Different(
+    struct vmac_data *vmac1,
+    struct vmac_data *vmac2)
 {
     bool status = false;
     unsigned int i = 0;
@@ -171,7 +166,7 @@ bool VMAC_Different(struct vmac_data *vmac1, struct vmac_data *vmac2)
             status = true;
         } else {
             if (vmac1->mac_len < mac_len) {
-                mac_len = (unsigned int)vmac1->mac_len;
+                mac_len = vmac1->mac_len;
             }
             for (i = 0; i < mac_len; i++) {
                 if (vmac1->mac[i] != vmac2->mac[i]) {
@@ -191,7 +186,9 @@ bool VMAC_Different(struct vmac_data *vmac1, struct vmac_data *vmac2)
  *
  * @return true if the addresses are the same
  */
-bool VMAC_Match(struct vmac_data *vmac1, struct vmac_data *vmac2)
+bool VMAC_Match(
+    struct vmac_data *vmac1,
+    struct vmac_data *vmac2)
 {
     bool status = false;
     unsigned int i = 0;
@@ -203,7 +200,7 @@ bool VMAC_Match(struct vmac_data *vmac1, struct vmac_data *vmac2)
             status = false;
         } else {
             if (vmac1->mac_len < mac_len) {
-                mac_len = (unsigned int)vmac1->mac_len;
+                mac_len = vmac1->mac_len;
             }
             for (i = 0; i < mac_len; i++) {
                 if (vmac1->mac[i] != vmac2->mac[i]) {
@@ -234,7 +231,7 @@ bool VMAC_Find_By_Data(struct vmac_data *vmac, uint32_t *device_id)
     count = Keylist_Count(VMAC_List);
     while (count) {
         index = count - 1;
-        list_vmac = Keylist_Data_Index(VMAC_List, index);
+        list_vmac = (struct vmac_data *) Keylist_Data_Index(VMAC_List, index);
         if (list_vmac) {
             if (VMAC_Match(vmac, list_vmac)) {
                 if (device_id) {
@@ -256,21 +253,11 @@ bool VMAC_Find_By_Data(struct vmac_data *vmac, uint32_t *device_id)
 void VMAC_Cleanup(void)
 {
     struct vmac_data *pVMAC;
-    uint32_t device_id;
-    const int index = 0;
-    unsigned i = 0;
 
     if (VMAC_List) {
         do {
-            device_id = Keylist_Key(VMAC_List, index);
-            pVMAC = Keylist_Data_Delete_By_Index(VMAC_List, index);
+            pVMAC = (struct vmac_data *) Keylist_Data_Pop(VMAC_List);
             if (pVMAC) {
-                PRINTF("VMAC List: %lu [", (unsigned long)device_id);
-                /* print the MAC */
-                for (i = 0; i < pVMAC->mac_len; i++) {
-                    PRINTF("%02X", pVMAC->mac[i]);
-                }
-                PRINTF("]\n");
                 free(pVMAC);
             }
         } while (pVMAC);
@@ -287,6 +274,68 @@ void VMAC_Init(void)
     VMAC_List = Keylist_Create();
     if (VMAC_List) {
         atexit(VMAC_Cleanup);
-        PRINTF("VMAC List initialized.\n");
+        printf("VMAC List initialized.\n");
     }
 }
+
+#ifdef TEST
+#include <assert.h>
+#include <string.h>
+#include "ctest.h"
+
+void testVMAC(
+    Test * pTest)
+{
+    uint32_t device_id = 123;
+    uint32_t test_device_id = 0;
+    struct vmac_data test_vmac_data;
+    struct vmac_data *pVMAC;
+    unsigned int i = 0;
+    bool status = false;
+
+    VMAC_Init();
+    for (i = 0; i < VMAC_MAC_MAX; i++) {
+        test_vmac_data.mac[i] = 1 + i;
+    }
+    test_vmac_data.mac_len = VMAC_MAC_MAX;
+    status = VMAC_Add(device_id, &test_vmac_data);
+    ct_test(pTest, status);
+    pVMAC = VMAC_Find_By_Key(0);
+    ct_test(pTest, pVMAC == NULL);
+    pVMAC = VMAC_Find_By_Key(device_id);
+    ct_test(pTest, pVMAC);
+    status = VMAC_Different(pVMAC, &test_vmac_data);
+    ct_test(pTest, !status);
+    status = VMAC_Match(pVMAC, &test_vmac_data);
+    ct_test(pTest, status);
+    status = VMAC_Find_By_Data(&test_vmac_data, &test_device_id);
+    ct_test(pTest, status);
+    ct_test(pTest, test_device_id == device_id);
+    status = VMAC_Delete(device_id);
+    ct_test(pTest, status);
+    pVMAC = VMAC_Find_By_Key(device_id);
+    ct_test(pTest, pVMAC == NULL);
+    VMAC_Cleanup();
+}
+
+#ifdef TEST_VMAC
+int main(
+    void)
+{
+    Test *pTest;
+    bool rc;
+
+    pTest = ct_create("BACnet VMAC", NULL);
+    /* individual tests */
+    rc = ct_addTestFunction(pTest, testVMAC);
+    assert(rc);
+
+    ct_setStream(pTest, stdout);
+    ct_run(pTest);
+    (void) ct_report(pTest);
+    ct_destroy(pTest);
+
+    return 0;
+}
+#endif
+#endif

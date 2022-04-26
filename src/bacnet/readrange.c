@@ -29,13 +29,30 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+ *
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
 #include <stdint.h>
 #include "bacnet/bacenum.h"
 #include "bacnet/bacdcode.h"
 #include "bacnet/bacdef.h"
 #include "bacnet/readrange.h"
+#include "bacnet/bits.h"
+#include "bacnet/datalink/bip.h"
 
 /** @file readrange.c  Encode/Decode ReadRange requests */
 
@@ -43,8 +60,10 @@
  * ReadRange-Request ::= SEQUENCE {
  *     objectIdentifier   [0] BACnetObjectIdentifier,
  *     propertyIdentifier [1] BACnetPropertyIdentifier,
- *     propertyArrayIndex [2] Unsigned OPTIONAL, -- used only with array
- * datatype range CHOICE { byPosition [3] SEQUENCE { referenceIndex Unsigned,
+ *     propertyArrayIndex [2] Unsigned OPTIONAL, -- used only with array datatype
+ *     range CHOICE {
+ *         byPosition [3] SEQUENCE {
+ *             referenceIndex Unsigned,
  *             count          INTEGER
  *         },
  *     -- context tag 4 is deprecated
@@ -71,31 +90,35 @@
  *  @return Bytes encoded.
  */
 int rr_encode_apdu(
-    uint8_t *apdu, uint8_t invoke_id, BACNET_READ_RANGE_DATA *rrdata)
+    uint8_t *apdu, 
+    uint8_t invoke_id, 
+    BACNET_READ_RANGE_DATA *rrdata)
 {
     int apdu_len = 0; /* total length of the apdu, return value */
 
     if (apdu) {
         apdu[0] = PDU_TYPE_CONFIRMED_SERVICE_REQUEST;
-        apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU);
+        apdu[1] = encode_max_segs_max_apdu(0, MAX_LPDU_IP);
         apdu[2] = invoke_id;
         apdu[3] = SERVICE_CONFIRMED_READ_RANGE; /* service choice */
         apdu_len = 4;
 
-        apdu_len += encode_context_object_id(
-            &apdu[apdu_len], 0, rrdata->object_type, rrdata->object_instance);
-        apdu_len += encode_context_enumerated(
-            &apdu[apdu_len], 1, rrdata->object_property);
+        apdu_len +=
+            encode_context_object_id(&apdu[apdu_len], 0, rrdata->object_type,
+                                     rrdata->object_instance);
+        apdu_len +=
+            encode_context_enumerated(&apdu[apdu_len], 1,
+                                      rrdata->object_property);
 
         /* optional array index */
 
         if (rrdata->array_index != BACNET_ARRAY_ALL) {
-            apdu_len += encode_context_unsigned(
-                &apdu[apdu_len], 2, rrdata->array_index);
+            apdu_len +=
+                encode_context_unsigned(&apdu[apdu_len], 2,
+                                        rrdata->array_index);
         }
 
-        /* Build the appropriate (optional) range parameter based on the request
-         * type */
+        /* Build the appropriate (optional) range parameter based on the request type */
 
         switch (rrdata->RequestType) {
             case RR_BY_POSITION:
@@ -127,9 +150,8 @@ int rr_encode_apdu(
                 apdu_len += encode_closing_tag(&apdu[apdu_len], 7);
                 break;
 
-            case RR_READ_ALL: /* to attempt a read of the whole array or list,
-                                 omit the range parameter */
-                break;
+        case RR_READ_ALL:  /* to attempt a read of the whole array or list, omit the range parameter */
+            break;
 
             default:
                 break;
@@ -149,18 +171,20 @@ int rr_encode_apdu(
  *  @return Bytes encoded.
  */
 int rr_decode_service_request(
-    uint8_t *apdu, unsigned apdu_len, BACNET_READ_RANGE_DATA *rrdata)
+    uint8_t *apdu, 
+    unsigned apdu_len, 
+    BACNET_READ_RANGE_DATA *rrdata)
 {
     unsigned len = 0;
-    unsigned TagLen = 0;
-    uint8_t tag_number = 0;
-    uint32_t len_value_type = 0;
-    BACNET_OBJECT_TYPE type = OBJECT_NONE; /* for decoding */
+    unsigned TagLen ;
+    uint8_t tag_number ;
+    uint32_t len_value_type ;
+    BACNET_OBJECT_TYPE type;  /* for decoding */
     uint32_t enum_value;
     BACNET_UNSIGNED_INTEGER unsigned_value;
 
     /* check for value pointers */
-    if ((apdu_len >= 5) && apdu && rrdata) {
+    if (apdu_len >= 5) {
         /* Tag 0: Object ID */
         if (!decode_is_context_tag(&apdu[len++], 0)) {
             return -1;
@@ -181,8 +205,7 @@ int rr_decode_service_request(
         rrdata->Overhead = RR_OVERHEAD; /* Start with the fixed overhead */
 
         /* Tag 2: Optional Array Index - set to ALL if not present */
-        rrdata->array_index = BACNET_ARRAY_ALL; /* Assuming this is the most
-                                                   common outcome... */
+        rrdata->array_index = BACNET_ARRAY_ALL; /* Assuming this is the most common outcome... */
         if (len < apdu_len) {
             TagLen = (unsigned)decode_tag_number_and_value(
                 &apdu[len], &tag_number, &len_value_type);
@@ -191,13 +214,11 @@ int rr_decode_service_request(
                 len += decode_unsigned(
                     &apdu[len], len_value_type, &unsigned_value);
                 rrdata->array_index = (BACNET_ARRAY_INDEX)unsigned_value;
-                rrdata->Overhead +=
-                    RR_INDEX_OVERHEAD; /* Allow for this in the response */
+                rrdata->Overhead += RR_INDEX_OVERHEAD; /* Allow for this in the response */
             }
         }
         /* And/or optional range selection- Tags 3, 6 and 7 */
-        rrdata->RequestType = RR_READ_ALL; /* Assume the worst to cut out
-                                              explicit checking later */
+        rrdata->RequestType = RR_READ_ALL;      /* Assume the worst to cut out explicit checking later */
         if (len < apdu_len) {
             /*
              * Note: We pick up the opening tag and then decode the parameter
@@ -328,13 +349,12 @@ int rr_decode_service_request(
  * ReadRange-ACK ::= SEQUENCE {
  *     objectIdentifier    [0] BACnetObjectIdentifier,
  *     propertyIdentifier  [1] BACnetPropertyIdentifier,
- *     propertyArrayIndex  [2] Unsigned OPTIONAL	,  -- used only with
- * array datatype resultFlags         [3] BACnetResultFlags, itemCount [4]
- * Unsigned, itemData            [5] SEQUENCE OF ABSTRACT-SYNTAX.&TYPE,
- *     firstSequenceNumber [6] Unsigned32 OPTIONAL -- used only if 'Item Count'
- * > 0 and the request was either of
- *                                                  -- type 'By Sequence Number'
- * or 'By Time'
+ *     propertyArrayIndex  [2] Unsigned OPTIONAL	,  -- used only with array datatype
+ *     resultFlags         [3] BACnetResultFlags,
+ *     itemCount           [4] Unsigned,
+ *     itemData            [5] SEQUENCE OF ABSTRACT-SYNTAX.&TYPE,
+ *     firstSequenceNumber [6] Unsigned32 OPTIONAL -- used only if 'Item Count' > 0 and the request was either of
+ *                                                  -- type 'By Sequence Number' or 'By Time'
  * }
  */
 
@@ -348,15 +368,16 @@ int rr_decode_service_request(
  * @return The count of encoded bytes.
  */
 int rr_ack_encode_apdu(
-    uint8_t *apdu, uint8_t invoke_id, BACNET_READ_RANGE_DATA *rrdata)
+    uint8_t * apdu,
+    uint8_t invoke_id,
+    BACNET_READ_RANGE_DATA * rrdata)
 {
     int imax = 0;
-    int len = 0; /* length of each encoding */
-    int apdu_len = 0; /* total length of the apdu, return value */
+    int len = 0;        /* length of each encoding */
+    int apdu_len = 0;   /* total length of the apdu, return value */
 
-    if (apdu) {
-        apdu[0] = PDU_TYPE_COMPLEX_ACK; /* complex ACK service */
-        apdu[1] = invoke_id; /* original invoke id from request */
+        apdu[0] = PDU_TYPE_COMPLEX_ACK;         /* complex ACK service */
+        apdu[1] = invoke_id;                    /* original invoke id from request */
         apdu[2] = SERVICE_CONFIRMED_READ_RANGE; /* service choice */
         apdu_len = 3;
         /* service ack follows */
@@ -400,7 +421,6 @@ int rr_ack_encode_apdu(
                     &apdu[apdu_len], 6, rrdata->FirstSequence);
             }
         }
-    }
 
     return apdu_len;
 }
@@ -414,21 +434,22 @@ int rr_ack_encode_apdu(
  *
  *  @return Bytes decoded.
  */
-int rr_ack_decode_service_request(uint8_t *apdu,
+int rr_ack_decode_service_request(
+    uint8_t *apdu,
     int apdu_len, /* total length of the apdu */
     BACNET_READ_RANGE_DATA *rrdata)
 {
-    uint8_t tag_number = 0;
-    uint32_t len_value_type = 0;
-    int tag_len = 0; /* length of tag decode */
-    int len = 0; /* total length of decodes */
+    uint8_t tag_number ;
+    uint32_t len_value_type ;
+    int tag_len ;                       /* length of tag decode */
+    int len = 0;                        /* total length of decodes */
     int start_len;
-    BACNET_OBJECT_TYPE object_type = OBJECT_NONE; /* object type */
-    uint32_t property = 0; /* for decoding */
+    BACNET_OBJECT_TYPE object_type ;    /* object type */
+    uint32_t property ;                 /* for decoding */
     BACNET_UNSIGNED_INTEGER unsigned_value;
 
     /* Check apdu_len against the len during decode. */
-    if (apdu && (apdu_len >= 5 /* minimum */)) {
+    if (apdu_len >= 5 /* minimum */) {
         /* Tag 0: Object ID */
         if (!decode_is_context_tag(&apdu[0], 0)) {
             return -1;

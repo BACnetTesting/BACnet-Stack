@@ -29,27 +29,47 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+ *
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
 
 #include <string.h>
 
 #include "bacnet/bacdef.h"
-#include "bacnet/bacdcode.h"
+#include "bacdcode.h"
 #include "bacnet/bacenum.h"
-#include "bacnet/bits.h"
-#include "bacnet/bacstr.h"
-#include "bacnet/bacint.h"
-#include "bacnet/bacreal.h"
-#include "bacnet/basic/sys/bigend.h"
+#include "bits.h"
+#include "bacstr.h"
+#include "bacint.h"
+#include "bacreal.h"
 
-#ifndef BACNET_USE_DOUBLE
-#define BACNET_USE_DOUBLE 1
+/** @file bacreal.c  Encode/Decode Floating Point (Real) Types */
+
+/* NOTE: byte order plays a role in decoding multibyte values */
+/* http://www.unixpapa.com/incnote/byteorder.html */
+// 2016.08.20 EKH: Found a conflict with BIG_ENDIAN in another library. Renaming for BACnet.
+#ifndef BACNET_STACK_BIG_ENDIAN
+#error Define BACNET_STACK_BIG_ENDIAN=0 or BACNET_STACK_BIG_ENDIAN=1 for BACnet Stack in compiler settings
 #endif
 
 /* from clause 20.2.6 Encoding of a Real Number Value */
 /* returns the number of apdu bytes consumed */
-int decode_real(uint8_t *apdu, float *real_value)
+int decode_real(
+    const uint8_t * apdu,
+    float *real_value)
 {
     union {
         uint8_t byte[4];
@@ -57,36 +77,42 @@ int decode_real(uint8_t *apdu, float *real_value)
     } my_data;
 
     /* NOTE: assumes the compiler stores float as IEEE-754 float */
-    if (big_endian()) {
-        my_data.byte[0] = apdu[0];
-        my_data.byte[1] = apdu[1];
-        my_data.byte[2] = apdu[2];
-        my_data.byte[3] = apdu[3];
-    } else {
-        my_data.byte[0] = apdu[3];
-        my_data.byte[1] = apdu[2];
-        my_data.byte[2] = apdu[1];
-        my_data.byte[3] = apdu[0];
-    }
+#if BACNET_STACK_BIG_ENDIAN
+    my_data.byte[0] = apdu[0];
+    my_data.byte[1] = apdu[1];
+    my_data.byte[2] = apdu[2];
+    my_data.byte[3] = apdu[3];
+#else
+    my_data.byte[0] = apdu[3];
+    my_data.byte[1] = apdu[2];
+    my_data.byte[2] = apdu[1];
+    my_data.byte[3] = apdu[0];
+#endif
 
     *real_value = my_data.real_value;
 
     return 4;
 }
 
-int decode_real_safe(uint8_t *apdu, uint32_t len_value, float *real_value)
+int decode_real_safe(
+    const uint8_t * apdu,
+    const uint16_t len_value,
+    float *real_value)
 {
     if (len_value != 4) {
         *real_value = 0.0f;
-        return (int)len_value;
+        return (int) len_value;
     } else {
         return decode_real(apdu, real_value);
     }
 }
 
+
 /* from clause 20.2.6 Encoding of a Real Number Value */
 /* returns the number of apdu bytes consumed */
-int encode_bacnet_real(float value, uint8_t *apdu)
+int encode_bacnet_real(
+    float value,
+    uint8_t * apdu)
 {
     union {
         uint8_t byte[4];
@@ -95,17 +121,17 @@ int encode_bacnet_real(float value, uint8_t *apdu)
 
     /* NOTE: assumes the compiler stores float as IEEE-754 float */
     my_data.real_value = value;
-    if (big_endian()) {
-        apdu[0] = my_data.byte[0];
-        apdu[1] = my_data.byte[1];
-        apdu[2] = my_data.byte[2];
-        apdu[3] = my_data.byte[3];
-    } else {
-        apdu[0] = my_data.byte[3];
-        apdu[1] = my_data.byte[2];
-        apdu[2] = my_data.byte[1];
-        apdu[3] = my_data.byte[0];
-    }
+#if BACNET_STACK_BIG_ENDIAN
+    apdu[0] = my_data.byte[0];
+    apdu[1] = my_data.byte[1];
+    apdu[2] = my_data.byte[2];
+    apdu[3] = my_data.byte[3];
+#else
+    apdu[0] = my_data.byte[3];
+    apdu[1] = my_data.byte[2];
+    apdu[2] = my_data.byte[1];
+    apdu[3] = my_data.byte[0];
+#endif
 
     return 4;
 }
@@ -114,7 +140,9 @@ int encode_bacnet_real(float value, uint8_t *apdu)
 
 /* from clause 20.2.7 Encoding of a Double Precision Real Number Value */
 /* returns the number of apdu bytes consumed */
-int decode_double(uint8_t *apdu, double *double_value)
+int decode_double(
+    const uint8_t * apdu,
+    double *double_value)
 {
     union {
         uint8_t byte[8];
@@ -122,35 +150,39 @@ int decode_double(uint8_t *apdu, double *double_value)
     } my_data;
 
     /* NOTE: assumes the compiler stores float as IEEE-754 float */
-    if (big_endian()) {
-        my_data.byte[0] = apdu[0];
-        my_data.byte[1] = apdu[1];
-        my_data.byte[2] = apdu[2];
-        my_data.byte[3] = apdu[3];
-        my_data.byte[4] = apdu[4];
-        my_data.byte[5] = apdu[5];
-        my_data.byte[6] = apdu[6];
-        my_data.byte[7] = apdu[7];
-    } else {
-        my_data.byte[0] = apdu[7];
-        my_data.byte[1] = apdu[6];
-        my_data.byte[2] = apdu[5];
-        my_data.byte[3] = apdu[4];
-        my_data.byte[4] = apdu[3];
-        my_data.byte[5] = apdu[2];
-        my_data.byte[6] = apdu[1];
-        my_data.byte[7] = apdu[0];
-    }
+#if BACNET_STACK_BIG_ENDIAN
+    my_data.byte[0] = apdu[0];
+    my_data.byte[1] = apdu[1];
+    my_data.byte[2] = apdu[2];
+    my_data.byte[3] = apdu[3];
+    my_data.byte[4] = apdu[4];
+    my_data.byte[5] = apdu[5];
+    my_data.byte[6] = apdu[6];
+    my_data.byte[7] = apdu[7];
+#else
+    my_data.byte[0] = apdu[7];
+    my_data.byte[1] = apdu[6];
+    my_data.byte[2] = apdu[5];
+    my_data.byte[3] = apdu[4];
+    my_data.byte[4] = apdu[3];
+    my_data.byte[5] = apdu[2];
+    my_data.byte[6] = apdu[1];
+    my_data.byte[7] = apdu[0];
+#endif
+
     *double_value = my_data.double_value;
 
     return 8;
 }
 
-int decode_double_safe(uint8_t *apdu, uint32_t len_value, double *double_value)
+int decode_double_safe(
+    const uint8_t * apdu,
+    const uint16_t len_value,
+    double *double_value)
 {
     if (len_value != 8) {
         *double_value = 0.0;
-        return (int)len_value;
+        return (int) len_value;
     } else {
         return decode_double(apdu, double_value);
     }
@@ -158,7 +190,9 @@ int decode_double_safe(uint8_t *apdu, uint32_t len_value, double *double_value)
 
 /* from clause 20.2.7 Encoding of a Double Precision Real Number Value */
 /* returns the number of apdu bytes consumed */
-int encode_bacnet_double(double value, uint8_t *apdu)
+int encode_bacnet_double(
+    double value,
+    uint8_t * apdu)
 {
     union {
         uint8_t byte[8];
@@ -167,26 +201,86 @@ int encode_bacnet_double(double value, uint8_t *apdu)
 
     /* NOTE: assumes the compiler stores float as IEEE-754 float */
     my_data.double_value = value;
-    if (big_endian()) {
-        apdu[0] = my_data.byte[0];
-        apdu[1] = my_data.byte[1];
-        apdu[2] = my_data.byte[2];
-        apdu[3] = my_data.byte[3];
-        apdu[4] = my_data.byte[4];
-        apdu[5] = my_data.byte[5];
-        apdu[6] = my_data.byte[6];
-        apdu[7] = my_data.byte[7];
-    } else {
-        apdu[0] = my_data.byte[7];
-        apdu[1] = my_data.byte[6];
-        apdu[2] = my_data.byte[5];
-        apdu[3] = my_data.byte[4];
-        apdu[4] = my_data.byte[3];
-        apdu[5] = my_data.byte[2];
-        apdu[6] = my_data.byte[1];
-        apdu[7] = my_data.byte[0];
-    }
+#if BACNET_STACK_BIG_ENDIAN
+    apdu[0] = my_data.byte[0];
+    apdu[1] = my_data.byte[1];
+    apdu[2] = my_data.byte[2];
+    apdu[3] = my_data.byte[3];
+    apdu[4] = my_data.byte[4];
+    apdu[5] = my_data.byte[5];
+    apdu[6] = my_data.byte[6];
+    apdu[7] = my_data.byte[7];
+#else
+    apdu[0] = my_data.byte[7];
+    apdu[1] = my_data.byte[6];
+    apdu[2] = my_data.byte[5];
+    apdu[3] = my_data.byte[4];
+    apdu[4] = my_data.byte[3];
+    apdu[5] = my_data.byte[2];
+    apdu[6] = my_data.byte[1];
+    apdu[7] = my_data.byte[0];
+#endif
 
     return 8;
 }
 #endif
+
+/* end of decoding_encoding.c */
+#ifdef TEST
+#include <assert.h>
+#include <string.h>
+#include <ctype.h>
+#include "ctest.h"
+
+void testBACreal(
+    Test * pTest)
+{
+    float real_value = 3.14159F, test_real_value = 0.0;
+    uint8_t apdu[MAX_LPDU_IP] = { 0 };
+    int len = 0, test_len = 0;
+
+    len = encode_bacnet_real(real_value, &apdu[0]);
+    ct_test(pTest, len == 4);
+    test_len = decode_real(&apdu[0], &test_real_value);
+    ct_test(pTest, test_len == len);
+    ct_test(pTest, test_real_value == real_value);
+}
+
+void testBACdouble(
+    Test * pTest)
+{
+    double double_value = 3.1415927, test_double_value = 0.0;
+    uint8_t apdu[MAX_LPDU_IP] = { 0 };
+    int len = 0, test_len = 0;
+
+    len = encode_bacnet_double(double_value, &apdu[0]);
+    ct_test(pTest, len == 8);
+    test_len = decode_double(&apdu[0], &test_double_value);
+    ct_test(pTest, test_len == len);
+    ct_test(pTest, test_double_value == double_value);
+}
+
+#ifdef TEST_BACNET_REAL
+int main(
+    void)
+{
+    Test *pTest;
+    bool rc;
+
+    pTest = ct_create("BACreal", NULL);
+    /* individual tests */
+    rc = ct_addTestFunction(pTest, testBACreal);
+    assert(rc);
+    rc = ct_addTestFunction(pTest, testBACdouble);
+    assert(rc);
+
+    /* configure output */
+    ct_setStream(pTest, stdout);
+    ct_run(pTest);
+    (void) ct_report(pTest);
+    ct_destroy(pTest);
+
+    return 0;
+}
+#endif /* TEST_BACNET_REAL */
+#endif /* TEST */

@@ -1,35 +1,50 @@
 /**************************************************************************
-*
-* Copyright (C) 2008 John Minack
-*
-* Permission is hereby granted, free of charge, to any person obtaining
-* a copy of this software and associated documentation files (the
-* "Software"), to deal in the Software without restriction, including
-* without limitation the rights to use, copy, modify, merge, publish,
-* distribute, sublicense, and/or sell copies of the Software, and to
-* permit persons to whom the Software is furnished to do so, subject to
-* the following conditions:
-*
-* The above copyright notice and this permission notice shall be included
-* in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*********************************************************************/
+ *
+ * Copyright (C) 2008 John Minack
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
 #ifndef _BAC_PROP_STATES_H_
 #define _BAC_PROP_STATES_H_
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "bacnet/bacnet_stack_exports.h"
 #include "bacnet/bacenum.h"
-#include "bacnet/bacapp.h"
-#include "bacnet/timestamp.h"
+#include "bacapp.h"
+#include "timestamp.h"
 
 typedef enum {
     BOOLEAN_VALUE,
@@ -62,33 +77,23 @@ typedef struct {
         BACNET_EVENT_STATE state;
         BACNET_DEVICE_STATUS systemStatus;
         BACNET_ENGINEERING_UNITS units;
-        BACNET_UNSIGNED_INTEGER unsignedValue;
+        uint32_t unsignedValue;
         BACNET_LIFE_SAFETY_MODE lifeSafetyMode;
         BACNET_LIFE_SAFETY_STATE lifeSafetyState;
     } state;
 } BACNET_PROPERTY_STATE;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+int bacapp_decode_property_state(
+    uint8_t * apdu,
+    BACNET_PROPERTY_STATE * value);
 
-    BACNET_STACK_EXPORT
-    int bacapp_decode_property_state(
-        uint8_t * apdu,
-        BACNET_PROPERTY_STATE * value);
+int bacapp_decode_context_property_state(
+    uint8_t * apdu,
+    uint8_t tag_number,
+    BACNET_PROPERTY_STATE * value);
 
-    BACNET_STACK_EXPORT
-    int bacapp_decode_context_property_state(
-        uint8_t * apdu,
-        uint8_t tag_number,
-        BACNET_PROPERTY_STATE * value);
+int bacapp_encode_property_state(
+    uint8_t * apdu,
+    BACNET_PROPERTY_STATE * value);
 
-    BACNET_STACK_EXPORT
-    int bacapp_encode_property_state(
-        uint8_t * apdu,
-        BACNET_PROPERTY_STATE * value);
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

@@ -1,204 +1,211 @@
 /**************************************************************************
-*
-* Copyright (C) 2005 Steve Karg <skarg@users.sourceforge.net>
-* Copyright (C) 2011 Krzysztof Malorny <malornykrzysztof@gmail.com>
-*
-* Permission is hereby granted, free of charge, to any person obtaining
-* a copy of this software and associated documentation files (the
-* "Software"), to deal in the Software without restriction, including
-* without limitation the rights to use, copy, modify, merge, publish,
-* distribute, sublicense, and/or sell copies of the Software, and to
-* permit persons to whom the Software is furnished to do so, subject to
-* the following conditions:
-*
-* The above copyright notice and this permission notice shall be included
-* in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*
-*********************************************************************/
+ *
+ * Copyright (C) 2005 Steve Karg <skarg@users.sourceforge.net>
+ * Copyright (C) 2011 Krzysztof Malorny <malornykrzysztof@gmail.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ *  2018.07.04 EKH Diffed in hints from Binary Value for future reference
+ *
+ ****************************************************************************************/
+
 #ifndef AI_H
 #define AI_H
 
+#include "configProj.h"
+
+#if (BACNET_USE_OBJECT_ANALOG_INPUT == 1 )
+
 #include <stdbool.h>
 #include <stdint.h>
-#include "bacnet/bacnet_stack_exports.h"
 #include "bacnet/bacdef.h"
 #include "bacnet/rp.h"
 #include "bacnet/wp.h"
-#if defined(INTRINSIC_REPORTING)
-#include "bacnet/basic/object/nc.h"
-#include "bacnet/getevent.h"
-#include "bacnet/alarm_ack.h"
-#include "bacnet/get_alarm_sum.h"
+#include "bacnet/bits/util/BACnetObjectAnalog.h"
+
+#if (INTRINSIC_REPORTING_B == 1)
+#include "nc.h"
+#include "getevent.h"
+#include "alarm_ack.h"
+// Deprecated since Rev 13    #include "get_alarm_sum.h"
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
-    typedef struct analog_input_descr {
-        unsigned Event_State:3;
-        float Present_Value;
-        BACNET_RELIABILITY Reliability;
-        bool Out_Of_Service;
-        uint8_t Units;
-        float Prior_Value;
-        float COV_Increment;
-        bool Changed;
-#if defined(INTRINSIC_REPORTING)
-        uint32_t Time_Delay;
-        uint32_t Notification_Class;
-        float High_Limit;
-        float Low_Limit;
-        float Deadband;
-        unsigned Limit_Enable:2;
-        unsigned Event_Enable:3;
-        unsigned Notify_Type:1;
-        ACKED_INFO Acked_Transitions[MAX_BACNET_EVENT_TRANSITION];
-        BACNET_DATE_TIME Event_Time_Stamps[MAX_BACNET_EVENT_TRANSITION];
-        /* time to generate event notification */
-        uint32_t Remaining_Time_Delay;
-        /* AckNotification information */
-        ACK_NOTIFICATION Ack_notify_data;
+typedef struct {
+    BACnetAnalogObject analogCommon;
+} ANALOG_INPUT_DESCR;
+
+
+void Analog_Input_Property_Lists(
+    const BACNET_PROPERTY_ID** pRequired,
+    const BACNET_PROPERTY_ID** pOptional,
+    const BACNET_PROPERTY_ID** pProprietary);
+
+bool Analog_Input_Valid_Instance(
+    DEVICE_OBJECT_DATA* pDev,
+    uint32_t object_instance);
+
+unsigned Analog_Input_Count(
+    DEVICE_OBJECT_DATA* pDev);
+
+uint32_t Analog_Input_Index_To_Instance(
+    DEVICE_OBJECT_DATA* pDev,
+    unsigned index);
+
+// making static
+//int Analog_Input_Instance_To_Index(
+//    const DEVICE_OBJECT_DATA *pDev,
+//    const uint32_t object_instance);
+
+bool Analog_Input_Object_Name(
+    DEVICE_OBJECT_DATA* pDev,
+    uint32_t object_instance,
+    BACNET_CHARACTER_STRING* object_name);
+
+//bool Analog_Input_Name_Set(
+//    DEVICE_OBJECT_DATA *pDev,
+//    uint32_t object_instance,
+//    char *new_name);
+
+char* Analog_Input_Description(
+    uint32_t instance);
+
+bool Analog_Input_Description_Set(
+    uint32_t instance,
+    char* new_name);
+
+bool Analog_Input_Units_Set(
+    uint32_t instance,
+    uint16_t units);
+
+uint16_t Analog_Input_Units(
+    uint32_t instance);
+
+int Analog_Input_Read_Property(
+    DEVICE_OBJECT_DATA* pDev,
+    BACNET_READ_PROPERTY_DATA* rpdata);
+
+bool Analog_Input_Write_Property(
+    DEVICE_OBJECT_DATA* pDev,
+    BACNET_WRITE_PROPERTY_DATA* wp_data);
+
+#if ( BACNET_SVC_COV_B == 1 )
+bool Analog_Input_Change_Of_Value(
+    DEVICE_OBJECT_DATA* pDev,
+    const uint32_t instance);
+
+
+void Analog_Input_Change_Of_Value_Clear(
+    DEVICE_OBJECT_DATA* pDev,
+    const uint32_t instance);
+
+
+bool Analog_Input_Encode_Value_List(
+    DEVICE_OBJECT_DATA* pDev,
+    uint32_t object_instance,
+    BACNET_PROPERTY_VALUE* value_list);
+
+float Analog_Input_COV_Increment(
+    uint32_t instance);
+
+void Analog_Input_COV_Increment_Set(
+    uint32_t instance,
+    float value);
+#endif // BACNET_SVC_COV_B
+
+
+#if (INTRINSIC_REPORTING_B == 1)
+void Analog_Input_Intrinsic_Reporting(
+    DEVICE_OBJECT_DATA* pDev,
+    uint32_t object_instance);
+
+
+int Analog_Input_Event_Information(
+    DEVICE_OBJECT_DATA* pDev,
+    unsigned index,
+    BACNET_GET_EVENT_INFORMATION_DATA* getevent_data);
+
+
+int Analog_Input_Alarm_Ack(
+    DEVICE_OBJECT_DATA* pDev,
+    BACNET_ALARM_ACK_DATA* alarmack_data,
+    BACNET_ERROR_CLASS* error_class,
+    BACNET_ERROR_CODE* error_code);
+
+
+#if ( BACNET_PROTOCOL_REVISION < 13 )
+int Analog_Input_Alarm_Summary(
+    DEVICE_OBJECT_DATA* pDev,
+    unsigned index,
+    BACNET_GET_ALARM_SUMMARY_DATA* getalarm_data);
 #endif
-    } ANALOG_INPUT_DESCR;
-
-    BACNET_STACK_EXPORT
-    void Analog_Input_Property_Lists(
-        const int **pRequired,
-        const int **pOptional,
-        const int **pProprietary);
-
-    BACNET_STACK_EXPORT
-    bool Analog_Input_Valid_Instance(
-        uint32_t object_instance);
-    BACNET_STACK_EXPORT
-    unsigned Analog_Input_Count(
-        void);
-    BACNET_STACK_EXPORT
-    uint32_t Analog_Input_Index_To_Instance(
-        unsigned index);
-    BACNET_STACK_EXPORT
-    unsigned Analog_Input_Instance_To_Index(
-        uint32_t instance);
-    BACNET_STACK_EXPORT
-    bool Analog_Input_Object_Instance_Add(
-        uint32_t instance);
-
-    BACNET_STACK_EXPORT
-    bool Analog_Input_Object_Name(
-        uint32_t object_instance,
-        BACNET_CHARACTER_STRING * object_name);
-    BACNET_STACK_EXPORT
-    bool Analog_Input_Name_Set(
-        uint32_t object_instance,
-        char *new_name);
-
-    BACNET_STACK_EXPORT
-    char *Analog_Input_Description(
-        uint32_t instance);
-    BACNET_STACK_EXPORT
-    bool Analog_Input_Description_Set(
-        uint32_t instance,
-        char *new_name);
-
-    BACNET_STACK_EXPORT
-    bool Analog_Input_Units_Set(
-        uint32_t instance,
-        uint16_t units);
-    BACNET_STACK_EXPORT
-    uint16_t Analog_Input_Units(
-        uint32_t instance);
-
-    BACNET_STACK_EXPORT
-    int Analog_Input_Read_Property(
-        BACNET_READ_PROPERTY_DATA * rpdata);
-    BACNET_STACK_EXPORT
-    bool Analog_Input_Write_Property(
-        BACNET_WRITE_PROPERTY_DATA * wp_data);
-
-    BACNET_STACK_EXPORT
-    float Analog_Input_Present_Value(
-        uint32_t object_instance);
-    BACNET_STACK_EXPORT
-    void Analog_Input_Present_Value_Set(
-        uint32_t object_instance,
-        float value);
-
-    BACNET_STACK_EXPORT
-    bool Analog_Input_Out_Of_Service(
-        uint32_t object_instance);
-    BACNET_STACK_EXPORT
-    void Analog_Input_Out_Of_Service_Set(
-        uint32_t object_instance,
-        bool oos_flag);
-
-    BACNET_STACK_EXPORT
-    unsigned Analog_Input_Event_State(uint32_t object_instance);
-    BACNET_STACK_EXPORT
-    bool Analog_Input_Event_State_Set(uint32_t object_instance, unsigned state);
-
-    BACNET_STACK_EXPORT
-    bool Analog_Input_Change_Of_Value(
-        uint32_t instance);
-    BACNET_STACK_EXPORT
-    void Analog_Input_Change_Of_Value_Clear(
-        uint32_t instance);
-    BACNET_STACK_EXPORT
-    bool Analog_Input_Encode_Value_List(
-        uint32_t object_instance,
-        BACNET_PROPERTY_VALUE * value_list);
-    float Analog_Input_COV_Increment(
-        uint32_t instance);
-    BACNET_STACK_EXPORT
-    void Analog_Input_COV_Increment_Set(
-        uint32_t instance,
-        float value);
-
-    /* note: header of Intrinsic_Reporting function is required
-       even when INTRINSIC_REPORTING is not defined */
-    BACNET_STACK_EXPORT
-    void Analog_Input_Intrinsic_Reporting(
-        uint32_t object_instance);
-
-#if defined(INTRINSIC_REPORTING)
-    BACNET_STACK_EXPORT
-    int Analog_Input_Event_Information(
-        unsigned index,
-        BACNET_GET_EVENT_INFORMATION_DATA * getevent_data);
-
-    BACNET_STACK_EXPORT
-    int Analog_Input_Alarm_Ack(
-        BACNET_ALARM_ACK_DATA * alarmack_data,
-        BACNET_ERROR_CODE * error_code);
-
-    BACNET_STACK_EXPORT
-    int Analog_Input_Alarm_Summary(
-        unsigned index,
-        BACNET_GET_ALARM_SUMMARY_DATA * getalarm_data);
 #endif
 
-    BACNET_STACK_EXPORT
-    bool Analog_Input_Create(
-        uint32_t object_instance);
-    BACNET_STACK_EXPORT
-    bool Analog_Input_Delete(
-        uint32_t object_instance);
-    BACNET_STACK_EXPORT
-    void Analog_Input_Cleanup(
-        void);
-    BACNET_STACK_EXPORT
-    void Analog_Input_Init(
-        void);
+BACNET_OBJECT* Analog_Input_Create(
+    DEVICE_OBJECT_DATA* pDev,
+    const uint32_t instance,
+    const char* name,
+    const BACNET_ENGINEERING_UNITS units);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-#endif
+
+float Analog_Input_Present_Value_from_Instance(
+    DEVICE_OBJECT_DATA* pDev,
+    const uint32_t instance);
+
+bool Analog_Input_Delete(
+    uint32_t object_instance);
+
+void Analog_Input_Cleanup(
+    void);
+
+void Analog_Input_Init(
+    void);
+
+ANALOG_INPUT_DESCR* Analog_Input_Instance_To_Object(
+    DEVICE_OBJECT_DATA* pDev,
+    uint32_t object_instance);
+
+//AnalogInputObject *Analog_Input_Instance_To_Object(
+//    DEVICE_OBJECT_DATA *pDev,
+//    uint32_t object_instance);
+
+
+#ifdef TEST
+#include "ctest.h"
+void testAnalogInput(
+    Test* pTest);
+#endif  // TEST_XXX
+
+#endif  // ( BACNET_USE_OBJECT_XXX == 1 )   -   configProj.h includes this BACnet Object Type
+#endif  // XXX_H include guard

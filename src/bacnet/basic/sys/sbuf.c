@@ -30,8 +30,22 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+ *
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
 
 /** @file sbuf.c  Static buffer library for deeply embedded system. */
 
@@ -41,47 +55,66 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include "sbuf.h"
+#include "eLib/util/eLibDebug.h"
 
-void sbuf_init(STATIC_BUFFER *b, /* static buffer structure */
-    char *data, /* data block */
-    unsigned size)
-{ /* actual size, in bytes, of the data block or array of data */
+void sbuf_init(
+    STATIC_BUFFER * b,  /* static buffer structure */
+    uint8_t *data,      /* data block */
+    unsigned size)      /* actual size, in bytes, of the data block or array of data */
+{       
     if (b) {
         b->data = data;
         b->size = size;
         b->count = 0;
     }
-
-    return;
 }
 
 /* returns true if count==0, false if count > 0 */
-bool sbuf_empty(STATIC_BUFFER const *b)
+bool sbuf_empty(
+    STATIC_BUFFER const *b)
 {
     return (b ? (b->count == 0) : false);
 }
 
-char *sbuf_data(STATIC_BUFFER const *b)
+uint8_t *sbuf_data(
+    STATIC_BUFFER const *b)
 {
     return (b ? b->data : NULL);
 }
 
-unsigned sbuf_size(STATIC_BUFFER *b)
+unsigned sbuf_size(
+    STATIC_BUFFER *b)
 {
     return (b ? b->size : 0);
 }
 
-unsigned sbuf_count(STATIC_BUFFER *b)
+unsigned sbuf_count(
+    STATIC_BUFFER *b)
 {
     return (b ? b->count : 0);
 }
 
+
+unsigned sbuf_remaining(
+    STATIC_BUFFER* b)
+{
+    if (b->processed == b->count) return 0;
+    if (b->processed > b->count) {
+        panic();
+        // how did this happen?
+        return 0;
+    }
+    return b->count - b->processed;
+}
+
+
 /* returns true if successful, false if not enough room to append data */
-bool sbuf_put(STATIC_BUFFER *b, /* static buffer structure */
-    unsigned offset, /* where to start */
-    char *data, /* data to place in buffer */
-    unsigned data_size)
-{ /* how many bytes to add */
+bool sbuf_put(
+    STATIC_BUFFER *b,       /* static buffer structure */
+    unsigned offset,        /* where to start */
+    uint8_t *data,          /* data to place in buffer */
+    unsigned data_size)     /* how many bytes to add */
+{ 
     bool status = false; /* return value */
 
     if (b && b->data) {
@@ -101,10 +134,11 @@ bool sbuf_put(STATIC_BUFFER *b, /* static buffer structure */
 }
 
 /* returns true if successful, false if not enough room to append data */
-bool sbuf_append(STATIC_BUFFER *b, /* static buffer structure */
-    char *data, /* data to place in buffer */
-    unsigned data_size)
-{ /* how many bytes to add */
+bool sbuf_append(
+    STATIC_BUFFER *b,       /* static buffer structure */
+    uint8_t *data,          /* data to place in buffer */
+    unsigned data_size)     /* how many bytes to add */
+{ 
     unsigned count = 0;
 
     if (b) {
@@ -115,7 +149,8 @@ bool sbuf_append(STATIC_BUFFER *b, /* static buffer structure */
 }
 
 /* returns true if successful, false if not enough room to append data */
-bool sbuf_truncate(STATIC_BUFFER *b, /* static buffer structure */
+bool sbuf_truncate(
+    STATIC_BUFFER *b, /* static buffer structure */
     unsigned count)
 { /* total number of bytes in to remove */
     bool status = false; /* return value */
@@ -129,3 +164,84 @@ bool sbuf_truncate(STATIC_BUFFER *b, /* static buffer structure */
 
     return status;
 }
+
+#ifdef BAC_TEST
+#include <assert.h>
+#include <string.h>
+
+#include "ctest.h"
+
+void testStaticBuffer(
+    Test * pTest)
+{
+    STATIC_BUFFER sbuffer;
+    char *data1 = "Joshua";
+    char *data2 = "Anna";
+    char *data3 = "Christopher";
+    char *data4 = "Mary";
+    char data_buffer[480] = "";
+    char test_data_buffer[480] = "";
+    char *data;
+    unsigned count;
+
+    sbuf_init(&sbuffer, NULL, 0);
+    ct_test(pTest, sbuf_empty(&sbuffer) == true);
+    ct_test(pTest, sbuf_data(&sbuffer) == NULL);
+    ct_test(pTest, sbuf_size(&sbuffer) == 0);
+    ct_test(pTest, sbuf_count(&sbuffer) == 0);
+    ct_test(pTest, sbuf_append(&sbuffer, data1, strlen(data1)) == false);
+
+    sbuf_init(&sbuffer, data_buffer, sizeof(data_buffer));
+    ct_test(pTest, sbuf_empty(&sbuffer) == true);
+    ct_test(pTest, sbuf_data(&sbuffer) == data_buffer);
+    ct_test(pTest, sbuf_size(&sbuffer) == sizeof(data_buffer));
+    ct_test(pTest, sbuf_count(&sbuffer) == 0);
+
+    ct_test(pTest, sbuf_append(&sbuffer, data1, strlen(data1)) == true);
+    ct_test(pTest, sbuf_append(&sbuffer, data2, strlen(data2)) == true);
+    ct_test(pTest, sbuf_append(&sbuffer, data3, strlen(data3)) == true);
+    ct_test(pTest, sbuf_append(&sbuffer, data4, strlen(data4)) == true);
+    strcat(test_data_buffer, data1);
+    strcat(test_data_buffer, data2);
+    strcat(test_data_buffer, data3);
+    strcat(test_data_buffer, data4);
+    ct_test(pTest, sbuf_count(&sbuffer) == strlen(test_data_buffer));
+
+    data = sbuf_data(&sbuffer);
+    count = sbuf_count(&sbuffer);
+    ct_test(pTest, memcmp(data, test_data_buffer, count) == 0);
+    ct_test(pTest, count == strlen(test_data_buffer));
+
+    ct_test(pTest, sbuf_truncate(&sbuffer, 0) == true);
+    ct_test(pTest, sbuf_count(&sbuffer) == 0);
+    ct_test(pTest, sbuf_size(&sbuffer) == sizeof(data_buffer));
+    ct_test(pTest, sbuf_append(&sbuffer, data4, strlen(data4)) == true);
+    data = sbuf_data(&sbuffer);
+    count = sbuf_count(&sbuffer);
+    ct_test(pTest, memcmp(data, data4, count) == 0);
+    ct_test(pTest, count == strlen(data4));
+}
+
+#ifdef TEST_STATIC_BUFFER
+int main(
+    void)
+{
+    Test *pTest;
+    bool rc;
+
+    pTest = ct_create("static buffer", NULL);
+
+    /* individual tests */
+    rc = ct_addTestFunction(pTest, testStaticBuffer);
+    assert(rc);
+
+    ct_setStream(pTest, stdout);
+    ct_run(pTest);
+    (void)ct_report(pTest);
+
+    ct_destroy(pTest);
+
+    return 0;
+}
+#endif /* TEST_STATIC_BUFFER */
+#endif /* BAC_TEST */

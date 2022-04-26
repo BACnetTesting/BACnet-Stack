@@ -21,7 +21,22 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
-*********************************************************************/
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef BACNET_SECURITY_H
 #define BACNET_SECURITY_H
 
@@ -39,9 +54,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "bacnet/bacnet_stack_exports.h"
-#include "bacnet/bacdef.h"
-#include "bacnet/bacenum.h"
+#include "bacdef.h"
+#include "bacenum.h"
 
 typedef struct BACnet_Security_Wrapper {
     bool payload_net_or_bvll_flag;      /* true if NPDU or BVLL */
@@ -189,134 +203,97 @@ typedef struct Set_Master_Key {
     BACNET_KEY_ENTRY key;
 } BACNET_SET_MASTER_KEY;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 /* helper functions */
-    BACNET_STACK_EXPORT
     BACNET_KEY_IDENTIFIER_ALGORITHM key_algorithm(uint16_t id);
-    BACNET_STACK_EXPORT
     BACNET_KEY_IDENTIFIER_KEY_NUMBER key_number(uint16_t id);
 
 /* key manipulation functions - port specific! */
-    BACNET_STACK_EXPORT
     BACNET_SECURITY_RESPONSE_CODE bacnet_master_key_set(BACNET_SET_MASTER_KEY *
         key);
-    BACNET_STACK_EXPORT
     BACNET_SECURITY_RESPONSE_CODE
         bacnet_distribution_key_update(BACNET_UPDATE_DISTRIBUTION_KEY * key);
-    BACNET_STACK_EXPORT
     BACNET_SECURITY_RESPONSE_CODE bacnet_key_set_update(BACNET_UPDATE_KEY_SET *
         update_key_sets);
-    BACNET_STACK_EXPORT
     BACNET_SECURITY_RESPONSE_CODE bacnet_find_key(uint8_t revision,
         BACNET_KEY_ENTRY * key);
 
 /* signing/verification and encryption/decryption - port specific */
-    BACNET_STACK_EXPORT
     int key_sign_msg(BACNET_KEY_ENTRY * key,
         uint8_t * msg,
         uint32_t msg_len,
         uint8_t * signature);
-    // BACNET_STACK_EXPORT
-    // bool key_verify_sign_msg(BACNET_KEY_ENTRY * key,
-    //     uint8_t * msg,
-    //     uint32_t msg_len,
-    //     uint8_t * signature);
-    BACNET_STACK_EXPORT
+    bool key_verify_sign_msg(BACNET_KEY_ENTRY * key,
+        uint8_t * msg,
+        uint32_t msg_len,
+        uint8_t * signature);
     int key_encrypt_msg(BACNET_KEY_ENTRY * key,
         uint8_t * msg,
         uint32_t msg_len,
         uint8_t * signature);
-    BACNET_STACK_EXPORT
     bool key_decrypt_msg(BACNET_KEY_ENTRY * key,
         uint8_t * msg,
         uint32_t msg_len,
         uint8_t * signature);
-    BACNET_STACK_EXPORT
     void key_set_padding(BACNET_KEY_ENTRY * key,
         int enc_len,
         uint16_t * padding_len,
         uint8_t * padding);
 
 /* encoders */
-    // BACNET_STACK_EXPORT
-    // int encode_security_wrapper(int bytes_before,
-    //     uint8_t * apdu,
-    //     BACNET_SECURITY_WRAPPER * wrapper);
-    BACNET_STACK_EXPORT
+    int encode_security_wrapper(int bytes_before,
+        uint8_t * apdu,
+        BACNET_SECURITY_WRAPPER * wrapper);
     int encode_challenge_request(uint8_t * apdu,
         BACNET_CHALLENGE_REQUEST * bc_req);
-    BACNET_STACK_EXPORT
     int encode_security_payload(uint8_t * apdu,
         BACNET_SECURITY_PAYLOAD * payload);
-    BACNET_STACK_EXPORT
     int encode_security_response(uint8_t * apdu,
         BACNET_SECURITY_RESPONSE * resp);
-    BACNET_STACK_EXPORT
     int encode_request_key_update(uint8_t * apdu,
         BACNET_REQUEST_KEY_UPDATE * req);
-    BACNET_STACK_EXPORT
     int encode_key_entry(uint8_t * apdu,
         BACNET_KEY_ENTRY * entry);
-    BACNET_STACK_EXPORT
     int encode_update_key_set(uint8_t * apdu,
         BACNET_UPDATE_KEY_SET * key_set);
-    BACNET_STACK_EXPORT
     int encode_update_distribution_key(uint8_t * apdu,
         BACNET_UPDATE_DISTRIBUTION_KEY * dist_key);
-    BACNET_STACK_EXPORT
     int encode_request_master_key(uint8_t * apdu,
         BACNET_REQUEST_MASTER_KEY * req_master_key);
-    BACNET_STACK_EXPORT
     int encode_set_master_key(uint8_t * apdu,
         BACNET_SET_MASTER_KEY * set_master_key);
 
 /* safe decoders */
-    // BACNET_STACK_EXPORT
-    // int decode_security_wrapper_safe(int bytes_before,
-    //     uint8_t * apdu,
-    //     uint32_t apdu_len_remaining,
-    //     BACNET_SECURITY_WRAPPER * wrapper);
-    BACNET_STACK_EXPORT
+    int decode_security_wrapper_safe(int bytes_before,
+        uint8_t * apdu,
+        uint32_t apdu_len_remaining,
+        BACNET_SECURITY_WRAPPER * wrapper);
     int decode_challenge_request_safe(uint8_t * apdu,
         uint32_t apdu_len_remaining,
         BACNET_CHALLENGE_REQUEST * bc_req);
-    BACNET_STACK_EXPORT
     int decode_security_payload_safe(uint8_t * apdu,
         uint32_t apdu_len_remaining,
         BACNET_SECURITY_PAYLOAD * payload);
-    BACNET_STACK_EXPORT
     int decode_security_response_safe(uint8_t * apdu,
         uint32_t apdu_len_remaining,
         BACNET_SECURITY_RESPONSE * resp);
-    BACNET_STACK_EXPORT
     int decode_request_key_update_safe(uint8_t * apdu,
         uint32_t apdu_len_remaining,
         BACNET_REQUEST_KEY_UPDATE * req);
-    BACNET_STACK_EXPORT
     int decode_key_entry_safe(uint8_t * apdu,
         uint32_t apdu_len_remaining,
         BACNET_KEY_ENTRY * entry);
-    BACNET_STACK_EXPORT
     int decode_update_key_set_safe(uint8_t * apdu,
         uint32_t apdu_len_remaining,
         BACNET_UPDATE_KEY_SET * key_set);
-    BACNET_STACK_EXPORT
     int decode_update_distribution_key_safe(uint8_t * apdu,
         uint32_t apdu_len_remaining,
         BACNET_UPDATE_DISTRIBUTION_KEY * dist_key);
-    BACNET_STACK_EXPORT
     int decode_request_master_key_safe(uint8_t * apdu,
         uint32_t apdu_len_remaining,
         BACNET_REQUEST_MASTER_KEY * req_master_key);
-    BACNET_STACK_EXPORT
     int decode_set_master_key_safe(uint8_t * apdu,
         uint32_t apdu_len_remaining,
         BACNET_SET_MASTER_KEY * set_master_key);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif

@@ -21,17 +21,30 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- *********************************************************************/
-#include <stddef.h>
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
 #include <stdint.h>
-#include <stdio.h>
-#include "bacnet/config.h"
+
+#include "configProj.h"
+
 #include "bacnet/bacdef.h"
-#include "bacnet/bacdcode.h"
 #include "bacnet/iam.h"
 #include "bacnet/basic/binding/address.h"
-#include "bacnet/basic/services.h"
-#include "bacnet/basic/tsm/tsm.h"
+#include "bacnet/basic/object/device.h"
 
 /** @file h_iam.c  Handles I-Am requests. */
 
@@ -40,38 +53,37 @@
  * @ingroup DMDDB
  * @param service_request [in] The received message to be handled.
  * @param service_len [in] Length of the service_request message.
- * @param src [in] The BACNET_ADDRESS of the message's source.
+ * @param src [in] The BACNET_PATH of the message's source.
  */
+#if (BACNET_CLIENT == 1)
 void handler_i_am_add(
-    uint8_t *service_request, uint16_t service_len, BACNET_ADDRESS *src)
+    DEVICE_OBJECT_DATA *pDev,
+    uint8_t * service_request,
+    uint16_t service_len,
+    BACNET_ROUTE * src)
 {
-    int len = 0;
-    uint32_t device_id = 0;
-    unsigned max_apdu = 0;
-    int segmentation = 0;
-    uint16_t vendor_id = 0;
+    int len ;
+    uint32_t device_id ;
+    uint16_t max_apdu ;
+    int segmentation ;
+    uint16_t vendor_id ;
 
-    (void)service_len;
-    len = iam_decode_service_request(
-        service_request, &device_id, &max_apdu, &segmentation, &vendor_id);
-#if PRINT_ENABLED
-    fprintf(stderr, "Received I-Am Request");
-#endif
+    (void) service_len;
+    len =
+        iam_decode_service_request(service_request, &device_id, &max_apdu,
+                                   &segmentation, &vendor_id);
+
+    dbMessage(DBD_ALL, DB_NOTE, "Received I-Am message %d", device_id );
+
     if (len != -1) {
-#if PRINT_ENABLED
-        fprintf(stderr, " from %lu, MAC = %d.%d.%d.%d.%d.%d\n",
-            (unsigned long)device_id, src->mac[0], src->mac[1], src->mac[2],
-            src->mac[3], src->mac[4], src->mac[5]);
-#endif
-        address_add(device_id, max_apdu, src);
-    } else {
-#if PRINT_ENABLED
-        fprintf(stderr, ", but unable to decode it.\n");
-#endif
+        
+        address_add(src->portParams, device_id, max_apdu, &src->bacnetPath );
     }
-
-    return;
+    else {
+        dbMessage(DBD_ALL, DB_ERROR, "Unable to decode I-Am message");
+    }
 }
+#endif
 
 /** Handler for I-Am responses (older binding-update-only version).
  * Will update the responder's binding, but if already in our cache.
@@ -79,24 +91,29 @@ void handler_i_am_add(
  *
  * @param service_request [in] The received message to be handled.
  * @param service_len [in] Length of the service_request message.
- * @param src [in] The BACNET_ADDRESS of the message's source.
+ * @param src [in] The BACNET_PATH of the message's source.
  */
+#if 0
 void handler_i_am_bind(
-    uint8_t *service_request, uint16_t service_len, BACNET_ADDRESS *src)
+    DEVICE_OBJECT_DATA *pDev,
+    uint8_t *service_request,
+    uint16_t service_len,
+    BACNET_ROUTE * srcRoute)
 {
     int len = 0;
     uint32_t device_id = 0;
-    unsigned max_apdu = 0;
+    uint16_t max_apdu ;
     int segmentation = 0;
     uint16_t vendor_id = 0;
 
-    (void)service_len;
-    len = iam_decode_service_request(
-        service_request, &device_id, &max_apdu, &segmentation, &vendor_id);
+    (void) service_len;
+    (void)pDev;
+    len =
+        iam_decode_service_request(service_request, &device_id, &max_apdu,
+                                   &segmentation, &vendor_id);
     if (len > 0) {
         /* only add address if requested to bind */
-        address_add_binding(device_id, max_apdu, src);
+        address_add_binding(device_id, max_apdu, srcRoute);
     }
-
-    return;
 }
+#endif

@@ -1,26 +1,42 @@
 /**************************************************************************
-*
-* Copyright (C) 2012 Steve Karg <skarg@users.sourceforge.net>
-*
-* Permission is hereby granted, free of charge, to any person obtaining
-* a copy of this software and associated documentation files (the
-* "Software"), to deal in the Software without restriction, including
-* without limitation the rights to use, copy, modify, merge, publish,
-* distribute, sublicense, and/or sell copies of the Software, and to
-* permit persons to whom the Software is furnished to do so, subject to
-* the following conditions:
-*
-* The above copyright notice and this permission notice shall be included
-* in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*********************************************************************/
+ *
+ * Copyright (C) 2012 Steve Karg <skarg@users.sourceforge.net>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
 #ifndef WHOHAS_H
 #define WHOHAS_H
 
@@ -30,7 +46,7 @@
 #include "bacnet/bacstr.h"
 
 typedef struct BACnet_Who_Has_Data {
-    int32_t low_limit;  /* deviceInstanceRange */
+    int32_t low_limit;          /* deviceInstanceRange */
     int32_t high_limit;
     bool is_object_name;        /* true if a string */
     union {
@@ -39,31 +55,27 @@ typedef struct BACnet_Who_Has_Data {
     } object;
 } BACNET_WHO_HAS_DATA;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 /* encode service  - use -1 for limit if you want unlimited */
-    BACNET_STACK_EXPORT
-    int whohas_encode_apdu(
-        uint8_t * apdu,
-        BACNET_WHO_HAS_DATA * data);
+int whohas_encode_apdu(
+    uint8_t * apdu,
+    BACNET_WHO_HAS_DATA * data);
 
-    BACNET_STACK_EXPORT
-    int whohas_decode_service_request(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        BACNET_WHO_HAS_DATA * data);
+int whohas_decode_service_request(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    BACNET_WHO_HAS_DATA * data);
 
-    BACNET_STACK_EXPORT
-    int whohas_decode_apdu(
-        uint8_t * apdu,
-        unsigned apdu_len,
-        BACNET_WHO_HAS_DATA * data);
+int whohas_decode_apdu(
+    uint8_t * apdu,
+    unsigned apdu_len,
+    BACNET_WHO_HAS_DATA * data);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+#ifdef BAC_TEST
+#include "ctest.h"
+void testWhoHas(
+    Test * pTest);
+#endif
+
 /** @defgroup DMDOB Device Management-Dynamic Object Binding (DM-DOB)
  * @ingroup RDMS
  * 16.9 Who-Has and I-Have Services <br>

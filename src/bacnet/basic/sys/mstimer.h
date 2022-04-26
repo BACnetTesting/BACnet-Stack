@@ -44,9 +44,9 @@ struct mstimer_callback_data_t {
     struct mstimer_callback_data_t *next;
 };
 
-#ifdef __cplusplus
+#ifdef __cplusplus_disable
 extern "C" {
-#endif /* __cplusplus */
+#endif /* __cplusplus_disable */
 
 BACNET_STACK_EXPORT
 void mstimer_set(struct mstimer *t, unsigned long interval);
@@ -73,7 +73,7 @@ void mstimer_callback(
 BACNET_STACK_EXPORT
 void mstimer_init(void);
 
-#ifdef __cplusplus
+#ifdef __cplusplus_disable
 }
-#endif /* __cplusplus */
+#endif /* __cplusplus_disable */
 #endif

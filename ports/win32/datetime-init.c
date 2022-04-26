@@ -85,7 +85,7 @@ int gettimeofday(struct timeval *tp, void *tzp)
             _tzset();
             tzflag++;
         }
-        tz = tzp;
+        tz = (struct timezone *)  tzp;
         tz->tz_minuteswest = _timezone / 60;
         tz->tz_dsttime = _daylight;
     }
@@ -110,20 +110,9 @@ bool datetime_local(BACNET_DATE *bdate,
 {
     bool status = false;
     struct tm *tblock = NULL;
-#if defined(_MSC_VER)
     time_t tTemp;
-#else
-    struct timeval tv;
-#endif
-#if defined(_MSC_VER)
     time(&tTemp);
     tblock = (struct tm *)localtime(&tTemp);
-#else
-    if (gettimeofday(&tv, NULL) == 0) {
-        tblock = (struct tm *)localtime((const time_t *)&tv.tv_sec);
-    }
-#endif
-
     if (tblock) {
         status = true;
         /** struct tm
@@ -139,14 +128,8 @@ bool datetime_local(BACNET_DATE *bdate,
          */
         datetime_set_date(bdate, (uint16_t)tblock->tm_year + 1900,
             (uint8_t)tblock->tm_mon + 1, (uint8_t)tblock->tm_mday);
-#if !defined(_MSC_VER)
-        datetime_set_time(btime, (uint8_t)tblock->tm_hour,
-            (uint8_t)tblock->tm_min, (uint8_t)tblock->tm_sec,
-            (uint8_t)(tv.tv_usec / 10000));
-#else
         datetime_set_time(btime, (uint8_t)tblock->tm_hour,
             (uint8_t)tblock->tm_min, (uint8_t)tblock->tm_sec, 0);
-#endif
         if (dst_active) {
             /* The value of tm_isdst is:
                - positive if Daylight Saving Time is in effect,

@@ -21,17 +21,24 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- *********************************************************************/
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include "bacnet/config.h"
-#include "bacnet/bacdef.h"
-#include "bacnet/bacdcode.h"
-#include "bacnet/bactext.h"
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
 #include "bacnet/ihave.h"
 #include "bacnet/basic/services.h"
-#include "bacnet/basic/tsm/tsm.h"
 
 /** @file h_ihave.c  Handles incoming I-Have messages. */
 
@@ -39,30 +46,19 @@
  * @ingroup DMDOB
  * @param service_request [in] The received message to be handled.
  * @param service_len [in] Length of the service_request message.
- * @param src [in] The BACNET_ADDRESS of the message's source.
+ * @param src [in] The BACNET_ROUTE of the message's source.
  */
 void handler_i_have(
-    uint8_t *service_request, uint16_t service_len, BACNET_ADDRESS *src)
+    DEVICE_OBJECT_DATA *pDev,
+    uint8_t * service_request,
+    uint16_t service_len,
+    BACNET_ROUTE * src)
 {
-    int len = 0;
+    int len ;
     BACNET_I_HAVE_DATA data;
 
-    (void)service_len;
-    (void)src;
+    (void) service_len;
+    (void) src;
+    (void)pDev;
     len = ihave_decode_service_request(service_request, service_len, &data);
-    if (len != -1) {
-#if PRINT_ENABLED
-        fprintf(stderr, "I-Have: %s %lu from %s %lu!\r\n",
-            bactext_object_type_name(data.object_id.type),
-            (unsigned long)data.object_id.instance,
-            bactext_object_type_name(data.device_id.type),
-            (unsigned long)data.device_id.instance);
-#endif
-    } else {
-#if PRINT_ENABLED
-        fprintf(stderr, "I-Have: received, but unable to decode!\n");
-#endif
-    }
-
-    return;
 }

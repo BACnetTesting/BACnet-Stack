@@ -1,28 +1,46 @@
 /**************************************************************************
-*
-* Copyright (C) 2012 Steve Karg <skarg@users.sourceforge.net>
-*
-* Permission is hereby granted, free of charge, to any person obtaining
-* a copy of this software and associated documentation files (the
-* "Software"), to deal in the Software without restriction, including
-* without limitation the rights to use, copy, modify, merge, publish,
-* distribute, sublicense, and/or sell copies of the Software, and to
-* permit persons to whom the Software is furnished to do so, subject to
-* the following conditions:
-*
-* The above copyright notice and this permission notice shall be included
-* in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*********************************************************************/
+ *
+ * Copyright (C) 2012 Steve Karg <skarg@users.sourceforge.net>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
 #ifndef BACENUM_H
 #define BACENUM_H
+
+#include "configProj.h"
 
 typedef enum {
     PROP_ACKED_TRANSITIONS = 0,
@@ -368,6 +386,8 @@ typedef enum {
     PROP_COVU_PERIOD = 349,
     PROP_COVU_RECIPIENTS = 350,
     PROP_EVENT_MESSAGE_TEXTS = 351,
+
+#if ( BACNET_PROTOCOL_REVISION >= 13 )
     /* enumerations 352-363 are defined in Addendum 2010-af */
     PROP_EVENT_MESSAGE_TEXTS_CONFIG = 352,
     PROP_EVENT_DETECTION_ENABLE = 353,
@@ -381,6 +401,9 @@ typedef enum {
     PROP_PROCESS_IDENTIFIER_FILTER = 361,
     PROP_SUBSCRIBED_RECIPIENTS = 362,
     PROP_PORT_FILTER = 363,
+#endif
+
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
     /* enumeration 364 is defined in Addendum 2010-ae */
     PROP_AUTHORIZATION_EXEMPTIONS = 364,
     /* enumerations 365-370 are defined in Addendum 2010-aa */
@@ -390,8 +413,15 @@ typedef enum {
     PROP_EXECUTION_DELAY = 368,
     PROP_LAST_PRIORITY = 369,
     PROP_WRITE_STATUS = 370,
+#endif
+
     /* enumeration 371 is defined in Addendum 2010-ao */
+	/* Note: Although Property_List is defined in revision 14 and should not be valid if a prior version is specified, the reality is this
+		implmentation of the stack uses this enum for some internal processes, so we allow it to be defined for that purpose only even if 
+		selected revision < 14 */
     PROP_PROPERTY_LIST = 371,
+
+#if ( BACNET_PROTOCOL_REVISION >= 14 )
     /* enumeration 372 is defined in Addendum 2010-ak */
     PROP_SERIAL_NUMBER = 372,
     /* enumerations 373-386 are defined in Addendum 2010-i */
@@ -422,6 +452,7 @@ typedef enum {
     PROP_STATE_CHANGE_VALUES = 396,
     PROP_TIMER_RUNNING = 397,
     PROP_TIMER_STATE = 398,
+#endif
     /* enumerations 399-427 are defined in Addendum 2012-ai */
     PROP_APDU_LENGTH = 399,
     PROP_IP_ADDRESS = 400,
@@ -522,65 +553,16 @@ typedef enum {
     PROP_STAGES = 494,
     PROP_STAGE_NAMES = 495,
     PROP_TARGET_REFERENCES = 496,
-    PROP_AUDIT_SOURCE_LEVEL = 497,
-    PROP_AUDIT_LEVEL = 498,
-    PROP_AUDIT_NOTIFICATION_RECIPIENT = 499,
-    PROP_AUDIT_PRIORITY_FILTER = 500,
-    PROP_AUDITABLE_OPERATIONS = 501,
-    PROP_DELETE_ON_FORWARD = 502,
-    PROP_MAXIMUM_SEND_DELAY = 503,
-    PROP_MONITORED_OBJECTS = 504,
-    PROP_SEND_NOW = 505,
-    PROP_FLOOR_NUMBER = 506,
-    PROP_DEVICE_UUID = 507,
-    /* enumerations 508-511 are defined in Addendum 2020cc */
-    PROP_ADDITIONAL_REFERENCE_PORTS = 508,
-    PROP_CERTIFICATE_SIGNING_REQUEST_FILE = 509,
-    PROP_COMMAND_VALIDATION_RESULT = 510,
-    PROP_ISSUER_CERTIFICATE_FILES = 511,
     /* The special property identifiers all, optional, and required  */
     /* are reserved for use in the ReadPropertyConditional and */
     /* ReadPropertyMultiple services or services not defined in this standard. */
     /* Enumerated values 0-511 are reserved for definition by ASHRAE.  */
     /* Enumerated values 512-4194303 may be used by others subject to the  */
     /* procedures and constraints described in Clause 23.  */
-    PROP_PROPRIETARY_RANGE_MIN = 512,
-    PROP_PROPRIETARY_RANGE_MAX = 4194303,
-    /* enumerations 4194304-4194327 are defined in Addendum 2020cc */
-    PROP_MAX_BVLC_LENGTH_ACCEPTED = 4194304,
-    PROP_MAX_NPDU_LENGTH_ACCEPTED = 4194305,
-    PROP_OPERATIONAL_CERTIFICATE_FILE = 4194305,
-    PROP_CURRENT_HEALTH = 4194307,
-    PROP_SC_CONNECT_WAIT_TIMEOUT = 4194308,
-    PROP_SC_DIRECT_CONNECT_ACCEPT_ENABLE = 4194309,
-    PROP_SC_DIRECT_CONNECT_ACCEPT_URIS = 4194310,
-    PROP_SC_DIRECT_CONNECT_BINDING = 4194311,
-    PROP_SC_DIRECT_CONNECT_CONNECTION_STATUS = 4194312,
-    PROP_SC_DIRECT_CONNECT_INITIATE_ENABLE = 4194313,
-    PROP_SC_DISCONNECT_WAIT_TIMEOUT = 4194314,
-    PROP_SC_FAILED_CONNECTION_REQUESTS = 4194315,
-    PROP_SC_FAILOVER_HUB_CONNECTION_STATUS = 4194316,
-    PROP_SC_FAILOVER_HUB_URI = 4194317,
-    PROP_SC_HUB_CONNECTOR_STATE = 4194318,
-    PROP_SC_HUB_FUNCTION_ACCEPT_URIS = 4194319,
-    PROP_SC_HUB_FUNCTION_BINDING = 4194320,
-    PROP_SC_HUB_FUNCTION_CONNECTION_STATUS = 4194321,
-    PROP_SC_HUB_FUNCTION_ENABLE = 4194322,
-    PROP_SC_HEARTBEAT_TIMEOUT = 4194323,
-    PROP_SC_PRIMARY_HUB_CONNECTION_STATUS = 4194324,
-    PROP_SC_PRIMARY_HUB_URI = 4194325,
-    PROP_SC_MAXIMUM_RECONNECT_TIME = 4194326,
-    PROP_SC_MINIMUM_RECONNECT_TIME = 4194327,
-    /* enumerations 4194328-4194332 are defined in Addendum 2020ca */
-    PROP_COLOR_OVERRIDE = 4194328,
-    PROP_COLOR_REFERENCE = 4194329,
-    PROP_DEFAULT_COLOR = 4194330,
-    PROP_DEFAULT_COLOR_TEMPERATURE = 4194331,
-    PROP_OVERRIDE_COLOR_REFERENCE = 4194332,
     /* do the max range inside of enum so that
        compilers will allocate adequate sized datatype for enum
        which is used to store decoding */
-    MAX_BACNET_PROPERTY_ID = UINT32_MAX
+    MAX_BACNET_PROPERTY_ID = 4194303
 } BACNET_PROPERTY_ID;
 
 
@@ -987,9 +969,9 @@ typedef enum {
     RESTART_REASON_HARDWARE_WATCHDOG = 5,
     RESTART_REASON_SOFTWARE_WATCHDOG = 6,
     RESTART_REASON_SUSPENDED = 7,
-/* Enumerated values 0-63 are reserved for definition by ASHRAE.
-   Enumerated values 64-255 may be used by others subject to the
-   procedures and constraints described in Clause 23. */
+    /* Enumerated values 0-63 are reserved for definition by ASHRAE.
+       Enumerated values 64-255 may be used by others subject to the
+       procedures and constraints described in Clause 23. */
     /* do the max range inside of enum so that
        compilers will allocate adequate sized datatype for enum
        which is used to store decoding */
@@ -1225,7 +1207,7 @@ typedef enum {
     NOTIFY_MAX = 3
 } BACNET_NOTIFY_TYPE;
 
-typedef enum BACnetObjectType {
+typedef enum {
     OBJECT_ANALOG_INPUT = 0,
     OBJECT_ANALOG_OUTPUT = 1,
     OBJECT_ANALOG_VALUE = 2,
@@ -1239,13 +1221,13 @@ typedef enum BACnetObjectType {
     OBJECT_FILE = 10,
     OBJECT_GROUP = 11,
     OBJECT_LOOP = 12,
-    OBJECT_MULTI_STATE_INPUT = 13,
-    OBJECT_MULTI_STATE_OUTPUT = 14,
+    OBJECT_MULTISTATE_INPUT = 13,
+    OBJECT_MULTISTATE_OUTPUT = 14,
     OBJECT_NOTIFICATION_CLASS = 15,
     OBJECT_PROGRAM = 16,
     OBJECT_SCHEDULE = 17,
     OBJECT_AVERAGING = 18,
-    OBJECT_MULTI_STATE_VALUE = 19,
+    OBJECT_MULTISTATE_VALUE = 19,
     OBJECT_TRENDLOG = 20,
     OBJECT_LIFE_SAFETY_POINT = 21,
     OBJECT_LIFE_SAFETY_ZONE = 22,
@@ -1269,40 +1251,37 @@ typedef enum BACnetObjectType {
     OBJECT_BITSTRING_VALUE = 39,        /* Addendum 2008-w */
     OBJECT_CHARACTERSTRING_VALUE = 40,  /* Addendum 2008-w */
     OBJECT_DATE_PATTERN_VALUE = 41,     /* Addendum 2008-w */
-    OBJECT_DATE_VALUE = 42,     /* Addendum 2008-w */
+    OBJECT_DATE_VALUE = 42,             /* Addendum 2008-w */
     OBJECT_DATETIME_PATTERN_VALUE = 43, /* Addendum 2008-w */
-    OBJECT_DATETIME_VALUE = 44, /* Addendum 2008-w */
-    OBJECT_INTEGER_VALUE = 45,  /* Addendum 2008-w */
+    OBJECT_DATETIME_VALUE = 44,         /* Addendum 2008-w */
+    OBJECT_INTEGER_VALUE = 45,          /* Addendum 2008-w */
     OBJECT_LARGE_ANALOG_VALUE = 46,     /* Addendum 2008-w */
     OBJECT_OCTETSTRING_VALUE = 47,      /* Addendum 2008-w */
     OBJECT_POSITIVE_INTEGER_VALUE = 48, /* Addendum 2008-w */
     OBJECT_TIME_PATTERN_VALUE = 49,     /* Addendum 2008-w */
-    OBJECT_TIME_VALUE = 50,     /* Addendum 2008-w */
+    OBJECT_TIME_VALUE = 50,             /* Addendum 2008-w */
     OBJECT_NOTIFICATION_FORWARDER = 51, /* Addendum 2010-af */
     OBJECT_ALERT_ENROLLMENT = 52,       /* Addendum 2010-af */
-    OBJECT_CHANNEL = 53,        /* Addendum 2010-aa */
+    OBJECT_CHANNEL = 53,                /* Addendum 2010-aa */
     OBJECT_LIGHTING_OUTPUT = 54,        /* Addendum 2010-i */
+#if ( BACNET_PROTOCOL_REVISION >= 17 )
     OBJECT_BINARY_LIGHTING_OUTPUT = 55, /* Addendum 135-2012az */
-    OBJECT_NETWORK_PORT = 56,   /* Addendum 135-2012az */
-    OBJECT_ELEVATOR_GROUP = 57,   /* Addendum 135-2012aq */
-    OBJECT_ESCALATOR = 58,   /* Addendum 135-2012aq */
-    OBJECT_LIFT = 59,   /* Addendum 135-2012aq */
-    OBJECT_STAGING = 60,   /* Addendum 135-2016bd */
-    OBJECT_AUDIT_LOG = 61,   /* Addendum 135-2016bi */
-    OBJECT_AUDIT_REPORTER = 62,   /* Addendum 135-2016bi */
-    OBJECT_COLOR = 63, /* Addendum 135-2020ca */
-    OBJECT_COLOR_TEMPERATURE = 64, /* Addendum 135-2020ca */
+    OBJECT_NETWORK_PORT = 56,           /* Addendum 135-2012az */
+    OBJECT_ELEVATOR_GROUP = 57,         /* Addendum 135-2012aq */
+    OBJECT_ESCALATOR = 58,              /* Addendum 135-2012aq */
+    OBJECT_LIFT = 59,                   /* Addendum 135-2012aq */
+    OBJECT_STAGING = 60,                /* Addendum 135-2016bd */
+#endif
     /* Enumerated values 0-127 are reserved for definition by ASHRAE. */
     /* Enumerated values 128-1023 may be used by others subject to  */
     /* the procedures and constraints described in Clause 23. */
-    OBJECT_PROPRIETARY_MIN = 128,
-    OBJECT_PROPRIETARY_MAX = 1023,
     /* do the max range inside of enum so that
        compilers will allocate adequate sized datatype for enum
        which is used to store decoding */
+    OBJECT_PROPRIETARY_MIN = 128,
+    OBJECT_PROPRIETARY_MAX = 1023,
     MAX_BACNET_OBJECT_TYPE = 1024,
-    /* special usage for this library */
-    OBJECT_NONE = UINT16_MAX
+    OBJECT_NONE = 0xFFFFu
 } BACNET_OBJECT_TYPE;
 
 typedef enum {
@@ -1531,6 +1510,33 @@ typedef enum {
         /* All values in this production are reserved */
         /* for definition by ASHRAE. */
 } BACNET_SERVICES_SUPPORTED;
+
+typedef enum {
+    BVLC_RESULT = 0,
+    BVLC_WRITE_BROADCAST_DISTRIBUTION_TABLE = 1,
+    BVLC_READ_BROADCAST_DIST_TABLE = 2,
+    BVLC_READ_BROADCAST_DIST_TABLE_ACK = 3,
+    BVLC_FORWARDED_NPDU = 4,
+    BVLC_REGISTER_FOREIGN_DEVICE = 5,
+    BVLC_READ_FOREIGN_DEVICE_TABLE = 6,
+    BVLC_READ_FOREIGN_DEVICE_TABLE_ACK = 7,
+    BVLC_DELETE_FOREIGN_DEVICE_TABLE_ENTRY = 8,
+    BVLC_DISTRIBUTE_BROADCAST_TO_NETWORK = 9,
+    BVLC_ORIGINAL_UNICAST_NPDU = 10,
+    BVLC_ORIGINAL_BROADCAST_NPDU = 11,
+    BVLC_SECURE_BVLL = 12,
+    MAX_BVLC_FUNCTION = 13
+} BACNET_BVLC_FUNCTION;
+
+typedef enum {
+    BVLC_RESULT_SUCCESSFUL_COMPLETION = 0x0000,
+    BVLC_RESULT_WRITE_BROADCAST_DISTRIBUTION_TABLE_NAK = 0x0010,
+    BVLC_RESULT_READ_BROADCAST_DISTRIBUTION_TABLE_NAK = 0x0020,
+    BVLC_RESULT_REGISTER_FOREIGN_DEVICE_NAK = 0X0030,
+    BVLC_RESULT_READ_FOREIGN_DEVICE_TABLE_NAK = 0x0040,
+    BVLC_RESULT_DELETE_FOREIGN_DEVICE_TABLE_ENTRY_NAK = 0x0050,
+    BVLC_RESULT_DISTRIBUTE_BROADCAST_TO_NETWORK_NAK = 0x0060
+} BACNET_BVLC_RESULT;
 
 /* Bit String Enumerations */
 typedef enum {
@@ -1917,8 +1923,7 @@ typedef enum BACnetLightingInProgress {
     BACNET_LIGHTING_RAMP_ACTIVE = 2,
     BACNET_LIGHTING_NOT_CONTROLLED = 3,
     BACNET_LIGHTING_OTHER = 4,
-    BACNET_LIGHTING_TRIM_ACTIVE = 5,
-    MAX_BACNET_LIGHTING_IN_PROGRESS = 6
+    MAX_BACNET_LIGHTING_IN_PROGRESS = 5
 } BACNET_LIGHTING_IN_PROGRESS;
 
 typedef enum BACnetLightingTransition {
@@ -1933,17 +1938,6 @@ typedef enum BACnetLightingTransition {
     BACNET_LIGHTING_TRANSITION_PROPRIETARY_LAST = 255
 } BACNET_LIGHTING_TRANSITION;
 
-typedef enum BACnetColorOperation {
-    BACNET_COLOR_OPERATION_NONE = 0,
-    BACNET_COLOR_OPERATION_FADE_TO_COLOR = 1,
-    BACNET_COLOR_OPERATION_FADE_TO_CCT = 2,
-    BACNET_COLOR_OPERATION_RAMP_TO_CCT = 3,
-    BACNET_COLOR_OPERATION_STEP_UP_CCT = 4,
-    BACNET_COLOR_OPERATION_STEP_DOWN_CCT = 5,
-    BACNET_COLOR_OPERATION_STOP = 6,
-    BACNET_COLOR_OPERATION_MAX = 7
-} BACNET_COLOR_OPERATION;
-
 /* NOTE: BACNET_DAYS_OF_WEEK is different than BACNET_WEEKDAY */
 /* 0=Monday-6=Sunday */
 typedef enum BACnetDaysOfWeek {
@@ -1957,6 +1951,7 @@ typedef enum BACnetDaysOfWeek {
     MAX_BACNET_DAYS_OF_WEEK = 7
 } BACNET_DAYS_OF_WEEK;
 
+// these are used as an index in some arrays.
 typedef enum BACnetEventTransitionBits {
     TRANSITION_TO_OFFNORMAL = 0,
     TRANSITION_TO_FAULT = 1,

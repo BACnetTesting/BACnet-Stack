@@ -21,18 +21,32 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- *********************************************************************/
-#include <stddef.h>
-#include <stdint.h>
-#include <errno.h>
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
+#include "configProj.h"
+
 #include "bacnet/event.h"
-#include "bacnet/datalink/datalink.h"
-#include "bacnet/basic/services.h"
 #include "bacnet/basic/object/device.h"
+
+#if (BACNET_USE_EVENT_HANDLING == 1)
 
 /** @file s_uevent.c  Send an Unconfirmed Event Notification. */
 
-/** Sends an Unconfirmed Alarm/Event Notification.
+/** Sends an Unconfirmed Alarm/Alert/Event Notification.
  * @ingroup EVNOTFCN
  *
  * @param buffer [in,out] The buffer to build the message in for sending.
@@ -40,24 +54,44 @@
  * @param dest [in] The destination address information (may be a broadcast).
  * @return Size of the message sent (bytes), or a negative value on error.
  */
-int Send_UEvent_Notify(
-    uint8_t *buffer, BACNET_EVENT_NOTIFICATION_DATA *data, BACNET_ADDRESS *dest)
+void Send_UEvent_Notify(
+    BACNET_ROUTE *dest,
+    BACNET_EVENT_NOTIFICATION_DATA * data
+    )
 {
-    int len = 0;
-    int pdu_len = 0;
+    int len ;
+    int pdu_len ;
     int bytes_sent = 0;
-    BACNET_NPDU_DATA npdu_data;
-    BACNET_ADDRESS my_address;
+    BACNET_NPCI_DATA npci_data;
 
-    datalink_get_my_address(&my_address);
+
+    DLCB *dlcb = alloc_dlcb_application('a', dest);
+    if (dlcb == NULL)
+    {
+        return ;
+    }
+
     /* encode the NPDU portion of the packet */
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
-    pdu_len = npdu_encode_pdu(buffer, dest, &my_address, &npdu_data);
-    /* encode the APDU portion of the packet */
-    len = uevent_notify_encode_apdu(&buffer[pdu_len], data);
+    npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
+    pdu_len =
+        npdu_encode_pdu(
+                dlcb->Handler_Transmit_Buffer, 
+                &dlcb->route.bacnetPath.glAdr, 
+                NULL,
+                &npci_data);
+            
+        /* encode the APDU portion of the packet */
+    len =
+        uevent_notify_encode_apdu(
+            &dlcb->Handler_Transmit_Buffer[pdu_len],
+            data);
+            
     pdu_len += len;
     /* send the data */
-    bytes_sent = datalink_send_pdu(dest, &npdu_data, &buffer[0], pdu_len);
-
-    return bytes_sent;
+    //bytes_sent = portParams->SendPdu(portParams, dest, &npci_data, pdu_len);
+    dlcb->optr = pdu_len;
+    dlcb->route.portParams->SendPdu(dlcb);
 }
+
+#endif  // (BACNET_USE_OBJECT_ALERT_ENROLLMENT == 1)
+

@@ -1,102 +1,107 @@
 /**************************************************************************
-*
-* Copyright (C) 2011 Krzysztof Malorny <malornykrzysztof@gmail.com>
-*
-* Permission is hereby granted, free of charge, to any person obtaining
-* a copy of this software and associated documentation files (the
-* "Software"), to deal in the Software without restriction, including
-* without limitation the rights to use, copy, modify, merge, publish,
-* distribute, sublicense, and/or sell copies of the Software, and to
-* permit persons to whom the Software is furnished to do so, subject to
-* the following conditions:
-*
-* The above copyright notice and this permission notice shall be included
-* in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*
-*********************************************************************/
+ *
+ * Copyright (C) 2011 Krzysztof Malorny <malornykrzysztof@gmail.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
 #ifndef WRITEPROPERTYMULTIPLE_H
 #define WRITEPROPERTYMULTIPLE_H
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "bacnet/bacnet_stack_exports.h"
-#include "bacnet/bacdcode.h"
-#include "bacnet/bacapp.h"
+#include "bacdcode.h"
+#include "bacapp.h"
 #include "bacnet/wp.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
-    struct BACnet_Write_Access_Data;
-    typedef struct BACnet_Write_Access_Data {
-        BACNET_OBJECT_TYPE object_type;
-        uint32_t object_instance;
-        /* simple linked list of values */
-        BACNET_PROPERTY_VALUE *listOfProperties;
-        struct BACnet_Write_Access_Data *next;
-    } BACNET_WRITE_ACCESS_DATA;
+struct BACnet_Write_Access_Data;
+typedef struct BACnet_Write_Access_Data {
+    BACNET_OBJECT_TYPE object_type;
+    uint32_t object_instance;
+    /* simple linked list of values */
+    BACNET_PROPERTY_VALUE *listOfProperties;
+    struct BACnet_Write_Access_Data *next;
+} BACNET_WRITE_ACCESS_DATA;
 
-    /* decode the service request only */
-    int wpm_decode_object_id(
-        uint8_t * apdu,
-        uint16_t apdu_len,
-        BACNET_WRITE_PROPERTY_DATA * data);
+/* decode the service request only */
+int wpm_decode_object_id(
+    uint8_t * apdu,
+    uint16_t apdu_len,
+    BACNET_WRITE_PROPERTY_DATA * data);
 
-    int wpm_decode_object_property(
-        uint8_t * apdu,
-        uint16_t apdu_len,
-        BACNET_WRITE_PROPERTY_DATA * wpm_data);
+int wpm_decode_object_property(
+    uint8_t * apdu,
+    uint16_t apdu_len,
+    BACNET_WRITE_PROPERTY_DATA * wpm_data);
 
+/* encode objects */
+int wpm_encode_apdu_init(
+    uint8_t * apdu,
+    uint16_t max_apdu,
+    uint8_t invoke_id);
 
-    /* encode objects */
-    BACNET_STACK_EXPORT
-    int wpm_encode_apdu_init(
-        uint8_t * apdu,
-        uint8_t invoke_id);
-    BACNET_STACK_EXPORT
-    int wpm_encode_apdu_object_begin(
-        uint8_t * apdu,
-        BACNET_OBJECT_TYPE object_type,
-        uint32_t object_instance);
-    BACNET_STACK_EXPORT
-    int wpm_encode_apdu_object_end(
-        uint8_t * apdu);
-    BACNET_STACK_EXPORT
-    int wpm_encode_apdu_object_property(
-        uint8_t * apdu,
-        BACNET_WRITE_PROPERTY_DATA * wpdata);
-    BACNET_STACK_EXPORT
-    int wpm_encode_apdu(
-        uint8_t * apdu,
-        size_t max_apdu,
-        uint8_t invoke_id,
-        BACNET_WRITE_ACCESS_DATA * write_access_data);
+int wpm_encode_apdu_object_begin(
+    uint8_t * apdu,
+    BACNET_OBJECT_TYPE object_type,
+    uint32_t object_instance);
 
-    /* encode service */
-    BACNET_STACK_EXPORT
-    int wpm_ack_encode_apdu_init(
-        uint8_t * apdu,
-        uint8_t invoke_id);
+int wpm_encode_apdu_object_end(
+    uint8_t * apdu);
 
-    BACNET_STACK_EXPORT
-    int wpm_error_ack_encode_apdu(
-        uint8_t * apdu,
-        uint8_t invoke_id,
-        BACNET_WRITE_PROPERTY_DATA * wp_data);
+int wpm_encode_apdu_object_property(
+    uint8_t * apdu,
+    BACNET_WRITE_PROPERTY_DATA * wpdata);
+
+int wpm_encode_apdu(
+    uint8_t * apdu,
+    uint16_t max_apdu,
+    uint8_t invoke_id,
+    BACNET_WRITE_ACCESS_DATA * write_access_data);
+
+/* encode service */
+int wpm_ack_encode_apdu_init(
+    uint8_t * apdu,
+    uint8_t invoke_id);
+
+int wpm_error_ack_encode_apdu(
+    uint8_t * apdu,
+    uint8_t invoke_id,
+    BACNET_WRITE_PROPERTY_DATA * wp_data);
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 /** @defgroup DSWP Data Sharing - Write Property Multiple Service (DS-WPM)
  * @ingroup DataShare
  * 15.10 WriteProperty Multiple Service <br>
@@ -115,5 +120,5 @@ extern "C" {
  * WRITE_ACCESS_DENIED. Note that these restricted properties may be accessible
  * through the use of Virtual Terminal services or other means at the discretion
  * of the implementor.
-*/
+ */
 #endif

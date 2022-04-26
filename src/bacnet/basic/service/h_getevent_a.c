@@ -26,6 +26,22 @@
  * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************
  *
  * @section DESCRIPTION
  *
@@ -36,33 +52,35 @@
  * Acked_Transitions property, which has at least one of the bits
  * (TO-OFFNORMAL, TO-FAULT, TONORMAL) set to FALSE.
  */
-#include <assert.h>
-#include "bacnet/config.h"
-#include "bacnet/bacdef.h"
-#include "bacnet/bacdcode.h"
-#include "bacnet/bacerror.h"
-#include "bacnet/apdu.h"
-#include "bacnet/npdu.h"
-#include "bacnet/abort.h"
-#include "bacnet/getevent.h"
-/* basic services */
-#include "bacnet/basic/tsm/tsm.h"
-#include "bacnet/basic/services.h"
+#include "configProj.h"
 
-/* 40 = min size of get event data in APDU */
-#define MAX_NUMBER_OF_EVENTS ((MAX_APDU / 40) + 1)
+#include <assert.h>
+#include "bacdef.h"
+#include "bacdcode.h"
+#include "bacerror.h"
+#include "apdu.h"
+#include "npdu.h"
+#include "abort.h"
+#include "bacnet/basic/services.h"
+#include "getevent.h"
+
+#if (INTRINSIC_REPORTING_B == 1)
+
+ /* 40 = min size of get event data in APDU */
+#define MAX_NUMBER_OF_EVENTS ((MAX_LPDU_IP / 40) + 1)
 
 /** Example function to handle a GetEvent ACK.
  *
  * @param service_request [in] The contents of the service request.
  * @param service_len [in] The length of the service_request.
- * @param src [in] BACNET_ADDRESS of the source of the message
+ * @param src [in] BACNET_PATH of the source of the message
  * @param service_data [in] The BACNET_CONFIRMED_SERVICE_ACK_DATA information
  * decoded from the APDU header of this message.
  */
-void get_event_ack_handler(uint8_t *service_request,
+void get_event_ack_handler(
+    uint8_t *service_request,
     uint16_t service_len,
-    BACNET_ADDRESS *src,
+    BACNET_ROUTE *src,
     BACNET_CONFIRMED_SERVICE_ACK_DATA *service_data)
 {
     uint8_t i = 0;
@@ -77,10 +95,13 @@ void get_event_ack_handler(uint8_t *service_request,
         get_event_data[i - 1].next = &get_event_data[i];
     }
 
-    apdu_len = getevent_ack_decode_service_request(
-        &service_request[0], service_len, &get_event_data[0], &more_events);
+    apdu_len =
+        getevent_ack_decode_service_request(&service_request[0],
+        service_len, &get_event_data[0], &more_events);
 
     if (apdu_len > 0) {
         /* FIXME: Add code to process get_event_data */
     }
 }
+
+#endif // #if (INTRINSIC_REPORTING == 1)

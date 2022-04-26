@@ -1,15 +1,14 @@
 /* Derived from "Unix Incompatibility Notes: Byte Order" by Jan Wolter */
 /* http://unixpapa.com/incnote/byteorder.html */
 
-/** @file bigend.c  Determination of Endianness */
+/** @file bigend.c  Determination of Endianess */
 
-#include "bacnet/basic/sys/bigend.h"
+#include "bigend.h"
 
-#ifndef BACNET_BIG_ENDIAN
 /* Big-Endian systems save the most significant byte first.  */
 /* Sun and Motorola processors, IBM-370s and PDP-10s are big-endian. */
 /* "Network Byte Order" is also know as "Big-Endian Byte Order" */
-/* for example, a 4 byte integer 67305985 is 0x04030201 in hexadecimal. */
+/* for example, a 4 byte integer 67305985 is 0x04030201 in hexidecimal. */
 /* x[0] = 0x04 */
 /* x[1] = 0x03 */
 /* x[2] = 0x02 */
@@ -17,7 +16,7 @@
 
 /* Little-Endian systems save the least significant byte first.  */
 /* The entire Intel x86 family, Vaxes, Alphas and PDP-11s are little-endian. */
-/* for example, a 4 byte integer 67305985 is 0x04030201 in hexadecimal. */
+/* for example, a 4 byte integer 67305985 is 0x04030201 in hexidecimal. */
 /* x[0] = 0x01 */
 /* x[1] = 0x02 */
 /* x[2] = 0x03 */
@@ -36,7 +35,8 @@
 
 /* function to return true on Big-Endian architectures */
 /* (based on Harbison & Steele) */
-int big_endian(void)
+int big_endian(
+    void)
 {
     union {
         long l;
@@ -47,4 +47,3 @@ int big_endian(void)
 
     return (u.c[sizeof(long) - 1] == 1);
 }
-#endif

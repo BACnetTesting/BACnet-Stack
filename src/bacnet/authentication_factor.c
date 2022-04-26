@@ -22,42 +22,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  *********************************************************************/
-#include <stdint.h>
-#include "bacnet/authentication_factor.h"
-#include "bacnet/bacdcode.h"
+
+#include "authentication_factor.h"
+#include "bacdcode.h"
+
 
 int bacapp_encode_authentication_factor(
-    uint8_t *apdu, BACNET_AUTHENTICATION_FACTOR *af)
+    uint8_t * apdu,
+    BACNET_AUTHENTICATION_FACTOR * af)
 {
     int len;
     int apdu_len = 0;
 
     len = encode_context_enumerated(&apdu[apdu_len], 0, af->format_type);
-    if (len < 0) {
+    if (len < 0)
         return -1;
-    } else {
+    else
         apdu_len += len;
-    }
 
     len = encode_context_unsigned(&apdu[apdu_len], 1, af->format_class);
-    if (len < 0) {
+    if (len < 0)
         return -1;
-    } else {
+    else
         apdu_len += len;
-    }
 
     len = encode_context_octet_string(&apdu[apdu_len], 2, &af->value);
-    if (len < 0) {
+    if (len < 0)
         return -1;
-    } else {
+    else
         apdu_len += len;
-    }
 
     return apdu_len;
 }
 
 int bacapp_encode_context_authentication_factor(
-    uint8_t *apdu, uint8_t tag, BACNET_AUTHENTICATION_FACTOR *af)
+    uint8_t * apdu,
+    uint8_t tag,
+    BACNET_AUTHENTICATION_FACTOR * af)
 {
     int len;
     int apdu_len = 0;
@@ -72,59 +73,53 @@ int bacapp_encode_context_authentication_factor(
     apdu_len += len;
 
     return apdu_len;
+
 }
 
 int bacapp_decode_authentication_factor(
-    uint8_t *apdu, BACNET_AUTHENTICATION_FACTOR *af)
+    uint8_t * apdu,
+    BACNET_AUTHENTICATION_FACTOR * af)
 {
     int len;
     int apdu_len = 0;
-    uint32_t format_type = af->format_type;
-    BACNET_UNSIGNED_INTEGER unsigned_value = 0;
+    uint32_t tuint32 ;
 
     if (decode_is_context_tag(&apdu[apdu_len], 0)) {
-        len = decode_context_enumerated(&apdu[apdu_len], 0, &format_type);
-        if (len < 0) {
+        len = decode_context_enumerated(&apdu[apdu_len], 0, &tuint32);
+        if (len < 0)
             return -1;
-        } else if (format_type < AUTHENTICATION_FACTOR_MAX) {
+        else {
+            af->format_type = (BACNET_AUTHENTICATION_FACTOR_TYPE) tuint32 ;
             apdu_len += len;
-            af->format_type = (BACNET_AUTHENTICATION_FACTOR_TYPE)format_type;
-        } else {
-            /* FIXME: Maybe this should return BACNET_STATUS_REJECT */
-            return -1;
         }
-    } else {
+    } else
         return -1;
-    }
 
     if (decode_is_context_tag(&apdu[apdu_len], 1)) {
-        len = decode_context_unsigned(&apdu[apdu_len], 1, &unsigned_value);
-        if (len < 0) {
+        len = decode_context_unsigned(&apdu[apdu_len], 1, &af->format_class);
+        if (len < 0)
             return -1;
-        } else {
-            af->format_class = unsigned_value;
+        else
             apdu_len += len;
-        }
-    } else {
+    } else
         return -1;
-    }
 
     if (decode_is_context_tag(&apdu[apdu_len], 2)) {
         len = decode_context_octet_string(&apdu[apdu_len], 2, &af->value);
-        if (len < 0) {
+        if (len < 0)
             return -1;
-        } else {
+        else
             apdu_len += len;
-        }
-    } else {
+    } else
         return -1;
-    }
-
+    
     return apdu_len;
 }
 
 int bacapp_decode_context_authentication_factor(
-    uint8_t *apdu, uint8_t tag, BACNET_AUTHENTICATION_FACTOR *af)
+    uint8_t * apdu,
+    uint8_t tag,
+    BACNET_AUTHENTICATION_FACTOR * af)
 {
     int len = 0;
     int section_length;

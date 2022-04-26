@@ -31,6 +31,9 @@
  License.
  -------------------------------------------
 ####COPYRIGHTEND####*/
+
+#include "configProj.h"
+
 #include <stdint.h>
 #include "bacnet/bacenum.h"
 #include "bacnet/bacdef.h"
@@ -826,7 +829,8 @@ static const int Network_Port_Properties_Optional[] = { PROP_DESCRIPTION,
     PROP_IPV6_DNS_SERVER, PROP_IPV6_AUTO_ADDRESSING_ENABLE,
     PROP_IPV6_DHCP_LEASE_TIME, PROP_IPV6_DHCP_LEASE_TIME_REMAINING,
     PROP_IPV6_DHCP_SERVER, PROP_IPV6_ZONE_INDEX, PROP_MAX_MASTER,
-    PROP_MAX_INFO_FRAMES, PROP_SLAVE_PROXY_ENABLE,
+    PROP_MAX_INFO_FRAMES, 
+    PROP_SLAVE_PROXY_ENABLE,
     PROP_MANUAL_SLAVE_ADDRESS_BINDING, PROP_AUTO_SLAVE_DISCOVERY,
     PROP_SLAVE_ADDRESS_BINDING, PROP_VIRTUAL_MAC_ADDRESS_TABLE,
     PROP_ROUTING_TABLE, PROP_EVENT_DETECTION_ENABLE, PROP_NOTIFICATION_CLASS,
@@ -1204,13 +1208,13 @@ const int *property_list_optional(BACNET_OBJECT_TYPE object_type)
         case OBJECT_LOOP:
             pList = Loop_Properties_Optional;
             break;
-        case OBJECT_MULTI_STATE_INPUT:
+        case OBJECT_MULTISTATE_INPUT:
             pList = Multistate_Input_Properties_Optional;
             break;
-        case OBJECT_MULTI_STATE_OUTPUT:
+        case OBJECT_MULTISTATE_OUTPUT:
             pList = Multistate_Output_Properties_Optional;
             break;
-        case OBJECT_MULTI_STATE_VALUE:
+        case OBJECT_MULTISTATE_VALUE:
             pList = Multistate_Value_Properties_Optional;
             break;
         case OBJECT_NETWORK_PORT:
@@ -1409,13 +1413,13 @@ const int *property_list_required(BACNET_OBJECT_TYPE object_type)
         case OBJECT_LOOP:
             pList = Loop_Properties_Required;
             break;
-        case OBJECT_MULTI_STATE_INPUT:
+        case OBJECT_MULTISTATE_INPUT:
             pList = Multistate_Input_Properties_Required;
             break;
-        case OBJECT_MULTI_STATE_OUTPUT:
+        case OBJECT_MULTISTATE_OUTPUT:
             pList = Multistate_Output_Properties_Required;
             break;
-        case OBJECT_MULTI_STATE_VALUE:
+        case OBJECT_MULTISTATE_VALUE:
             pList = Multistate_Value_Properties_Required;
             break;
         case OBJECT_NETWORK_PORT:
@@ -1509,7 +1513,7 @@ BACNET_PROPERTY_ID property_list_special_property(
 {
     int property = -1; /* return value */
     unsigned required, optional, proprietary;
-    struct special_property_list_t PropertyList = { 0 };
+    struct special_property_list_t PropertyList = { { 0 } };
 
     property_list_special(object_type, &PropertyList);
     required = PropertyList.Required.count;
@@ -1552,7 +1556,7 @@ unsigned property_list_special_count(
     BACNET_OBJECT_TYPE object_type, BACNET_PROPERTY_ID special_property)
 {
     unsigned count = 0; /* return value */
-    struct special_property_list_t PropertyList = { 0 };
+    struct special_property_list_t PropertyList = { { 0 } };
 
     property_list_special(object_type, &PropertyList);
     if (special_property == PROP_ALL) {
@@ -1567,3 +1571,73 @@ unsigned property_list_special_count(
     return count;
 }
 #endif
+
+#ifdef BAC_TEST
+#include <assert.h>
+#include <string.h>
+#include "ctest.h"
+
+void testPropList(Test *pTest)
+{
+    unsigned i = 0, j = 0;
+    unsigned count = 0;
+    BACNET_PROPERTY_ID property = MAX_BACNET_PROPERTY_ID;
+    unsigned object_id = 0, object_name = 0, object_type = 0;
+    struct special_property_list_t property_list = { 0 };
+
+    for (i = 0; i < OBJECT_PROPRIETARY_MIN; i++) {
+        count = property_list_special_count((BACNET_OBJECT_TYPE)i, PROP_ALL);
+        ct_test(pTest, count >= 3);
+        object_id = 0;
+        object_name = 0;
+        object_type = 0;
+        for (j = 0; j < count; j++) {
+            property = property_list_special_property(
+                (BACNET_OBJECT_TYPE)i, PROP_ALL, j);
+            if (property == PROP_OBJECT_TYPE) {
+                object_type++;
+            }
+            if (property == PROP_OBJECT_IDENTIFIER) {
+                object_id++;
+            }
+            if (property == PROP_OBJECT_NAME) {
+                object_name++;
+            }
+        }
+        ct_test(pTest, object_type == 1);
+        ct_test(pTest, object_id == 1);
+        ct_test(pTest, object_name == 1);
+        /* test member function */
+        property_list_special((BACNET_OBJECT_TYPE)i, &property_list);
+        ct_test(pTest,
+            property_list_member(
+                property_list.Required.pList, PROP_OBJECT_TYPE));
+        ct_test(pTest,
+            property_list_member(
+                property_list.Required.pList, PROP_OBJECT_IDENTIFIER));
+        ct_test(pTest,
+            property_list_member(
+                property_list.Required.pList, PROP_OBJECT_NAME));
+    }
+}
+
+#ifdef TEST_PROPLIST
+int main(void)
+{
+    Test *pTest;
+    bool rc;
+
+    pTest = ct_create("BACnet Property List", NULL);
+    /* individual tests */
+    rc = ct_addTestFunction(pTest, testPropList);
+    assert(rc);
+
+    ct_setStream(pTest, stdout);
+    ct_run(pTest);
+    (void)ct_report(pTest);
+    ct_destroy(pTest);
+
+    return 0;
+}
+#endif /* TEST_PROPLIST */
+#endif /* BAC_TEST */

@@ -1,0 +1,332 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\apps">
+      <UniqueIdentifier>{dd5a205b-5135-402c-92a3-3d50de7eeba5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\src">
+      <UniqueIdentifier>{34191122-199c-4dbe-87bb-7d74d053545d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\src\bacnet">
+      <UniqueIdentifier>{e9c6496a-9f01-4929-8bd6-cb4c531ad9eb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\src\bacnet\basic">
+      <UniqueIdentifier>{019f9b45-6bb1-455e-b723-952540889892}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\src\bacnet\basic\service">
+      <UniqueIdentifier>{9638f464-2a04-44b2-97b6-a727a220fbb1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\src\bacnet\basic\binding">
+      <UniqueIdentifier>{f3b755c9-aedf-4db3-a5c0-4e59ff90fbf7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\src\bacnet\ports">
+      <UniqueIdentifier>{ce5861c9-fe4c-4e31-89ba-f0047b92d645}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\src\bacnet\ports\win32">
+      <UniqueIdentifier>{d8a11451-7edf-4574-a156-8c2f19136395}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\src\bacnet\basic\tsm">
+      <UniqueIdentifier>{7b4a1074-2082-4e24-8503-ad1ac6e5269b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\src\bacnet\object">
+      <UniqueIdentifier>{a2094f7e-df76-4a18-84b3-5a4ac2c721d7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\src\bacnet\basic\bbmd">
+      <UniqueIdentifier>{4a5fd3ec-5de5-49e6-bb2a-66360e977a7f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\src\bacnet\basic\sys">
+      <UniqueIdentifier>{826193e4-87ae-45fd-b0ee-b614beeb2e0b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\src\bacnet\npdu">
+      <UniqueIdentifier>{ac0e9b06-3b4b-4a30-9ff2-a185fe9068c8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\src\bacnet\datalink">
+      <UniqueIdentifier>{9219a7e6-12a1-46eb-a1a6-4c51ba22f3f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\apps\whois">
+      <UniqueIdentifier>{5b7cb929-c2cd-4ab0-9739-265ec1ee03c9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\bacnet\whois.c">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\basic\service\h_iam.c">
+      <Filter>Source Files\src\bacnet\basic\service</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\basic\service\s_whois.c">
+      <Filter>Source Files\src\bacnet\basic\service</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ports\win32\bip-init.c">
+      <Filter>Source Files\src\bacnet\ports\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\basic\npdu\h_npdu.c">
+      <Filter>Source Files\src\bacnet\npdu</Filter>
+    </ClCompile>
+    <ClCompile Include="main.c">
+      <Filter>Source Files\apps\whois</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\bacdcode.c">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\npdu.c">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\basic\service\h_noserv.c">
+      <Filter>Source Files\src\bacnet\basic\service</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\basic\service\h_rp.c">
+      <Filter>Source Files\src\bacnet\basic\service</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\bacstr.c">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\datetime.c">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\iam.c">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\bacreal.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\rp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\abort.c">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\bacaddr.c">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\basic\binding\address.c">
+      <Filter>Source Files\src\bacnet\basic\binding</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\basic\service\h_apdu.c">
+      <Filter>Source Files\src\bacnet\basic\service</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\bacerror.c">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\bacint.c">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\bactext.c">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\dcc.c">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\reject.c">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\basic\bbmd\h_bbmd.c">
+      <Filter>Source Files\src\bacnet\basic\bbmd</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\datalink\bvlc.c">
+      <Filter>Source Files\src\bacnet\datalink</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\basic\sys\bigend.c">
+      <Filter>Source Files\src\bacnet\basic\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\basic\object\device.c">
+      <Filter>Source Files\src\bacnet\object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\bacapp.c">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\indtext.c">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ports\win32\datetime-init.c">
+      <Filter>Source Files\src\bacnet\ports\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\proplist.c">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\basic\tsm\tsm.c">
+      <Filter>Source Files\src\bacnet\basic\tsm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\basic\sys\filename.c">
+      <Filter>Source Files\src\bacnet\basic\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\basic\service\h_wp.c">
+      <Filter>Source Files\src\bacnet\basic\service</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\wp.c">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\datalink\dlenv.c">
+      <Filter>Source Files\src\bacnet\datalink</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bacnet\basic\object\netport.c">
+      <Filter>Source Files\src\bacnet\object</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\bacnet\basic\service\h_iam.h">
+      <Filter>Source Files\src\bacnet\basic\service</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\basic\service\s_whois.h">
+      <Filter>Source Files\src\bacnet\basic\service</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\basic\services.h">
+      <Filter>Source Files\src\bacnet\basic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\whois.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\basic\npdu\h_npdu.h">
+      <Filter>Source Files\src\bacnet\npdu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\bacdcode.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\bacdef.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\bacenum.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\bacint.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\bacnet_stack_exports.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\config.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\npdu.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\basic\service\h_noserv.h">
+      <Filter>Source Files\src\bacnet\basic\service</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\basic\service\h_rp.h">
+      <Filter>Source Files\src\bacnet\basic\service</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\apdu.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\bacstr.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\datetime.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\iam.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\version.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\bacreal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\abort.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\bacaddr.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\rp.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\basic\binding\address.h">
+      <Filter>Source Files\src\bacnet\basic\binding</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\basic\service\h_apdu.h">
+      <Filter>Source Files\src\bacnet\basic\service</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\bacerror.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\bactext.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\dcc.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\reject.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\basic\bbmd\h_bbmd.h">
+      <Filter>Source Files\src\bacnet\basic\bbmd</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\datalink\bip.h">
+      <Filter>Source Files\src\bacnet\datalink</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\datalink\bvlc.h">
+      <Filter>Source Files\src\bacnet\datalink</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\datalink\datalink.h">
+      <Filter>Source Files\src\bacnet\datalink</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\basic\sys\bigend.h">
+      <Filter>Source Files\src\bacnet\basic\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\basic\object\device.h">
+      <Filter>Source Files\src\bacnet\object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\bacapp.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\bits.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\indtext.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\proplist.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\rd.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\readrange.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\rpm.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\wp.h">
+      <Filter>Source Files\src\bacnet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ports\win32\bacport.h">
+      <Filter>Source Files\src\bacnet\ports\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\basic\tsm\tsm.h">
+      <Filter>Source Files\src\bacnet\basic\tsm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\basic\sys\filename.h">
+      <Filter>Source Files\src\bacnet\basic\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\basic\service\h_wp.h">
+      <Filter>Source Files\src\bacnet\basic\service</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\datalink\dlenv.h">
+      <Filter>Source Files\src\bacnet\datalink</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bacnet\basic\object\netport.h">
+      <Filter>Source Files\src\bacnet\object</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\..\..\.gitignore">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
+</Project>

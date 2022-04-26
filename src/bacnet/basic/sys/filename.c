@@ -29,17 +29,33 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+ *
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
 #include <stdio.h>
 #include <string.h>
-#include "bacnet/basic/sys/filename.h"
+#include "filename.h"
 
 /** @file filename.c  Function for filename manipulation */
 
-char *filename_remove_path(const char *filename_in)
+const char *filename_remove_path(
+    const char *filename_in)
 {
-    char *filename_out = (char *)filename_in;
+    const char *filename_out = (char *) filename_in;
 
     /* allow the device ID to be set */
     if (filename_in) {
@@ -52,9 +68,62 @@ char *filename_remove_path(const char *filename_in)
             filename_out++;
         } else {
             /* no slash in filename */
-            filename_out = (char *)filename_in;
+            filename_out = (char *) filename_in;
         }
     }
 
     return filename_out;
 }
+
+#ifdef TEST
+#include <assert.h>
+#include <string.h>
+
+#include "ctest.h"
+
+void testFilename(
+    Test * pTest)
+{
+    char *data1 = "c:\\Joshua\\run";
+    char *data2 = "/home/Anna/run";
+    char *data3 = "c:\\Program Files\\Christopher\\run.exe";
+    char *data4 = "//Mary/data/run";
+    char *data5 = "bin\\run";
+    char *filename = NULL;
+
+    filename = filename_remove_path(data1);
+    ct_test(pTest, strcmp("run", filename) == 0);
+    filename = filename_remove_path(data2);
+    ct_test(pTest, strcmp("run", filename) == 0);
+    filename = filename_remove_path(data3);
+    ct_test(pTest, strcmp("run.exe", filename) == 0);
+    filename = filename_remove_path(data4);
+    ct_test(pTest, strcmp("run", filename) == 0);
+    filename = filename_remove_path(data5);
+    ct_test(pTest, strcmp("run", filename) == 0);
+
+}
+
+#ifdef TEST_FILENAME
+int main(
+    void)
+{
+    Test *pTest;
+    bool rc;
+
+    pTest = ct_create("filename remove path", NULL);
+
+    /* individual tests */
+    rc = ct_addTestFunction(pTest, testFilename);
+    assert(rc);
+
+    ct_setStream(pTest, stdout);
+    ct_run(pTest);
+    (void) ct_report(pTest);
+
+    ct_destroy(pTest);
+
+    return 0;
+}
+#endif /* TEST_FILENAME */
+#endif /* TEST */

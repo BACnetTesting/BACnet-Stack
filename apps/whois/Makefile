@@ -1,6 +1,11 @@
-#Makefile to build BACnet Application using GCC compiler
+#Makefile to build BACnet Application for the Linux Port
 
-# Executable file name
+# tools - only if you need them.
+# Most platforms have this already defined
+# CC = gcc
+
+INCLUDES=-I$(realpath ../../src/eLib/osLayer/linux) -I$(realpath .)  -I$(realpath ../../src) -I$(realpath ../../ports/linux)
+
 TARGET = bacwi
 # BACnet objects that are used with this app
 BACNET_OBJECT_DIR = $(BACNET_SRC_DIR)/bacnet/basic/object
@@ -8,23 +13,45 @@ SRC = main.c \
 	$(BACNET_OBJECT_DIR)/client/device-client.c \
 	$(BACNET_OBJECT_DIR)/netport.c
 
+BACNET_BASIC_SRC += \
+	$(BACNET_SRC_DIR)/bacnet/basic/service/h_apdu.c \
+	$(BACNET_SRC_DIR)/bacnet/basic/service/h_iam.c \
+	$(BACNET_SRC_DIR)/bacnet/basic/service/h_noserv.c \
+	$(BACNET_SRC_DIR)/bacnet/basic/service/h_rp.c \
+	$(BACNET_SRC_DIR)/bacnet/basic/service/h_whois.c \
+	$(BACNET_SRC_DIR)/bacnet/basic/service/s_iam.c \
+	$(BACNET_SRC_DIR)/bacnet/basic/service/s_whois.c
+
+ELIB_DIR = $(BACNET_SRC_DIR)/eLib
+ELIB_SRC = $(ELIB_DIR)/util/eLibDebug.c \
+	$(ELIB_DIR)/osLayer/linux/btaDatalinkUDP.c 
+
 # TARGET_EXT is defined in apps/Makefile as .exe or nothing
 TARGET_BIN = ${TARGET}$(TARGET_EXT)
 
-OBJS += ${SRC:.c=.o}
+SRCS = $(SRC) $(BACNET_SRC) $(BACNET_BASIC_SRC) $(BACNET_PORT_SRC) $(ELIB_SRC)
 
-all: ${BACNET_LIB_TARGET} Makefile ${TARGET_BIN}
+OBJS += ${SRCS:.c=.o}
 
-${TARGET_BIN}: ${OBJS} Makefile ${BACNET_LIB_TARGET}
+.PHONY: all
+all: Makefile ${TARGET_BIN}
+
+${TARGET_BIN}: ${OBJS}
+	echo ================================================
+	echo ${INCLUDES}
+	echo ${CC} ${PFLAGS} ${OBJS} ${LFLAGS} -o $@
+	echo ================================================
 	${CC} ${PFLAGS} ${OBJS} ${LFLAGS} -o $@
 	size $@
 	cp $@ ../../bin
 
-${BACNET_LIB_TARGET}:
-	( cd ${BACNET_LIB_DIR} ; $(MAKE) clean ; $(MAKE) -s )
-
 .c.o:
-	${CC} -c ${CFLAGS} $*.c -o $@
+	echo ================================================
+	echo ${INCLUDES}
+	echo $(BACNET_OBJECT_DIR)
+	echo ${CC} -c ${CFLAGS} ${INCLUDES} $*.c -o $@
+	echo ================================================
+	${CC} -c ${CFLAGS} ${INCLUDES} $*.c -o $@
 
 .PHONY: depend
 depend:
@@ -33,7 +60,7 @@ depend:
 
 .PHONY: clean
 clean:
-	rm -f core ${TARGET_BIN} ${OBJS} $(TARGET).map ${BACNET_LIB_TARGET}
+	rm -f core ${TARGET_BIN} ${OBJS} $(TARGET).map
 
 .PHONY: include
 include: .depend

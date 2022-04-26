@@ -20,7 +20,23 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*********************************************************************/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef DATALINK_H
 #define DATALINK_H
 
@@ -28,10 +44,9 @@
 #include "bacnet/config.h"
 #include "bacnet/bacdef.h"
 
-#if defined(BACDL_ETHERNET)
+#if (BACDL_ETHERNET == 1)
 #include "bacnet/datalink/ethernet.h"
-#define MAX_MPDU ETHERNET_MPDU_MAX
-
+#error
 #define datalink_init ethernet_init
 #define datalink_send_pdu ethernet_send_pdu
 #define datalink_receive ethernet_receive
@@ -40,9 +55,8 @@
 #define datalink_get_my_address ethernet_get_my_address
 #define datalink_maintenance_timer(s)
 
-#elif defined(BACDL_ARCNET)
+#elif (BACDL_ARCNET == 1)
 #include "bacnet/datalink/arcnet.h"
-#define MAX_MPDU ARCNET_MPDU_MAX
 
 #define datalink_init arcnet_init
 #define datalink_send_pdu arcnet_send_pdu
@@ -52,9 +66,8 @@
 #define datalink_get_my_address arcnet_get_my_address
 #define datalink_maintenance_timer(s)
 
-#elif defined(BACDL_MSTP)
+#elif (BACDL_MSTP == 1)
 #include "bacnet/datalink/dlmstp.h"
-#define MAX_MPDU DLMSTP_MPDU_MAX
 
 #define datalink_init dlmstp_init
 #define datalink_send_pdu dlmstp_send_pdu
@@ -64,17 +77,17 @@
 #define datalink_get_my_address dlmstp_get_my_address
 #define datalink_maintenance_timer(s)
 
-#elif defined(BACDL_BIP)
+#elif (BACDL_BIP == 1)
 #include "bacnet/datalink/bip.h"
 #include "bacnet/datalink/bvlc.h"
 #include "bacnet/basic/bbmd/h_bbmd.h"
-#define MAX_MPDU BIP_MPDU_MAX
 
 #define datalink_init bip_init
 #define datalink_send_pdu bip_send_pdu
 #define datalink_receive bip_receive
 #define datalink_cleanup bip_cleanup
 #define datalink_get_broadcast_address bip_get_broadcast_address
+
 #ifdef BAC_ROUTING
 BACNET_STACK_EXPORT
 void routed_get_my_address(
@@ -83,14 +96,13 @@ void routed_get_my_address(
 #else
 #define datalink_get_my_address bip_get_my_address
 #endif
+
 #define datalink_maintenance_timer(s) bvlc_maintenance_timer(s)
 
-#elif defined(BACDL_BIP6)
+#elif (BACDL_BIP6)
 #include "bacnet/datalink/bip6.h"
 #include "bacnet/datalink/bvlc6.h"
 #include "bacnet/basic/bbmd6/h_bbmd6.h"
-#define MAX_MPDU BIP6_MPDU_MAX
-
 #define datalink_init bip6_init
 #define datalink_send_pdu bip6_send_pdu
 #define datalink_receive bip6_receive
@@ -110,12 +122,9 @@ extern "C" {
 #endif /* __cplusplus */
 
     BACNET_STACK_EXPORT
-    bool datalink_init(char *ifname);
-
-    BACNET_STACK_EXPORT
     int datalink_send_pdu(
         BACNET_ADDRESS * dest,
-        BACNET_NPDU_DATA * npdu_data,
+        BACNET_NPCI_DATA * npci_data,
         uint8_t * pdu,
         unsigned pdu_len);
 

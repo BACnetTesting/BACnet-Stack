@@ -29,14 +29,30 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+ *
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
 #include <stdint.h>
-#include "bacnet/bacenum.h"
-#include "bacnet/bacdef.h"
-#include "bacnet/npdu.h"
-#include "bacnet/dcc.h"
+//#include "bacnet/bacenum.h"
+//#include "bacnet/bacdef.h"
+//#include "bacnet/npdu.h"
+//#include "dcc.h"
 #include "bacnet/bacdcode.h"
+//#include "bacnet/basic/binding/address.h"
 #include "bacnet/iam.h"
 
 /** @file iam.c  Encode/Decode I-Am service */
@@ -52,18 +68,19 @@
  *
  * @return Total length of the apdu, zero otherwise.
  */
-int iam_encode_apdu(uint8_t *apdu,
+int iam_encode_apdu(
+    uint8_t *apdu,
     uint32_t device_id,
-    unsigned max_apdu,
+    uint16_t max_apdu,
     int segmentation,
     uint16_t vendor_id)
 {
-    int len = 0; /* length of each encoding */
-    int apdu_len = 0; /* total length of the apdu, return value */
+    int len = 0;        /* length of each encoding */
+    int apdu_len = 0;   /* total length of the apdu, return value */
 
     if (apdu) {
         apdu[0] = PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST;
-        apdu[1] = SERVICE_UNCONFIRMED_I_AM; /* service choice */
+        apdu[1] = SERVICE_UNCONFIRMED_I_AM;     /* service choice */
         apdu_len = 2;
         len = encode_application_object_id(
             &apdu[apdu_len], OBJECT_DEVICE, device_id);
@@ -91,19 +108,19 @@ int iam_encode_apdu(uint8_t *apdu,
  *
  * @return Total length of the apdu, zero otherwise.
  */
-int iam_decode_service_request(uint8_t *apdu,
+int iam_decode_service_request(
+    const uint8_t *apdu,
     uint32_t *pDevice_id,
-    unsigned *pMax_apdu,
+    uint16_t *pMax_apdu,
     int *pSegmentation,
     uint16_t *pVendor_id)
 {
-    int len = 0;
-    int apdu_len = 0; /* total length of the apdu, return value */
-    /* should be a Device Object */
-    BACNET_OBJECT_TYPE object_type = OBJECT_NONE;
-    uint32_t object_instance = 0;
-    uint8_t tag_number = 0;
-    uint32_t len_value = 0;
+    int len ;
+    int apdu_len = 0;   /* total length of the apdu, return value */
+    BACNET_OBJECT_TYPE object_type ;   /* should be a Device Object */
+    uint32_t object_instance ;
+    uint8_t tag_number ;
+    uint32_t len_value ;
     uint32_t enum_value = 0;
     BACNET_UNSIGNED_INTEGER unsigned_value = 0;
 
@@ -163,3 +180,81 @@ int iam_decode_service_request(uint8_t *apdu,
 
     return apdu_len;
 }
+
+#ifdef BAC_TEST
+#include <assert.h>
+#include <string.h>
+#include "ctest.h"
+
+int iam_decode_apdu(
+    uint8_t *apdu,
+    uint32_t *pDevice_id,
+    unsigned *pMax_apdu,
+    int *pSegmentation,
+    uint16_t *pVendor_id)
+{
+    int apdu_len = 0; /* total length of the apdu, return value */
+
+    /* valid data? */
+    if (!apdu)
+        return -1;
+    /* optional checking - most likely was already done prior to this call */
+    if (apdu[0] != PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST)
+        return -1;
+    if (apdu[1] != SERVICE_UNCONFIRMED_I_AM)
+        return -1;
+    apdu_len = iam_decode_service_request(
+        &apdu[2], pDevice_id, pMax_apdu, pSegmentation, pVendor_id);
+
+    return apdu_len;
+}
+
+void testIAm(
+    Test * pTest)
+{
+    uint8_t apdu[480] = { 0 };
+    int len = 0;
+    uint32_t device_id = 42;
+    uint16_t max_apdu = 480;
+    int segmentation = SEGMENTATION_NONE;
+    uint16_t vendor_id = 42;
+    uint32_t test_device_id = 0;
+    unsigned test_max_apdu = 0;
+    int test_segmentation = 0;
+    uint16_t test_vendor_id = 0;
+
+    len =
+        iam_encode_apdu(&apdu[0], device_id, max_apdu, segmentation, vendor_id);
+    ct_test(pTest, len != 0);
+
+    len = iam_decode_apdu(&apdu[0], &test_device_id, &test_max_apdu,
+        &test_segmentation, &test_vendor_id);
+
+    ct_test(pTest, len != -1);
+    ct_test(pTest, test_device_id == device_id);
+    ct_test(pTest, test_vendor_id == vendor_id);
+    ct_test(pTest, test_max_apdu == max_apdu);
+    ct_test(pTest, test_segmentation == segmentation);
+}
+
+#ifdef TEST_IAM
+int main(
+    void)
+{
+    Test *pTest;
+    bool rc;
+
+    pTest = ct_create("BACnet I-Am", NULL);
+    /* individual tests */
+    rc = ct_addTestFunction(pTest, testIAm);
+    assert(rc);
+
+    ct_setStream(pTest, stdout);
+    ct_run(pTest);
+    (void)ct_report(pTest);
+    ct_destroy(pTest);
+
+    return 0;
+}
+#endif /* TEST_IAM */
+#endif /* BAC_TEST */

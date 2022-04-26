@@ -131,6 +131,13 @@ extern "C" {
     void Integer_Value_Init(
         void);
 
+#ifdef BAC_TEST
+#include "ctest.h"
+    BACNET_STACK_EXPORT
+    void testInteger_Value(
+        Test * pTest);
+#endif
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

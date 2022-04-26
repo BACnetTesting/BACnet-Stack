@@ -21,68 +21,83 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- *********************************************************************/
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
 #include <stddef.h>
 #include <stdint.h>
 #include <errno.h>
 #include <string.h>
-#include "bacnet/config.h"
+#include "configProj.h"
 #include "bacnet/bacdef.h"
 #include "bacnet/bacdcode.h"
+#include "bacnet/basic/binding/address.h"
+#include "bacnet/basic/tsm/tsm.h"
 #include "bacnet/npdu.h"
 #include "bacnet/apdu.h"
+#include "bacnet/basic/object/device.h"
+//#include "datalink.h"
 #include "bacnet/dcc.h"
 #include "bacnet/timesync.h"
 /* some demo stuff needed */
-#include "bacnet/basic/binding/address.h"
-#include "bacnet/basic/object/device.h"
 #include "bacnet/basic/services.h"
-#include "bacnet/basic/tsm/tsm.h"
-#include "bacnet/datalink/datalink.h"
 
 /** @file s_ts.c  Send TimeSync requests. */
 
+#if BACNET_SVC_TS_A
 /**
  * Sends a TimeSync message to a specific destination
  *
- * @param dest - #BACNET_ADDRESS - the specific destination
+ * @param dest - #BACNET_PATH - the specific destination
  * @param bdate - #BACNET_DATE
  * @param btime - #BACNET_TIME
  */
+
 void Send_TimeSync_Remote(
-    BACNET_ADDRESS *dest, BACNET_DATE *bdate, BACNET_TIME *btime)
+    BACNET_ROUTE *dest,
+    DEVICE_OBJECT_DATA *sendingDev,
+    BACNET_DATE * bdate,
+    BACNET_TIME * btime)
 {
     int len = 0;
     int pdu_len = 0;
-#if PRINT_ENABLED
     int bytes_sent = 0;
-#endif
-    BACNET_NPDU_DATA npdu_data;
-    BACNET_ADDRESS my_address;
+    BACNET_NPCI_DATA npci_data;
+    //BACNET_PATH my_address;
 
-    if (!dcc_communication_enabled()) {
+    if (!dcc_communication_enabled(sendingDev))
         return;
-    }
 
-    datalink_get_my_address(&my_address);
+    //datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
-    pdu_len = npdu_encode_pdu(
-        &Handler_Transmit_Buffer[0], dest, &my_address, &npdu_data);
+    npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
+    pdu_len =
+        npdu_encode_pdu(&Handler_Transmit_Buffer[0], dest, NULL,
+        &npci_data);
     /* encode the APDU portion of the packet */
-    len = timesync_encode_apdu(&Handler_Transmit_Buffer[pdu_len], bdate, btime);
+    len =
+        timesync_encode_apdu(&Handler_Transmit_Buffer[pdu_len], bdate, btime);
     pdu_len += len;
     /* send it out the datalink */
-#if PRINT_ENABLED
-    bytes_sent =
-#endif
-        datalink_send_pdu(
-            dest, &npdu_data, &Handler_Transmit_Buffer[0], pdu_len);
-#if PRINT_ENABLED
-    if (bytes_sent <= 0)
-        fprintf(stderr, "Failed to Send Time-Synchronization Request (%s)!\n",
-            strerror(errno));
-#endif
+    //bytes_sent =
+    //    datalink_send _pdu(portParams, dest, &npci_data, &Handler_Transmit_Buffer[0],
+    //    pdu_len);
+
+    dest->portParams->SendPdu(dest->portParams, sendingDev, &dest->bacnetPath->localMac, &npci_data, &Handler_Transmit_Buffer[0],
+        pdu_len);
 }
 
 /**
@@ -91,56 +106,59 @@ void Send_TimeSync_Remote(
  * @param bdate - #BACNET_DATE
  * @param btime - #BACNET_TIME
  */
-void Send_TimeSync(BACNET_DATE *bdate, BACNET_TIME *btime)
+void Send_TimeSync(
+    PORT_SUPPORT *portParams,
+    DEVICE_OBJECT_DATA *pDev,
+    BACNET_DATE * bdate,
+    BACNET_TIME * btime)
 {
-    BACNET_ADDRESS dest;
+    BACNET_PATH dest;
 
-    datalink_get_broadcast_address(&dest);
-    Send_TimeSync_Remote(&dest, bdate, btime);
+    bacnet_path_set_broadcast_global(&dest);
+    Send_TimeSync_Remote(portParams, pDev, &dest, bdate, btime);
 }
 
 /**
  * Sends a UTC TimeSync message to a specific destination
  *
- * @param dest - #BACNET_ADDRESS - the specific destination
+ * @param dest - #BACNET_PATH - the specific destination
  * @param bdate - #BACNET_DATE
  * @param btime - #BACNET_TIME
  */
 void Send_TimeSyncUTC_Remote(
-    BACNET_ADDRESS *dest, BACNET_DATE *bdate, BACNET_TIME *btime)
+    BACNET_ROUTE *dest,
+    DEVICE_OBJECT_DATA *sendingDev,
+    BACNET_DATE * bdate,
+    BACNET_TIME * btime)
 {
-    int len = 0;
-    int pdu_len = 0;
-#if PRINT_ENABLED
-    int bytes_sent = 0;
-#endif
-    BACNET_NPDU_DATA npdu_data;
-    BACNET_ADDRESS my_address;
+    int len ;
+    int pdu_len ;
+    // int bytes_sent = 0;
+    BACNET_NPCI_DATA npci_data;
+    // BACNET_PATH my_address;
 
-    if (!dcc_communication_enabled()) {
+    if (!dcc_communication_enabled(sendingDev))
         return;
-    }
 
-    datalink_get_my_address(&my_address);
+    //datalink_get_my_address(&my_address);
     /* encode the NPDU portion of the packet */
-    npdu_encode_npdu_data(&npdu_data, false, MESSAGE_PRIORITY_NORMAL);
-    pdu_len = npdu_encode_pdu(
-        &Handler_Transmit_Buffer[0], dest, &my_address, &npdu_data);
+    npdu_setup_npci_data(&npci_data, false, MESSAGE_PRIORITY_NORMAL);
+    pdu_len =
+        npdu_encode_pdu(&dlcb->Handler_Transmit_Buffer[0], dest, NULL,
+        &npci_data);
     /* encode the APDU portion of the packet */
-    len = timesync_utc_encode_apdu(
-        &Handler_Transmit_Buffer[pdu_len], bdate, btime);
+    len =
+        timesync_utc_encode_apdu(&Handler_Transmit_Buffer[pdu_len],
+        bdate, btime);
     pdu_len += len;
-#if PRINT_ENABLED
-    bytes_sent =
-#endif
-        datalink_send_pdu(
-            dest, &npdu_data, &Handler_Transmit_Buffer[0], pdu_len);
-#if PRINT_ENABLED
-    if (bytes_sent <= 0)
-        fprintf(stderr,
-            "Failed to Send UTC-Time-Synchronization Request (%s)!\n",
-            strerror(errno));
-#endif
+    dlcb->optr = pdu_len ;
+    //bytes_sent =
+    //    datalink_send _pdu(portParams, dest, &npci_data, &Handler_Transmit_Buffer[0],
+    //    pdu_len);
+
+    dest->portParams->SendPdu(dest->portParams, sendingDev, &dest->bacnetPath->localMac, &npci_data, &Handler_Transmit_Buffer[0],
+        pdu_len);
+
 }
 
 /**
@@ -149,21 +167,28 @@ void Send_TimeSyncUTC_Remote(
  * @param bdate - #BACNET_DATE
  * @param btime - #BACNET_TIME
  */
-void Send_TimeSyncUTC(BACNET_DATE *bdate, BACNET_TIME *btime)
+void Send_TimeSyncUTC(
+    PORT_SUPPORT *portParams,
+    DEVICE_OBJECT_DATA *pDev,
+    BACNET_DATE * bdate,
+    BACNET_TIME * btime)
 {
-    BACNET_ADDRESS dest;
+    BACNET_PATH dest;
 
     datalink_get_broadcast_address(&dest);
-    Send_TimeSyncUTC_Remote(&dest, bdate, btime);
+    Send_TimeSyncUTC_Remote(portParams, pDev, &dest, bdate, btime);
 }
 
 /**
  * Sends a UTC TimeSync message using the local time from the device.
  */
-void Send_TimeSyncUTC_Device(void)
+void Send_TimeSyncUTC_Device(
+    PORT_SUPPORT *portParams,
+    DEVICE_OBJECT_DATA *pDev
+    )
 {
     int32_t utc_offset_minutes = 0;
-    bool dst = false;
+    bool dst ;
     BACNET_DATE_TIME local_time;
     BACNET_DATE_TIME utc_time;
 
@@ -175,16 +200,24 @@ void Send_TimeSyncUTC_Device(void)
     if (dst) {
         datetime_add_minutes(&utc_time, -60);
     }
-    Send_TimeSyncUTC(&utc_time.date, &utc_time.time);
+    Send_TimeSyncUTC(
+        portParams,
+        pDev, 
+        &utc_time.date, &utc_time.time);
 }
 
 /**
  * Sends a TimeSync message using the local time from the device.
  */
-void Send_TimeSync_Device(void)
+void Send_TimeSync_Device(
+    PORT_SUPPORT *portParams,
+    DEVICE_OBJECT_DATA *pDev
+    )
 {
     BACNET_DATE_TIME local_time;
 
     Device_getCurrentDateTime(&local_time);
-    Send_TimeSync(&local_time.date, &local_time.time);
+    Send_TimeSync(portParams, pDev, &local_time.date, &local_time.time);
 }
+
+#endif //#if BACNET_SVC_TS_A

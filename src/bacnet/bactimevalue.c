@@ -29,15 +29,30 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
+ *
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "bacnet/bacdcode.h"
-#include "bacnet/bactimevalue.h"
+#include "bacdcode.h"
+#include "bactimevalue.h"
 
-int bacapp_encode_time_value(uint8_t *apdu, BACNET_TIME_VALUE *value)
+int bacapp_encode_time_value(uint8_t * apdu,
+    BACNET_TIME_VALUE * value)
 {
     int len;
     int apdu_len = 0;
@@ -51,8 +66,9 @@ int bacapp_encode_time_value(uint8_t *apdu, BACNET_TIME_VALUE *value)
     return apdu_len;
 }
 
-int bacapp_encode_context_time_value(
-    uint8_t *apdu, uint8_t tag_number, BACNET_TIME_VALUE *value)
+int bacapp_encode_context_time_value(uint8_t * apdu,
+    uint8_t tag_number,
+    BACNET_TIME_VALUE * value)
 {
     int len;
     int apdu_len = 0;
@@ -69,50 +85,47 @@ int bacapp_encode_context_time_value(
     return apdu_len;
 }
 
-int bacapp_decode_time_value(uint8_t *apdu, BACNET_TIME_VALUE *value)
+int bacapp_decode_time_value(uint8_t * apdu,
+    BACNET_TIME_VALUE * value)
 {
     int len;
     int apdu_len = 0;
 
     len = decode_application_time(&apdu[apdu_len], &value->Time);
-    if (len <= 0) {
+    if (len <= 0)
         return -1;
-    }
     apdu_len += len;
 
     len = bacapp_decode_application_data(&apdu[apdu_len], 2048, &value->Value);
-    if (len <= 0) {
+    if (len <= 0)
         return -1;
-    }
     apdu_len += len;
 
     return apdu_len;
 }
 
-int bacapp_decode_context_time_value(
-    uint8_t *apdu, uint8_t tag_number, BACNET_TIME_VALUE *value)
+int bacapp_decode_context_time_value(uint8_t * apdu,
+    uint8_t tag_number,
+    BACNET_TIME_VALUE * value)
 {
     int len = 0;
     int section_length;
 
-    if (decode_is_opening_tag_number(&apdu[len], tag_number)) {
+    if (decode_is_opening_tag_number(&apdu[len], tag_number))
         len++;
-    } else {
+    else
         return -1;
-    }
 
     section_length = bacapp_decode_time_value(&apdu[len], value);
-    if (section_length > 0) {
+    if (section_length > 0)
         len += section_length;
-    } else {
+    else
         return -1;
-    }
 
-    if (decode_is_closing_tag_number(&apdu[len], tag_number)) {
+    if (decode_is_closing_tag_number(&apdu[len], tag_number))
         len++;
-    } else {
+    else
         return -1;
-    }
 
     return len;
 }

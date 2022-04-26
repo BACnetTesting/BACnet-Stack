@@ -29,12 +29,24 @@
  This exception does not invalidate any other reasons why a work
  based on this file might be covered by the GNU General Public
  License.
- -------------------------------------------
-####COPYRIGHTEND####*/
-#include <stdint.h>
+ *
+ *****************************************************************************************
+ *
+ *   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+ *
+ *   July 1, 2017    BITS    Modifications to this file have been made in compliance
+ *                           with original licensing.
+ *
+ *   This file contains changes made by BACnet Interoperability Testing
+ *   Services, Inc. These changes are subject to the permissions,
+ *   warranty terms and limitations above.
+ *   For more information: info@bac-test.com
+ *   For access to source code:  info@bac-test.com
+ *          or      www.github.com/bacnettesting/bacnet-stack
+ *
+ ****************************************************************************************/
+
 #include "bacnet/bacenum.h"
-#include "bacnet/bacdcode.h"
-#include "bacnet/bacdef.h"
 #include "bacnet/dcc.h"
 
 /** @file dcc.c  Enable/Disable Device Communication Control (DCC) */
@@ -44,9 +56,7 @@
 /* note: time duration is given in Minutes, but in order to be accurate,
    we need to count down in seconds. */
 /* infinite time duration is defined as 0 */
-static uint32_t DCC_Time_Duration_Seconds = 0;
-static BACNET_COMMUNICATION_ENABLE_DISABLE DCC_Enable_Disable =
-    COMMUNICATION_ENABLE;
+// For multi-device support, replace statics with pDev pointers
 /* password is optionally supported */
 
 /**
@@ -54,20 +64,24 @@ static BACNET_COMMUNICATION_ENABLE_DISABLE DCC_Enable_Disable =
  *
  * @return BACnet communication status
  */
-BACNET_COMMUNICATION_ENABLE_DISABLE dcc_enable_status(void)
+BACNET_COMMUNICATION_ENABLE_DISABLE dcc_enable_status(
+    DEVICE_OBJECT_DATA *pDev)
 {
-    return DCC_Enable_Disable;
+    return pDev->DCC_Enable_Disable;
 }
+
 
 /**
  * Returns, if network communications is enabled.
  *
  * @return true, if communication has been enabled.
  */
-bool dcc_communication_enabled(void)
+bool dcc_communication_enabled(
+    DEVICE_OBJECT_DATA *pDev)
 {
-    return (DCC_Enable_Disable == COMMUNICATION_ENABLE);
+    return (pDev->DCC_Enable_Disable == COMMUNICATION_ENABLE);
 }
+
 
 /**
  * When network communications are completely disabled,
@@ -76,10 +90,12 @@ bool dcc_communication_enabled(void)
  *
  * @return true, if communication has been disabled, false otherwise.
  */
-bool dcc_communication_disabled(void)
+bool dcc_communication_disabled(
+    DEVICE_OBJECT_DATA *pDev)
 {
-    return (DCC_Enable_Disable == COMMUNICATION_DISABLE);
+    return (pDev->DCC_Enable_Disable == COMMUNICATION_DISABLE);
 }
+
 
 /**
  * When the initiation of communications is disabled,
@@ -94,10 +110,12 @@ bool dcc_communication_disabled(void)
  *
  * @return true, if disabling initiation is set, false otherwise.
  */
-bool dcc_communication_initiation_disabled(void)
+bool dcc_communication_initiation_disabled(
+    DEVICE_OBJECT_DATA *pDev)
 {
-    return (DCC_Enable_Disable == COMMUNICATION_DISABLE_INITIATION);
+    return (pDev->DCC_Enable_Disable == COMMUNICATION_DISABLE_INITIATION);
 }
+
 
 /**
  * Returns the time duration in seconds.
@@ -105,10 +123,12 @@ bool dcc_communication_initiation_disabled(void)
  *
  * @return time in seconds
  */
-uint32_t dcc_duration_seconds(void)
+uint32_t dcc_duration_seconds(
+    DEVICE_OBJECT_DATA *pDev)
 {
-    return DCC_Time_Duration_Seconds;
+    return pDev->DCC_Time_Duration_Seconds;
 }
+
 
 /**
  * Called every second or so.  If more than one second,
@@ -116,20 +136,23 @@ uint32_t dcc_duration_seconds(void)
  *
  * @param seconds  Time passed in seconds, since last call.
  */
-void dcc_timer_seconds(uint32_t seconds)
+void dcc_timer_seconds(
+    DEVICE_OBJECT_DATA *pDev,
+    uint32_t seconds)
 {
-    if (DCC_Time_Duration_Seconds) {
-        if (DCC_Time_Duration_Seconds > seconds) {
-            DCC_Time_Duration_Seconds -= seconds;
+    if (pDev->DCC_Time_Duration_Seconds) {
+        if (pDev->DCC_Time_Duration_Seconds > seconds) {
+            pDev->DCC_Time_Duration_Seconds -= seconds;
         } else {
-            DCC_Time_Duration_Seconds = 0;
+            pDev->DCC_Time_Duration_Seconds = 0;
         }
         /* just expired - do something */
-        if (DCC_Time_Duration_Seconds == 0) {
-            DCC_Enable_Disable = COMMUNICATION_ENABLE;
+        if (pDev->DCC_Time_Duration_Seconds == 0) {
+            pDev->DCC_Enable_Disable = COMMUNICATION_ENABLE;
         }
     }
 }
+
 
 /**
  * Set DCC status using duration.
@@ -140,23 +163,26 @@ void dcc_timer_seconds(uint32_t seconds)
  * @return true/false
  */
 bool dcc_set_status_duration(
-    BACNET_COMMUNICATION_ENABLE_DISABLE status, uint16_t minutes)
+    DEVICE_OBJECT_DATA *pDev,
+    BACNET_COMMUNICATION_ENABLE_DISABLE status,
+    uint16_t minutes)
 {
     bool valid = false;
 
     /* valid? */
     if (status < MAX_BACNET_COMMUNICATION_ENABLE_DISABLE) {
-        DCC_Enable_Disable = status;
+        pDev->DCC_Enable_Disable = status;
         if (status == COMMUNICATION_ENABLE) {
-            DCC_Time_Duration_Seconds = 0;
+            pDev->DCC_Time_Duration_Seconds = 0;
         } else {
-            DCC_Time_Duration_Seconds = minutes * 60;
+            pDev->DCC_Time_Duration_Seconds = minutes * 60;
         }
         valid = true;
     }
 
     return valid;
 }
+
 
 #if BACNET_SVC_DCC_A
 /**
@@ -170,18 +196,19 @@ bool dcc_set_status_duration(
  *
  * @return Bytes encoded or zero on an error.
  */
-int dcc_encode_apdu(uint8_t *apdu,
+int dcc_encode_apdu(
+    uint8_t *apdu,
     uint8_t invoke_id,
-    uint16_t timeDuration, /* 0=optional */
+    uint16_t timeDuration,              /* 0=optional */
     BACNET_COMMUNICATION_ENABLE_DISABLE enable_disable,
-    BACNET_CHARACTER_STRING *password)
-{ /* NULL=optional */
-    int len = 0; /* length of each encoding */
-    int apdu_len = 0; /* total length of the apdu, return value */
+    BACNET_CHARACTER_STRING *password)  /* NULL=optional */
+{
+    int len = 0;        /* length of each encoding */
+    int apdu_len = 0;   /* total length of the apdu, return value */
 
     if (apdu) {
         apdu[0] = PDU_TYPE_CONFIRMED_SERVICE_REQUEST;
-        apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU);
+        apdu[1] = encode_max_segs_max_apdu(0, MAX_LPDU_IP);
         apdu[2] = invoke_id;
         apdu[3] = SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL;
         apdu_len = 4;
@@ -207,6 +234,7 @@ int dcc_encode_apdu(uint8_t *apdu,
 }
 #endif
 
+
 /**
  * Decode the service request only
  *
@@ -219,21 +247,22 @@ int dcc_encode_apdu(uint8_t *apdu,
  *
  * @return Bytes decoded, or BACNET_STATUS_ABORT or BACNET_STATUS_REJECT
  */
-int dcc_decode_service_request(uint8_t *apdu,
+int dcc_decode_service_request(
+    uint8_t *apdu,
     unsigned apdu_len_max,
     uint16_t *timeDuration,
     BACNET_COMMUNICATION_ENABLE_DISABLE *enable_disable,
     BACNET_CHARACTER_STRING *password)
 {
     int apdu_len = 0;
-    int len = 0;
+    int len;
     uint8_t tag_number = 0;
     uint32_t len_value_type = 0;
     BACNET_UNSIGNED_INTEGER decoded_unsigned = 0;
     uint32_t decoded_enum = 0;
     uint32_t password_length = 0;
 
-    if (apdu && apdu_len_max) {
+    if (apdu_len_max) {
         /* Tag 0: timeDuration, in minutes --optional-- */
         len = bacnet_unsigned_context_decode(
             &apdu[apdu_len], apdu_len_max - apdu_len, 0, &decoded_unsigned);
@@ -307,3 +336,157 @@ int dcc_decode_service_request(uint8_t *apdu,
 
     return apdu_len;
 }
+
+
+#ifdef BAC_TEST
+#include <assert.h>
+#include <string.h>
+#include "ctest.h"
+
+int dcc_decode_apdu(
+    uint8_t *apdu,
+    unsigned apdu_len,
+    uint8_t *invoke_id,
+    uint16_t *timeDuration,
+    BACNET_COMMUNICATION_ENABLE_DISABLE *enable_disable,
+    BACNET_CHARACTER_STRING *password)
+{
+    int len = 0;
+    unsigned offset = 0;
+
+    if (!apdu)
+        return -1;
+    /* optional checking - most likely was already done prior to this call */
+    if (apdu[0] != PDU_TYPE_CONFIRMED_SERVICE_REQUEST)
+        return -1;
+    /*  apdu[1] = encode_max_segs_max_apdu(0, MAX_APDU); */
+    *invoke_id = apdu[2]; /* invoke id - filled in by net layer */
+    if (apdu[3] != SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL)
+        return -1;
+    offset = 4;
+
+    if (apdu_len > offset) {
+        len = dcc_decode_service_request(&apdu[offset], apdu_len - offset,
+            timeDuration, enable_disable, password);
+    }
+
+    return len;
+}
+
+void test_DeviceCommunicationControlData(
+    Test *pTest,
+    uint8_t invoke_id,
+    uint16_t timeDuration,
+    BACNET_COMMUNICATION_ENABLE_DISABLE enable_disable,
+    BACNET_CHARACTER_STRING *password)
+{
+    uint8_t apdu[480] = { 0 };
+    int len = 0;
+    int apdu_len = 0;
+    uint8_t test_invoke_id = 0;
+    uint16_t test_timeDuration = 0;
+    BACNET_COMMUNICATION_ENABLE_DISABLE test_enable_disable;
+    BACNET_CHARACTER_STRING test_password;
+
+    len = dcc_encode_apdu(
+        &apdu[0], invoke_id, timeDuration, enable_disable, password);
+    ct_test(pTest, len != 0);
+    apdu_len = len;
+
+    len = dcc_decode_apdu(&apdu[0], apdu_len, &test_invoke_id,
+        &test_timeDuration, &test_enable_disable, &test_password);
+    ct_test(pTest, len != -1);
+    ct_test(pTest, test_invoke_id == invoke_id);
+    ct_test(pTest, test_timeDuration == timeDuration);
+    ct_test(pTest, test_enable_disable == enable_disable);
+    ct_test(pTest, characterstring_same(&test_password, password));
+}
+
+
+void test_DeviceCommunicationControl(
+    Test *pTest)
+{
+    uint8_t invoke_id = 128;
+    uint16_t timeDuration = 0;
+    BACNET_COMMUNICATION_ENABLE_DISABLE enable_disable;
+    BACNET_CHARACTER_STRING password;
+
+    timeDuration = 0;
+    enable_disable = COMMUNICATION_DISABLE_INITIATION;
+    characterstring_init_ansi(&password, "John 3:16");
+    test_DeviceCommunicationControlData(
+        pTest, invoke_id, timeDuration, enable_disable, &password);
+
+    timeDuration = 12345;
+    enable_disable = COMMUNICATION_DISABLE;
+    test_DeviceCommunicationControlData(
+        pTest, invoke_id, timeDuration, enable_disable, NULL);
+
+    return;
+}
+
+void test_DeviceCommunicationControlMalformedData(Test *pTest)
+{
+    /* payload with enable-disable, and password with wrong characterstring
+     * length */
+    uint8_t payload_1[] = { 0x19, 0x00, 0x2a, 0x00, 0x41 };
+    /* payload with enable-disable, and password with wrong characterstring
+     * length */
+    uint8_t payload_2[] = { 0x19, 0x00, 0x2d, 0x55, 0x00, 0x66, 0x69, 0x73,
+        0x74, 0x65, 0x72 };
+    /* payload with enable-disable - wrong context tag number for password */
+    uint8_t payload_3[] = { 0x19, 0x01, 0x3d, 0x09, 0x00, 0x66, 0x69, 0x73,
+        0x74, 0x65, 0x72 };
+    /* payload with duration, enable-disable, and password */
+    uint8_t payload_4[] = { 0x00, 0x05, 0xf1, 0x11, 0x0a, 0x00, 0x19, 0x00,
+        0x2d, 0x09, 0x00, 0x66, 0x69, 0x73, 0x74, 0x65, 0x72 };
+    /* payload submitted with bug report */
+    uint8_t payload_5[] = { 0x0d, 0xff, 0x80, 0x00, 0x03, 0x1a, 0x0a, 0x19,
+        0x00, 0x2a, 0x00, 0x41 };
+    int len = 0;
+    uint8_t test_invoke_id = 0;
+    uint16_t test_timeDuration = 0;
+    BACNET_COMMUNICATION_ENABLE_DISABLE test_enable_disable;
+    BACNET_CHARACTER_STRING test_password;
+
+    len = dcc_decode_apdu(&payload_1[0], sizeof(payload_1), &test_invoke_id,
+        &test_timeDuration, &test_enable_disable, &test_password);
+    ct_test(pTest, len == BACNET_STATUS_ERROR);
+    len = dcc_decode_apdu(&payload_2[0], sizeof(payload_2), &test_invoke_id,
+        &test_timeDuration, &test_enable_disable, &test_password);
+    ct_test(pTest, len == BACNET_STATUS_ERROR);
+    len = dcc_decode_apdu(&payload_3[0], sizeof(payload_3), &test_invoke_id,
+        &test_timeDuration, &test_enable_disable, &test_password);
+    ct_test(pTest, len == BACNET_STATUS_ERROR);
+    len = dcc_decode_apdu(&payload_4[0], sizeof(payload_4), &test_invoke_id,
+        &test_timeDuration, &test_enable_disable, &test_password);
+    ct_test(pTest, len == BACNET_STATUS_ABORT);
+    len = dcc_decode_apdu(&payload_5[0], sizeof(payload_5), &test_invoke_id,
+        &test_timeDuration, &test_enable_disable, &test_password);
+    ct_test(pTest, len == BACNET_STATUS_ERROR);
+}
+
+#ifdef TEST_DEVICE_COMMUNICATION_CONTROL
+int main(
+    void)
+{
+    Test *pTest;
+    bool rc;
+
+    pTest = ct_create("BACnet DeviceCommunicationControl", NULL);
+    /* individual tests */
+    rc = ct_addTestFunction(pTest, test_DeviceCommunicationControl);
+    assert(rc);
+    rc =
+        ct_addTestFunction(pTest, test_DeviceCommunicationControlMalformedData);
+    assert(rc);
+
+    ct_setStream(pTest, stdout);
+    ct_run(pTest);
+    (void)ct_report(pTest);
+    ct_destroy(pTest);
+
+    return 0;
+}
+#endif /* TEST_DEVICE_COMMUNICATION_CONTROL */
+#endif /* BAC_TEST */
