@@ -20,14 +20,30 @@
 * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*********************************************************************/
+*
+*****************************************************************************************
+*
+*   Modifications Copyright (C) 2017 BACnet Interoperability Testing Services, Inc.
+*
+*   July 1, 2017    BITS    Modifications to this file have been made in compliance
+*                           with original licensing.
+*
+*   This file contains changes made by BACnet Interoperability Testing
+*   Services, Inc. These changes are subject to the permissions,
+*   warranty terms and limitations above.
+*   For more information: info@bac-test.com
+*   For access to source code:  info@bac-test.com
+*          or      www.github.com/bacnettesting/bacnet-stack
+*
+****************************************************************************************/
+
 #ifndef ADDRESS_H
 #define ADDRESS_H
 
-#include <stddef.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include "bacdef.h"
+//#include <stddef.h>
+//#include <stdint.h>
+//#include <stdbool.h>
+//#include "bacdef.h"
 #include "readrange.h"
 #include "datalink.h"
 
@@ -86,12 +102,12 @@ unsigned address_count(
 //    BACNET_PATH * src);
 
 bool address_bind_request(
-    uint32_t device_id,
+    const uint32_t device_id,
     uint16_t *max_apdu,
     BACNET_ROUTE * src);
 
 bool address_device_bind_request(
-    uint32_t device_id,
+    const uint32_t device_id,
     uint32_t * device_ttl,
     uint16_t *max_apdu,
     BACNET_ROUTE * src);
@@ -105,9 +121,13 @@ int address_list_encode(
     uint8_t * apdu,
     uint16_t apdu_len);
 
+#if  (LIST_MANIPULATION == 1)
+
 int rr_address_list_encode(
     uint8_t * apdu,
     BACNET_READ_RANGE_DATA * pRequest);
+
+#endif
 
 void address_set_device_TTL(
     uint32_t device_id,

@@ -32,54 +32,63 @@
 #include "wp.h"
 #include "rp.h"
 
+typedef struct octetstring_value_descr {
+    unsigned Event_State:3;
+    bool Out_Of_Service;
+    BACNET_OCTET_STRING Present_Value;
+} OCTETSTRING_VALUE_DESCR;
 
-    typedef struct octetstring_value_descr {
-        unsigned Event_State:3;
-        bool Out_Of_Service;
-        BACNET_OCTET_STRING Present_Value;
-    } OCTETSTRING_VALUE_DESCR;
 
+void OctetString_Value_Property_Lists(const BACNET_PROPERTY_ID **pRequired,
+    const BACNET_PROPERTY_ID **pOptional,
+    const BACNET_PROPERTY_ID **pProprietary);
 
-    void OctetString_Value_Property_Lists(const int **pRequired,
-        const int **pOptional,
-        const int **pProprietary);
-    bool OctetString_Value_Valid_Instance(uint32_t object_instance);
-    unsigned OctetString_Value_Count(void);
-    uint32_t OctetString_Value_Index_To_Instance(unsigned index);
-    unsigned OctetString_Value_Instance_To_Index(uint32_t object_instance);
+bool OctetString_Value_Valid_Instance(uint32_t object_instance);
 
-    bool OctetString_Value_Object_Name(uint32_t object_instance,
-        BACNET_CHARACTER_STRING * object_name);
+unsigned OctetString_Value_Count(void);
 
-    int OctetString_Value_Read_Property(BACNET_READ_PROPERTY_DATA * rpdata);
+uint32_t OctetString_Value_Index_To_Instance(unsigned index);
 
-    bool OctetString_Value_Write_Property(BACNET_WRITE_PROPERTY_DATA *
-        wp_data);
+unsigned OctetString_Value_Instance_To_Index(uint32_t object_instance);
 
-    bool OctetString_Value_Present_Value_Set(uint32_t object_instance,
-        BACNET_OCTET_STRING * value,
-        uint8_t priority);
-    BACNET_OCTET_STRING *OctetString_Value_Present_Value(uint32_t
-        object_instance);
+bool OctetString_Value_Object_Name(uint32_t object_instance,
+    BACNET_CHARACTER_STRING * object_name);
 
-    bool OctetString_Value_Change_Of_Value(uint32_t instance);
-    void OctetString_Value_Change_Of_Value_Clear(uint32_t instance);
-    bool OctetString_Value_Encode_Value_List(uint32_t object_instance,
-        BACNET_PROPERTY_VALUE * value_list);
+int OctetString_Value_Read_Property(BACNET_READ_PROPERTY_DATA * rpdata);
 
-    char *OctetString_Value_Description(uint32_t instance);
-    bool OctetString_Value_Description_Set(uint32_t instance,
-        char *new_name);
+bool OctetString_Value_Write_Property(BACNET_WRITE_PROPERTY_DATA *
+    wp_data);
 
-    bool OctetString_Value_Out_Of_Service(uint32_t instance);
-    void OctetString_Value_Out_Of_Service_Set(uint32_t instance,
-        bool oos_flag);
+bool OctetString_Value_Present_Value_Set(uint32_t object_instance,
+    BACNET_OCTET_STRING * value,
+    uint8_t priority);
+
+BACNET_OCTET_STRING *OctetString_Value_Present_Value(uint32_t
+    object_instance);
+
+bool OctetString_Value_Change_Of_Value(uint32_t instance);
+
+void OctetString_Value_Change_Of_Value_Clear(uint32_t instance);
+
+bool OctetString_Value_Encode_Value_List(uint32_t object_instance,
+    BACNET_PROPERTY_VALUE * value_list);
+
+char *OctetString_Value_Description(uint32_t instance);
+
+bool OctetString_Value_Description_Set(uint32_t instance,
+    char *new_name);
+
+bool OctetString_Value_Out_Of_Service(uint32_t instance);
+
+void OctetString_Value_Out_Of_Service_Set(uint32_t instance,
+    bool oos_flag);
 
     /* note: header of Intrinsic_Reporting function is required
-       even when INTRINSIC_REPORTING is not defined */
-    void OctetString_Value_Intrinsic_Reporting(uint32_t object_instance);
+    even when INTRINSIC_REPORTING_B is not defined */
+void OctetString_Value_Intrinsic_Reporting(
+    uint32_t object_instance);
 
-    void OctetString_Value_Init(void);
+void OctetString_Value_Init(void);
 
 #ifdef TEST
 #include "ctest.h"
