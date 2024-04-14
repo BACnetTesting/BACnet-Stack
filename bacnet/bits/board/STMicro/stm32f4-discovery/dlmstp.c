@@ -900,7 +900,7 @@ void dlmstp_automac_hander(
         break;
     }
 }
-#endif
+#endif
 
 // call this as often as possible, 1 to 5ms _at least_, per the spec.
 void dlmstp_tick(
@@ -913,7 +913,7 @@ void dlmstp_tick(
     if (This_Station == 255) {
         automac_enabled_set(true);
     }
-#endif
+#endif
     if (mstp_port->receive_state == MSTP_RECEIVE_STATE_IDLE) {
         transmitting = MSTP_Transmit_FSM(mstp_port);
     }

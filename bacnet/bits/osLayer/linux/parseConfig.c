@@ -148,7 +148,7 @@ bool read_config(char *filepath)
     config_destroy(&cfg);
     
     AlignApplicationWithPort();
-
+
     return true;
 }
 
