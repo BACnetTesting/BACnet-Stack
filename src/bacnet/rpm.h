@@ -1,36 +1,22 @@
-/**************************************************************************
-*
-* Copyright (C) 2012 Steve Karg <skarg@users.sourceforge.net>
-*
-* Permission is hereby granted, free of charge, to any person obtaining
-* a copy of this software and associated documentation files (the
-* "Software"), to deal in the Software without restriction, including
-* without limitation the rights to use, copy, modify, merge, publish,
-* distribute, sublicense, and/or sell copies of the Software, and to
-* permit persons to whom the Software is furnished to do so, subject to
-* the following conditions:
-*
-* The above copyright notice and this permission notice shall be included
-* in all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*********************************************************************/
-#ifndef RPM_H
-#define RPM_H
+/**
+ * @file
+ * @brief BACnet ReadPropertyMultiple -Request and -Ack encode and decode 
+ * API header file
+ * @author Steve Karg <skarg@users.sourceforge.net>
+ * @date 2005
+ * @copyright SPDX-License-Identifier: MIT
+ */
+#ifndef BACNET_READ_PROPERTY_MULTIPLE_H
+#define BACNET_READ_PROPERTY_MULTIPLE_H
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "bacnet/bacnet_stack_exports.h"
-#include "bacnet/bacenum.h"
+/* BACnet Stack defines - first */
 #include "bacnet/bacdef.h"
+/* BACnet Stack API */
 #include "bacnet/bacapp.h"
 #include "bacnet/proplist.h"
+#include "bacnet/rp.h"
 /*
  * Bundle together commonly used data items for convenience when calling
  * rpm helper functions.
@@ -106,6 +92,16 @@ extern "C" {
     BACNET_STACK_EXPORT
     int rpm_encode_apdu_object_end(
         uint8_t * apdu);
+
+    BACNET_STACK_EXPORT
+    int read_property_multiple_request_encode(
+        uint8_t *apdu,
+        BACNET_READ_ACCESS_DATA *data); 
+    BACNET_STACK_EXPORT
+    size_t read_property_multiple_request_service_encode(
+        uint8_t *apdu, 
+        size_t apdu_size, 
+        BACNET_READ_ACCESS_DATA *data);
 
     BACNET_STACK_EXPORT
     int rpm_encode_apdu(
@@ -184,6 +180,13 @@ extern "C" {
         unsigned apdu_len,
         BACNET_PROPERTY_ID * object_property,
         BACNET_ARRAY_INDEX * array_index);
+    BACNET_STACK_EXPORT
+    void rpm_ack_object_property_process(
+        uint8_t *apdu,
+        unsigned apdu_len,
+        uint32_t device_id,
+        BACNET_READ_PROPERTY_DATA *rp_data,
+        read_property_ack_process callback);
 
 #ifdef __cplusplus
 }

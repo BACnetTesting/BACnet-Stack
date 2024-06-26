@@ -31,7 +31,9 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "bacnet/bacnet_stack_exports.h"
+/* BACnet Stack defines - first */
+#include "bacnet/bacdef.h"
+/* BACnet Stack API */
 #include "bacnet/indtext.h"
 
 #ifdef __cplusplus
@@ -63,10 +65,7 @@ extern "C" {
         const char *search_name,
         unsigned *found_index);
     BACNET_STACK_EXPORT
-    const char *bactext_notify_type_name(
-        unsigned index);
-    BACNET_STACK_EXPORT
-    const char *bactext_event_type_name(
+    bool bactext_property_name_proprietary(
         unsigned index);
     BACNET_STACK_EXPORT
     const char *bactext_property_name(
@@ -83,6 +82,9 @@ extern "C" {
     bool bactext_property_strtol(
         const char *search_name,
         unsigned *found_index);
+    BACNET_STACK_EXPORT
+    bool bactext_engineering_unit_name_proprietary(
+        unsigned index);
     BACNET_STACK_EXPORT
     const char *bactext_engineering_unit_name(
         unsigned index);
@@ -193,6 +195,20 @@ extern "C" {
     BACNET_STACK_EXPORT
     const char *bactext_lighting_operation_name(
         unsigned index);
+
+    BACNET_STACK_EXPORT
+    bool bactext_lighting_operation_strtol(
+        const char *search_name, 
+        unsigned *found_index);
+
+    BACNET_STACK_EXPORT
+    const char *bactext_binary_lighting_pv_name(
+        unsigned index);
+
+    BACNET_STACK_EXPORT
+    bool bactext_binary_lighting_pv_names_strtol(
+        const char *search_name, 
+        unsigned *found_index);
 
     BACNET_STACK_EXPORT
 	const char *bactext_lighting_in_progress(

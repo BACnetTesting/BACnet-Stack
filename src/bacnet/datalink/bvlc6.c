@@ -35,7 +35,10 @@
 #include <stdint.h> /* for standard integer types uint8_t etc. */
 #include <stdbool.h> /* for the standard bool type. */
 #include <stdio.h>
-#include "bacnet/bacenum.h"
+/* BACnet Stack defines - first */
+#include "bacnet/bacdef.h"
+/* BACnet Stack API */
+#include "bacnet/bacapp.h"
 #include "bacnet/bacdcode.h"
 #include "bacnet/bacint.h"
 #include "bacnet/datalink/bvlc6.h"
@@ -641,6 +644,32 @@ bool bvlc6_address_get(BACNET_IP6_ADDRESS *addr,
     return status;
 }
 
+/**
+ * @brief Shift the buffer pointer and decrease the size after an snprintf
+ * @param len - number of bytes (excluding terminating NULL byte) from snprintf
+ * @param buf - pointer to the buffer pointer
+ * @param buf_size - pointer to the buffer size
+ * @return number of bytes (excluding terminating NULL byte) from snprintf
+ */
+static int snprintf_shift(int len, char **buf, size_t *buf_size)
+{
+    if (buf) {
+        if (*buf) {
+            *buf += len;
+        }
+    }
+    if (buf_size) {
+        if ((*buf_size) >= len) {
+            *buf_size -= len;
+        } else {
+            *buf_size = 0;
+        }
+    }
+
+    return len;
+}
+
+
 /** Convert IPv6 Address from ASCII
  *
  * IPv6 addresses are represented as eight groups, separated by colons,
@@ -670,8 +699,7 @@ bool bvlc6_address_get(BACNET_IP6_ADDRESS *addr,
  *  input, excluding the trailing null.
  * @note buf and buf_size may be null and zero to return only the size
  */
-int bvlc6_address_to_ascii(BACNET_IP6_ADDRESS *addr, char *buf,
-    size_t buf_size)
+int bvlc6_address_to_ascii(BACNET_IP6_ADDRESS *addr, char *buf, size_t buf_size)
 {
     uint16_t a;
     unsigned int i;
@@ -685,46 +713,22 @@ int bvlc6_address_to_ascii(BACNET_IP6_ADDRESS *addr, char *buf,
     if (!buf) {
         return n;
     }
-    for(i = 0; i < IP6_ADDRESS_MAX; i += 2) {
+    for (i = 0; i < IP6_ADDRESS_MAX; i += 2) {
         a = (addr->address[i] << 8) + addr->address[i + 1];
         if ((a == 0) && (f >= 0)) {
             if (f++ == 0) {
                 len = snprintf(buf, buf_size, "::");
-                if (buf) {
-                    buf += len;
-                }
-                if (len > buf_size) {
-                    buf_size = 0;
-                } else {
-                    buf_size -= len;
-                }
-                n += len;
+                n += snprintf_shift(len, &buf, &buf_size);
             }
         } else {
             if (f > 0) {
                 f = -1;
             } else if (i > 0) {
                 len = snprintf(buf, buf_size, ":");
-                if (buf) {
-                    buf += len;
-                }
-                if (len > buf_size) {
-                    buf_size = 0;
-                } else {
-                    buf_size -= len;
-                }
-                n += len;
+                n += snprintf_shift(len, &buf, &buf_size);
             }
             len = snprintf(buf, buf_size, "%x", a);
-            if (buf) {
-                buf += len;
-            }
-            if (len > buf_size) {
-                buf_size = 0;
-            } else {
-                buf_size -= len;
-            }
-            n += len;
+            n += snprintf_shift(len, &buf, &buf_size);
         }
     }
 
@@ -1467,13 +1471,15 @@ int bvlc6_decode_secure_bvll(uint8_t *pdu,
     int bytes_consumed = 0;
     uint16_t i = 0;
 
-    if (pdu && sbuf) {
+    if (pdu) {
         if (sbuf_len) {
             *sbuf_len = pdu_len;
         }
-        if (pdu_len) {
+        if (pdu_len && sbuf && sbuf_size) {
             for (i = 0; i < pdu_len; i++) {
-                sbuf[i] = pdu[i];
+                if (i < sbuf_size) {
+                    sbuf[i] = pdu[i];
+                }
             }
         }
         bytes_consumed = (int)pdu_len;

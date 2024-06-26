@@ -10,15 +10,21 @@ SRC = main.c \
 	$(BACNET_OBJECT_DIR)/ao.c \
 	$(BACNET_OBJECT_DIR)/av.c \
 	$(BACNET_OBJECT_DIR)/bi.c \
+	$(BACNET_OBJECT_DIR)/bitstring_value.c \
 	$(BACNET_OBJECT_DIR)/bo.c \
+	$(BACNET_OBJECT_DIR)/blo.c \
 	$(BACNET_OBJECT_DIR)/bv.c \
+	$(BACNET_OBJECT_DIR)/calendar.c \
 	$(BACNET_OBJECT_DIR)/channel.c \
+	$(BACNET_OBJECT_DIR)/color_object.c \
+	$(BACNET_OBJECT_DIR)/color_temperature.c \
 	$(BACNET_OBJECT_DIR)/command.c \
 	$(BACNET_OBJECT_DIR)/csv.c \
 	$(BACNET_OBJECT_DIR)/iv.c \
 	$(BACNET_OBJECT_DIR)/lc.c \
 	$(BACNET_OBJECT_DIR)/lo.c \
 	$(BACNET_OBJECT_DIR)/lsp.c \
+	$(BACNET_OBJECT_DIR)/lsz.c \
 	$(BACNET_OBJECT_DIR)/ms-input.c \
 	$(BACNET_OBJECT_DIR)/mso.c \
 	$(BACNET_OBJECT_DIR)/msv.c \
@@ -26,8 +32,10 @@ SRC = main.c \
 	$(BACNET_OBJECT_DIR)/piv.c \
 	$(BACNET_OBJECT_DIR)/nc.c  \
 	$(BACNET_OBJECT_DIR)/netport.c  \
+	$(BACNET_OBJECT_DIR)/time_value.c \
 	$(BACNET_OBJECT_DIR)/trendlog.c \
 	$(BACNET_OBJECT_DIR)/schedule.c \
+	$(BACNET_OBJECT_DIR)/structured_view.c \
 	$(BACNET_OBJECT_DIR)/access_credential.c \
 	$(BACNET_OBJECT_DIR)/access_door.c \
 	$(BACNET_OBJECT_DIR)/access_point.c \

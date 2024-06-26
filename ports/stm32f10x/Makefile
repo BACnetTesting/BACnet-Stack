@@ -13,6 +13,9 @@ LIBRARY_STM32 = ./drivers/src
 LIBRARY_STM32_INCLUDES = ./drivers/inc
 LIBRARY_CMSIS = ./CMSIS
 
+CSTACK_TOOL := $(BACNET_DIR)/tools/avstack/avstack.pl
+MEMAP_TOOL := $(BACNET_DIR)/tools/memap/memap.py
+
 INCLUDES = -I$(PLATFORM_DIR)
 INCLUDES += -I$(LIBRARY_STM32_INCLUDES)
 INCLUDES += -I$(LIBRARY_CMSIS)
@@ -20,11 +23,9 @@ INCLUDES += -I$(BACNET_INCLUDE)
 
 PLATFORM_SRC = \
 	$(PLATFORM_DIR)/main.c \
-	$(PLATFORM_DIR)/automac.c \
 	$(PLATFORM_DIR)/bacnet.c \
 	$(PLATFORM_DIR)/bo.c \
 	$(PLATFORM_DIR)/device.c \
-	$(PLATFORM_DIR)/dlmstp.c \
 	$(PLATFORM_DIR)/netport.c \
 	$(PLATFORM_DIR)/led.c \
 	$(PLATFORM_DIR)/rs485.c \
@@ -46,6 +47,7 @@ BASIC_SRC = \
 	$(BACNET_BASIC)/service/s_iam.c \
 	$(BACNET_BASIC)/service/s_ihave.c \
 	$(BACNET_BASIC)/tsm/tsm.c \
+	$(BACNET_BASIC)/sys/debug.c \
 	$(BACNET_BASIC)/sys/ringbuf.c \
 	$(BACNET_BASIC)/sys/fifo.c \
 	$(BACNET_BASIC)/sys/mstimer.c
@@ -55,14 +57,21 @@ BACNET_SRC = \
 	$(BACNET_CORE)/bacaddr.c \
 	$(BACNET_CORE)/bacapp.c \
 	$(BACNET_CORE)/bacdcode.c \
+	$(BACNET_CORE)/bacdest.c \
+	$(BACNET_CORE)/bacdevobjpropref.c \
 	$(BACNET_CORE)/bacerror.c \
 	$(BACNET_CORE)/bacint.c \
 	$(BACNET_CORE)/bacreal.c \
 	$(BACNET_CORE)/bacstr.c \
-	$(BACNET_CORE)/datalink/crc.c \
+	$(BACNET_CORE)/bactimevalue.c \
+	$(BACNET_CORE)/calendar_entry.c \
+	$(BACNET_CORE)/datetime.c \
+	$(BACNET_CORE)/dailyschedule.c \
 	$(BACNET_CORE)/dcc.c \
+	$(BACNET_CORE)/hostnport.c \
 	$(BACNET_CORE)/iam.c \
 	$(BACNET_CORE)/ihave.c \
+	$(BACNET_CORE)/indtext.c \
 	$(BACNET_CORE)/lighting.c \
 	$(BACNET_CORE)/memcopy.c \
 	$(BACNET_CORE)/npdu.c \
@@ -71,9 +80,19 @@ BACNET_SRC = \
 	$(BACNET_CORE)/reject.c \
 	$(BACNET_CORE)/rp.c \
 	$(BACNET_CORE)/rpm.c \
+	$(BACNET_CORE)/special_event.c \
+	$(BACNET_CORE)/timestamp.c \
+	$(BACNET_CORE)/weeklyschedule.c \
 	$(BACNET_CORE)/whohas.c \
 	$(BACNET_CORE)/whois.c \
 	$(BACNET_CORE)/wp.c
+
+DATALINK_SRC = \
+	$(BACNET_CORE)/datalink/cobs.c \
+	$(BACNET_CORE)/datalink/crc.c \
+	$(BACNET_CORE)/datalink/dlmstp.c \
+	$(BACNET_CORE)/datalink/mstp.c \
+	$(BACNET_CORE)/datalink/mstptext.c
 
 STM32_SRC = \
 	$(LIBRARY_STM32)/stm32f10x_adc.c \
@@ -104,17 +123,20 @@ STM32_SRC = \
 CSRC = $(PLATFORM_SRC)
 CSRC += $(BASIC_SRC)
 CSRC += $(BACNET_SRC)
+CSRC += $(DATALINK_SRC)
 CSRC += $(STM32_SRC)
 
 ASRC = $(LIBRARY_CMSIS)/gcc_ride7/startup_stm32f10x_xl.s
 
 #Set the toolchain command names (only the ones needed are defined)
+# sudo apt install gcc-arm-none-eabi
 PREFIX ?= arm-none-eabi-
 
 CC = $(PREFIX)gcc
 OBJCOPY = $(PREFIX)objcopy
 OBJDUMP = $(PREFIX)objdump
 AR = $(PREFIX)ar
+NM = $(PREFIX)nm
 SIZE = $(PREFIX)size
 
 LDSCRIPT = $(PLATFORM_DIR)/stm32f10x.ld
@@ -130,8 +152,8 @@ OPTIMIZE_FLAGS := -Os -ggdb
 OPTIMIZE_FLAGS += -DNDEBUG
 
 BACNET_FLAGS = -DBACDL_MSTP=1
-BACNET_FLAGS += -DBACAPP_ALL
-BACNET_FLAGS += -DMAX_APDU=480
+BACNET_FLAGS += -DBACAPP_MINIMAL
+BACNET_FLAGS += -DMAX_APDU=1476
 BACNET_FLAGS += -DBIG_ENDIAN=0
 BACNET_FLAGS += -DMAX_TSM_TRANSACTIONS=0
 BACNET_FLAGS += -DMAX_CHARACTER_STRING_BYTES=64
@@ -139,6 +161,10 @@ BACNET_FLAGS += -DMAX_OCTET_STRING_BYTES=64
 # if called from root Makefile, PRINT was already defined
 BACNET_FLAGS += -UPRINT_ENABLED
 BACNET_FLAGS += -DPRINT_ENABLED=0
+ifeq (${LEGACY},true)
+# disable deprecated function warnings for legacy builds
+BACNET_FLAGS += -DBACNET_STACK_DEPRECATED_DISABLE
+endif
 
 CFLAGS += $(MCU_FLAGS)
 CFLAGS += $(OPTIMIZE_FLAGS)
@@ -146,17 +172,31 @@ CFLAGS += $(BACNET_FLAGS)
 CFLAGS += $(INCLUDES)
 # enable garbage collection of unused functions and data to shrink binary
 CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
+# enable stack usage tracking
+CFLAGS += -fstack-usage
 # function calls will not use any special __builtin_xx to allow debug/linking
 CFLAGS += -fno-builtin
 # place uninitialized global variables in the data section of the object file.
 CFLAGS += -fno-common
-# enable all relevant warnings
-CFLAGS += -Wall
+# enable all relevant warnings that find bugs
+WARNING_ALL := -Wall -Wextra -Wfloat-equal -Wconversion
+WARNING_ALL += -Wredundant-decls -Wswitch-default -pedantic
+# don't warn about conversion, sign, compares, long long and attributes
+# since they are common in embedded
+WARNING_ALL += -Wno-sign-conversion -Wno-conversion -Wno-sign-compare
+WARNING_ALL += -Wno-long-long -Wno-attributes
+# don't warn about implicit fallthrough since it's common in network protocols
+WARNING_ALL += -Wno-implicit-fallthrough
 # don't warn about missing braces since GCC is over-achiever for this
-CFLAGS += -Wno-missing-braces
+WARNING_ALL += -Wno-missing-braces
 # don't warn about missing prototypes since STM32 library doesn't have some
-CFLAGS += -Wno-missing-prototypes
-
+WARNING_ALL += -Wno-missing-prototypes
+# don't warn about array subscript being char
+WARNING_ALL += -Wno-char-subscripts
+# FIXME later
+WARNING_ALL += -Wno-unused-parameter
+#WARNING_ALL += -Werror
+CFLAGS += $(WARNING_ALL)
 #  -Wa,<options> Pass comma-separated <options> on to the assembler
 AFLAGS = -Wa,-ahls,-mapcs-32,-adhlns=$(<:.s=.lst)
 
@@ -172,6 +212,7 @@ ODFLAGS	= -x --syms
 
 AOBJ = $(ASRC:.s=.o)
 COBJ = $(CSRC:.c=.o)
+CSTACK = $(CSRC:.c=.su)
 
 all: $(TARGET).bin $(TARGET).elf
 	$(OBJDUMP) $(ODFLAGS) $(TARGET).elf > $(TARGET).dmp
@@ -183,18 +224,22 @@ $(TARGET).bin:  $(TARGET).elf
 $(TARGET).elf: $(COBJ) $(AOBJ) Makefile
 	$(CC) $(CFLAGS) $(AOBJ) $(COBJ) $(LDFLAGS) -o $@
 
-# allow a single file to be unoptimized for debugging purposes
-#dlmstp.o:
-#	$(CC) -c $(CFLAGS) $*.c -o $@
-#
-#main.o:
-#	$(CC) -c $(CFLAGS) $*.c -o $@
-#
-#$(BACNET_CORE)/npdu.o:
-#	$(CC) -c $(CFLAGS) $*.c -o $@
-#
-#$(BACNET_CORE)/apdu.o:
-#	$(CC) -c $(CFLAGS) $*.c -o $@
+.PHONY: ram-usage
+ram-usage:
+	@$(NM) -t d -S --size-sort $(TARGET).elf 1> $(TARGET).nm
+	@echo "=ADDRESS= ==SIZE== = ==VARIABLE NAME=="
+	@tail $(TARGET).nm
+	
+.PHONY: cstack
+cstack:
+	@$(CSTACK_TOOL) $(COBJ) 2> /dev/null 1> $(TARGET).su
+	@head -n 25 $(TARGET).su
+
+.PHONY: memap
+memap:
+	# memmap needs Python and PrettyPrint and IntelHex
+	# sudo apt install python3-prettytable python3-intelhex
+	$(MEMAP_TOOL) -t GCC_ARM $(TARGET).map
 
 .c.o:
 	$(CC) -c $(OPTIMIZATION) $(CFLAGS) $*.c -o $@
@@ -204,8 +249,9 @@ $(TARGET).elf: $(COBJ) $(AOBJ) Makefile
 
 .PHONY: clean
 clean:
-	-rm -rf $(COBJ) $(AOBJ) $(COREOBJ)
+	-rm -rf $(COBJ) $(AOBJ) $(COREOBJ) $(CSTACK)
 	-rm -rf $(TARGET).elf $(TARGET).bin $(TARGET).dmp $(TARGET).map
+	-rm -rf $(TARGET).su $(TARGET).nm
 	-rm -rf *.lst
 
 ## Other dependencies

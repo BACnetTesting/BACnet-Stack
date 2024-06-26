@@ -36,10 +36,11 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "bacnet/bacnet_stack_exports.h"
+/* BACnet Stack defines - first */
 #include "bacnet/bacdef.h"
-#include "bacnet/bacenum.h"
+/* BACnet Stack API */
 #include "bacnet/apdu.h"
+#include "bacnet/readrange.h"
 #include "bacnet/rp.h"
 #include "bacnet/wp.h"
 
@@ -67,6 +68,9 @@ extern "C" {
     bool Network_Port_Name_Set(
         uint32_t object_instance,
         char *new_name);
+    BACNET_STACK_EXPORT
+    const char *Network_Port_Object_Name_ASCII(
+        uint32_t object_instance);
 
     BACNET_STACK_EXPORT
     char *Network_Port_Description(
@@ -121,6 +125,11 @@ extern "C" {
         uint32_t object_instance,
         BACNET_OCTET_STRING *mac_address);
     BACNET_STACK_EXPORT
+    uint8_t Network_Port_MAC_Address_Value(
+        uint32_t object_instance,
+        uint8_t *mac_address,
+        size_t mac_size);
+    BACNET_STACK_EXPORT
     bool Network_Port_MAC_Address_Set(
         uint32_t object_instance,
         uint8_t *mac_src,
@@ -134,6 +143,14 @@ extern "C" {
         uint32_t object_instance,
         uint16_t value);
 
+    BACNET_STACK_EXPORT
+    uint8_t Network_Port_MSTP_MAC_Address(
+        uint32_t object_instance);
+    BACNET_STACK_EXPORT
+    bool Network_Port_MSTP_MAC_Address_Set(
+        uint32_t object_instance,
+        uint8_t value);
+    
     BACNET_STACK_EXPORT
     uint8_t Network_Port_MSTP_Max_Master(
         uint32_t object_instance);
@@ -259,6 +276,29 @@ extern "C" {
         void *fdt_head);
 
     BACNET_STACK_EXPORT
+    bool Network_Port_Remote_BBMD_IP_Address(
+        uint32_t object_instance,
+        uint8_t *a, uint8_t *b, uint8_t *c, uint8_t *d);
+    BACNET_STACK_EXPORT
+    bool Network_Port_Remote_BBMD_IP_Address_Set(
+        uint32_t object_instance,
+        uint8_t a, uint8_t b, uint8_t c, uint8_t d);
+    BACNET_STACK_EXPORT
+    uint16_t Network_Port_Remote_BBMD_BIP_Port(
+        uint32_t object_instance);
+    BACNET_STACK_EXPORT
+    bool Network_Port_Remote_BBMD_BIP_Port_Set(
+        uint32_t object_instance,
+        uint16_t value);
+    BACNET_STACK_EXPORT
+    uint16_t Network_Port_Remote_BBMD_BIP_Lifetime(
+        uint32_t object_instance);
+    BACNET_STACK_EXPORT
+    bool Network_Port_Remote_BBMD_BIP_Lifetime_Set(
+        uint32_t object_instance,
+        uint16_t value);
+
+    BACNET_STACK_EXPORT
     BACNET_IP_MODE Network_Port_BIP6_Mode(
         uint32_t object_instance);
     BACNET_STACK_EXPORT
@@ -345,6 +385,12 @@ extern "C" {
     bool Network_Port_Changes_Pending_Set(
         uint32_t instance,
         bool flag);
+    BACNET_STACK_EXPORT
+    void Network_Port_Changes_Pending_Activate(
+        uint32_t instance);
+    BACNET_STACK_EXPORT
+    void Network_Port_Changes_Pending_Discard(
+        uint32_t instance);
 
     BACNET_STACK_EXPORT
     bool Network_Port_Valid_Instance(
@@ -378,11 +424,17 @@ extern "C" {
         RR_PROP_INFO * pInfo);
 
     BACNET_STACK_EXPORT
-    bool Network_Port_Create(
+    uint32_t Network_Port_Create(
         uint32_t object_instance);
     BACNET_STACK_EXPORT
     bool Network_Port_Delete(
         uint32_t object_instance);
+    BACNET_STACK_EXPORT
+    void Network_Port_Changes_Activate(
+        void);
+    BACNET_STACK_EXPORT
+    void Network_Port_Changes_Discard(
+        void);
     BACNET_STACK_EXPORT
     void Network_Port_Cleanup(
         void);

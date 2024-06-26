@@ -115,8 +115,11 @@ void RS485_Set_Interface(char *ifname)
         strupper(ifname);
         if (strncmp("COM", ifname, 3) == 0) {
             if (strlen(ifname) > 3) {
-                sprintf(RS485_Port_Name, "\\\\.\\COM%i", atoi(ifname + 3));
-                fprintf(stdout, "Adjusted interface name to %s\r\n",
+                snprintf(
+                    RS485_Port_Name, sizeof(RS485_Port_Name), "\\\\.\\COM%i",
+                    atoi(ifname + 3));
+                fprintf(
+                    stdout, "Adjusted interface name to %s\r\n",
                     RS485_Port_Name);
             }
         }
@@ -136,7 +139,7 @@ bool RS485_Interface_Valid(unsigned port_number)
     bool status = false;
     char ifname[255] = "";
 
-    sprintf(ifname, "\\\\.\\COM%u", port_number);
+    snprintf(ifname, sizeof(ifname), "\\\\.\\COM%u", port_number);
     h = CreateFile(
         ifname, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
     if (h == INVALID_HANDLE_VALUE) {
@@ -266,7 +269,7 @@ void RS485_Initialize(void)
         0, OPEN_EXISTING,
         /*FILE_FLAG_OVERLAPPED */ 0, 0);
     if (RS485_Handle == INVALID_HANDLE_VALUE) {
-        fprintf(stderr, "Unable to open %s\n", RS485_Port_Name);
+        fprintf(stderr, "RS485 unable to open %s\n", RS485_Port_Name);
         RS485_Print_Error();
         exit(1);
     }
@@ -276,6 +279,8 @@ void RS485_Initialize(void)
     RS485_Configure_Status();
 #if PRINT_ENABLED
     fprintf(stdout, "RS485 Interface: %s\n", RS485_Port_Name);
+    fprintf(stdout, "RS485 Baud Rate %u\n", RS485_Get_Baud_Rate());
+    fflush(stdout);
 #endif
 
     atexit(RS485_Cleanup);
@@ -419,7 +424,7 @@ bool RS485_Set_Baud_Rate(uint32_t baud)
 
 /* Transmits a Frame on the wire */
 void RS485_Send_Frame(
-    volatile struct mstp_port_struct_t *mstp_port, /* port specific data */
+    struct mstp_port_struct_t *mstp_port, /* port specific data */
     uint8_t *buffer, /* frame to send (up to 501 bytes of data) */
     uint16_t nbytes)
 { /* number of bytes of data (up to 501) */
@@ -451,7 +456,7 @@ void RS485_Send_Frame(
 }
 
 /* called by timer, interrupt(?) or other thread */
-void RS485_Check_UART_Data(volatile struct mstp_port_struct_t *mstp_port)
+void RS485_Check_UART_Data(struct mstp_port_struct_t *mstp_port)
 {
     char lpBuf[1];
     DWORD dwRead = 0;

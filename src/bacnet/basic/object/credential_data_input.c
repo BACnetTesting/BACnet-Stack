@@ -29,14 +29,15 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+/* BACnet Stack defines - first */
 #include "bacnet/bacdef.h"
+/* BACnet Stack API */
 #include "bacnet/bacdcode.h"
-#include "bacnet/bacenum.h"
 #include "bacnet/bacapp.h"
-#include "bacnet/config.h" /* the custom stuff */
 #include "bacnet/wp.h"
-#include "bacnet/basic/object/credential_data_input.h"
 #include "bacnet/basic/services.h"
+/* me! */
+#include "bacnet/basic/object/credential_data_input.h"
 
 static bool Credential_Data_Input_Initialized = false;
 
@@ -137,13 +138,13 @@ unsigned Credential_Data_Input_Instance_To_Index(uint32_t object_instance)
 bool Credential_Data_Input_Object_Name(
     uint32_t object_instance, BACNET_CHARACTER_STRING *object_name)
 {
-    static char text_string[32] = ""; /* okay for single thread */
+    static char text[32] = ""; /* okay for single thread */
     bool status = false;
 
     if (object_instance < MAX_CREDENTIAL_DATA_INPUTS) {
-        sprintf(text_string, "CREDENTIAL DATA INPUT %lu",
+        snprintf(text, sizeof(text), "CREDENTIAL DATA INPUT %lu",
             (unsigned long)object_instance);
-        status = characterstring_init_ansi(object_name, text_string);
+        status = characterstring_init_ansi(object_name, text);
     }
 
     return status;
@@ -333,8 +334,8 @@ bool Credential_Data_Input_Write_Property(BACNET_WRITE_PROPERTY_DATA *wp_data)
         case PROP_RELIABILITY:
             if (Credential_Data_Input_Out_Of_Service(
                     wp_data->object_instance)) {
-                status = write_property_type_valid(wp_data, &value,
-                    BACNET_APPLICATION_TAG_ENUMERATED);
+                status = write_property_type_valid(
+                    wp_data, &value, BACNET_APPLICATION_TAG_ENUMERATED);
                 if (status) {
                     cdi_descr[object_index].reliability =
                         (BACNET_RELIABILITY)value.type.Enumerated;
